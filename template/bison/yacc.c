@@ -1392,35 +1392,37 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
           int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
           int yyx;
           for (yyx = yyxbegin; yyx < yyxend; ++yyx)
-            if (yycheck[yyx + yyn] == yyx && yyx != YYSYMBOL_YYerror
-                && !yytable_value_is_error (yytable[yyx + yyn]))
-              {
-                if (current->repair_length + 1 > 5)
-                  continue;
-
-                /* If token yyx is a next token, PDA can process it. */
-                repairs *new = (repairs *) malloc (sizeof (repairs));
-                new->stack_length = stack_length;
-                new->states = (yy_state_t *) malloc (sizeof (yy_state_t) * (stack_length));
-                new->state = new->states + (current->state - current->states);
-                YYCOPY (current->states, yyss, current->state - current->states + 1);
-                new->repair_length = current->repair_length + 1;
-                new->prev_repair = current;
-                new->repair.type = insert;
-                new->repair.term = (yysymbol_kind_t) yyx;
-
-                tail->next = new;
-                tail = new;
-
-                /* Process PDA assuming next token is yyx */
-                yy_process_repairs(new, yyx); // assert == 1
-                if (yy_process_repairs(new, yytoken))
+            {
+              if (yycheck[yyx + yyn] == yyx && yyx != YYSYMBOL_YYerror
+                  && !yytable_value_is_error (yytable[yyx + yyn]))
                 {
-                  /* With new state, next token can be shifted. */
-                  rep_terms = yy_create_repair_terms(new);
-                  goto done;
+                  if (current->repair_length + 1 > 5)
+                    continue;
+
+                  /* If token yyx is a next token, PDA can process it. */
+                  repairs *new = (repairs *) malloc (sizeof (repairs));
+                  new->stack_length = stack_length;
+                  new->states = (yy_state_t *) malloc (sizeof (yy_state_t) * (stack_length));
+                  new->state = new->states + (current->state - current->states);
+                  YYCOPY (current->states, yyss, current->state - current->states + 1);
+                  new->repair_length = current->repair_length + 1;
+                  new->prev_repair = current;
+                  new->repair.type = insert;
+                  new->repair.term = (yysymbol_kind_t) yyx;
+
+                  tail->next = new;
+                  tail = new;
+
+                  /* Process PDA assuming next token is yyx */
+                  yy_process_repairs(new, yyx); // assert == 1
+                  if (yy_process_repairs(new, yytoken))
+                  {
+                    /* With new state, next token can be shifted. */
+                    rep_terms = yy_create_repair_terms(new);
+                    goto done;
+                  }
                 }
-              }
+            }
         }
 
       current = current->next;
