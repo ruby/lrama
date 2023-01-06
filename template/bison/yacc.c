@@ -1210,6 +1210,10 @@ yydestruct (const char *yymsg,
 
 
 <%- if output.error_recovery -%>
+#ifndef YYMAXREPAIR
+# define YYMAXREPAIR 3
+#endif
+
 enum repair_type {
   insert,
   delete,
@@ -1396,7 +1400,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
               if (yycheck[yyx + yyn] == yyx && yyx != YYSYMBOL_YYerror
                   && !yytable_value_is_error (yytable[yyx + yyn]))
                 {
-                  if (current->repair_length + 1 > 5)
+                  if (current->repair_length + 1 > YYMAXREPAIR)
                     continue;
 
                   /* If token yyx is a next token, PDA can process it. */
