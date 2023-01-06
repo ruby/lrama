@@ -1400,6 +1400,12 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
               if (yycheck[yyx + yyn] == yyx && yyx != YYSYMBOL_YYerror
                   && !yytable_value_is_error (yytable[yyx + yyn]))
                 {
+                  if (yyx == yytoken)
+                  {
+                    rep_terms = yy_create_repair_terms(current);
+                    goto done;
+                  }
+
                   if (current->repair_length + 1 > YYMAXREPAIR)
                     continue;
 
@@ -1419,12 +1425,6 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
 
                   /* Process PDA assuming next token is yyx */
                   yy_process_repairs(new, yyx); // assert == 1
-                  if (yy_process_repairs(new, yytoken))
-                  {
-                    /* With new state, next token can be shifted. */
-                    rep_terms = yy_create_repair_terms(new);
-                    goto done;
-                  }
                 }
             }
         }
