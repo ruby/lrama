@@ -86,6 +86,7 @@ module Lrama
           header_file_path: header_file,
           context: context,
           grammar: grammar,
+          error_recovery: error_recovery,
         ).render
       end
 

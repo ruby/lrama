@@ -7,14 +7,18 @@ module Lrama
     extend Forwardable
     include Report::Duration
 
-    attr_reader :grammar_file_path, :context, :grammar
+    attr_reader :grammar_file_path, :context, :grammar, :error_recovery
 
     def_delegators "@context", :yyfinal, :yylast, :yyntokens, :yynnts, :yynrules, :yynstates,
                                :yymaxutok, :yypact_ninf, :yytable_ninf
 
     def_delegators "@grammar", :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol
 
-    def initialize(out:, output_file_path:, template_name:, grammar_file_path:, header_out: nil, header_file_path: nil, context:, grammar:)
+    def initialize(
+      out:, output_file_path:, template_name:, grammar_file_path:,
+      header_out: nil, header_file_path: nil,
+      context:, grammar:, error_recovery: false
+    )
       @out = out
       @output_file_path = output_file_path
       @template_name = template_name
@@ -23,6 +27,7 @@ module Lrama
       @header_file_path = header_file_path
       @context = context
       @grammar = grammar
+      @error_recovery = error_recovery
     end
 
     def render

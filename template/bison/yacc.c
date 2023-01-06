@@ -1209,6 +1209,230 @@ yydestruct (const char *yymsg,
 
 
 
+<%- if output.error_recovery -%>
+enum repair_type {
+  insert,
+  delete,
+  shift,
+};
+
+struct repair {
+  enum repair_type type;
+  yysymbol_kind_t term;
+};
+typedef struct repair repair;
+
+struct repairs {
+  /* For breadth-first traversing */
+  struct repairs *next;
+  YYPTRDIFF_T stack_length;
+  /* Top of states */
+  yy_state_t *state;
+  /* Bottom of states */
+  yy_state_t *states;
+  /* repair length */
+  int repair_length;
+  /*  */
+  struct repairs *prev_repair;
+  struct repair repair;
+};
+typedef struct repairs repairs;
+
+struct repair_terms {
+  int length;
+  yysymbol_kind_t terms[];
+};
+typedef struct repair_terms repair_terms;
+
+static repair_terms *
+yy_create_repair_terms(repairs *reps)
+{
+  repairs *r = reps;
+  repair_terms *rep_terms;
+  int count = 0;
+
+  while (r->prev_repair)
+  {
+    count++;
+    r = r->prev_repair;
+  }
+
+  rep_terms = (repair_terms *) malloc (sizeof (repair_terms) + sizeof (yysymbol_kind_t) * count);
+  rep_terms->length = count;
+
+  r = reps;
+  while (r->prev_repair)
+  {
+    rep_terms->terms[count-1] = r->repair.term;
+    count--;
+    r = r->prev_repair;
+  }
+
+  return rep_terms;
+}
+
+static void
+yy_print_repair_terms(repair_terms *rep_terms)
+{
+  for (int i = 0; i < rep_terms->length; i++)
+    fprintf (stderr, "%s ", yysymbol_name (rep_terms->terms[i]));
+
+  fprintf (stderr, "\n");
+}
+
+static void
+yy_free_repairs(repairs *reps)
+{
+  while (reps)
+  {
+    repairs *r = reps;
+    reps = reps->next;
+    free(r->states);
+    free(r);
+  }
+}
+
+static int
+yy_process_repairs(repairs *reps, yysymbol_kind_t token)
+{
+  int yyn;
+  int yystate = *reps->state;
+  int yylen = 0;
+  yysymbol_kind_t yytoken = token;
+
+  goto yyrecover_backup;
+
+yyrecover_newstate:
+  // TODO: check reps->stack_length
+  reps->state += 1;
+  *reps->state = (yy_state_t) yystate;
+
+
+yyrecover_backup:
+  yyn = yypact[yystate];
+  if (yypact_value_is_default (yyn))
+    goto yyrecover_default;
+
+  /* "Reading a token" */
+  if (yytoken == YYSYMBOL_YYEMPTY)
+    return 1;
+
+  yyn += token;
+  if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken)
+    goto yyrecover_default;
+  yyn = yytable[yyn];
+  if (yyn <= 0)
+  {
+    if (yytable_value_is_error (yyn))
+      goto yyrecover_errlab;
+    yyn = -yyn;
+    goto yyrecover_reduce;
+  }
+
+  /* shift */
+  yystate = yyn;
+  yytoken = YYSYMBOL_YYEMPTY;
+  goto yyrecover_newstate;
+
+
+yyrecover_default:
+  yyn = yydefact[yystate];
+  if (yyn == 0)
+    goto yyrecover_errlab;
+  goto yyrecover_reduce;
+
+
+yyrecover_reduce:
+  yylen = yyr2[yyn];
+  /* YYPOPSTACK */
+  reps->state -= yylen;
+  yylen = 0;
+
+  {
+    const int yylhs = yyr1[yyn] - YYNTOKENS;
+    const int yyi = yypgoto[yylhs] + *reps->state;
+    yystate = (0 <= yyi && yyi <= YYLAST && yycheck[yyi] == *reps->state
+               ? yytable[yyi]
+               : yydefgoto[yylhs]);
+  }
+
+  goto yyrecover_newstate;
+
+yyrecover_errlab:
+  return 0;
+}
+
+static repair_terms *
+yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
+{
+  yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
+  repair_terms *rep_terms = NULL;
+
+  repairs *head = (repairs *) malloc (sizeof (repairs));
+  repairs *current = head;
+  repairs *tail = head;
+  YYPTRDIFF_T stack_length = yyssp - yyss + 1;
+  head->stack_length = stack_length;
+  head->states = (yy_state_t *) malloc (sizeof (yy_state_t) * (stack_length));
+  head->state = head->states + (yyssp - yyss);
+  YYCOPY (head->states, yyss, stack_length);
+  head->repair_length = 0;
+
+  stack_length = (stack_length * 2 > 100) ? (stack_length * 2) : 100;
+
+  while (current)
+    {
+      int yystate = *current->state;
+      int yyn = yypact[yystate];
+      /* See also: yypcontext_expected_tokens */
+      if (!yypact_value_is_default (yyn))
+        {
+          int yyxbegin = yyn < 0 ? -yyn : 0;
+          int yychecklim = YYLAST - yyn + 1;
+          int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
+          int yyx;
+          for (yyx = yyxbegin; yyx < yyxend; ++yyx)
+            if (yycheck[yyx + yyn] == yyx && yyx != YYSYMBOL_YYerror
+                && !yytable_value_is_error (yytable[yyx + yyn]))
+              {
+                if (current->repair_length + 1 > 5)
+                  continue;
+
+                /* If token yyx is a next token, PDA can process it. */
+                repairs *new = (repairs *) malloc (sizeof (repairs));
+                new->stack_length = stack_length;
+                new->states = (yy_state_t *) malloc (sizeof (yy_state_t) * (stack_length));
+                new->state = new->states + (current->state - current->states);
+                YYCOPY (current->states, yyss, current->state - current->states + 1);
+                new->repair_length = current->repair_length + 1;
+                new->prev_repair = current;
+                new->repair.type = insert;
+                new->repair.term = (yysymbol_kind_t) yyx;
+
+                tail->next = new;
+                tail = new;
+
+                /* Process PDA assuming next token is yyx */
+                yy_process_repairs(new, yyx); // assert == 1
+                if (yy_process_repairs(new, yytoken))
+                {
+                  /* With new state, next token can be shifted. */
+                  rep_terms = yy_create_repair_terms(new);
+                  goto done;
+                }
+              }
+        }
+
+      current = current->next;
+    }
+
+done:
+
+  yy_free_repairs(head);
+
+  return rep_terms;
+}
+<%- end -%>
 
 
 
@@ -1639,6 +1863,16 @@ yyerrorlab:
 yyerrlab1:
   yyerrstatus = 3;      /* Each real token shifted decrements this.  */
 
+<%- if output.error_recovery -%>
+  {
+    repair_terms *rep_terms = yyrecover(yyss, yyssp, yychar);
+    if (rep_terms)
+    {
+      yy_print_repair_terms(rep_terms);
+      free(rep_terms);
+    }
+  }
+<%- end -%>
   /* Pop stack until we find a state that shifts the error token.  */
   for (;;)
     {
