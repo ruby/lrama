@@ -6,7 +6,7 @@ module Lrama
       opt = OptionParser.new
 
       # opt.on('-h') {|v| p v }
-      # opt.on('-V') {|v| p v }
+      opt.on('-V', '--version') {|v| puts Lrama::VERSION ; exit 0 }
 
       # Tuning the Parser
       skeleton = "bison/yacc.c"
