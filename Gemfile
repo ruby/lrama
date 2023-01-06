@@ -5,3 +5,4 @@ gemspec
 gem "rspec"
 gem "pry"
 gem "stackprof"
+gem "rake"
