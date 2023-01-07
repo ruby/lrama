@@ -1227,13 +1227,15 @@ struct repair {
 typedef struct repair repair;
 
 struct repairs {
+  /* For debug */
+  int id;
   /* For breadth-first traversing */
   struct repairs *next;
   YYPTRDIFF_T stack_length;
-  /* Top of states */
-  yy_state_t *state;
   /* Bottom of states */
   yy_state_t *states;
+  /* Top of states */
+  yy_state_t *state;
   /* repair length */
   int repair_length;
   /*  */
@@ -1243,6 +1245,7 @@ struct repairs {
 typedef struct repairs repairs;
 
 struct repair_terms {
+  int id;
   int length;
   yysymbol_kind_t terms[];
 };
@@ -1262,6 +1265,7 @@ yy_create_repair_terms(repairs *reps)
   }
 
   rep_terms = (repair_terms *) malloc (sizeof (repair_terms) + sizeof (yysymbol_kind_t) * count);
+  rep_terms->id = reps->id;
   rep_terms->length = count;
 
   r = reps;
@@ -1273,6 +1277,24 @@ yy_create_repair_terms(repairs *reps)
   }
 
   return rep_terms;
+}
+
+static void
+yy_print_repairs(repairs *reps)
+{
+  repairs *r = reps;
+
+  fprintf (stderr,
+        "id: %d, repair_length: %d, repair_state: %d, prev_repair_id: %d\n",
+        reps->id, reps->repair_length, *reps->state, reps->prev_repair->id);
+
+  while (r->prev_repair)
+  {
+    fprintf (stderr, "%s ", yysymbol_name (r->repair.term));
+    r = r->prev_repair;
+  }
+
+  fprintf (stderr, "\n");
 }
 
 static void
@@ -1370,17 +1392,22 @@ static repair_terms *
 yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
 {
   yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
-  repair_terms *rep_terms = NULL;
+  repair_terms *rep_terms = YY_NULLPTR;
+  int count = 0;
 
   repairs *head = (repairs *) malloc (sizeof (repairs));
   repairs *current = head;
   repairs *tail = head;
   YYPTRDIFF_T stack_length = yyssp - yyss + 1;
+
+  head->id = count;
+  head->next = 0;
   head->stack_length = stack_length;
   head->states = (yy_state_t *) malloc (sizeof (yy_state_t) * (stack_length));
   head->state = head->states + (yyssp - yyss);
   YYCOPY (head->states, yyss, stack_length);
   head->repair_length = 0;
+  head->prev_repair = 0;
 
   stack_length = (stack_length * 2 > 100) ? (stack_length * 2) : 100;
 
@@ -1403,6 +1430,10 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
                   if (yyx == yytoken)
                   {
                     rep_terms = yy_create_repair_terms(current);
+                    fprintf(stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length);
+                    yy_print_repairs(current);
+                    yy_print_repair_terms(rep_terms);
+
                     goto done;
                   }
 
@@ -1410,11 +1441,15 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
                     continue;
 
                   /* If token yyx is a next token, PDA can process it. */
+                  count++;
+
                   repairs *new = (repairs *) malloc (sizeof (repairs));
+                  new->id = count;
+                  new->next = 0;
                   new->stack_length = stack_length;
                   new->states = (yy_state_t *) malloc (sizeof (yy_state_t) * (stack_length));
                   new->state = new->states + (current->state - current->states);
-                  YYCOPY (current->states, yyss, current->state - current->states + 1);
+                  YYCOPY (new->states, current->states, current->state - current->states + 1);
                   new->repair_length = current->repair_length + 1;
                   new->prev_repair = current;
                   new->repair.type = insert;
@@ -1425,6 +1460,11 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
 
                   /* Process PDA assuming next token is yyx */
                   yy_process_repairs(new, yyx); // assert == 1
+
+                  fprintf(stderr,
+                        "New repairs is enqueued. count: %d, yystate: %d, yyx: %d\n",
+                        count, yystate, yyx);
+                  yy_print_repairs (new);
                 }
             }
         }
@@ -1435,6 +1475,11 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
 done:
 
   yy_free_repairs(head);
+
+  if (!rep_terms)
+    {
+      fprintf(stderr, "repair_terms not found\n");
+    }
 
   return rep_terms;
 }
@@ -1874,7 +1919,6 @@ yyerrlab1:
     repair_terms *rep_terms = yyrecover(yyss, yyssp, yychar);
     if (rep_terms)
     {
-      yy_print_repair_terms(rep_terms);
       free(rep_terms);
     }
   }
