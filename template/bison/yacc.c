@@ -1410,6 +1410,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
   head->prev_repair = 0;
 
   stack_length = (stack_length * 2 > 100) ? (stack_length * 2) : 100;
+  count++;
 
   while (current)
     {
@@ -1424,24 +1425,10 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
           int yyx;
           for (yyx = yyxbegin; yyx < yyxend; ++yyx)
             {
-              if (yycheck[yyx + yyn] == yyx && yyx != YYSYMBOL_YYerror
-                  && !yytable_value_is_error (yytable[yyx + yyn]))
+              if (yyx != YYSYMBOL_YYerror)
                 {
-                  if (yyx == yytoken)
-                    {
-                      rep_terms = yy_create_repair_terms (current);
-                      fprintf (stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length);
-                      yy_print_repairs (current);
-                      yy_print_repair_terms (rep_terms);
-
-                      goto done;
-                    }
-
                   if (current->repair_length + 1 > YYMAXREPAIR)
                     continue;
-
-                  /* If token yyx is a next token, PDA can process it. */
-                  count++;
 
                   repairs *new = (repairs *) malloc (sizeof (repairs));
                   new->id = count;
@@ -1455,11 +1442,26 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
                   new->repair.type = insert;
                   new->repair.term = (yysymbol_kind_t) yyx;
 
+                  /* Process PDA assuming next token is yyx */
+                  if (! yy_process_repairs (new, yyx))
+                    {
+                      free (new);
+                      continue;
+                    }
+
                   tail->next = new;
                   tail = new;
+                  count++;
 
-                  /* Process PDA assuming next token is yyx */
-                  yy_process_repairs (new, yyx); // assert == 1
+                  if (yyx == yytoken)
+                    {
+                      rep_terms = yy_create_repair_terms (current);
+                      fprintf (stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length);
+                      yy_print_repairs (current);
+                      yy_print_repair_terms (rep_terms);
+
+                      goto done;
+                    }
 
                   fprintf (stderr,
                         "New repairs is enqueued. count: %d, yystate: %d, yyx: %d\n",
