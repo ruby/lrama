@@ -1310,12 +1310,12 @@ static void
 yy_free_repairs(repairs *reps)
 {
   while (reps)
-  {
-    repairs *r = reps;
-    reps = reps->next;
-    free(r->states);
-    free(r);
-  }
+    {
+      repairs *r = reps;
+      reps = reps->next;
+      free (r->states);
+      free (r);
+    }
 }
 
 static int
@@ -1348,12 +1348,12 @@ yyrecover_backup:
     goto yyrecover_default;
   yyn = yytable[yyn];
   if (yyn <= 0)
-  {
-    if (yytable_value_is_error (yyn))
-      goto yyrecover_errlab;
-    yyn = -yyn;
-    goto yyrecover_reduce;
-  }
+    {
+      if (yytable_value_is_error (yyn))
+        goto yyrecover_errlab;
+      yyn = -yyn;
+      goto yyrecover_reduce;
+    }
 
   /* shift */
   yystate = yyn;
@@ -1428,14 +1428,14 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
                   && !yytable_value_is_error (yytable[yyx + yyn]))
                 {
                   if (yyx == yytoken)
-                  {
-                    rep_terms = yy_create_repair_terms(current);
-                    fprintf(stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length);
-                    yy_print_repairs(current);
-                    yy_print_repair_terms(rep_terms);
+                    {
+                      rep_terms = yy_create_repair_terms (current);
+                      fprintf (stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length);
+                      yy_print_repairs (current);
+                      yy_print_repair_terms (rep_terms);
 
-                    goto done;
-                  }
+                      goto done;
+                    }
 
                   if (current->repair_length + 1 > YYMAXREPAIR)
                     continue;
@@ -1459,9 +1459,9 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
                   tail = new;
 
                   /* Process PDA assuming next token is yyx */
-                  yy_process_repairs(new, yyx); // assert == 1
+                  yy_process_repairs (new, yyx); // assert == 1
 
-                  fprintf(stderr,
+                  fprintf (stderr,
                         "New repairs is enqueued. count: %d, yystate: %d, yyx: %d\n",
                         count, yystate, yyx);
                   yy_print_repairs (new);
@@ -1478,7 +1478,7 @@ done:
 
   if (!rep_terms)
     {
-      fprintf(stderr, "repair_terms not found\n");
+      fprintf (stderr, "repair_terms not found\n");
     }
 
   return rep_terms;
@@ -1916,11 +1916,11 @@ yyerrlab1:
 
 <%- if output.error_recovery -%>
   {
-    repair_terms *rep_terms = yyrecover(yyss, yyssp, yychar);
+    repair_terms *rep_terms = yyrecover (yyss, yyssp, yychar);
     if (rep_terms)
-    {
-      free(rep_terms);
-    }
+      {
+        free (rep_terms);
+      }
   }
 <%- end -%>
   /* Pop stack until we find a state that shifts the error token.  */
