@@ -1343,7 +1343,7 @@ yyrecover_backup:
   if (yytoken == YYSYMBOL_YYEMPTY)
     return 1;
 
-  yyn += token;
+  yyn += yytoken;
   if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken)
     goto yyrecover_default;
   yyn = yytable[yyn];
