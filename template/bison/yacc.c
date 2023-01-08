@@ -1291,14 +1291,14 @@ yy_create_repair_terms(repairs *reps)
     r = r->prev_repair;
   }
 
-  rep_terms = (repair_terms *) malloc (sizeof (repair_terms) + sizeof (yysymbol_kind_t) * count);
+  rep_terms = (repair_terms *) malloc (sizeof (repair_terms) + sizeof (yy_term) * count);
   rep_terms->id = reps->id;
   rep_terms->length = count;
 
   r = reps;
   while (r->prev_repair)
   {
-    rep_terms->terms[count-1] = r->repair.term;
+    rep_terms->terms[count-1].kind = r->repair.term;
     count--;
     r = r->prev_repair;
   }
@@ -1328,7 +1328,7 @@ static void
 yy_print_repair_terms(repair_terms *rep_terms)
 {
   for (int i = 0; i < rep_terms->length; i++)
-    fprintf (stderr, "%s ", yysymbol_name (rep_terms->terms[i]));
+    fprintf (stderr, "%s ", yysymbol_name (rep_terms->terms[i].kind));
 
   fprintf (stderr, "\n");
 }
@@ -1583,6 +1583,12 @@ YYLTYPE yylloc = yyloc_default;
 
   /* The locations where the error started and ended.  */
   YYLTYPE yyerror_range[3];
+<%- if output.error_recovery -%>
+  repair_terms *rep_terms = 0;
+  yy_term term_backup;
+  int rep_terms_index;
+  int yychar_backup;
+<%- end -%>
 
   /* Buffer for error messages, and its allocated size.  */
   char yymsgbuf[128];
@@ -1717,6 +1723,36 @@ yybackup:
 
   /* Not known => get a lookahead token if don't already have one.  */
 
+<%- if output.error_recovery -%>
+  if (yychar == YYEMPTY && rep_terms)
+    {
+
+      if (rep_terms_index < rep_terms->length)
+        {
+          YYDPRINTF ((stderr, "An error recovery token is used\n"));
+          yy_term term = rep_terms->terms[rep_terms_index];
+          yytoken = term.kind;
+          yylval = term.value;
+          yylloc = term.location;
+          yychar = yytranslate_inverted[yytoken];
+          YY_SYMBOL_PRINT ("Next error recovery token is", yytoken, &yylval, &yylloc);
+          rep_terms_index++;
+        }
+      else
+        {
+          YYDPRINTF ((stderr, "Error recovery is completed\n"));
+          yytoken = term_backup.kind;
+          yylval = term_backup.value;
+          yylloc = term_backup.location;
+          yychar = yychar_backup;
+          YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc);
+
+          free (rep_terms);
+          rep_terms = 0;
+          yychar_backup = 0;
+        }
+    }
+<%- end -%>
   /* YYCHAR is either empty, or end-of-input, or a valid lookahead.  */
   if (yychar == YYEMPTY)
     {
@@ -1941,17 +1977,31 @@ yyerrorlab:
 | yyerrlab1 -- common code for both syntax error and YYERROR.  |
 `-------------------------------------------------------------*/
 yyerrlab1:
-  yyerrstatus = 3;      /* Each real token shifted decrements this.  */
-
 <%- if output.error_recovery -%>
   {
-    repair_terms *rep_terms = yyrecover (yyss, yyssp, yychar);
+    rep_terms = yyrecover (yyss, yyssp, yychar);
     if (rep_terms)
       {
-        free (rep_terms);
+        for (int i = 0; i < rep_terms->length; i++)
+          {
+            yy_term term = rep_terms->terms[i];
+            yy_error_token_initialize (term.kind, &term.value, &term.location, p);
+          }
+
+        yychar_backup = yychar;
+        /* Can be packed into (the tail of) rep_terms? */
+        term_backup.kind = yytoken;
+        term_backup.value = yylval;
+        term_backup.location = yylloc;
+        rep_terms_index = 0;
+        yychar = YYEMPTY;
+
+        goto yybackup;
       }
   }
 <%- end -%>
+  yyerrstatus = 3;      /* Each real token shifted decrements this.  */
+
   /* Pop stack until we find a state that shifts the error token.  */
   for (;;)
     {
