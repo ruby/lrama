@@ -32,6 +32,7 @@ module Lrama
       define_type(:P_expect)         # %expect
       define_type(:P_define)         # %define
       define_type(:P_printer)        # %printer
+      define_type(:P_error_token)    # %error-token
       define_type(:P_lex_param)      # %lex-param
       define_type(:P_parse_param)    # %parse-param
       define_type(:P_initial_action) # %initial-action
@@ -176,6 +177,8 @@ module Lrama
           tokens << create_token(Token::P_define, ss[0], line, ss.pos - column)
         when ss.scan(/%printer/)
           tokens << create_token(Token::P_printer, ss[0], line, ss.pos - column)
+        when ss.scan(/%error-token/)
+          tokens << create_token(Token::P_error_token, ss[0], line, ss.pos - column)
         when ss.scan(/%lex-param/)
           tokens << create_token(Token::P_lex_param, ss[0], line, ss.pos - column)
         when ss.scan(/%parse-param/)

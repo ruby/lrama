@@ -155,6 +155,25 @@ module Lrama
       STR
     end
 
+    def symbol_actions_for_error_token
+      str = ""
+
+      @grammar.symbols.each do |sym|
+        next unless sym.error_token
+
+        str << <<-STR
+    case #{sym.enum_name}: /* #{sym.comment}  */
+#line #{sym.error_token.lineno} "#{@grammar_file_path}"
+         #{sym.error_token.translated_code(sym.tag)}
+#line [@oline@] [@ofile@]
+        break;
+
+        STR
+      end
+
+      str
+    end
+
     # b4_user_actions
     def user_actions
       str = ""

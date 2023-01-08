@@ -1251,12 +1251,32 @@ struct repairs {
 };
 typedef struct repairs repairs;
 
+struct yy_term {
+  yysymbol_kind_t kind;
+  YYSTYPE value;
+  YYLTYPE location;
+};
+typedef struct yy_term yy_term;
+
 struct repair_terms {
   int id;
   int length;
-  yysymbol_kind_t terms[];
+  yy_term terms[];
 };
 typedef struct repair_terms repair_terms;
+
+static void
+yy_error_token_initialize (yysymbol_kind_t yykind, YYSTYPE * const yyvaluep, YYLTYPE * const yylocationp<%= output.user_formals %>)
+{
+  YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+switch (yykind)
+    {
+<%= output.symbol_actions_for_error_token -%>
+      default:
+        break;
+    }
+  YY_IGNORE_MAYBE_UNINITIALIZED_END
+}
 
 static repair_terms *
 yy_create_repair_terms(repairs *reps)

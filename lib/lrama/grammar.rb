@@ -41,7 +41,7 @@ module Lrama
   # `token_id` is tokentype for term, internal sequence number for nterm
   #
   # TODO: Add validation for ASCII code range for Token::Char
-  Symbol = Struct.new(:id, :alias_name, :number, :tag, :term, :token_id, :nullable, :precedence, :printer, keyword_init: true) do
+  Symbol = Struct.new(:id, :alias_name, :number, :tag, :term, :token_id, :nullable, :precedence, :printer, :error_token, keyword_init: true) do
     attr_writer :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol
 
     def term?
@@ -271,6 +271,12 @@ module Lrama
     end
   end
 
+  ErrorToken = Struct.new(:ident_or_tags, :code, :lineno, keyword_init: true) do
+    def translated_code(member)
+      code.translated_error_token_code(member)
+    end
+  end
+
   Union = Struct.new(:code, :lineno, keyword_init: true) do
     def braces_less_code
       # Remove braces
@@ -287,7 +293,7 @@ module Lrama
 
     attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
-                  :printers,
+                  :printers, :error_tokens,
                   :lex_param, :parse_param, :initial_action,
                   :symbols, :types,
                   :rules, :_rules,
@@ -295,6 +301,7 @@ module Lrama
 
     def initialize
       @printers = []
+      @error_tokens = []
       @symbols = []
       @types = []
       @_rules = []
@@ -312,6 +319,10 @@ module Lrama
 
     def add_printer(ident_or_tags:, code:, lineno:)
       @printers << Printer.new(ident_or_tags: ident_or_tags, code: code, lineno: lineno)
+    end
+
+    def add_error_token(ident_or_tags:, code:, lineno:)
+      @error_tokens << ErrorToken.new(ident_or_tags, code, lineno)
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
@@ -419,6 +430,7 @@ module Lrama
       fill_sym_to_rules
       fill_nterm_type
       fill_symbol_printer
+      fill_symbol_error_token
       @symbols.sort_by!(&:number)
     end
 
@@ -831,6 +843,23 @@ module Lrama
               sym.printer = printer if sym.tag == ident_or_tag
             else
               raise "Unknown token type. #{printer}"
+            end
+          end
+        end
+      end
+    end
+
+    def fill_symbol_error_token
+      @symbols.each do |sym|
+        @error_tokens.each do |error_token|
+          error_token.ident_or_tags.each do |ident_or_tag|
+            case ident_or_tag.type
+            when Token::Ident
+              sym.error_token = error_token if sym.id == ident_or_tag
+            when Token::Tag
+              sym.error_token = error_token if sym.tag == ident_or_tag
+            else
+              raise "Unknown token type. #{error_token}"
             end
           end
         end
