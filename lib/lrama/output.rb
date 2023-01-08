@@ -94,6 +94,10 @@ module Lrama
       int_array_to_string(@context.yytranslate)
     end
 
+    def yytranslate_inverted
+      int_array_to_string(@context.yytranslate_inverted)
+    end
+
     def yyrline
       int_array_to_string(@context.yyrline)
     end

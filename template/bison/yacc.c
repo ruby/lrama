@@ -542,6 +542,13 @@ static const <%= output.int_type_for(output.context.yytranslate) %> yytranslate[
 <%= output.yytranslate %>
 };
 
+<%- if output.error_recovery -%>
+/* YYTRANSLATE_INVERTED[SYMBOL-NUM] -- Token number corresponding to SYMBOL-NUM */
+static const <%= output.int_type_for(output.context.yytranslate_inverted) %> yytranslate_inverted[] =
+{
+<%= output.yytranslate_inverted %>
+};
+<%- end -%>
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const <%= output.int_type_for(output.context.yyrline) %> yyrline[] =
