@@ -1984,8 +1984,8 @@ yyerrlab1:
       {
         for (int i = 0; i < rep_terms->length; i++)
           {
-            yy_term term = rep_terms->terms[i];
-            yy_error_token_initialize (term.kind, &term.value, &term.location, p);
+            yy_term *term = &rep_terms->terms[i];
+            yy_error_token_initialize (term->kind, &term->value, &term->location, p);
           }
 
         yychar_backup = yychar;
