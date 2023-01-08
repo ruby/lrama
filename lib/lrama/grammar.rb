@@ -174,6 +174,7 @@ module Lrama
 
       return t_code
     end
+    alias :translated_error_token_code :translated_printer_code
 
 
     private
