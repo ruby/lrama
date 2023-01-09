@@ -1,39 +1,28 @@
+# Lrama
 
-# TODO
+Lrama is LALR (1) parser generator written by Ruby. The first goal of this project is providing error tolerant parser for CRuby with minimal changes on CRuby parse.y file.
 
-* lexer
-  * [x] Basic functionalities
-* parser
-  * [x] Basic functionalities
-  * [x] Precedence in grammar
-* LALR
-  * [x] compute_nullable
-  * [x] compute_lr0_states
-  * [x] Direct Read Sets
-  * [x] Reads Relation
-  * [x] Read Sets
-  * [x] Includes Relation
-  * [x] Lookback Relation
-  * [x] Follow Sets
-  * [x] Look-Ahead Sets
-  * [x] Precedence support
-  * [x] Conflict check
-  * [x] Algorithm Digraph
-* Rendering
-  * [x] Table compaction
-  * [x] -d option
-  * [ ] yacc.c
-    * [ ] %lex-param
-    * [x] %parse-param
-    * [x] %printer
-    * [x] Replace $, @ in user codes
-    * [x] `[@oline@]`
-    * [ ] b4_symbol (for eof, error and so on)
-    * Assumption
-      * b4_locations_if is true
-      * b4_pure_if is true
-      * b4_pull_if is false
-      * b4_lac_if is false
-* Reporting
-  * [ ] Bison style
-* Error Tolerance
+## Features
+
+* Bison style grammar file is supported with some assumptions
+  * b4_locations_if is always true
+  * b4_pure_if is always true
+  * b4_pull_if is always false
+  * b4_lac_if is always false
+* Error Tolerance parser
+  * Subset of [Repairing Syntax Errors in LR Parsers (Corchuelo et al.)](https://idus.us.es/bitstream/handle/11441/65631/Repairing%20syntax%20errors.pdf) algorithm is supported
+
+## Installation
+
+```shell
+$ bundle exec rake install
+$ lrama --version
+0.1.0
+```
+
+## Usage
+
+```shell
+# "y.tab.c" is generated
+$ lrama parse.y
+```
