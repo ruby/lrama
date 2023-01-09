@@ -1,5 +1,15 @@
+require "stackprof"
+
 module Lrama
   class Report
+    module Profile
+      def self.report_profile
+        StackProf.run(mode: :cpu, raw: true, out: 'tmp/stackprof-cpu-myapp.dump') do
+          yield
+        end
+      end
+    end
+
     module Duration
       def self.enable
         @_report_duration_enabled = true
