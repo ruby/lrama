@@ -1,9 +1,11 @@
 require "erb"
 require "forwardable"
+require "lrama/report"
 
 module Lrama
   class Output
     extend Forwardable
+    include Report::Duration
 
     attr_reader :grammar_file_path, :context, :grammar
 
@@ -23,25 +25,26 @@ module Lrama
       @grammar = grammar
     end
 
-    # TODO: report_duration
     def render
-      erb = ERB.new(File.read(template_file), nil, '-')
-      erb.filename = template_file
-      tmp = erb.result_with_hash(context: @context, output: self)
-      tmp = replace_special_variables(tmp, @output_file_path)
-      @out << tmp
-
-      if @header_file_path
-        erb = ERB.new(File.read(header_template_file), nil, '-')
-        erb.filename = header_template_file
+      report_duration(:render) do
+        erb = ERB.new(File.read(template_file), nil, '-')
+        erb.filename = template_file
         tmp = erb.result_with_hash(context: @context, output: self)
-        tmp = replace_special_variables(tmp, @header_file_path)
+        tmp = replace_special_variables(tmp, @output_file_path)
+        @out << tmp
 
-        if @header_out
-          @header_out << tmp
-        else
-          File.open(@header_file_path, "w+") do |f|
-            f << tmp
+        if @header_file_path
+          erb = ERB.new(File.read(header_template_file), nil, '-')
+          erb.filename = header_template_file
+          tmp = erb.result_with_hash(context: @context, output: self)
+          tmp = replace_special_variables(tmp, @header_file_path)
+
+          if @header_out
+            @header_out << tmp
+          else
+            File.open(@header_file_path, "w+") do |f|
+              f << tmp
+            end
           end
         end
       end

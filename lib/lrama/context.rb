@@ -1,6 +1,10 @@
+require "lrama/report"
+
 module Lrama
   # This is passed to a template
   class Context
+    include Report::Duration
+
     ErrorActionNumber = -Float::INFINITY
     BaseMin = -Float::INFINITY
 
@@ -14,8 +18,7 @@ module Lrama
       # Array of array
       @_actions = []
 
-      # TODO: report_duration
-      compute_tables
+      report_duration(:compute_tables) { compute_tables }
     end
 
     # enum yytokentype
