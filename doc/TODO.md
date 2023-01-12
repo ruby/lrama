@@ -43,4 +43,4 @@
   * [x] Subset of Corchuelo et al.
 * Lex state
 * CI
-  * Setup CI
+  * [x] Setup CI
