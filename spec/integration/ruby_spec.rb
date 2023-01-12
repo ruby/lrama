@@ -33,13 +33,13 @@ RSpec.describe "integration" do
 
   describe "Ruby 3.2" do
     it do
-      generate_and_compare("ruby_3_2")
+      generate_and_compare("ruby_3_2_0")
     end
   end
 
   describe "Ruby 3.1" do
     it do
-      generate_and_compare("ruby_3_1")
+      generate_and_compare("ruby_3_1_0")
     end
   end
 end
