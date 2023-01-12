@@ -42,3 +42,5 @@
 * Error Tolerance
   * [x] Subset of Corchuelo et al.
 * Lex state
+* CI
+  * Setup CI
