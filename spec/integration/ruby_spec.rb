@@ -42,4 +42,10 @@ RSpec.describe "integration" do
       generate_and_compare("ruby_3_1_0")
     end
   end
+
+  describe "Ruby 3.0" do
+    it do
+      generate_and_compare("ruby_3_0_5")
+    end
+  end
 end
