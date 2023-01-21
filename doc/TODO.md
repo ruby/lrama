@@ -45,3 +45,4 @@
 * CI
   * [x] Setup CI]
   * [x] Add ruby 3.1 or under
+  * [ ] Add integration tests which installs Lrama, build ruby and run `make test`
