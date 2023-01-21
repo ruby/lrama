@@ -38,7 +38,7 @@ module Lrama
       end
 
       def consume!(*token_types)
-        consume(*token_types) || (raise "#{token_types} is expected but #{current_type}")
+        consume(*token_types) || (raise "#{token_types} is expected but #{current_type}. #{current_token}")
       end
 
       def consume_multi(*token_types)
@@ -224,11 +224,12 @@ module Lrama
     #  keyword_class { code 2 } tSTRING '!' keyword_end { code 3 } %prec "="
     def parse_grammar_rule(ts, grammar)
       # LHS
-      lhs = ts.consume!(T::Ident) # class
-      colon_line = ts.consume!(T::Colon).line # :
+      lhs = ts.consume!(T::Ident_Colon) # class:
+      lhs.type = T::Ident
+
       rhs = parse_grammar_rule_rhs(ts, grammar)
 
-      grammar.add_rule(lhs: lhs, rhs: rhs, lineno: rhs.first ? rhs.first.line : colon_line)
+      grammar.add_rule(lhs: lhs, rhs: rhs, lineno: rhs.first ? rhs.first.line : lhs.line)
 
       while true do
         case ts.current_type

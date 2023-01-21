@@ -45,6 +45,7 @@ module Lrama
       define_type(:User_code)        # { ... }
       define_type(:Tag)              # <int>
       define_type(:Number)           # 0
+      define_type(:Ident_Colon)      # k_if:, k_if  : (spaces can be there)
       define_type(:Ident)            # api.pure, tNUMBER
       define_type(:Semicolon)        # ;
       define_type(:Colon)            # :
@@ -168,6 +169,8 @@ module Lrama
           tokens << create_token(Token::Number, Integer(ss[0]), line, ss.pos - column)
         when ss.scan(/(<[a-zA-Z0-9_]+>)/)
           tokens << create_token(Token::Tag, ss[0], line, ss.pos - column)
+        when ss.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)\s*:/)
+          tokens << create_token(Token::Ident_Colon, ss[1], line, ss.pos - column)
         when ss.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
           tokens << create_token(Token::Ident, ss[0], line, ss.pos - column)
         when ss.scan(/%expect/)
