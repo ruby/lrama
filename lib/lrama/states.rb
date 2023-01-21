@@ -99,7 +99,7 @@ module Lrama
     # * symbol: A symbol under discussion
     # * reduce: A reduce under discussion
     # * which: For which a conflict is resolved. :shift, :reduce or :error (for nonassociative)
-    ResolvedConflict = Struct.new(:symbol, :reduce, :which, :same_prec) do
+    ResolvedConflict = Struct.new(:symbol, :reduce, :which, :same_prec, keyword_init: true) do
       def report_message
         s = symbol.display_name
         r = reduce.rule.precedence_sym.display_name
@@ -503,7 +503,7 @@ module Lrama
     include Lrama::Report::Duration
 
     # TODO: Validate position is not over rule rhs
-    Item = Struct.new(:rule, :position) do
+    Item = Struct.new(:rule, :position, keyword_init: true) do
       # Optimization for States#setup_state
       def hash
         [rule.id, position].hash
@@ -522,7 +522,7 @@ module Lrama
       end
 
       def new_by_next_position
-        Item.new(rule, position + 1)
+        Item.new(rule: rule, position: position + 1)
       end
 
       def previous_sym
@@ -792,7 +792,7 @@ module Lrama
 
         if (sym = item.next_sym) && sym.nterm?
           @grammar.find_rules_by_symbol!(sym).each do |rule|
-            i = Item.new(rule, 0)
+            i = Item.new(rule: rule, position: 0)
             next if queued[i]
             closure << i
             items << i
@@ -839,7 +839,7 @@ module Lrama
       states = []
       states_creted = {}
 
-      state, _ = create_state(symbols.first, [Item.new(@grammar.rules.first, 0)], states_creted)
+      state, _ = create_state(symbols.first, [Item.new(rule: @grammar.rules.first, position: 0)], states_creted)
       enqueue_state(states, state)
 
       while (state = states.shift) do
@@ -1050,12 +1050,12 @@ module Lrama
             case
             when shift_prec < reduce_prec
               # Reduce is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(sym, reduce, :reduce)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce)
               shift.not_selected = true
               next
             when shift_prec > reduce_prec
               # Shift is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(sym, reduce, :shift)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift)
               reduce.add_not_selected_symbol(sym)
               next
             end
@@ -1064,12 +1064,12 @@ module Lrama
             case sym.precedence.type
             when :right
               # Shift is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(sym, reduce, :shift, true)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift, same_prec: true)
               reduce.add_not_selected_symbol(sym)
               next
             when :left
               # Reduce is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(sym, reduce, :reduce, true)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce, same_prec: true)
               shift.not_selected = true
               next
             when :nonassoc
@@ -1079,7 +1079,7 @@ module Lrama
               # Then omit both the shift and reduce.
               #
               # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
-              state.resolved_conflicts << State::ResolvedConflict.new(sym, reduce, :error)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :error)
               shift.not_selected = true
               reduce.add_not_selected_symbol(sym)
             else

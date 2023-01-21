@@ -7,8 +7,8 @@ module Lrama
     include Lrama::Report::Duration
 
     # s_value is semantic value
-    Token = Struct.new(:type, :s_value) do
-      Type = Struct.new(:id, :name)
+    Token = Struct.new(:type, :s_value, keyword_init: true) do
+      Type = Struct.new(:id, :name, keyword_init: true)
 
       attr_accessor :line, :column, :referred
       # For User_code
@@ -22,7 +22,7 @@ module Lrama
       @types = []
 
       def self.define_type(name)
-        type = Type.new(@i, name.to_s)
+        type = Type.new(id: @i, name: name.to_s)
         const_set(name, type)
         @types << type
         @i += 1
@@ -92,7 +92,7 @@ module Lrama
     private
 
     def create_token(type, s_value, line, column)
-      t = Token.new(type, s_value)
+      t = Token.new(type: type, s_value: s_value)
       t.line = line
       t.column = column
 
@@ -267,7 +267,7 @@ module Lrama
           debug("Return lex_user_code: #{line}")
           if brace_count == 0
             str << ss[0]
-            user_code = Token.new(Token::User_code, str.freeze)
+            user_code = Token.new(type: Token::User_code, s_value: str.freeze)
             user_code.line = first_line
             user_code.column = first_column
             user_code.references = references

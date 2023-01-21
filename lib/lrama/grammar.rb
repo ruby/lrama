@@ -2,7 +2,7 @@ require "forwardable"
 require "lrama/lexer"
 
 module Lrama
-  Rule = Struct.new(:id, :lhs, :rhs, :code, :nullable, :precedence_sym, :lineno) do
+  Rule = Struct.new(:id, :lhs, :rhs, :code, :nullable, :precedence_sym, :lineno, keyword_init: true) do
     # TODO: Change this to display_name
     def to_s
       l = lhs.id.s_value
@@ -41,7 +41,7 @@ module Lrama
   # `token_id` is tokentype for term, internal sequence number for nterm
   #
   # TODO: Add validation for ASCII code range for Token::Char
-  Symbol = Struct.new(:id, :alias_name, :number, :tag, :term, :token_id, :nullable, :precedence, :printer) do
+  Symbol = Struct.new(:id, :alias_name, :number, :tag, :term, :token_id, :nullable, :precedence, :printer, keyword_init: true) do
     attr_writer :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol
 
     def term?
@@ -126,9 +126,9 @@ module Lrama
     end
   end
 
-  Type = Struct.new(:id, :tag)
+  Type = Struct.new(:id, :tag, keyword_init: true)
 
-  Code = Struct.new(:type, :token_code) do
+  Code = Struct.new(:type, :token_code, keyword_init: true) do
     extend Forwardable
 
     def_delegators "token_code", :s_value, :line, :column, :references
@@ -247,7 +247,7 @@ module Lrama
 
   # type: :dollar or :at
   # ex_tag: "$<tag>1" (Optional)
-  Reference = Struct.new(:type, :number, :ex_tag, :first_column, :last_column, :referring_symbol, :position_in_rhs) do
+  Reference = Struct.new(:type, :number, :ex_tag, :first_column, :last_column, :referring_symbol, :position_in_rhs, keyword_init: true) do
     def tag
       if ex_tag
         ex_tag
@@ -257,7 +257,7 @@ module Lrama
     end
   end
 
-  Precedence = Struct.new(:type, :precedence) do
+  Precedence = Struct.new(:type, :precedence, keyword_init: true) do
     include Comparable
 
     def <=>(other)
@@ -265,13 +265,13 @@ module Lrama
     end
   end
 
-  Printer = Struct.new(:ident_or_tags, :code, :lineno) do
+  Printer = Struct.new(:ident_or_tags, :code, :lineno, keyword_init: true) do
     def translated_code(member)
       code.translated_printer_code(member)
     end
   end
 
-  Union = Struct.new(:code, :lineno) do
+  Union = Struct.new(:code, :lineno, keyword_init: true) do
     def braces_less_code
       # Remove braces
       code.s_value[1..-2]
@@ -283,7 +283,7 @@ module Lrama
   # Grammar is the result of parsing an input grammar file
   class Grammar
     # Grammar file information not used by States but by Output
-    Aux = Struct.new(:prologue_first_lineno, :prologue, :epilogue_first_lineno, :epilogue)
+    Aux = Struct.new(:prologue_first_lineno, :prologue, :epilogue_first_lineno, :epilogue, keyword_init: true)
 
     attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
@@ -311,7 +311,7 @@ module Lrama
     end
 
     def add_printer(ident_or_tags:, code:, lineno:)
-      @printers << Printer.new(ident_or_tags, code, lineno)
+      @printers << Printer.new(ident_or_tags: ident_or_tags, code: code, lineno: lineno)
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
@@ -353,19 +353,19 @@ module Lrama
     end
 
     def add_type(id:, tag:)
-      @types << Type.new(id, tag)
+      @types << Type.new(id: id, tag: tag)
     end
 
     def add_nonassoc(sym, precedence)
-      set_precedence(sym, Precedence.new(:nonassoc, precedence))
+      set_precedence(sym, Precedence.new(type: :nonassoc, precedence: precedence))
     end
 
     def add_left(sym, precedence)
-      set_precedence(sym, Precedence.new(:left, precedence))
+      set_precedence(sym, Precedence.new(type: :left, precedence: precedence))
     end
 
     def add_right(sym, precedence)
-      set_precedence(sym, Precedence.new(:right, precedence))
+      set_precedence(sym, Precedence.new(type: :right, precedence: precedence))
     end
 
     def set_precedence(sym, precedence)
@@ -374,7 +374,7 @@ module Lrama
     end
 
     def set_union(code, lineno)
-      @union = Union.new(code, lineno)
+      @union = Union.new(code: code, lineno: lineno)
     end
 
     def add_rule(lhs:, rhs:, lineno:)
@@ -383,7 +383,7 @@ module Lrama
 
     def build_references(token_code)
       token_code.references.map! do |type, number, tag, first_column, last_column|
-        Reference.new(type, number, tag, first_column, last_column)
+        Reference.new(type: type, number: number, ex_tag: tag, first_column: first_column, last_column: last_column)
       end
 
       token_code
@@ -391,7 +391,7 @@ module Lrama
 
     def build_code(type, token_code)
       build_references(token_code)
-      Code.new(type, token_code)
+      Code.new(type: type, token_code: token_code)
     end
 
     def prologue_first_lineno=(prologue_first_lineno)
@@ -546,25 +546,25 @@ module Lrama
       # @empty_symbol = term
 
       # YYEOF
-      term = add_term(id: Token.new(Token::Ident, "YYEOF"), alias_name: "\"end of file\"", token_id: 0)
+      term = add_term(id: Token.new(type: Token::Ident, s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0)
       term.number = 0
       term.eof_symbol = true
       @eof_symbol = term
 
       # YYerror
-      term = add_term(id: Token.new(Token::Ident, "YYerror"), alias_name: "error")
+      term = add_term(id: Token.new(type: Token::Ident, s_value: "YYerror"), alias_name: "error")
       term.number = 1
       term.error_symbol = true
       @error_symbol = term
 
       # YYUNDEF
-      term = add_term(id: Token.new(Token::Ident, "YYUNDEF"), alias_name: "\"invalid token\"")
+      term = add_term(id: Token.new(type: Token::Ident, s_value: "YYUNDEF"), alias_name: "\"invalid token\"")
       term.number = 2
       term.undef_symbol = true
       @undef_symbol = term
 
       # $accept
-      term = add_nterm(id: Token.new(Token::Ident, "$accept"))
+      term = add_nterm(id: Token.new(type: Token::Ident, s_value: "$accept"))
       term.accept_symbol = true
       @accept_symbol = term
     end
@@ -644,7 +644,7 @@ module Lrama
         rhs2 = rhs1.map do |token|
           if token.type == Token::User_code
             prefix = token.referred ? "@" : "$@"
-            new_token = Token.new(Token::Ident, prefix + extracted_action_number.to_s)
+            new_token = Token.new(type: Token::Ident, s_value: prefix + extracted_action_number.to_s)
             extracted_action_number += 1
             a << [new_token, token]
             new_token
@@ -656,10 +656,10 @@ module Lrama
         # Extract actions in the middle of RHS
         # into new rules.
         a.each do |new_token, code|
-          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], code: Code.new(:user_code, code), lineno: code.line)
+          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], code: Code.new(type: :user_code, token_code: code), lineno: code.line)
         end
 
-        c = code ? Code.new(:user_code, code) : nil
+        c = code ? Code.new(type: :user_code, token_code: code) : nil
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
 
         add_nterm(id: lhs)
