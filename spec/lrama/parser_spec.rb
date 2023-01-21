@@ -550,6 +550,48 @@ RSpec.describe Lrama::Parser do
       ])
     end
 
+    it "; for rules is optional" do
+      y = header + <<~INPUT
+%%
+
+program: class
+
+class : keyword_class tSTRING keyword_end { code 1 }
+      | error
+
+%%
+      INPUT
+
+      grammar = Lrama::Parser.new(y).parse
+
+      expect(grammar._rules).to eq([
+        [
+          T.new(type: T::Ident, s_value: "program"),
+          [
+            T.new(type: T::Ident, s_value: "class")
+          ],
+          29,
+        ],
+        [
+          T.new(type: T::Ident, s_value: "class"),
+          [
+            T.new(type: T::Ident, s_value: "keyword_class"),
+            T.new(type: T::Ident, s_value: "tSTRING"),
+            T.new(type: T::Ident, s_value: "keyword_end"),
+            T.new(type: T::User_code, s_value: "{ code 1 }"),
+          ],
+          31,
+        ],
+        [
+          T.new(type: T::Ident, s_value: "class"),
+          [
+            T.new(type: T::Ident, s_value: "error")
+          ],
+          32,
+        ],
+      ])
+    end
+
     it "error token" do
         y = header + <<~INPUT
 %%

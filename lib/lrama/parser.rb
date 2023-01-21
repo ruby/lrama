@@ -243,9 +243,13 @@ module Lrama
           # ;
           ts.next
           break
+        when T::Ident_Colon
+          # Next lhs can be here because ";" is optional.
+          # Do not consume next token.
+          break
         when nil
-          # end of input
-          raise "Reach to end of input within rule"
+          # end of input can be here when ";" is omitted
+          break
         else
           raise "Unexpected token: #{ts.current_token}"
         end
@@ -300,9 +304,12 @@ module Lrama
         when T::Semicolon
           # ;
           break
+        when T::Ident_Colon
+          # Next lhs can be here because ";" is optional.
+          break
         when nil
-          # end of input
-          raise "Reach to end of input within rule RHS"
+          # end of input can be here when ";" is omitted
+          break
         else
           raise "Unexpected token: #{ts.current_token}"
         end
