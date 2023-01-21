@@ -43,4 +43,5 @@
   * [x] Subset of Corchuelo et al.
 * Lex state
 * CI
-  * [x] Setup CI
+  * [x] Setup CI]
+  * [x] Add ruby 3.1 or under
