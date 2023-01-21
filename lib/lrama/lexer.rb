@@ -48,7 +48,6 @@ module Lrama
       define_type(:Ident_Colon)      # k_if:, k_if  : (spaces can be there)
       define_type(:Ident)            # api.pure, tNUMBER
       define_type(:Semicolon)        # ;
-      define_type(:Colon)            # :
       define_type(:Bar)              # |
       define_type(:String)           # "str"
       define_type(:Char)             # '+'
@@ -163,8 +162,6 @@ module Lrama
           tokens << create_token(Token::Semicolon, ss[0], line, ss.pos - column)
         when ss.scan(/\|/)
           tokens << create_token(Token::Bar, ss[0], line, ss.pos - column)
-        when ss.scan(/:/)
-          tokens << create_token(Token::Colon, ss[0], line, ss.pos - column)
         when ss.scan(/(\d+)/)
           tokens << create_token(Token::Number, Integer(ss[0]), line, ss.pos - column)
         when ss.scan(/(<[a-zA-Z0-9_]+>)/)
