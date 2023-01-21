@@ -1,5 +1,7 @@
 # TODO
 
+* command
+  * [ ] Add "--bison" option
 * lexer
   * [x] Basic functionalities
 * parser
