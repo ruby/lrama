@@ -22,3 +22,51 @@ jobs:
           bundler-cache: true
       - run: bundle install
       - run: bundle exec rspec
+  test-ruby:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        baseruby: ['3.0']
+        ruby_branch: ['master']
+    defaults:
+      run:
+        working-directory: ../ruby/build
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.baseruby }}
+          bundler-cache: true
+      - run: git clone --depth=1 https://github.com/ruby/ruby.git -b ${{ matrix.ruby_branch }} ../ruby
+        working-directory:
+      - run: mkdir tool/lrama
+        working-directory: ../ruby
+      - name: Copy Lrama to ruby/tool
+        run: cp -r exe lib template ../ruby/tool/lrama
+        working-directory:
+      - run: tree tool/lrama
+        working-directory: ../ruby
+      # See also https://github.com/ruby/ruby/blob/master/.github/workflows/ubuntu.yml
+      - run: mkdir build
+        working-directory: ../ruby
+      - name: Set ENV
+        run: |
+          echo "GNUMAKEFLAGS=-j$((1 + $(nproc --all)))" >> $GITHUB_ENV
+      - name: Install libraries
+        run: |
+          set -x
+          arch=${arch:+:${arch/i[3-6]86/i386}}
+          ${arch:+sudo dpkg --add-architecture ${arch#:}}
+          sudo apt-get update -q || :
+          sudo apt-get install --no-install-recommends -q -y \
+          ${arch:+cross}build-essential${arch/:/-} \
+          libssl-dev${arch} libyaml-dev${arch} libreadline6-dev${arch} \
+          zlib1g-dev${arch} libncurses5-dev${arch} libffi-dev${arch} \
+          autoconf
+          sudo apt-get install -q -y pkg-config${arch} || :
+      - run: sudo apt-get --purge remove bison
+      - run: ../autogen.sh
+      - run: ../configure -C --disable-install-doc
+      - run: make YACC=$(readlink -f $(pwd)/../tool/lrama/exe/lrama)
+      - run: make test-all
