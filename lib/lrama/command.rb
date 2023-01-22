@@ -24,6 +24,7 @@ module Lrama
       opt.on('-d') { header = true }
       opt.on('-r', '--report=THINGS') {|v| report = v.split(',') }
       opt.on('--report-file=FILE')    {|v| report_file = v }
+      opt.on('-v') {  } # Do nothing
       opt.on('-o', '--output=FILE')   {|v| outfile = v }
 
       # Hidden
