@@ -1,9 +1,9 @@
-require "stackprof"
-
 module Lrama
   class Report
     module Profile
       def self.report_profile
+        require "stackprof"
+
         StackProf.run(mode: :cpu, raw: true, out: 'tmp/stackprof-cpu-myapp.dump') do
           yield
         end
