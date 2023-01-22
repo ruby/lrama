@@ -12,6 +12,7 @@ module Lrama
       skeleton = "bison/yacc.c"
 
       opt.on('-S', '--skeleton=FILE') {|v| skeleton = v }
+      opt.on('-t') {  } # Do nothing
 
       # Output Files:
       header = false
