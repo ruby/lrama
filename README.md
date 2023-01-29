@@ -26,3 +26,7 @@ $ lrama --version
 # "y.tab.c" is generated
 $ lrama parse.y
 ```
+
+## License
+
+See LEGAL.md file.

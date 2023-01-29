@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.summary       = "TBD"
   spec.description   = "TBD"
   spec.homepage      = "https://github.com/yui-knk/lrama"
-  spec.license       = "under consideration"
+  spec.license       = "See LEGAL.md file"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.0.0")
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do

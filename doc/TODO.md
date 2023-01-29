@@ -38,7 +38,7 @@
 * Performance improvement
   * [ ]
 * Licenses
-  * [ ] Write down something about licenses
+  * [x] Write down something about licenses
 * Reporting
   * [ ] Bison style
 * Error Tolerance
