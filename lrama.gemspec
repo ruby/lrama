@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description   = "LALR (1) parser generator written by Ruby"
   spec.homepage      = "https://github.com/yui-knk/lrama"
   spec.license       = "See LEGAL.md file"
-  spec.required_ruby_version = Gem::Requirement.new(">= 2.0.0")
+  spec.required_ruby_version = Gem::Requirement.new(">= 3.0.0")
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{\A(?:test|spec|features)/}) }
