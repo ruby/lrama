@@ -6,8 +6,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Yuichiro Kaneko"]
   spec.email         = ["spiketeika@gmail.com"]
 
-  spec.summary       = "TBD"
-  spec.description   = "TBD"
+  spec.summary       = "LALR (1) parser generator written by Ruby"
+  spec.description   = "LALR (1) parser generator written by Ruby"
   spec.homepage      = "https://github.com/yui-knk/lrama"
   spec.license       = "See LEGAL.md file"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.0.0")
