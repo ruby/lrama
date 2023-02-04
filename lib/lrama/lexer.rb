@@ -52,6 +52,15 @@ module Lrama
       define_type(:Bar)              # |
       define_type(:String)           # "str"
       define_type(:Char)             # '+'
+
+      define_type(:In)               # in
+      define_type(:Case)             # case
+      define_type(:End)              # end
+      define_type(:Rhs)              # lhs
+      define_type(:Lhs)              # rhs
+      define_type(:Arrow)            # ->
+      define_type(:Lbrack)           # [
+      define_type(:Rbrack)           # ]
     end
 
     # States
@@ -147,7 +156,7 @@ module Lrama
     #   * https://www.gnu.org/software/bison/manual/html_node/Decl-Summary.html
     #   * https://www.gnu.org/software/bison/manual/html_node/Symbol-Decls.html
     #   * https://www.gnu.org/software/bison/manual/html_node/Empty-Rules.html
-    def lex_common(lines, tokens)
+    def lex_common(lines, tokens, decls: false)
       line = lines.first[1]
       column = 0
       ss = StringScanner.new(lines.map(&:first).join)
@@ -163,6 +172,24 @@ module Lrama
           tokens << create_token(Token::Semicolon, ss[0], line, ss.pos - column)
         when ss.scan(/\|/)
           tokens << create_token(Token::Bar, ss[0], line, ss.pos - column)
+
+        when ss.scan(/case/) && decls
+          tokens << create_token(Token::Case, ss[0], line, ss.pos - column)
+        when ss.scan(/in/)   && decls
+          tokens << create_token(Token::In, ss[0], line, ss.pos - column)
+        when ss.scan(/end/)  && decls
+          tokens << create_token(Token::End, ss[0], line, ss.pos - column)
+        when ss.scan(/lhs/)  && decls
+          tokens << create_token(Token::Lhs, ss[0], line, ss.pos - column)
+        when ss.scan(/rhs/)  && decls
+          tokens << create_token(Token::Rhs, ss[0], line, ss.pos - column)
+        when ss.scan(/->/)   && decls
+          tokens << create_token(Token::Arrow, ss[0], line, ss.pos - column)
+        when ss.scan(/\[/)   && decls
+          tokens << create_token(Token::Lbrack, ss[0], line, ss.pos - column)
+        when ss.scan(/]/)    && decls
+          tokens << create_token(Token::Rbrack, ss[0], line, ss.pos - column)
+
         when ss.scan(/(\d+)/)
           tokens << create_token(Token::Number, Integer(ss[0]), line, ss.pos - column)
         when ss.scan(/(<[a-zA-Z0-9_]+>)/)
@@ -227,7 +254,7 @@ module Lrama
     end
 
     def lex_bison_declarations_tokens
-      lex_common(@bison_declarations, @bison_declarations_tokens)
+      lex_common(@bison_declarations, @bison_declarations_tokens, decls: true)
     end
 
     def lex_user_code(ss, line, column, lines)

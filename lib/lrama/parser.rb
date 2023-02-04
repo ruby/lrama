@@ -139,6 +139,37 @@ module Lrama
           ts.next
           id = ts.consume!(T::Ident)
           grammar.add_attr(id: id, lineno: lineno)
+        when T::Case
+          # case
+          # in ident
+          #   lhs[attr1];
+          #   lhs[attr2] -> rhs[attr2];
+          # end
+          ts.next
+          while ts.consume(T::In) do
+            id = ts.consume!(T::Ident)
+
+            while (lhs = ts.consume(T::Lhs)) do
+              ts.consume!(T::Lbrack)
+              l_attr = ts.consume!(T::Ident)
+              ts.consume!(T::Rbrack)
+
+              case ts.current_type
+              when T::Semicolon
+                ts.next
+              when T::Arrow
+                ts.next
+                ts.consume!(T::Rhs)
+                ts.consume!(T::Lbrack)
+                r_attr = ts.consume!(T::Ident)
+                ts.consume!(T::Rbrack)
+                ts.consume!(T::Semicolon)
+              else
+                # Noop
+              end
+            end
+          end
+          ts.consume!(T::End)
         when T::P_token
           # %token tag? (ident number? string?)+
           #

@@ -1148,7 +1148,7 @@ emp: /* none */
     end
 
     describe "nonterminal attributes" do
-      it "can parse %attr" do
+      it "can parse %attr and case" do
         y = <<~INPUT
 %{
 // Prologue
@@ -1158,17 +1158,36 @@ emp: /* none */
   int i;
 }
 
-%token <i> keyword_class
+%token <i> k_while
+%token <i> k_do
+%token <i> k_end
+
 %token <i> tSTRING
-%token <i> keyword_end
+%token <i> tIDENTIFIER
 
 %attr COND_DO
+%attr CMDARG_DO
+
+case
+in expr
+  lhs[COND_DO] -> rhs[COND_DO];
+  lhs[CMDARG_DO] -> rhs[CMDARG_DO];
+end
 
 %%
 
-program: class ;
+program: stmt ;
 
-class : keyword_class tSTRING keyword_end ;
+stmt  : k_while expr[COND_DO] k_do stmt k_end {}
+      | expr
+      ;
+
+expr  : tSTRING
+      | tIDENTIFIER command_arg {}
+      | tIDENTIFIER command_arg k_do stmt k_end {}
+      ;
+
+command_arg: expr ;
 
 %%
         INPUT
@@ -1176,7 +1195,8 @@ class : keyword_class tSTRING keyword_end ;
         grammar = Lrama::Parser.new(y).parse
 
         expect(grammar.attrs).to eq([
-          Attr.new(id: T.new(type: T::Ident, s_value: "COND_DO"), lineno: 13)
+          Attr.new(id: T.new(type: T::Ident, s_value: "COND_DO"), lineno: 16),
+          Attr.new(id: T.new(type: T::Ident, s_value: "CMDARG_DO"), lineno: 17),
         ])
       end
     end
