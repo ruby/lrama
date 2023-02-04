@@ -109,6 +109,8 @@ RSpec.describe Lrama::Parser do
           [
             T.new(type: T::Ident, s_value: "class"),
           ],
+          [nil],
+          nil,
           57,
         ],
         [
@@ -117,6 +119,8 @@ RSpec.describe Lrama::Parser do
             T.new(type: T::Char, s_value: "'+'"),
             T.new(type: T::Ident, s_value: "strings_1"),
           ],
+          [nil, nil],
+          nil,
           58,
         ],
         [
@@ -125,6 +129,8 @@ RSpec.describe Lrama::Parser do
             T.new(type: T::Char, s_value: "'-'"),
             T.new(type: T::Ident, s_value: "strings_2"),
           ],
+          [nil, nil],
+          nil,
           59,
         ],
         [
@@ -136,6 +142,8 @@ RSpec.describe Lrama::Parser do
             grammar.find_symbol_by_s_value!("tPLUS"),
             T.new(type: T::User_code, s_value: "{ code 1 }"),
           ],
+          [nil, nil, nil, nil],
+          nil,
           62,
         ],
         [
@@ -149,6 +157,8 @@ RSpec.describe Lrama::Parser do
             T.new(type: T::User_code, s_value: "{ code 3 }"),
             grammar.find_symbol_by_s_value!("tEQ"),
           ],
+          [nil, nil, nil, nil, nil, nil],
+          nil,
           64,
         ],
         [
@@ -162,6 +172,8 @@ RSpec.describe Lrama::Parser do
             T.new(type: T::User_code, s_value: "{ code 5 }"),
             grammar.find_symbol_by_s_value!("'>'"),
           ],
+          [nil, nil, nil, nil, nil, nil],
+          nil,
           65,
         ],
         [
@@ -169,6 +181,8 @@ RSpec.describe Lrama::Parser do
           [
             T.new(type: T::Ident, s_value: "string_1"),
           ],
+          [nil],
+          nil,
           68,
         ],
         [
@@ -176,6 +190,8 @@ RSpec.describe Lrama::Parser do
           [
             T.new(type: T::Ident, s_value: "string_1"),
           ],
+          [nil],
+          nil,
           71,
         ],
         [
@@ -183,6 +199,8 @@ RSpec.describe Lrama::Parser do
           [
             T.new(type: T::Ident, s_value: "string_2"),
           ],
+          [nil],
+          nil,
           72,
         ],
         [
@@ -190,6 +208,8 @@ RSpec.describe Lrama::Parser do
           [
             T.new(type: T::Ident, s_value: "string"),
           ],
+          [nil],
+          nil,
           75,
         ],
         [
@@ -198,6 +218,8 @@ RSpec.describe Lrama::Parser do
             T.new(type: T::Ident, s_value: "string"),
             T.new(type: T::Char, s_value: "'+'"),
           ],
+          [nil, nil],
+          nil,
           78,
         ],
         [
@@ -205,6 +227,8 @@ RSpec.describe Lrama::Parser do
           [
             T.new(type: T::Ident, s_value: "tSTRING")
           ],
+          [nil],
+          nil,
           81,
         ],
       ])
@@ -571,6 +595,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
           [
             T.new(type: T::Ident, s_value: "class")
           ],
+          [nil],
+          nil,
           29,
         ],
         [
@@ -581,6 +607,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
             T.new(type: T::Ident, s_value: "keyword_end"),
             T.new(type: T::User_code, s_value: "{ code 1 }"),
           ],
+          [nil, nil, nil, nil],
+          nil,
           31,
         ],
         [
@@ -588,6 +616,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
           [
             T.new(type: T::Ident, s_value: "error")
           ],
+          [nil],
+          nil,
           32,
         ],
       ])
@@ -627,6 +657,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
           [
             T.new(type: T::Ident, s_value: "class")
           ],
+          [nil],
+          nil,
           29,
         ],
         [
@@ -637,6 +669,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
             T.new(type: T::Ident, s_value: "keyword_end"),
             T.new(type: T::User_code, s_value: "{ code 1 }"),
           ],
+          [nil, nil, nil, nil],
+          nil,
           31,
         ],
         [
@@ -644,6 +678,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
           [
             T.new(type: T::Ident, s_value: "error")
           ],
+          [nil],
+          nil,
           32,
         ],
       ])
@@ -1158,17 +1194,29 @@ emp: /* none */
   int i;
 }
 
-%token <i> keyword_class
-%token <i> tSTRING
-%token <i> keyword_end
+%token <i> k_while
+%token <i> k_do
+%token <i> k_end
 
-%attr COND_DO
+%token <i> tSTRING
+%token <i> tIDENTIFIER
+
+%attr REDUCE_DO
 
 %%
 
-program: class ;
+program: stmt ;
 
-class : keyword_class tSTRING keyword_end ;
+stmt  : k_while expr(REDUCE_DO) k_do stmt k_end {}
+      | expr
+      ;
+
+expr  : tSTRING
+      | tIDENTIFIER command_arg {}
+      | @lhs(!REDUCE_DO) tIDENTIFIER command_arg k_do stmt k_end {}
+      ;
+
+command_arg: expr ;
 
 %%
         INPUT
@@ -1176,7 +1224,27 @@ class : keyword_class tSTRING keyword_end ;
         grammar = Lrama::Parser.new(y).parse
 
         expect(grammar.attrs).to eq([
-          Attr.new(id: T.new(type: T::Ident, s_value: "COND_DO"), lineno: 13)
+          Attr.new(id: T.new(type: T::Ident, s_value: "REDUCE_DO"), lineno: 16)
+        ])
+        expect(grammar.rules.map(&:attrs)).to eq([
+          [],
+          [nil],
+          [nil, [T.new(type: T::Ident, s_value: "REDUCE_DO"), false], nil, nil, nil, nil],
+          [nil],
+          [nil],
+          [nil, nil, nil],
+          [nil, nil, nil, nil, nil, nil],
+          [nil],
+        ])
+        expect(grammar.rules.map(&:at_lhs)).to eq([
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
+          [T.new(type: T::Ident, s_value: "REDUCE_DO"), true],
+          nil,
         ])
       end
     end

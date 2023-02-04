@@ -3,6 +3,8 @@ require "lrama/lexer"
 
 module Lrama
   Rule = Struct.new(:id, :lhs, :rhs, :code, :nullable, :precedence_sym, :lineno, keyword_init: true) do
+    attr_accessor :attrs, :at_lhs
+
     # TODO: Change this to display_name
     def to_s
       l = lhs.id.s_value
@@ -384,8 +386,8 @@ module Lrama
       @union = Union.new(code: code, lineno: lineno)
     end
 
-    def add_rule(lhs:, rhs:, lineno:)
-      @_rules << [lhs, rhs, lineno]
+    def add_rule(lhs:, rhs:, attrs:, at_lhs:, lineno:)
+      @_rules << [lhs, rhs, attrs, at_lhs, lineno]
     end
 
     def build_references(token_code)
@@ -602,12 +604,14 @@ module Lrama
       # 1. Add $accept rule to the top of rules
       accept = find_symbol_by_s_value!("$accept")
       eof = find_symbol_by_number!(0)
-      lineno = @_rules.first ? @_rules.first[2] : 0
-      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [@_rules.first[0], eof], code: nil, lineno: lineno)
+      lineno = @_rules.first ? @_rules.first.last : 0
+      rule = Rule.new(id: @rules.count, lhs: accept, rhs: [@_rules.first[0], eof], code: nil, lineno: lineno)
+      rule.attrs = []
+      @rules << rule
 
       extracted_action_number = 1 # @n as nterm
 
-      @_rules.each do |lhs, rhs, lineno|
+      @_rules.each do |lhs, rhs, attrs, at_lhs, lineno|
         a = []
         rhs1 = []
         code = nil
@@ -663,11 +667,16 @@ module Lrama
         # Extract actions in the middle of RHS
         # into new rules.
         a.each do |new_token, code|
-          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], code: Code.new(type: :user_code, token_code: code), lineno: code.line)
+          rule = Rule.new(id: @rules.count, lhs: new_token, rhs: [], code: Code.new(type: :user_code, token_code: code), lineno: code.line)
+          rule.attrs = []
+          @rules << rule
         end
 
         c = code ? Code.new(type: :user_code, token_code: code) : nil
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
+        rule = Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
+        rule.attrs = attrs
+        rule.at_lhs = at_lhs
+        @rules << rule
 
         add_nterm(id: lhs)
         a.each do |new_token, _|

@@ -52,6 +52,11 @@ module Lrama
       define_type(:Bar)              # |
       define_type(:String)           # "str"
       define_type(:Char)             # '+'
+
+      define_type(:At_lhs)           # @lhs
+      define_type(:Lparen)           # (
+      define_type(:Rparen)           # )
+      define_type(:Bang)             # !
     end
 
     # States
@@ -147,7 +152,7 @@ module Lrama
     #   * https://www.gnu.org/software/bison/manual/html_node/Decl-Summary.html
     #   * https://www.gnu.org/software/bison/manual/html_node/Symbol-Decls.html
     #   * https://www.gnu.org/software/bison/manual/html_node/Empty-Rules.html
-    def lex_common(lines, tokens)
+    def lex_common(lines, tokens, decls: false)
       line = lines.first[1]
       column = 0
       ss = StringScanner.new(lines.map(&:first).join)
@@ -163,6 +168,16 @@ module Lrama
           tokens << create_token(Token::Semicolon, ss[0], line, ss.pos - column)
         when ss.scan(/\|/)
           tokens << create_token(Token::Bar, ss[0], line, ss.pos - column)
+
+        when ss.scan(/@lhs/) && !decls
+          tokens << create_token(Token::At_lhs, ss[0], line, ss.pos - column)
+        when ss.scan(/\(/) && !decls
+          tokens << create_token(Token::Lparen, ss[0], line, ss.pos - column)
+        when ss.scan(/\)/) && !decls
+          tokens << create_token(Token::Rparen, ss[0], line, ss.pos - column)
+        when ss.scan(/!/) && !decls
+          tokens << create_token(Token::Bang, ss[0], line, ss.pos - column)
+
         when ss.scan(/(\d+)/)
           tokens << create_token(Token::Number, Integer(ss[0]), line, ss.pos - column)
         when ss.scan(/(<[a-zA-Z0-9_]+>)/)
@@ -227,7 +242,7 @@ module Lrama
     end
 
     def lex_bison_declarations_tokens
-      lex_common(@bison_declarations, @bison_declarations_tokens)
+      lex_common(@bison_declarations, @bison_declarations_tokens, decls: true)
     end
 
     def lex_user_code(ss, line, column, lines)
