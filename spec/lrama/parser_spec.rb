@@ -6,6 +6,7 @@ RSpec.describe Lrama::Parser do
   Rule = Lrama::Rule
   Printer = Lrama::Printer
   Code = Lrama::Code
+  Attr = Lrama::Attr
 
   let(:header) do
     <<~HEADER
@@ -1143,6 +1144,40 @@ emp: /* none */
             ),
           ])
         end
+      end
+    end
+
+    describe "nonterminal attributes" do
+      it "can parse %attr" do
+        y = <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+  int i;
+}
+
+%token <i> keyword_class
+%token <i> tSTRING
+%token <i> keyword_end
+
+%attr COND_DO
+
+%%
+
+program: class ;
+
+class : keyword_class tSTRING keyword_end ;
+
+%%
+        INPUT
+
+        grammar = Lrama::Parser.new(y).parse
+
+        expect(grammar.attrs).to eq([
+          Attr.new(id: T.new(type: T::Ident, s_value: "COND_DO"), lineno: 13)
+        ])
       end
     end
   end

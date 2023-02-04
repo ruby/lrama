@@ -133,6 +133,12 @@ module Lrama
           code = grammar.build_code(:union, code)
           ts.consume(T::Semicolon)
           grammar.set_union(code, lineno)
+        when T::P_attr
+          # %attr ident
+          lineno = ts.current_token.line
+          ts.next
+          id = ts.consume!(T::Ident)
+          grammar.add_attr(id: id, lineno: lineno)
         when T::P_token
           # %token tag? (ident number? string?)+
           #

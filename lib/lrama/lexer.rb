@@ -36,6 +36,7 @@ module Lrama
       define_type(:P_parse_param)    # %parse-param
       define_type(:P_initial_action) # %initial-action
       define_type(:P_union)          # %union
+      define_type(:P_attr)           # %attr
       define_type(:P_token)          # %token
       define_type(:P_type)           # %type
       define_type(:P_nonassoc)       # %nonassoc
@@ -184,6 +185,8 @@ module Lrama
           tokens << create_token(Token::P_initial_action, ss[0], line, ss.pos - column)
         when ss.scan(/%union/)
           tokens << create_token(Token::P_union, ss[0], line, ss.pos - column)
+        when ss.scan(/%attr/)
+          tokens << create_token(Token::P_attr, ss[0], line, ss.pos - column)
         when ss.scan(/%token/)
           tokens << create_token(Token::P_token, ss[0], line, ss.pos - column)
         when ss.scan(/%type/)

@@ -278,6 +278,8 @@ module Lrama
     end
   end
 
+  Attr = Struct.new(:id, :lineno, keyword_init: true)
+
   Token = Lrama::Lexer::Token
 
   # Grammar is the result of parsing an input grammar file
@@ -287,7 +289,7 @@ module Lrama
 
     attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
-                  :printers,
+                  :printers, :attrs,
                   :lex_param, :parse_param, :initial_action,
                   :symbols, :types,
                   :rules, :_rules,
@@ -295,6 +297,7 @@ module Lrama
 
     def initialize
       @printers = []
+      @attrs = []
       @symbols = []
       @types = []
       @_rules = []
@@ -312,6 +315,10 @@ module Lrama
 
     def add_printer(ident_or_tags:, code:, lineno:)
       @printers << Printer.new(ident_or_tags: ident_or_tags, code: code, lineno: lineno)
+    end
+
+    def add_attr(id:, lineno:)
+      @attrs << Attr.new(id: id, lineno: lineno)
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
