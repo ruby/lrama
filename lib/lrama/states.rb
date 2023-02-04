@@ -253,15 +253,13 @@ module Lrama
       end
     end
 
-    attr_reader :states, :item_to_state,
-                :reads_relation, :includes_relation, :lookback_relation
+    attr_reader :states, :reads_relation, :includes_relation, :lookback_relation
 
     def initialize(grammar, trace_state: false)
       @grammar = grammar
       @trace_state = trace_state
 
       @states = []
-      @item_to_state = {}
 
       # `DR(p, A) = {t ∈ T | p -(A)-> r -(t)-> }`
       #   where p is state, A is nterm, t is term.
@@ -529,10 +527,6 @@ module Lrama
 
       # shift & reduce
       state.compute_shifts_reduces
-
-      state.kernels.each do |item|
-        @item_to_state[item] = state
-      end
     end
 
     def enqueue_state(states, state)
