@@ -1229,21 +1229,21 @@ command_arg: expr ;
         expect(grammar.rules.map(&:attrs)).to eq([
           [],
           [nil],
-          [nil, [T.new(type: T::Ident, s_value: "REDUCE_DO"), false], nil, nil, nil, nil],
+          [nil, {T.new(type: T::Ident, s_value: "REDUCE_DO") => true}, nil, nil, nil, nil],
           [nil],
           [nil],
           [nil, nil, nil],
           [nil, nil, nil, nil, nil, nil],
           [nil],
         ])
-        expect(grammar.rules.map(&:at_lhs)).to eq([
+        expect(grammar.rules.map(&:lhs_attr)).to eq([
           nil,
           nil,
           nil,
           nil,
           nil,
           nil,
-          [T.new(type: T::Ident, s_value: "REDUCE_DO"), true],
+          {T.new(type: T::Ident, s_value: "REDUCE_DO") => false},
           nil,
         ])
       end

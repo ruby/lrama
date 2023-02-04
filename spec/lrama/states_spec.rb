@@ -1747,4 +1747,58 @@ string: tSTRING
       end
     end
   end
+
+  describe "with nonterminal attributes" do
+    let(:y) do
+      <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+  int i;
+}
+
+%token <i> k_while
+%token <i> k_do
+%token <i> k_end
+
+%token <i> tSTRING
+%token <i> tIDENTIFIER
+
+%attr REDUCE_DO
+
+%%
+
+program: stmt ;
+
+stmt  : k_while expr(REDUCE_DO) k_do stmt k_end {}
+      | expr
+      ;
+
+expr  : tSTRING
+      | tIDENTIFIER command_arg {}
+      | @lhs(!REDUCE_DO) tIDENTIFIER command_arg k_do stmt k_end {}
+      ;
+
+command_arg: expr ;
+
+%%
+      INPUT
+    end
+
+    describe "#compute" do
+      it "includes attributes into states" do
+        grammar = Lrama::Parser.new(y).parse
+        states = Lrama::States.new(grammar, warning)
+        states.compute
+
+        str = ""
+        states.reporter.report(str, states: true, itemsets: true, lookaheads: true)
+
+        expect(str).to eq(<<~STR)
+        STR
+      end
+    end
+  end
 end

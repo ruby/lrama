@@ -73,15 +73,16 @@ module Lrama
 
     Conflict = Struct.new(:symbols, :reduce, :type, keyword_init: true)
 
-    attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
+    attr_reader :id, :accessing_symbol, :kernels, :attrs, :conflicts, :resolved_conflicts,
                 :default_reduction_rule, :closure, :items
     attr_accessor :shifts, :reduces
 
-    def initialize(id, accessing_symbol, kernels)
+    def initialize(id, accessing_symbol, kernels, attrs)
       @id = id
       @accessing_symbol = accessing_symbol
       @kernels = kernels.freeze
       @items = @kernels
+      @attrs = attrs.freeze
       # Manage relationships between items to state
       # to resolve next state
       @items_to_state = {}
@@ -105,8 +106,8 @@ module Lrama
       _shifts = {}
       reduces = []
       items.each do |item|
-        # TODO: Consider what should be pushed
         if item.end_of_rule?
+          # TODO: Consider what should be pushed
           reduces << Reduce.new(item)
         else
           key = item.next_sym
@@ -361,6 +362,10 @@ module Lrama
       @states.count
     end
 
+    def attrs
+      @grammar.attrs
+    end
+
     def direct_read_sets
       h = {}
 
@@ -427,7 +432,7 @@ module Lrama
       end
     end
 
-    def create_state(accessing_symbol, kernels, states_creted)
+    def create_state(accessing_symbol, kernels, attrs, states_creted)
       # A item can appear in some states,
       # so need to use `kernels` (not `kernels.first`) as a key.
       #
@@ -464,11 +469,13 @@ module Lrama
       #    string_1: string •
       #    string_2: string • '+'
       #
-      return [states_creted[kernels], false] if states_creted[kernels]
 
-      state = State.new(@states.count, accessing_symbol, kernels)
+      key = [kernels, attrs]
+      return [states_creted[key], false] if states_creted[key]
+
+      state = State.new(@states.count, accessing_symbol, kernels, attrs)
       @states << state
-      states_creted[kernels] = state
+      states_creted[key] = state
 
       return [state, true]
     end
@@ -489,6 +496,10 @@ module Lrama
 
         if (sym = item.next_sym) && sym.nterm?
           @grammar.find_rules_by_symbol!(sym).each do |rule|
+            if rule.lhs_attr
+              next unless rule.lhs_attr.all? {|k, v| state.attrs[k] == v }
+            end
+
             i = Item.new(rule: rule, position: 0)
             next if queued[i]
             closure << i
@@ -534,7 +545,7 @@ module Lrama
       states = []
       states_creted = {}
 
-      state, _ = create_state(symbols.first, [Item.new(rule: @grammar.rules.first, position: 0)], states_creted)
+      state, _ = create_state(symbols.first, [Item.new(rule: @grammar.rules.first, position: 0)], initial_attrs, states_creted)
       enqueue_state(states, state)
 
       while (state = states.shift) do
@@ -550,7 +561,7 @@ module Lrama
         setup_state(state)
 
         state.shifts.each do |shift|
-          new_state, created = create_state(shift.next_sym, shift.next_items, states_creted)
+          new_state, created = create_state(shift.next_sym, shift.next_items, {}, states_creted)
           state.set_items_to_state(shift.next_items, new_state)
           enqueue_state(states, new_state) if created
         end

@@ -233,9 +233,9 @@ module Lrama
       lhs = ts.consume!(T::Ident_Colon) # class:
       lhs.type = T::Ident
 
-      rhs, attrs, at_lhs = parse_grammar_rule_rhs(ts, grammar)
+      rhs, attrs, lhs_attr = parse_grammar_rule_rhs(ts, grammar)
 
-      grammar.add_rule(lhs: lhs, rhs: rhs, attrs: attrs, at_lhs: at_lhs, lineno: rhs.first ? rhs.first.line : lhs.line)
+      grammar.add_rule(lhs: lhs, rhs: rhs, attrs: attrs, lhs_attr: lhs_attr, lineno: rhs.first ? rhs.first.line : lhs.line)
 
       while true do
         case ts.current_type
@@ -243,8 +243,8 @@ module Lrama
           # |
           bar_lineno = ts.current_token.line
           ts.next
-          rhs, attrs, at_lhs = parse_grammar_rule_rhs(ts, grammar)
-          grammar.add_rule(lhs: lhs, rhs: rhs, attrs: attrs, at_lhs: at_lhs, lineno: rhs.first ? rhs.first.line : bar_lineno)
+          rhs, attrs, lhs_attr = parse_grammar_rule_rhs(ts, grammar)
+          grammar.add_rule(lhs: lhs, rhs: rhs, attrs: attrs, lhs_attr: lhs_attr, lineno: rhs.first ? rhs.first.line : bar_lineno)
         when T::Semicolon
           # ;
           ts.next
@@ -269,7 +269,8 @@ module Lrama
         opt_bang = ts.consume(T::Bang)
         id = ts.consume!(T::Ident)
         ts.consume!(T::Rparen)
-        return [id, !!opt_bang]
+        # If ! is specified, it means the attr should be false
+        return {id => !opt_bang}
       else
         return nil
       end
@@ -278,7 +279,7 @@ module Lrama
     def parse_grammar_rule_rhs(ts, grammar)
       a = []
       attrs = []
-      at_lhs = nil
+      lhs_attr = nil
       prec_seen = false
       code_after_prec = false
 
@@ -325,7 +326,7 @@ module Lrama
         when T::At_lhs
           # @lhs
           ts.next
-          at_lhs = parse_attr(ts)
+          lhs_attr = parse_attr(ts)
         when T::Bar
           # |
           break
@@ -343,7 +344,7 @@ module Lrama
         end
       end
 
-      return [a, attrs, at_lhs]
+      return [a, attrs, lhs_attr]
     end
   end
 end

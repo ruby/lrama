@@ -3,7 +3,7 @@ require "lrama/lexer"
 
 module Lrama
   Rule = Struct.new(:id, :lhs, :rhs, :code, :nullable, :precedence_sym, :lineno, keyword_init: true) do
-    attr_accessor :attrs, :at_lhs
+    attr_accessor :attrs, :lhs_attr
 
     # TODO: Change this to display_name
     def to_s
@@ -386,8 +386,8 @@ module Lrama
       @union = Union.new(code: code, lineno: lineno)
     end
 
-    def add_rule(lhs:, rhs:, attrs:, at_lhs:, lineno:)
-      @_rules << [lhs, rhs, attrs, at_lhs, lineno]
+    def add_rule(lhs:, rhs:, attrs:, lhs_attr:, lineno:)
+      @_rules << [lhs, rhs, attrs, lhs_attr, lineno]
     end
 
     def build_references(token_code)
@@ -611,7 +611,7 @@ module Lrama
 
       extracted_action_number = 1 # @n as nterm
 
-      @_rules.each do |lhs, rhs, attrs, at_lhs, lineno|
+      @_rules.each do |lhs, rhs, attrs, lhs_attr, lineno|
         a = []
         rhs1 = []
         code = nil
@@ -675,7 +675,7 @@ module Lrama
         c = code ? Code.new(type: :user_code, token_code: code) : nil
         rule = Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
         rule.attrs = attrs
-        rule.at_lhs = at_lhs
+        rule.lhs_attr = lhs_attr
         @rules << rule
 
         add_nterm(id: lhs)
