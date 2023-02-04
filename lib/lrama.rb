@@ -1,5 +1,6 @@
 require "lrama/command"
 require "lrama/context"
+require "lrama/digraph"
 require "lrama/grammar"
 require "lrama/lexer"
 require "lrama/output"
