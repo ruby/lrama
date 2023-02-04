@@ -564,9 +564,7 @@ module Lrama
         setup_state(state)
 
         # It seems Bison 3.8.2 iterates transitions order by symbol number
-        state.shifts.sort_by do |shift|
-          shift.next_sym.number
-        end.each do |shift|
+        state.shifts.each do |shift|
           new_state, created = create_state(shift.next_sym, shift.next_items, states_creted)
           state.set_items_to_state(shift.next_items, new_state)
           enqueue_state(states, new_state) if created
