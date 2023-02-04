@@ -110,6 +110,7 @@ module Lrama
         end
       end
 
+      # It seems Bison 3.8.2 iterates transitions order by symbol number
       shifts = _shifts.sort_by do |next_sym, new_items|
         next_sym.number
       end.map do |next_sym, new_items|
@@ -563,7 +564,6 @@ module Lrama
 
         setup_state(state)
 
-        # It seems Bison 3.8.2 iterates transitions order by symbol number
         state.shifts.each do |shift|
           new_state, created = create_state(shift.next_sym, shift.next_items, states_creted)
           state.set_items_to_state(shift.next_items, new_state)
