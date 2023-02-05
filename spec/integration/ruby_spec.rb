@@ -4,11 +4,12 @@ require "open3"
 RSpec.describe "integration" do
   def generate_and_compare(version)
     grammar_file_path = fixture_path("integration/#{version}/parse.tmp.y")
+    warning = Lrama::Warning.new
     y = File.read(grammar_file_path)
     out = Tempfile.new
     header_out = Tempfile.new
     grammar = Lrama::Parser.new(y).parse
-    states = Lrama::States.new(grammar)
+    states = Lrama::States.new(grammar, warning)
     states.compute
     context = Lrama::Context.new(states)
     Lrama::Output.new(

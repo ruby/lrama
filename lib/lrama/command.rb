@@ -63,9 +63,10 @@ module Lrama
 
       Report::Duration.enable if trace_opts[:time]
 
+      warning = Lrama::Warning.new
       y = File.read(grammar_file)
       grammar = Lrama::Parser.new(y).parse
-      states = Lrama::States.new(grammar, trace_state: (trace_opts[:automaton] || trace_opts[:closure]))
+      states = Lrama::States.new(grammar, warning, trace_state: (trace_opts[:automaton] || trace_opts[:closure]))
       states.compute
       context = Lrama::Context.new(states)
 
@@ -86,6 +87,10 @@ module Lrama
           context: context,
           grammar: grammar,
         ).render
+      end
+
+      if warning.has_error?
+        exit 1
       end
     end
 
