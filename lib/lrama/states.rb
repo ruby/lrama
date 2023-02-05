@@ -77,12 +77,13 @@ module Lrama
                 :default_reduction_rule, :closure, :items
     attr_accessor :shifts, :reduces
 
-    def initialize(id, accessing_symbol, kernels, attrs)
+    def initialize(id, accessing_symbol, kernels)
       @id = id
       @accessing_symbol = accessing_symbol
       @kernels = kernels.freeze
       @items = @kernels
       @attrs = attrs.freeze
+
       # Manage relationships between items to state
       # to resolve next state
       @items_to_state = {}
@@ -112,7 +113,7 @@ module Lrama
         else
           key = item.next_sym
           _shifts[key] ||= []
-          _shifts[key] << item.new_by_next_position
+          _shifts[key] << item.next_position_item
         end
       end
 
@@ -191,7 +192,7 @@ module Lrama
         end
       end
 
-      raise "Can not transit by #{sym} #{self}" if result.nil?
+      raise "Can not transit by #{sym.id.s_value}. State id: #{id}, #{items.map(&:display_name)}" if result.nil?
 
       result
     end
@@ -237,10 +238,10 @@ module Lrama
       :accept_symbol, :eof_symbol, :find_symbol_by_s_value!
 
     # TODO: Validate position is not over rule rhs
-    Item = Struct.new(:rule, :position, keyword_init: true) do
+    Item = Struct.new(:rule, :position, :attrs, keyword_init: true) do
       # Optimization for States#setup_state
       def hash
-        [rule.id, position].hash
+        [rule.id, position, attrs].hash
       end
 
       def rule_id
@@ -251,12 +252,21 @@ module Lrama
         rule.rhs[position]
       end
 
+      def next_attrs
+        # If next nterm does not overwrite attrs, use current attrs
+        attrs.merge(rule.attrs[position] || {})
+      end
+
       def end_of_rule?
         rule.rhs.count == position
       end
 
-      def new_by_next_position
-        Item.new(rule: rule, position: position + 1)
+      def beginning_of_rule?
+        position == 0
+      end
+
+      def next_position_item
+        Item.new(rule: rule, position: position + 1, attrs: attrs)
       end
 
       def previous_sym
@@ -432,7 +442,7 @@ module Lrama
       end
     end
 
-    def create_state(accessing_symbol, kernels, attrs, states_creted)
+    def create_state(accessing_symbol, kernels, states_creted)
       # A item can appear in some states,
       # so need to use `kernels` (not `kernels.first`) as a key.
       #
@@ -469,13 +479,11 @@ module Lrama
       #    string_1: string •
       #    string_2: string • '+'
       #
+      return [states_creted[kernels], false] if states_creted[kernels]
 
-      key = [kernels, attrs]
-      return [states_creted[key], false] if states_creted[key]
-
-      state = State.new(@states.count, accessing_symbol, kernels, attrs)
+      state = State.new(@states.count, accessing_symbol, kernels)
       @states << state
-      states_creted[key] = state
+      states_creted[kernels] = state
 
       return [state, true]
     end
@@ -497,10 +505,10 @@ module Lrama
         if (sym = item.next_sym) && sym.nterm?
           @grammar.find_rules_by_symbol!(sym).each do |rule|
             if rule.lhs_attr
-              next unless rule.lhs_attr.all? {|k, v| state.attrs[k] == v }
+              next unless rule.lhs_attr.all? {|k, v| item.next_attrs[k] == v }
             end
 
-            i = Item.new(rule: rule, position: 0)
+            i = Item.new(rule: rule, position: 0, attrs: item.next_attrs)
             next if queued[i]
             closure << i
             items << i
@@ -545,7 +553,7 @@ module Lrama
       states = []
       states_creted = {}
 
-      state, _ = create_state(symbols.first, [Item.new(rule: @grammar.rules.first, position: 0)], initial_attrs, states_creted)
+      state, _ = create_state(symbols.first, [Item.new(rule: @grammar.rules.first, position: 0, attrs: initial_attrs)], states_creted)
       enqueue_state(states, state)
 
       while (state = states.shift) do
@@ -561,7 +569,7 @@ module Lrama
         setup_state(state)
 
         state.shifts.each do |shift|
-          new_state, created = create_state(shift.next_sym, shift.next_items, {}, states_creted)
+          new_state, created = create_state(shift.next_sym, shift.next_items, states_creted)
           state.set_items_to_state(shift.next_items, new_state)
           enqueue_state(states, new_state) if created
         end
@@ -634,7 +642,9 @@ module Lrama
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
           nterm = shift.next_sym
-          @grammar.find_rules_by_symbol!(nterm).each do |rule|
+          # rules = state.items.map(&:rule).select {|rule| rule.lhs == nterm }
+          rules = state.items.select {|item| item.beginning_of_rule? && item.rule.lhs == nterm }.map(&:rule)
+          rules.each do |rule|
             i = rule.rhs.count - 1
 
             while (i > -1) do
@@ -659,7 +669,9 @@ module Lrama
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
           nterm = shift.next_sym
-          @grammar.find_rules_by_symbol!(nterm).each do |rule|
+          # rules = state.items.map(&:rule).select {|rule| rule.lhs == nterm }
+          rules = state.items.select {|item| item.beginning_of_rule? && item.rule.lhs == nterm }.map(&:rule)
+          rules.each do |rule|
             state2 = transition(state, rule.rhs)
             # p = state, A = nterm, q = state2, A -> ω = rule
             key = [state2.id, rule.id]

@@ -3,6 +3,7 @@ require "lrama/lexer"
 
 module Lrama
   Rule = Struct.new(:id, :lhs, :rhs, :code, :nullable, :precedence_sym, :lineno, keyword_init: true) do
+    # TODO: Validate attrs are only for nterms
     attr_accessor :attrs, :lhs_attr
 
     # TODO: Change this to display_name

@@ -1792,9 +1792,11 @@ command_arg: expr ;
         grammar = Lrama::Parser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
+        # states.send :compute_lr0_states
 
         str = ""
         states.reporter.report(str, states: true, itemsets: true, lookaheads: true)
+        # states.reporter.report(str, states: true, itemsets: true)
 
         expect(str).to eq(<<~STR)
         STR
