@@ -15,6 +15,12 @@ Lrama is LALR (1) parser generator written by Ruby. The first goal of this proje
 ## Installation
 
 ```shell
+$ gem install lrama
+```
+
+From source codes,
+
+```shell
 $ bundle exec rake install
 $ lrama --version
 0.1.0
