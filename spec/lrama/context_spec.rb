@@ -1,5 +1,6 @@
 RSpec.describe Lrama::Context do
-  let(:warning) { Lrama::Warning.new }
+  let(:out) { "" }
+  let(:warning) { Lrama::Warning.new(out) }
 
   describe "basic" do
     it do

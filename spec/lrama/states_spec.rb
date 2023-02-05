@@ -1,5 +1,6 @@
 RSpec.describe Lrama::States do
-  let(:warning) { Lrama::Warning.new }
+  let(:out) { "" }
+  let(:warning) { Lrama::Warning.new(out) }
 
   describe '#compute' do
     it "basic" do
@@ -1688,6 +1689,7 @@ string: tSTRING
             states = Lrama::States.new(grammar, warning)
             states.compute
 
+            expect(out).to eq("reduce/reduce conflicts: 1 found, 0 expected\n")
             expect(warning.errors).to eq([
               "reduce/reduce conflicts: 1 found, 0 expected"
             ])
@@ -1711,6 +1713,7 @@ string: tSTRING
             states = Lrama::States.new(grammar, warning)
             states.compute
 
+            expect(out).to eq("shift/reduce conflicts: 2 found, 0 expected\nreduce/reduce conflicts: 1 found, 0 expected\n")
             expect(warning.errors).to eq([
               "shift/reduce conflicts: 2 found, 0 expected",
               "reduce/reduce conflicts: 1 found, 0 expected"
@@ -1734,6 +1737,7 @@ string: tSTRING
           states = Lrama::States.new(grammar, warning)
           states.compute
 
+          expect(out).to eq("shift/reduce conflicts: 2 found\nreduce/reduce conflicts: 1 found\n")
           expect(warning.errors).to eq([])
           expect(warning.warns).to eq([
             "shift/reduce conflicts: 2 found",
