@@ -1792,13 +1792,217 @@ command_arg: expr ;
         grammar = Lrama::Parser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
-        # states.send :compute_lr0_states
 
         str = ""
         states.reporter.report(str, states: true, itemsets: true, lookaheads: true)
-        # states.reporter.report(str, states: true, itemsets: true)
 
         expect(str).to eq(<<~STR)
+State 11 conflicts: 1 shift/reduce
+
+
+State 0
+
+    0 $accept: • program "end of file"
+    1 program: • stmt
+    2 stmt: • k_while expr k_do stmt k_end
+    3     | • expr
+    4 expr: • tSTRING
+    5     | • tIDENTIFIER command_arg
+    6     | • tIDENTIFIER command_arg k_do stmt k_end
+
+    k_while      shift, and go to state 1
+    tSTRING      shift, and go to state 2
+    tIDENTIFIER  shift, and go to state 3
+
+    program  go to state 4
+    stmt     go to state 5
+    expr     go to state 6
+
+
+State 1
+
+    2 stmt: k_while • expr k_do stmt k_end
+    4 expr: • tSTRING
+    5     | • tIDENTIFIER command_arg
+
+    tSTRING      shift, and go to state 7
+    tIDENTIFIER  shift, and go to state 8
+
+    expr  go to state 9
+
+
+State 2
+
+    4 expr: tSTRING •
+
+    $default  reduce using rule 4 (expr)
+
+
+State 3
+
+    4 expr: • tSTRING
+    5     | • tIDENTIFIER command_arg
+    5     | tIDENTIFIER • command_arg
+    6     | • tIDENTIFIER command_arg k_do stmt k_end
+    6     | tIDENTIFIER • command_arg k_do stmt k_end
+    7 command_arg: • expr
+
+    tSTRING      shift, and go to state 2
+    tIDENTIFIER  shift, and go to state 3
+
+    expr         go to state 10
+    command_arg  go to state 11
+
+
+State 4
+
+    0 $accept: program • "end of file"
+
+    "end of file"  shift, and go to state 12
+
+
+State 5
+
+    1 program: stmt •
+
+    $default  reduce using rule 1 (program)
+
+
+State 6
+
+    3 stmt: expr •
+
+    $default  reduce using rule 3 (stmt)
+
+
+State 7
+
+    4 expr: tSTRING •
+
+    $default  reduce using rule 4 (expr)
+
+
+State 8
+
+    4 expr: • tSTRING
+    5     | • tIDENTIFIER command_arg
+    5     | tIDENTIFIER • command_arg
+    7 command_arg: • expr
+
+    tSTRING      shift, and go to state 7
+    tIDENTIFIER  shift, and go to state 8
+
+    expr         go to state 13
+    command_arg  go to state 14
+
+
+State 9
+
+    2 stmt: k_while expr • k_do stmt k_end
+
+    k_do  shift, and go to state 15
+
+
+State 10
+
+    7 command_arg: expr •
+
+    $default  reduce using rule 7 (command_arg)
+
+
+State 11
+
+    5 expr: tIDENTIFIER command_arg •  ["end of file", k_do, k_end]
+    6     | tIDENTIFIER command_arg • k_do stmt k_end
+
+    k_do  shift, and go to state 16
+
+    $default  reduce using rule 5 (expr)
+
+
+State 12
+
+    0 $accept: program "end of file" •
+
+    $default  accept
+
+
+State 13
+
+    7 command_arg: expr •
+
+    $default  reduce using rule 7 (command_arg)
+
+
+State 14
+
+    5 expr: tIDENTIFIER command_arg •
+
+    $default  reduce using rule 5 (expr)
+
+
+State 15
+
+    2 stmt: • k_while expr k_do stmt k_end
+    2     | k_while expr k_do • stmt k_end
+    3     | • expr
+    4 expr: • tSTRING
+    5     | • tIDENTIFIER command_arg
+    6     | • tIDENTIFIER command_arg k_do stmt k_end
+
+    k_while      shift, and go to state 1
+    tSTRING      shift, and go to state 2
+    tIDENTIFIER  shift, and go to state 3
+
+    stmt  go to state 17
+    expr  go to state 6
+
+
+State 16
+
+    2 stmt: • k_while expr k_do stmt k_end
+    3     | • expr
+    4 expr: • tSTRING
+    5     | • tIDENTIFIER command_arg
+    6     | • tIDENTIFIER command_arg k_do stmt k_end
+    6     | tIDENTIFIER command_arg k_do • stmt k_end
+
+    k_while      shift, and go to state 1
+    tSTRING      shift, and go to state 2
+    tIDENTIFIER  shift, and go to state 3
+
+    stmt  go to state 18
+    expr  go to state 6
+
+
+State 17
+
+    2 stmt: k_while expr k_do stmt • k_end
+
+    k_end  shift, and go to state 19
+
+
+State 18
+
+    6 expr: tIDENTIFIER command_arg k_do stmt • k_end
+
+    k_end  shift, and go to state 20
+
+
+State 19
+
+    2 stmt: k_while expr k_do stmt k_end •
+
+    $default  reduce using rule 2 (stmt)
+
+
+State 20
+
+    6 expr: tIDENTIFIER command_arg k_do stmt k_end •
+
+    $default  reduce using rule 6 (expr)
+
+
         STR
       end
     end
