@@ -1,3 +1,4 @@
+require "forwardable"
 require "lrama/report"
 
 module Lrama
@@ -212,7 +213,11 @@ module Lrama
   # "Efficient Computation of LALR(1) Look-Ahead Sets"
   #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
+    extend Forwardable
     include Lrama::Report::Duration
+
+    def_delegators "@grammar", :symbols, :terms, :nterms, :rules,
+      :accept_symbol, :eof_symbol, :find_symbol_by_s_value!
 
     # TODO: Validate position is not over rule rhs
     Item = Struct.new(:rule, :position, keyword_init: true) do
@@ -340,34 +345,6 @@ module Lrama
 
     def states_count
       @states.count
-    end
-
-    def symbols
-      @grammar.symbols
-    end
-
-    def terms
-      @grammar.terms
-    end
-
-    def nterms
-      @grammar.nterms
-    end
-
-    def rules
-      @grammar.rules
-    end
-
-    def accept_symbol
-      @grammar.accept_symbol
-    end
-
-    def eof_symbol
-      @grammar.eof_symbol
-    end
-
-    def find_symbol_by_s_value!(s_value)
-      @grammar.find_symbol_by_s_value!(s_value)
     end
 
     def direct_read_sets
