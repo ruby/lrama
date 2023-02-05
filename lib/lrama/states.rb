@@ -335,9 +335,6 @@ module Lrama
     end
 
     def compute
-      # TODO: Move report_grammar to other place
-      # report_grammar(@grammar)
-
       # Look Ahead Sets
       report_duration(:compute_lr0_states) { compute_lr0_states }
       report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
@@ -412,30 +409,6 @@ module Lrama
 
     def rr_conflicts
       @states.flat_map(&:rr_conflicts)
-    end
-
-    def report_grammar(grammar)
-      str = "Grammar\n\n"
-      last_lhs = nil
-
-      grammar.rules.each do |rule|
-        if rule.rhs.empty?
-          r = "ε"
-        else
-          r = rule.rhs.map(&:display_name).join(" ")
-        end
-
-        if rule.lhs == last_lhs
-          str << sprintf("%5d %s| %s\n", rule.id, " " * rule.lhs.display_name.length, r)
-        else
-          str << "\n"
-          str << sprintf("%5d %s: %s\n", rule.id, rule.lhs.display_name, r)
-        end
-
-        last_lhs = rule.lhs
-      end
-
-      puts str
     end
 
     def trace_state(msg)

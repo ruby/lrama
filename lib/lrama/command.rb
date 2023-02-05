@@ -99,7 +99,7 @@ module Lrama
     def validate_report(report)
       list = %w[states itemsets lookaheads solved counterexamples cex all none]
       not_supported = %w[counterexamples cex all none]
-      h = {}
+      h = { grammar: true }
 
       report.each do |r|
         if list.include?(r) && !not_supported.include?(r)

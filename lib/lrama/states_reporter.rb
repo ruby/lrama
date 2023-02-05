@@ -4,7 +4,7 @@ module Lrama
       @states = states
     end
 
-    def report(io, states: false, itemsets: false, lookaheads: false, solved: false, verbose: false)
+    def report(io, grammar: false, states: false, itemsets: false, lookaheads: false, solved: false, verbose: false)
       # TODO: Unused terms
       # TODO: Unused rules
 
@@ -32,7 +32,29 @@ module Lrama
         io << "\n\n"
       end
 
-      # TODO: Grammar
+      # Report Grammar
+      if grammar
+        io << "Grammar\n"
+        last_lhs = nil
+
+        @states.rules.each do |rule|
+          if rule.rhs.empty?
+            r = "ε"
+          else
+            r = rule.rhs.map(&:display_name).join(" ")
+          end
+
+          if rule.lhs == last_lhs
+            io << sprintf("%5d %s| %s\n", rule.id, " " * rule.lhs.display_name.length, r)
+          else
+            io << "\n"
+            io << sprintf("%5d %s: %s\n", rule.id, rule.lhs.display_name, r)
+          end
+
+          last_lhs = rule.lhs
+        end
+        io << "\n\n"
+      end
 
       @states.states.each do |state|
         # Report State

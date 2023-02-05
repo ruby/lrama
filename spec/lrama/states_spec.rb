@@ -9,10 +9,44 @@ RSpec.describe Lrama::States do
       states.compute
 
       str = ""
-      states.reporter.report(str, states: true, itemsets: true, lookaheads: true)
+      states.reporter.report(str, grammar: true, states: true, itemsets: true, lookaheads: true)
 
       expect(str).to eq(<<~STR)
 State 1 conflicts: 2 shift/reduce, 1 reduce/reduce
+
+
+Grammar
+
+    0 $accept: program "EOI"
+
+    1 program: class
+    2        | '+' strings_1
+    3        | '-' strings_2
+
+    4 class: keyword_class tSTRING "end"
+
+    5 $@1: ε
+
+    6 $@2: ε
+
+    7 class: keyword_class $@1 tSTRING '!' "end" $@2
+
+    8 $@3: ε
+
+    9 $@4: ε
+
+   10 class: keyword_class $@3 tSTRING '?' "end" $@4
+
+   11 strings_1: string_1
+
+   12 strings_2: string_1
+   13          | string_2
+
+   14 string_1: string
+
+   15 string_2: string '+'
+
+   16 string: tSTRING
 
 
 State 0
