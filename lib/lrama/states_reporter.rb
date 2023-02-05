@@ -5,6 +5,35 @@ module Lrama
     end
 
     def report(io, states: false, itemsets: false, lookaheads: false, solved: false, verbose: false)
+      # TODO: Unused terms
+      # TODO: Unused rules
+
+      # Report Conflict
+      has_conflict = false
+
+      @states.states.each do |state|
+        messages = []
+        cs = state.conflicts.group_by(&:type)
+        if cs[:shift_reduce]
+          messages << "#{cs[:shift_reduce].count} shift/reduce"
+        end
+
+        if cs[:reduce_reduce]
+          messages << "#{cs[:reduce_reduce].count} reduce/reduce"
+        end
+
+        if !messages.empty?
+          has_conflict = true
+          io << "State #{state.id} conflicts: #{messages.join(', ')}\n"
+        end
+      end
+
+      if has_conflict
+        io << "\n\n"
+      end
+
+      # TODO: Grammar
+
       @states.states.each do |state|
         # Report State
         io << "State #{state.id}\n\n"

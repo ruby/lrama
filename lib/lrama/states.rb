@@ -71,6 +71,8 @@ module Lrama
       end
     end
 
+    Conflict = Struct.new(:symbols, :reduce, :type, keyword_init: true)
+
     attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
                 :default_reduction_rule
     attr_accessor :closure, :shifts, :reduces
@@ -723,7 +725,7 @@ module Lrama
 
             # Can resolve only when both have prec
             unless shift_prec && reduce_prec
-              state.conflicts << [sym, reduce, :no_precedence]
+              state.conflicts << State::Conflict.new(symbols: [sym], reduce: reduce, type: :shift_reduce)
               next
             end
 
@@ -781,7 +783,7 @@ module Lrama
           a += reduce.look_ahead
 
           if !intersection.empty?
-            state.conflicts << [intersection.dup, reduce, :reduce_reduce]
+            state.conflicts << State::Conflict.new(symbols: intersection.dup, reduce: reduce, type: :reduce_reduce)
           end
         end
       end

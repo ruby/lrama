@@ -10,6 +10,9 @@ RSpec.describe Lrama::States do
       states.reporter.report(str, states: true, itemsets: true, lookaheads: true)
 
       expect(str).to eq(<<~STR)
+State 1 conflicts: 2 shift/reduce, 1 reduce/reduce
+
+
 State 0
 
     0 $accept: • program "EOI"
@@ -306,6 +309,10 @@ State 27
       states.reporter.report(str, states: true, itemsets: true, verbose: true)
 
       expect(str).to eq(<<~STR)
+State 0 conflicts: 1 shift/reduce
+State 7 conflicts: 1 shift/reduce
+
+
 State 0
 
     0 $accept: • program "end of file"
