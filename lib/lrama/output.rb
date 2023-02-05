@@ -27,14 +27,14 @@ module Lrama
 
     def render
       report_duration(:render) do
-        erb = ERB.new(File.read(template_file), nil, '-')
+        erb = ERB.new(File.read(template_file), trim_mode: '-')
         erb.filename = template_file
         tmp = erb.result_with_hash(context: @context, output: self)
         tmp = replace_special_variables(tmp, @output_file_path)
         @out << tmp
 
         if @header_file_path
-          erb = ERB.new(File.read(header_template_file), nil, '-')
+          erb = ERB.new(File.read(header_template_file), trim_mode: '-')
           erb.filename = header_template_file
           tmp = erb.result_with_hash(context: @context, output: self)
           tmp = replace_special_variables(tmp, @header_file_path)
