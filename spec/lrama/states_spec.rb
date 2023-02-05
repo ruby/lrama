@@ -1822,8 +1822,8 @@ State 0
 State 1
 
     2 stmt: k_while • expr k_do stmt k_end
-    4 expr: • tSTRING
-    5     | • tIDENTIFIER command_arg
+    4 expr: • tSTRING (REDUCE_DO)
+    5     | • tIDENTIFIER command_arg (REDUCE_DO)
 
     tSTRING      shift, and go to state 7
     tIDENTIFIER  shift, and go to state 8
@@ -1877,17 +1877,17 @@ State 6
 
 State 7
 
-    4 expr: tSTRING •
+    4 expr: tSTRING • (REDUCE_DO)
 
     $default  reduce using rule 4 (expr)
 
 
 State 8
 
-    4 expr: • tSTRING
-    5     | • tIDENTIFIER command_arg
-    5     | tIDENTIFIER • command_arg
-    7 command_arg: • expr
+    4 expr: • tSTRING (REDUCE_DO)
+    5     | • tIDENTIFIER command_arg (REDUCE_DO)
+    5     | tIDENTIFIER • command_arg (REDUCE_DO)
+    7 command_arg: • expr (REDUCE_DO)
 
     tSTRING      shift, and go to state 7
     tIDENTIFIER  shift, and go to state 8
@@ -1929,14 +1929,14 @@ State 12
 
 State 13
 
-    7 command_arg: expr •
+    7 command_arg: expr • (REDUCE_DO)
 
     $default  reduce using rule 7 (command_arg)
 
 
 State 14
 
-    5 expr: tIDENTIFIER command_arg •
+    5 expr: tIDENTIFIER command_arg • (REDUCE_DO)
 
     $default  reduce using rule 5 (expr)
 

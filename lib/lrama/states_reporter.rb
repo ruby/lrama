@@ -82,6 +82,8 @@ module Lrama
         list.sort_by {|i| [i.rule_id, i.position] }.each do |item|
           rule = item.rule
           position = item.position
+          attrs = item.attrs.select {|k, v| v }.map {|k, v| k.s_value}
+
           if rule.rhs.empty?
             r = "ε •"
           else
@@ -102,7 +104,11 @@ module Lrama
           end
           last_lhs = rule.lhs
 
-          io << sprintf("%5i %s %s%s\n", rule.id, l, r, la)
+          if attrs.empty?
+            io << sprintf("%5i %s %s%s\n", rule.id, l, r, la)
+          else
+            io << sprintf("%5i %s %s%s (%s)\n", rule.id, l, r, la, attrs.join('|'))
+          end
         end
         io << "\n"
 
