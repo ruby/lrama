@@ -1222,14 +1222,15 @@ command_arg: expr ;
         INPUT
 
         grammar = Lrama::Parser.new(y).parse
+        attr_0 = Attr.new(id: T.new(type: T::Ident, s_value: "REDUCE_DO"), number: 0, lineno: 16)
 
         expect(grammar.attrs).to eq([
-          Attr.new(id: T.new(type: T::Ident, s_value: "REDUCE_DO"), lineno: 16)
+          attr_0
         ])
         expect(grammar.rules.map(&:attrs)).to eq([
           [],
           [nil],
-          [nil, {T.new(type: T::Ident, s_value: "REDUCE_DO") => true}, nil, nil, nil, nil],
+          [nil, {attr_0 => true}, nil, nil, nil, nil],
           [nil],
           [nil],
           [nil, nil, nil],
@@ -1243,7 +1244,7 @@ command_arg: expr ;
           nil,
           nil,
           nil,
-          {T.new(type: T::Ident, s_value: "REDUCE_DO") => false},
+          {attr_0 => false},
           nil,
         ])
       end

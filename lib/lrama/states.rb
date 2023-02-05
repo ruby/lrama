@@ -257,6 +257,15 @@ module Lrama
         attrs.merge(rule.attrs[position] || {})
       end
 
+      # For comparison
+      def attrs_to_array
+        attrs.select do |k, v|
+          v
+        end.map do |k, v|
+          k.number
+        end.sort
+      end
+
       def end_of_rule?
         rule.rhs.count == position
       end
@@ -430,7 +439,7 @@ module Lrama
       h = {}
 
       attrs.each do |attr|
-        h[attr.id] = false
+        h[attr] = false
       end
 
       h
@@ -479,6 +488,8 @@ module Lrama
       #    string_1: string •
       #    string_2: string • '+'
       #
+      kernels.sort_by! {|item| [[item.rule.id, item.attrs_to_array]] }
+
       return [states_creted[kernels], false] if states_creted[kernels]
 
       state = State.new(@states.count, accessing_symbol, kernels)
@@ -517,7 +528,7 @@ module Lrama
         end
       end
 
-      state.closure = closure.sort_by {|i| i.rule.id }
+      state.closure = closure.sort_by {|item| [item.rule.id, item.attrs_to_array] }
 
       # Trace
       trace_state do |out|

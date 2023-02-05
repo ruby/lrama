@@ -281,7 +281,7 @@ module Lrama
     end
   end
 
-  Attr = Struct.new(:id, :lineno, keyword_init: true)
+  Attr = Struct.new(:id, :number, :lineno, keyword_init: true)
 
   Token = Lrama::Lexer::Token
 
@@ -321,7 +321,7 @@ module Lrama
     end
 
     def add_attr(id:, lineno:)
-      @attrs << Attr.new(id: id, lineno: lineno)
+      @attrs << Attr.new(id: id, number: @attrs.count, lineno: lineno)
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
@@ -524,6 +524,12 @@ module Lrama
       @sym_to_rules[sym.number]
     end
 
+    def find_attr_by_id!(id)
+      @attrs.find do |attr|
+        attr.id == id
+      end || (raise "Attr not found: #{id}")
+    end
+
     def terms_count
       terms.count
     end
@@ -547,7 +553,6 @@ module Lrama
         nterm.id == id
       end || (raise "Nterm not found: #{id}")
     end
-
 
     def append_special_symbols
       # YYEMPTY (token_id: -2, number: -2) is added when a template is evaluated
