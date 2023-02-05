@@ -438,10 +438,11 @@ module Lrama
             if @table[loc]
               # If the cell of table is set, can not use the cell.
               ok = false
+              break
             end
           end
 
-          if userd_res[res]
+          if ok && userd_res[res]
             ok = false
           end
 
