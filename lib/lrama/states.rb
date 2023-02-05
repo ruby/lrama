@@ -411,8 +411,20 @@ module Lrama
       @states.flat_map(&:rr_conflicts)
     end
 
-    def trace_state(msg)
-      puts msg if @trace_state
+    def initial_attrs
+      h = {}
+
+      attrs.each do |attr|
+        h[attr.id] = false
+      end
+
+      h
+    end
+
+    def trace_state
+      if @trace_state
+        yield STDERR
+      end
     end
 
     def create_state(accessing_symbol, kernels, states_creted)
@@ -489,16 +501,18 @@ module Lrama
       state.closure = closure.sort_by {|i| i.rule.id }
 
       # Trace
-      trace_state("Closure: input\n")
-      state.kernels.each do |item|
-        trace_state("  #{item.display_rest}\n")
+      trace_state do |out|
+        out << "Closure: input\n"
+        state.kernels.each do |item|
+          out << "  #{item.display_rest}\n"
+        end
+        out << "\n\n"
+        out << "Closure: output\n"
+        state.items.each do |item|
+          out << "  #{item.display_rest}\n"
+        end
+        out << "\n\n"
       end
-      trace_state("\n\n")
-      trace_state("Closure: output\n")
-      state.items.each do |item|
-        trace_state("  #{item.display_rest}\n")
-      end
-      trace_state("\n\n")
 
       # shift & reduce
       state.compute_shifts_reduces
@@ -507,10 +521,10 @@ module Lrama
     def enqueue_state(states, state)
       # Trace
       previous = state.kernels.first.previous_sym
-      trace_state(
-        sprintf("state_list_append (state = %d, symbol = %d (%s))",
+      trace_state do |out|
+        out << sprintf("state_list_append (state = %d, symbol = %d (%s))",
           @states.count, previous.number, previous.display_name)
-      )
+      end
 
       states << state
     end
@@ -529,7 +543,9 @@ module Lrama
         # Bison 3.8.2 renders "(reached by "end-of-input")" for State 0 but
         # I think it is not correct...
         previous = state.kernels.first.previous_sym
-        trace_state("Processing state #{state.id} (reached by #{previous.display_name})\n")
+        trace_state do |out|
+          out << "Processing state #{state.id} (reached by #{previous.display_name})\n"
+        end
 
         setup_state(state)
 
