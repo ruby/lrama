@@ -18,7 +18,7 @@ module Lrama
       # Array of array
       @_actions = []
 
-      report_duration(:compute_tables) { compute_tables }
+      compute_tables
     end
 
     # enum yytokentype
@@ -187,11 +187,11 @@ module Lrama
     # * yypact_ninf
     # * yytable_ninf
     def compute_tables
-      compute_yydefact
-      compute_yydefgoto
-      sort_actions
+      report_duration(:compute_yydefact) { compute_yydefact }
+      report_duration(:compute_yydefgoto) { compute_yydefgoto }
+      report_duration(:sort_actions) { sort_actions }
       # debug_sorted_actions
-      compute_packed_table
+      report_duration(:compute_packed_table) { compute_packed_table }
     end
 
     def vectors_count
