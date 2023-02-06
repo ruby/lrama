@@ -78,8 +78,8 @@ State 1
 
     tSTRING  shift, and go to state 6
 
-    tSTRING   reduce using rule 8 ($@3)
-    $default  reduce using rule 5 ($@1)
+    tSTRING  reduce using rule 5 ($@1)
+    tSTRING  reduce using rule 8 ($@3)
 
     $@1  go to state 7
     $@3  go to state 8
@@ -360,7 +360,7 @@ State 0
 
     a  shift, and go to state 1
 
-    $default  reduce using rule 4 (B)
+    a  reduce using rule 4 (B)
 
     program  go to state 2
     A        go to state 3
@@ -546,7 +546,7 @@ State 7
 
     a  shift, and go to state 1
 
-    $default  reduce using rule 4 (B)
+    a  reduce using rule 4 (B)
 
     A  go to state 8
     B  go to state 4

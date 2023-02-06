@@ -804,6 +804,8 @@ module Lrama
     def compute_default_reduction
       states.each do |state|
         next if state.reduces.empty?
+        # Do not set, if conflict exist
+        next if !state.conflicts.empty?
         # Do not set, if shift with `error` exists.
         next if state.shifts.map(&:next_sym).include?(@grammar.error_symbol)
 

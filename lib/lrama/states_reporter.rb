@@ -124,15 +124,13 @@ module Lrama
         max_len = state.non_default_reduces.flat_map(&:look_ahead).compact.map(&:display_name).map(&:length).max || 0
         max_len = [max_len, "$default".length].max if state.default_reduction_rule
         @states.terms.each do |term|
-          reduce = state.non_default_reduces.find do |r|
-            r.look_ahead.include?(term)
+          state.non_default_reduces.each do |reduce|
+            next if !reduce.look_ahead.include?(term)
+
+            rule = reduce.item.rule
+            io << "    #{term.display_name.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.display_name})\n"
+            nl = true
           end
-
-          next unless reduce
-
-          rule = reduce.item.rule
-          io << "    #{term.display_name.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.display_name})\n"
-          nl = true
         end
         if r = state.default_reduction_rule
           nl = true
