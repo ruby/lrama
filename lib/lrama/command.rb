@@ -97,7 +97,9 @@ module Lrama
     private
 
     def validate_report(report)
-      list = %w[states itemsets lookaheads solved counterexamples cex all none verbose]
+      bison_list = %w[states itemsets lookaheads solved counterexamples cex all none]
+      others = %w[verbose]
+      list = bison_list + others
       not_supported = %w[counterexamples cex none]
       h = { grammar: true }
 
@@ -110,7 +112,7 @@ module Lrama
       end
 
       if h[:all]
-        (list - not_supported).each do |r|
+        (bison_list - not_supported).each do |r|
           h[r.to_sym] = true
         end
 

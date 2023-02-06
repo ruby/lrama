@@ -13,7 +13,7 @@ RSpec.describe Lrama::Command do
           opts = command.send(:validate_report, ["all"])
           expect(opts).to eq({
             grammar: true, states: true, itemsets: true,
-            lookaheads: true, solved: true, verbose: true,
+            lookaheads: true, solved: true,
           })
         end
       end
