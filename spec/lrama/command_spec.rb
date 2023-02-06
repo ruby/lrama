@@ -11,7 +11,10 @@ RSpec.describe Lrama::Command do
       describe "all is passed" do
         it "returns option hash all flags enabled" do
           opts = command.send(:validate_report, ["all"])
-          expect(opts).to eq({grammar: true, states: true, itemsets: true, lookaheads: true, solved: true})
+          expect(opts).to eq({
+            grammar: true, states: true, itemsets: true,
+            lookaheads: true, solved: true, verbose: true,
+          })
         end
       end
     end

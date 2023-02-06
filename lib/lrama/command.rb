@@ -97,7 +97,7 @@ module Lrama
     private
 
     def validate_report(report)
-      list = %w[states itemsets lookaheads solved counterexamples cex all none]
+      list = %w[states itemsets lookaheads solved counterexamples cex all none verbose]
       not_supported = %w[counterexamples cex none]
       h = { grammar: true }
 
