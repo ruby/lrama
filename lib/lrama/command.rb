@@ -98,7 +98,7 @@ module Lrama
 
     def validate_report(report)
       list = %w[states itemsets lookaheads solved counterexamples cex all none]
-      not_supported = %w[counterexamples cex all none]
+      not_supported = %w[counterexamples cex none]
       h = { grammar: true }
 
       report.each do |r|
@@ -107,6 +107,14 @@ module Lrama
         else
           raise "Invalid report option \"#{r}\"."
         end
+      end
+
+      if h[:all]
+        (list - not_supported).each do |r|
+          h[r.to_sym] = true
+        end
+
+        h.delete(:all)
       end
 
       return h
