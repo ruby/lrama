@@ -239,6 +239,8 @@ module Lrama
 
     # TODO: Validate position is not over rule rhs
     Item = Struct.new(:rule, :position, :attrs, keyword_init: true) do
+      include Comparable
+
       # Optimization for States#setup_state
       def hash
         [rule.id, position, attrs].hash
@@ -291,6 +293,14 @@ module Lrama
       def display_rest
         r = rule.rhs[position..-1].map(&:display_name).join(" ")
         ". #{r}  (rule #{rule.id})"
+      end
+
+      def <=>(other)
+        if !other.is_a?(Item)
+          raise ArgumentError, "Item is expected but #{other} is given."
+        end
+
+        [rule.id, attrs_to_array] <=> [other.rule.id, other.attrs_to_array]
       end
     end
 
@@ -488,7 +498,7 @@ module Lrama
       #    string_1: string •
       #    string_2: string • '+'
       #
-      kernels.sort_by! {|item| [[item.rule.id, item.attrs_to_array]] }
+      kernels.sort!
 
       return [states_creted[kernels], false] if states_creted[kernels]
 
@@ -528,7 +538,7 @@ module Lrama
         end
       end
 
-      state.closure = closure.sort_by {|item| [item.rule.id, item.attrs_to_array] }
+      state.closure = closure.sort
 
       # Trace
       trace_state do |out|
