@@ -1766,19 +1766,19 @@ string: tSTRING
 %token <i> tSTRING
 %token <i> tIDENTIFIER
 
-%attr REDUCE_DO
+%attr SHIFT_DO
 
 %%
 
-program: stmt ;
+program: stmt(SHIFT_DO) ;
 
-stmt  : k_while expr(REDUCE_DO) k_do stmt k_end {}
+stmt  : k_while expr(!SHIFT_DO) k_do stmt k_end {...}
       | expr
       ;
 
 expr  : tSTRING
-      | tIDENTIFIER command_arg {}
-      | @lhs(!REDUCE_DO) tIDENTIFIER command_arg k_do stmt k_end {}
+      | tIDENTIFIER command_arg {...}
+      | @lhs(SHIFT_DO) tIDENTIFIER command_arg k_do stmt k_end {...}
       ;
 
 command_arg: expr ;
@@ -1804,11 +1804,11 @@ State 0
 
     0 $accept: • program "end of file"
     1 program: • stmt
-    2 stmt: • k_while expr k_do stmt k_end
-    3     | • expr
-    4 expr: • tSTRING
-    5     | • tIDENTIFIER command_arg
-    6     | • tIDENTIFIER command_arg k_do stmt k_end
+    2 stmt: • k_while expr k_do stmt k_end (SHIFT_DO)
+    3     | • expr (SHIFT_DO)
+    4 expr: • tSTRING (SHIFT_DO)
+    5     | • tIDENTIFIER command_arg (SHIFT_DO)
+    6     | • tIDENTIFIER command_arg k_do stmt k_end (SHIFT_DO)
 
     k_while      shift, and go to state 1
     tSTRING      shift, and go to state 2
@@ -1821,9 +1821,9 @@ State 0
 
 State 1
 
-    2 stmt: k_while • expr k_do stmt k_end
-    4 expr: • tSTRING (REDUCE_DO)
-    5     | • tIDENTIFIER command_arg (REDUCE_DO)
+    2 stmt: k_while • expr k_do stmt k_end (SHIFT_DO)
+    4 expr: • tSTRING
+    5     | • tIDENTIFIER command_arg
 
     tSTRING      shift, and go to state 7
     tIDENTIFIER  shift, and go to state 8
@@ -1833,19 +1833,19 @@ State 1
 
 State 2
 
-    4 expr: tSTRING •
+    4 expr: tSTRING • (SHIFT_DO)
 
     $default  reduce using rule 4 (expr)
 
 
 State 3
 
-    4 expr: • tSTRING
-    5     | • tIDENTIFIER command_arg
-    5     | tIDENTIFIER • command_arg
-    6     | • tIDENTIFIER command_arg k_do stmt k_end
-    6     | tIDENTIFIER • command_arg k_do stmt k_end
-    7 command_arg: • expr
+    4 expr: • tSTRING (SHIFT_DO)
+    5     | • tIDENTIFIER command_arg (SHIFT_DO)
+    5     | tIDENTIFIER • command_arg (SHIFT_DO)
+    6     | • tIDENTIFIER command_arg k_do stmt k_end (SHIFT_DO)
+    6     | tIDENTIFIER • command_arg k_do stmt k_end (SHIFT_DO)
+    7 command_arg: • expr (SHIFT_DO)
 
     tSTRING      shift, and go to state 2
     tIDENTIFIER  shift, and go to state 3
@@ -1870,24 +1870,24 @@ State 5
 
 State 6
 
-    3 stmt: expr •
+    3 stmt: expr • (SHIFT_DO)
 
     $default  reduce using rule 3 (stmt)
 
 
 State 7
 
-    4 expr: tSTRING • (REDUCE_DO)
+    4 expr: tSTRING •
 
     $default  reduce using rule 4 (expr)
 
 
 State 8
 
-    4 expr: • tSTRING (REDUCE_DO)
-    5     | • tIDENTIFIER command_arg (REDUCE_DO)
-    5     | tIDENTIFIER • command_arg (REDUCE_DO)
-    7 command_arg: • expr (REDUCE_DO)
+    4 expr: • tSTRING
+    5     | • tIDENTIFIER command_arg
+    5     | tIDENTIFIER • command_arg
+    7 command_arg: • expr
 
     tSTRING      shift, and go to state 7
     tIDENTIFIER  shift, and go to state 8
@@ -1898,22 +1898,22 @@ State 8
 
 State 9
 
-    2 stmt: k_while expr • k_do stmt k_end
+    2 stmt: k_while expr • k_do stmt k_end (SHIFT_DO)
 
     k_do  shift, and go to state 15
 
 
 State 10
 
-    7 command_arg: expr •
+    7 command_arg: expr • (SHIFT_DO)
 
     $default  reduce using rule 7 (command_arg)
 
 
 State 11
 
-    5 expr: tIDENTIFIER command_arg •  ["end of file", k_do, k_end]
-    6     | tIDENTIFIER command_arg • k_do stmt k_end
+    5 expr: tIDENTIFIER command_arg •  ["end of file", k_do, k_end] (SHIFT_DO)
+    6     | tIDENTIFIER command_arg • k_do stmt k_end (SHIFT_DO)
 
     k_do  shift, and go to state 16
 
@@ -1929,26 +1929,26 @@ State 12
 
 State 13
 
-    7 command_arg: expr • (REDUCE_DO)
+    7 command_arg: expr •
 
     $default  reduce using rule 7 (command_arg)
 
 
 State 14
 
-    5 expr: tIDENTIFIER command_arg • (REDUCE_DO)
+    5 expr: tIDENTIFIER command_arg •
 
     $default  reduce using rule 5 (expr)
 
 
 State 15
 
-    2 stmt: • k_while expr k_do stmt k_end
-    2     | k_while expr k_do • stmt k_end
-    3     | • expr
-    4 expr: • tSTRING
-    5     | • tIDENTIFIER command_arg
-    6     | • tIDENTIFIER command_arg k_do stmt k_end
+    2 stmt: • k_while expr k_do stmt k_end (SHIFT_DO)
+    2     | k_while expr k_do • stmt k_end (SHIFT_DO)
+    3     | • expr (SHIFT_DO)
+    4 expr: • tSTRING (SHIFT_DO)
+    5     | • tIDENTIFIER command_arg (SHIFT_DO)
+    6     | • tIDENTIFIER command_arg k_do stmt k_end (SHIFT_DO)
 
     k_while      shift, and go to state 1
     tSTRING      shift, and go to state 2
@@ -1960,12 +1960,12 @@ State 15
 
 State 16
 
-    2 stmt: • k_while expr k_do stmt k_end
-    3     | • expr
-    4 expr: • tSTRING
-    5     | • tIDENTIFIER command_arg
-    6     | • tIDENTIFIER command_arg k_do stmt k_end
-    6     | tIDENTIFIER command_arg k_do • stmt k_end
+    2 stmt: • k_while expr k_do stmt k_end (SHIFT_DO)
+    3     | • expr (SHIFT_DO)
+    4 expr: • tSTRING (SHIFT_DO)
+    5     | • tIDENTIFIER command_arg (SHIFT_DO)
+    6     | • tIDENTIFIER command_arg k_do stmt k_end (SHIFT_DO)
+    6     | tIDENTIFIER command_arg k_do • stmt k_end (SHIFT_DO)
 
     k_while      shift, and go to state 1
     tSTRING      shift, and go to state 2
@@ -1977,28 +1977,28 @@ State 16
 
 State 17
 
-    2 stmt: k_while expr k_do stmt • k_end
+    2 stmt: k_while expr k_do stmt • k_end (SHIFT_DO)
 
     k_end  shift, and go to state 19
 
 
 State 18
 
-    6 expr: tIDENTIFIER command_arg k_do stmt • k_end
+    6 expr: tIDENTIFIER command_arg k_do stmt • k_end (SHIFT_DO)
 
     k_end  shift, and go to state 20
 
 
 State 19
 
-    2 stmt: k_while expr k_do stmt k_end •
+    2 stmt: k_while expr k_do stmt k_end • (SHIFT_DO)
 
     $default  reduce using rule 2 (stmt)
 
 
 State 20
 
-    6 expr: tIDENTIFIER command_arg k_do stmt k_end •
+    6 expr: tIDENTIFIER command_arg k_do stmt k_end • (SHIFT_DO)
 
     $default  reduce using rule 6 (expr)
 
