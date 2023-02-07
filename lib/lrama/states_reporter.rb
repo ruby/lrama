@@ -1,10 +1,20 @@
 module Lrama
   class StatesReporter
+    include Lrama::Report::Duration
+
     def initialize(states)
       @states = states
     end
 
-    def report(io, grammar: false, states: false, itemsets: false, lookaheads: false, solved: false, verbose: false)
+    def report(io, **options)
+      report_duration(:report) do
+        _report(io, **options)
+      end
+    end
+
+    private
+
+    def _report(io, grammar: false, states: false, itemsets: false, lookaheads: false, solved: false, verbose: false)
       # TODO: Unused terms
       # TODO: Unused rules
 
