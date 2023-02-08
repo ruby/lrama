@@ -18,7 +18,12 @@ module Lrama
       # TODO: Unused terms
       # TODO: Unused rules
 
-      # Report Conflict
+      report_conflicts(io)
+      report_grammar(io) if grammar
+      report_states(io, itemsets, lookaheads, solved, verbose)
+    end
+
+    def report_conflicts(io)
       has_conflict = false
 
       @states.states.each do |state|
@@ -41,31 +46,32 @@ module Lrama
       if has_conflict
         io << "\n\n"
       end
+    end
 
-      # Report Grammar
-      if grammar
-        io << "Grammar\n"
-        last_lhs = nil
+    def report_grammar(io)
+      io << "Grammar\n"
+      last_lhs = nil
 
-        @states.rules.each do |rule|
-          if rule.rhs.empty?
-            r = "ε"
-          else
-            r = rule.rhs.map(&:display_name).join(" ")
-          end
-
-          if rule.lhs == last_lhs
-            io << sprintf("%5d %s| %s\n", rule.id, " " * rule.lhs.display_name.length, r)
-          else
-            io << "\n"
-            io << sprintf("%5d %s: %s\n", rule.id, rule.lhs.display_name, r)
-          end
-
-          last_lhs = rule.lhs
+      @states.rules.each do |rule|
+        if rule.rhs.empty?
+          r = "ε"
+        else
+          r = rule.rhs.map(&:display_name).join(" ")
         end
-        io << "\n\n"
-      end
 
+        if rule.lhs == last_lhs
+          io << sprintf("%5d %s| %s\n", rule.id, " " * rule.lhs.display_name.length, r)
+        else
+          io << "\n"
+          io << sprintf("%5d %s: %s\n", rule.id, rule.lhs.display_name, r)
+        end
+
+        last_lhs = rule.lhs
+      end
+      io << "\n\n"
+    end
+
+    def report_states(io, itemsets, lookaheads, solved, verbose)
       @states.states.each do |state|
         # Report State
         io << "State #{state.id}\n\n"
