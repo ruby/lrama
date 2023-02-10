@@ -74,13 +74,14 @@ module Lrama
     Conflict = Struct.new(:symbols, :reduce, :type, keyword_init: true)
 
     attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
-                :default_reduction_rule
-    attr_accessor :closure, :shifts, :reduces
+                :default_reduction_rule, :closure, :items
+    attr_accessor :shifts, :reduces
 
     def initialize(id, accessing_symbol, kernels)
       @id = id
       @accessing_symbol = accessing_symbol
       @kernels = kernels.freeze
+      @items = @kernels
       # Manage relationships between items to state
       # to resolve next state
       @items_to_state = {}
@@ -89,8 +90,9 @@ module Lrama
       @default_reduction_rule = nil
     end
 
-    def items
-      @kernels + @closure
+    def closure=(closure)
+      @closure = closure
+      @items = @kernels + @closure
     end
 
     def non_default_reduces
