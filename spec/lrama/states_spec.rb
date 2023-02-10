@@ -1917,7 +1917,9 @@ State 11
 
     k_do  shift, and go to state 16
 
-    $default  reduce using rule 5 (expr)
+    "end of file"  reduce using rule 5 (expr)
+    k_do           reduce using rule 5 (expr)
+    k_end          reduce using rule 5 (expr)
 
 
 State 12
