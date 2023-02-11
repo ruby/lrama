@@ -1,3 +1,4 @@
+require "lrama/bitmap"
 require "lrama/command"
 require "lrama/context"
 require "lrama/digraph"

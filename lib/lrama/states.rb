@@ -576,14 +576,12 @@ module Lrama
           nterm = shift.next_sym
           bit = 0
 
-          next_state.term_transitions.each do |shift, _|
-            sym = shift.next_sym
-            # Encode terms into bitmap
-            bit |= (1 << sym.number)
+          ary = next_state.term_transitions.map do |shift, _|
+            shift.next_sym.number
           end
 
           key = [state.id, nterm.token_id]
-          @direct_read_sets[key] = bit
+          @direct_read_sets[key] = Bitmap.from_array(ary)
         end
       end
     end
@@ -699,19 +697,10 @@ module Lrama
     end
 
     def bitmap_to_terms(bit)
-      a = []
-      i = 0
-
-      while bit > 0 do
-        if bit & 1 == 1
-          a << @grammar.find_symbol_by_number!(i)
-        end
-
-        i += 1
-        bit >>= 1
+      ary = Bitmap.to_array(bit)
+      ary.map do |i|
+        @grammar.find_symbol_by_number!(i)
       end
-
-      return a
     end
 
     def compute_conflicts
