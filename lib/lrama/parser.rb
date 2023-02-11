@@ -263,14 +263,33 @@ module Lrama
     end
 
     def parse_attr(ts, grammar)
+      h = {}
+
+      while true do
+        case ts.current_type
+        when T::Bang
+          # If ! is specified, it means the attr should be false
+          bang = ts.consume!(T::Bang)
+          id = grammar.find_attr_by_id!(ts.consume!(T::Ident))
+          h[id] = false
+        when T::Ident
+          id = grammar.find_attr_by_id!(ts.consume!(T::Ident))
+          h[id] = true
+        else
+          break
+        end
+      end
+
+      return h
+    end
+
+    def parse_attrs(ts, grammar)
       case ts.current_type
       when T::Lparen
         ts.next
-        opt_bang = ts.consume(T::Bang)
-        id = grammar.find_attr_by_id!(ts.consume!(T::Ident))
+        h = parse_attr(ts, grammar)
         ts.consume!(T::Rparen)
-        # If ! is specified, it means the attr should be false
-        return {id => !opt_bang}
+        return h
       else
         return nil
       end
@@ -292,14 +311,14 @@ module Lrama
           raise "Ident after %prec" if prec_seen
           a << ts.current_token
           ts.next
-          attrs << parse_attr(ts, grammar)
+          attrs << parse_attrs(ts, grammar)
         when T::Char
           # '!'
 
           raise "Char after %prec" if prec_seen
           a << ts.current_token
           ts.next
-          attrs << parse_attr(ts, grammar)
+          attrs << parse_attrs(ts, grammar)
         when T::P_prec
           # %prec tPLUS
           #
@@ -326,7 +345,7 @@ module Lrama
         when T::At_lhs
           # @lhs
           ts.next
-          lhs_attr = parse_attr(ts, grammar)
+          lhs_attr = parse_attrs(ts, grammar)
         when T::Bar
           # |
           break
