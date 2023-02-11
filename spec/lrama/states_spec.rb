@@ -2025,6 +2025,7 @@ State 20
 %token <i> k_while
 %token <i> k_do
 %token <i> k_end
+%token <i> k_def
 
 %token <i> tSTRING
 %token <i> tIDENTIFIER
@@ -2047,7 +2048,8 @@ do    : ';'
 expr  : arg
       ;
 
-arg   : primary
+arg   : k_def fname arg '=' arg
+      | primary
       ;
 
 primary  : tSTRING
@@ -2062,6 +2064,8 @@ fcall : operation
 operation : tFID
           ;
 
+fname : tIDENTIFIER
+      ;
 %%
         INPUT
       end
@@ -2076,7 +2080,7 @@ operation : tFID
           states.reporter.report(str, states: true, itemsets: true, lookaheads: true, verbose: false)
 puts str
           expect(str).to eq(<<~STR)
-State 13 conflicts: 1 reduce/reduce
+State 15 conflicts: 1 reduce/reduce
 
 
 State 0
@@ -2086,469 +2090,642 @@ State 0
     2 stmt: • k_while expr do stmt k_end (k_do: 2)
     3     | • expr (k_do: 2)
     6 expr: • arg (k_do: 2)
-    7 arg: • primary (k_do: 2)
-    8 primary: • tSTRING (k_do: 2)
-    9        | • tFID (k_do: 2)
-   10        | • fcall k_do stmt k_end (k_do: 2)
-   11        | • '(' expr ')' (k_do: 2)
-   12 fcall: • operation (k_do: 2)
-   13 operation: • tFID (k_do: 2)
+    7 arg: • k_def fname arg '=' arg (k_do: 2)
+    8    | • primary (k_do: 2)
+    9 primary: • tSTRING (k_do: 2)
+   10        | • tFID (k_do: 2)
+   11        | • fcall k_do stmt k_end (k_do: 2)
+   12        | • '(' expr ')' (k_do: 2)
+   13 fcall: • operation (k_do: 2)
+   14 operation: • tFID (k_do: 2)
 
     k_while  shift, and go to state 1
-    tSTRING  shift, and go to state 2
-    tFID     shift, and go to state 3
-    '('      shift, and go to state 4
+    k_def    shift, and go to state 2
+    tSTRING  shift, and go to state 3
+    tFID     shift, and go to state 4
+    '('      shift, and go to state 5
 
-    program    go to state 5
-    stmt       go to state 6
-    expr       go to state 7
-    arg        go to state 8
-    primary    go to state 9
-    fcall      go to state 10
-    operation  go to state 11
+    program    go to state 6
+    stmt       go to state 7
+    expr       go to state 8
+    arg        go to state 9
+    primary    go to state 10
+    fcall      go to state 11
+    operation  go to state 12
 
 
 State 1
 
     2 stmt: k_while • expr do stmt k_end (k_do: 2)
     6 expr: • arg (k_do: 0)
-    7 arg: • primary (k_do: 0)
-    8 primary: • tSTRING (k_do: 0)
-    9        | • tFID (k_do: 0)
-   10        | • fcall k_do stmt k_end (k_do: 0)
-   11        | • '(' expr ')' (k_do: 0)
-   12 fcall: • operation (k_do: 0)
-   13 operation: • tFID (k_do: 0)
+    7 arg: • k_def fname arg '=' arg (k_do: 0)
+    8    | • primary (k_do: 0)
+    9 primary: • tSTRING (k_do: 0)
+   10        | • tFID (k_do: 0)
+   11        | • fcall k_do stmt k_end (k_do: 0)
+   12        | • '(' expr ')' (k_do: 0)
+   13 fcall: • operation (k_do: 0)
+   14 operation: • tFID (k_do: 0)
 
-    tSTRING  shift, and go to state 12
-    tFID     shift, and go to state 13
-    '('      shift, and go to state 14
+    k_def    shift, and go to state 13
+    tSTRING  shift, and go to state 14
+    tFID     shift, and go to state 15
+    '('      shift, and go to state 16
 
-    expr       go to state 15
-    arg        go to state 16
-    primary    go to state 17
-    fcall      go to state 18
-    operation  go to state 19
+    expr       go to state 17
+    arg        go to state 18
+    primary    go to state 19
+    fcall      go to state 20
+    operation  go to state 21
 
 
 State 2
 
-    8 primary: tSTRING • (k_do: 2)
+    7 arg: k_def • fname arg '=' arg (k_do: 2)
+   15 fname: • tIDENTIFIER (k_do: 2)
 
-    $default  reduce using rule 8 (primary)
+    tIDENTIFIER  shift, and go to state 22
+
+    fname  go to state 23
 
 
 State 3
 
-    9 primary: tFID •  ["end of file", k_end, ')'] (k_do: 2)
-   13 operation: tFID •  [k_do] (k_do: 2)
+    9 primary: tSTRING • (k_do: 2)
 
-    k_do      reduce using rule 13 (operation)
     $default  reduce using rule 9 (primary)
 
 
 State 4
 
-    6 expr: • arg (k_do: 2)
-    7 arg: • primary (k_do: 2)
-    8 primary: • tSTRING (k_do: 2)
-    9        | • tFID (k_do: 2)
-   10        | • fcall k_do stmt k_end (k_do: 2)
-   11        | • '(' expr ')' (k_do: 2)
-   11        | '(' • expr ')' (k_do: 2)
-   12 fcall: • operation (k_do: 2)
-   13 operation: • tFID (k_do: 2)
+   10 primary: tFID •  ["end of file", k_end, '=', ')'] (k_do: 2)
+   14 operation: tFID •  [k_do] (k_do: 2)
 
-    tSTRING  shift, and go to state 2
-    tFID     shift, and go to state 3
-    '('      shift, and go to state 4
-
-    expr       go to state 20
-    arg        go to state 8
-    primary    go to state 9
-    fcall      go to state 10
-    operation  go to state 11
+    k_do      reduce using rule 14 (operation)
+    $default  reduce using rule 10 (primary)
 
 
 State 5
 
-    0 $accept: program • "end of file"
+    6 expr: • arg (k_do: 2)
+    7 arg: • k_def fname arg '=' arg (k_do: 2)
+    8    | • primary (k_do: 2)
+    9 primary: • tSTRING (k_do: 2)
+   10        | • tFID (k_do: 2)
+   11        | • fcall k_do stmt k_end (k_do: 2)
+   12        | • '(' expr ')' (k_do: 2)
+   12        | '(' • expr ')' (k_do: 2)
+   13 fcall: • operation (k_do: 2)
+   14 operation: • tFID (k_do: 2)
 
-    "end of file"  shift, and go to state 21
+    k_def    shift, and go to state 2
+    tSTRING  shift, and go to state 3
+    tFID     shift, and go to state 4
+    '('      shift, and go to state 5
+
+    expr       go to state 24
+    arg        go to state 9
+    primary    go to state 10
+    fcall      go to state 11
+    operation  go to state 12
 
 
 State 6
+
+    0 $accept: program • "end of file"
+
+    "end of file"  shift, and go to state 25
+
+
+State 7
 
     1 program: stmt •
 
     $default  reduce using rule 1 (program)
 
 
-State 7
+State 8
 
     3 stmt: expr • (k_do: 2)
 
     $default  reduce using rule 3 (stmt)
 
 
-State 8
+State 9
 
     6 expr: arg • (k_do: 2)
 
     $default  reduce using rule 6 (expr)
 
 
-State 9
-
-    7 arg: primary • (k_do: 2)
-
-    $default  reduce using rule 7 (arg)
-
-
 State 10
 
-   10 primary: fcall • k_do stmt k_end (k_do: 2)
+    8 arg: primary • (k_do: 2)
 
-    k_do  shift, and go to state 22
+    $default  reduce using rule 8 (arg)
 
 
 State 11
 
-   12 fcall: operation • (k_do: 2)
+   11 primary: fcall • k_do stmt k_end (k_do: 2)
 
-    $default  reduce using rule 12 (fcall)
+    k_do  shift, and go to state 26
 
 
 State 12
 
-    8 primary: tSTRING • (k_do: 0)
+   13 fcall: operation • (k_do: 2)
 
-    $default  reduce using rule 8 (primary)
+    $default  reduce using rule 13 (fcall)
 
 
 State 13
 
-    9 primary: tFID •  [k_do, k_end, ';'] (k_do: 0)
-   13 operation: tFID •  [k_do] (k_do: 0)
+    7 arg: k_def • fname arg '=' arg (k_do: 0)
+   15 fname: • tIDENTIFIER (k_do: 0)
 
-    k_do   reduce using rule 9 (primary)
-    k_do   reduce using rule 13 (operation)
-    k_end  reduce using rule 9 (primary)
-    ';'    reduce using rule 9 (primary)
+    tIDENTIFIER  shift, and go to state 27
+
+    fname  go to state 28
 
 
 State 14
 
-    6 expr: • arg (k_do: 2)
-    7 arg: • primary (k_do: 2)
-    8 primary: • tSTRING (k_do: 2)
-    9        | • tFID (k_do: 2)
-   10        | • fcall k_do stmt k_end (k_do: 2)
-   11        | • '(' expr ')' (k_do: 2)
-   11        | '(' • expr ')' (k_do: 0)
-   12 fcall: • operation (k_do: 2)
-   13 operation: • tFID (k_do: 2)
+    9 primary: tSTRING • (k_do: 0)
 
-    tSTRING  shift, and go to state 2
-    tFID     shift, and go to state 3
-    '('      shift, and go to state 4
-
-    expr       go to state 23
-    arg        go to state 8
-    primary    go to state 9
-    fcall      go to state 10
-    operation  go to state 11
+    $default  reduce using rule 9 (primary)
 
 
 State 15
+
+   10 primary: tFID •  [k_do, k_end, ';', '='] (k_do: 0)
+   14 operation: tFID •  [k_do] (k_do: 0)
+
+    k_do   reduce using rule 10 (primary)
+    k_do   reduce using rule 14 (operation)
+    k_end  reduce using rule 10 (primary)
+    ';'    reduce using rule 10 (primary)
+    '='    reduce using rule 10 (primary)
+
+
+State 16
+
+    6 expr: • arg (k_do: 2)
+    7 arg: • k_def fname arg '=' arg (k_do: 2)
+    8    | • primary (k_do: 2)
+    9 primary: • tSTRING (k_do: 2)
+   10        | • tFID (k_do: 2)
+   11        | • fcall k_do stmt k_end (k_do: 2)
+   12        | • '(' expr ')' (k_do: 2)
+   12        | '(' • expr ')' (k_do: 0)
+   13 fcall: • operation (k_do: 2)
+   14 operation: • tFID (k_do: 2)
+
+    k_def    shift, and go to state 2
+    tSTRING  shift, and go to state 3
+    tFID     shift, and go to state 4
+    '('      shift, and go to state 5
+
+    expr       go to state 29
+    arg        go to state 9
+    primary    go to state 10
+    fcall      go to state 11
+    operation  go to state 12
+
+
+State 17
 
     2 stmt: k_while expr • do stmt k_end (k_do: 2)
     4 do: • ';' (k_do: 1)
     5   | • k_do (k_do: 1)
 
-    k_do  shift, and go to state 24
-    ';'   shift, and go to state 25
+    k_do  shift, and go to state 30
+    ';'   shift, and go to state 31
 
-    do  go to state 26
+    do  go to state 32
 
 
-State 16
+State 18
 
     6 expr: arg • (k_do: 0)
 
     $default  reduce using rule 6 (expr)
 
 
-State 17
-
-    7 arg: primary • (k_do: 0)
-
-    $default  reduce using rule 7 (arg)
-
-
-State 18
-
-   10 primary: fcall • k_do stmt k_end (k_do: 0)
-
-    k_do  shift, and go to state 27
-
-
 State 19
 
-   12 fcall: operation • (k_do: 0)
+    8 arg: primary • (k_do: 0)
 
-    $default  reduce using rule 12 (fcall)
+    $default  reduce using rule 8 (arg)
 
 
 State 20
 
-   11 primary: '(' expr • ')' (k_do: 2)
+   11 primary: fcall • k_do stmt k_end (k_do: 0)
 
-    ')'  shift, and go to state 28
+    k_do  shift, and go to state 33
 
 
 State 21
+
+   13 fcall: operation • (k_do: 0)
+
+    $default  reduce using rule 13 (fcall)
+
+
+State 22
+
+   15 fname: tIDENTIFIER • (k_do: 2)
+
+    $default  reduce using rule 15 (fname)
+
+
+State 23
+
+    7 arg: • k_def fname arg '=' arg (k_do: 2)
+    7    | k_def fname • arg '=' arg (k_do: 2)
+    8    | • primary (k_do: 2)
+    9 primary: • tSTRING (k_do: 2)
+   10        | • tFID (k_do: 2)
+   11        | • fcall k_do stmt k_end (k_do: 2)
+   12        | • '(' expr ')' (k_do: 2)
+   13 fcall: • operation (k_do: 2)
+   14 operation: • tFID (k_do: 2)
+
+    k_def    shift, and go to state 2
+    tSTRING  shift, and go to state 3
+    tFID     shift, and go to state 4
+    '('      shift, and go to state 5
+
+    arg        go to state 34
+    primary    go to state 10
+    fcall      go to state 11
+    operation  go to state 12
+
+
+State 24
+
+   12 primary: '(' expr • ')' (k_do: 2)
+
+    ')'  shift, and go to state 35
+
+
+State 25
 
     0 $accept: program "end of file" •
 
     $default  accept
 
 
-State 22
+State 26
 
     2 stmt: • k_while expr do stmt k_end (k_do: 2)
     3     | • expr (k_do: 2)
     6 expr: • arg (k_do: 2)
-    7 arg: • primary (k_do: 2)
-    8 primary: • tSTRING (k_do: 2)
-    9        | • tFID (k_do: 2)
-   10        | • fcall k_do stmt k_end (k_do: 2)
-   10        | fcall k_do • stmt k_end (k_do: 2)
-   11        | • '(' expr ')' (k_do: 2)
-   12 fcall: • operation (k_do: 2)
-   13 operation: • tFID (k_do: 2)
+    7 arg: • k_def fname arg '=' arg (k_do: 2)
+    8    | • primary (k_do: 2)
+    9 primary: • tSTRING (k_do: 2)
+   10        | • tFID (k_do: 2)
+   11        | • fcall k_do stmt k_end (k_do: 2)
+   11        | fcall k_do • stmt k_end (k_do: 2)
+   12        | • '(' expr ')' (k_do: 2)
+   13 fcall: • operation (k_do: 2)
+   14 operation: • tFID (k_do: 2)
 
     k_while  shift, and go to state 1
-    tSTRING  shift, and go to state 2
-    tFID     shift, and go to state 3
-    '('      shift, and go to state 4
+    k_def    shift, and go to state 2
+    tSTRING  shift, and go to state 3
+    tFID     shift, and go to state 4
+    '('      shift, and go to state 5
 
-    stmt       go to state 29
-    expr       go to state 7
-    arg        go to state 8
-    primary    go to state 9
-    fcall      go to state 10
-    operation  go to state 11
-
-
-State 23
-
-   11 primary: '(' expr • ')' (k_do: 0)
-
-    ')'  shift, and go to state 30
+    stmt       go to state 36
+    expr       go to state 8
+    arg        go to state 9
+    primary    go to state 10
+    fcall      go to state 11
+    operation  go to state 12
 
 
-State 24
+State 27
+
+   15 fname: tIDENTIFIER • (k_do: 0)
+
+    $default  reduce using rule 15 (fname)
+
+
+State 28
+
+    7 arg: • k_def fname arg '=' arg (k_do: 0)
+    7    | k_def fname • arg '=' arg (k_do: 0)
+    8    | • primary (k_do: 0)
+    9 primary: • tSTRING (k_do: 0)
+   10        | • tFID (k_do: 0)
+   11        | • fcall k_do stmt k_end (k_do: 0)
+   12        | • '(' expr ')' (k_do: 0)
+   13 fcall: • operation (k_do: 0)
+   14 operation: • tFID (k_do: 0)
+
+    k_def    shift, and go to state 13
+    tSTRING  shift, and go to state 14
+    tFID     shift, and go to state 15
+    '('      shift, and go to state 16
+
+    arg        go to state 37
+    primary    go to state 19
+    fcall      go to state 20
+    operation  go to state 21
+
+
+State 29
+
+   12 primary: '(' expr • ')' (k_do: 0)
+
+    ')'  shift, and go to state 38
+
+
+State 30
 
     5 do: k_do • (k_do: 1)
 
     $default  reduce using rule 5 (do)
 
 
-State 25
+State 31
 
     4 do: ';' • (k_do: 1)
 
     $default  reduce using rule 4 (do)
 
 
-State 26
+State 32
 
     2 stmt: • k_while expr do stmt k_end (k_do: 2)
     2     | k_while expr do • stmt k_end (k_do: 2)
     3     | • expr (k_do: 2)
     6 expr: • arg (k_do: 2)
-    7 arg: • primary (k_do: 2)
-    8 primary: • tSTRING (k_do: 2)
-    9        | • tFID (k_do: 2)
-   10        | • fcall k_do stmt k_end (k_do: 2)
-   11        | • '(' expr ')' (k_do: 2)
-   12 fcall: • operation (k_do: 2)
-   13 operation: • tFID (k_do: 2)
+    7 arg: • k_def fname arg '=' arg (k_do: 2)
+    8    | • primary (k_do: 2)
+    9 primary: • tSTRING (k_do: 2)
+   10        | • tFID (k_do: 2)
+   11        | • fcall k_do stmt k_end (k_do: 2)
+   12        | • '(' expr ')' (k_do: 2)
+   13 fcall: • operation (k_do: 2)
+   14 operation: • tFID (k_do: 2)
 
     k_while  shift, and go to state 1
-    tSTRING  shift, and go to state 2
-    tFID     shift, and go to state 3
-    '('      shift, and go to state 4
+    k_def    shift, and go to state 2
+    tSTRING  shift, and go to state 3
+    tFID     shift, and go to state 4
+    '('      shift, and go to state 5
 
-    stmt       go to state 31
-    expr       go to state 7
-    arg        go to state 8
-    primary    go to state 9
-    fcall      go to state 10
-    operation  go to state 11
-
-
-State 27
-
-    2 stmt: • k_while expr do stmt k_end (k_do: 0)
-    3     | • expr (k_do: 0)
-    6 expr: • arg (k_do: 0)
-    7 arg: • primary (k_do: 0)
-    8 primary: • tSTRING (k_do: 0)
-    9        | • tFID (k_do: 0)
-   10        | • fcall k_do stmt k_end (k_do: 0)
-   10        | fcall k_do • stmt k_end (k_do: 0)
-   11        | • '(' expr ')' (k_do: 0)
-   12 fcall: • operation (k_do: 0)
-   13 operation: • tFID (k_do: 0)
-
-    k_while  shift, and go to state 32
-    tSTRING  shift, and go to state 12
-    tFID     shift, and go to state 13
-    '('      shift, and go to state 14
-
-    stmt       go to state 33
-    expr       go to state 34
-    arg        go to state 16
-    primary    go to state 17
-    fcall      go to state 18
-    operation  go to state 19
-
-
-State 28
-
-   11 primary: '(' expr ')' • (k_do: 2)
-
-    $default  reduce using rule 11 (primary)
-
-
-State 29
-
-   10 primary: fcall k_do stmt • k_end (k_do: 2)
-
-    k_end  shift, and go to state 35
-
-
-State 30
-
-   11 primary: '(' expr ')' • (k_do: 0)
-
-    $default  reduce using rule 11 (primary)
-
-
-State 31
-
-    2 stmt: k_while expr do stmt • k_end (k_do: 2)
-
-    k_end  shift, and go to state 36
-
-
-State 32
-
-    2 stmt: k_while • expr do stmt k_end (k_do: 0)
-    6 expr: • arg (k_do: 0)
-    7 arg: • primary (k_do: 0)
-    8 primary: • tSTRING (k_do: 0)
-    9        | • tFID (k_do: 0)
-   10        | • fcall k_do stmt k_end (k_do: 0)
-   11        | • '(' expr ')' (k_do: 0)
-   12 fcall: • operation (k_do: 0)
-   13 operation: • tFID (k_do: 0)
-
-    tSTRING  shift, and go to state 12
-    tFID     shift, and go to state 13
-    '('      shift, and go to state 14
-
-    expr       go to state 37
-    arg        go to state 16
-    primary    go to state 17
-    fcall      go to state 18
-    operation  go to state 19
+    stmt       go to state 39
+    expr       go to state 8
+    arg        go to state 9
+    primary    go to state 10
+    fcall      go to state 11
+    operation  go to state 12
 
 
 State 33
 
-   10 primary: fcall k_do stmt • k_end (k_do: 0)
+    2 stmt: • k_while expr do stmt k_end (k_do: 0)
+    3     | • expr (k_do: 0)
+    6 expr: • arg (k_do: 0)
+    7 arg: • k_def fname arg '=' arg (k_do: 0)
+    8    | • primary (k_do: 0)
+    9 primary: • tSTRING (k_do: 0)
+   10        | • tFID (k_do: 0)
+   11        | • fcall k_do stmt k_end (k_do: 0)
+   11        | fcall k_do • stmt k_end (k_do: 0)
+   12        | • '(' expr ')' (k_do: 0)
+   13 fcall: • operation (k_do: 0)
+   14 operation: • tFID (k_do: 0)
 
-    k_end  shift, and go to state 38
+    k_while  shift, and go to state 40
+    k_def    shift, and go to state 13
+    tSTRING  shift, and go to state 14
+    tFID     shift, and go to state 15
+    '('      shift, and go to state 16
+
+    stmt       go to state 41
+    expr       go to state 42
+    arg        go to state 18
+    primary    go to state 19
+    fcall      go to state 20
+    operation  go to state 21
 
 
 State 34
+
+    7 arg: k_def fname arg • '=' arg (k_do: 2)
+
+    '='  shift, and go to state 43
+
+
+State 35
+
+   12 primary: '(' expr ')' • (k_do: 2)
+
+    $default  reduce using rule 12 (primary)
+
+
+State 36
+
+   11 primary: fcall k_do stmt • k_end (k_do: 2)
+
+    k_end  shift, and go to state 44
+
+
+State 37
+
+    7 arg: k_def fname arg • '=' arg (k_do: 0)
+
+    '='  shift, and go to state 45
+
+
+State 38
+
+   12 primary: '(' expr ')' • (k_do: 0)
+
+    $default  reduce using rule 12 (primary)
+
+
+State 39
+
+    2 stmt: k_while expr do stmt • k_end (k_do: 2)
+
+    k_end  shift, and go to state 46
+
+
+State 40
+
+    2 stmt: k_while • expr do stmt k_end (k_do: 0)
+    6 expr: • arg (k_do: 0)
+    7 arg: • k_def fname arg '=' arg (k_do: 0)
+    8    | • primary (k_do: 0)
+    9 primary: • tSTRING (k_do: 0)
+   10        | • tFID (k_do: 0)
+   11        | • fcall k_do stmt k_end (k_do: 0)
+   12        | • '(' expr ')' (k_do: 0)
+   13 fcall: • operation (k_do: 0)
+   14 operation: • tFID (k_do: 0)
+
+    k_def    shift, and go to state 13
+    tSTRING  shift, and go to state 14
+    tFID     shift, and go to state 15
+    '('      shift, and go to state 16
+
+    expr       go to state 47
+    arg        go to state 18
+    primary    go to state 19
+    fcall      go to state 20
+    operation  go to state 21
+
+
+State 41
+
+   11 primary: fcall k_do stmt • k_end (k_do: 0)
+
+    k_end  shift, and go to state 48
+
+
+State 42
 
     3 stmt: expr • (k_do: 0)
 
     $default  reduce using rule 3 (stmt)
 
 
-State 35
+State 43
 
-   10 primary: fcall k_do stmt k_end • (k_do: 2)
+    7 arg: • k_def fname arg '=' arg (k_do: 2)
+    7    | k_def fname arg '=' • arg (k_do: 2)
+    8    | • primary (k_do: 2)
+    9 primary: • tSTRING (k_do: 2)
+   10        | • tFID (k_do: 2)
+   11        | • fcall k_do stmt k_end (k_do: 2)
+   12        | • '(' expr ')' (k_do: 2)
+   13 fcall: • operation (k_do: 2)
+   14 operation: • tFID (k_do: 2)
 
-    $default  reduce using rule 10 (primary)
+    k_def    shift, and go to state 2
+    tSTRING  shift, and go to state 3
+    tFID     shift, and go to state 4
+    '('      shift, and go to state 5
+
+    arg        go to state 49
+    primary    go to state 10
+    fcall      go to state 11
+    operation  go to state 12
 
 
-State 36
+State 44
+
+   11 primary: fcall k_do stmt k_end • (k_do: 2)
+
+    $default  reduce using rule 11 (primary)
+
+
+State 45
+
+    7 arg: • k_def fname arg '=' arg (k_do: 0)
+    7    | k_def fname arg '=' • arg (k_do: 0)
+    8    | • primary (k_do: 0)
+    9 primary: • tSTRING (k_do: 0)
+   10        | • tFID (k_do: 0)
+   11        | • fcall k_do stmt k_end (k_do: 0)
+   12        | • '(' expr ')' (k_do: 0)
+   13 fcall: • operation (k_do: 0)
+   14 operation: • tFID (k_do: 0)
+
+    k_def    shift, and go to state 13
+    tSTRING  shift, and go to state 14
+    tFID     shift, and go to state 15
+    '('      shift, and go to state 16
+
+    arg        go to state 50
+    primary    go to state 19
+    fcall      go to state 20
+    operation  go to state 21
+
+
+State 46
 
     2 stmt: k_while expr do stmt k_end • (k_do: 2)
 
     $default  reduce using rule 2 (stmt)
 
 
-State 37
+State 47
 
     2 stmt: k_while expr • do stmt k_end (k_do: 0)
     4 do: • ';' (k_do: 1)
     5   | • k_do (k_do: 1)
 
-    k_do  shift, and go to state 24
-    ';'   shift, and go to state 25
+    k_do  shift, and go to state 30
+    ';'   shift, and go to state 31
 
-    do  go to state 39
-
-
-State 38
-
-   10 primary: fcall k_do stmt k_end • (k_do: 0)
-
-    $default  reduce using rule 10 (primary)
+    do  go to state 51
 
 
-State 39
+State 48
+
+   11 primary: fcall k_do stmt k_end • (k_do: 0)
+
+    $default  reduce using rule 11 (primary)
+
+
+State 49
+
+    7 arg: k_def fname arg '=' arg • (k_do: 2)
+
+    $default  reduce using rule 7 (arg)
+
+
+State 50
+
+    7 arg: k_def fname arg '=' arg • (k_do: 0)
+
+    $default  reduce using rule 7 (arg)
+
+
+State 51
 
     2 stmt: • k_while expr do stmt k_end (k_do: 0)
     2     | k_while expr do • stmt k_end (k_do: 0)
     3     | • expr (k_do: 0)
     6 expr: • arg (k_do: 0)
-    7 arg: • primary (k_do: 0)
-    8 primary: • tSTRING (k_do: 0)
-    9        | • tFID (k_do: 0)
-   10        | • fcall k_do stmt k_end (k_do: 0)
-   11        | • '(' expr ')' (k_do: 0)
-   12 fcall: • operation (k_do: 0)
-   13 operation: • tFID (k_do: 0)
+    7 arg: • k_def fname arg '=' arg (k_do: 0)
+    8    | • primary (k_do: 0)
+    9 primary: • tSTRING (k_do: 0)
+   10        | • tFID (k_do: 0)
+   11        | • fcall k_do stmt k_end (k_do: 0)
+   12        | • '(' expr ')' (k_do: 0)
+   13 fcall: • operation (k_do: 0)
+   14 operation: • tFID (k_do: 0)
 
-    k_while  shift, and go to state 32
-    tSTRING  shift, and go to state 12
-    tFID     shift, and go to state 13
-    '('      shift, and go to state 14
+    k_while  shift, and go to state 40
+    k_def    shift, and go to state 13
+    tSTRING  shift, and go to state 14
+    tFID     shift, and go to state 15
+    '('      shift, and go to state 16
 
-    stmt       go to state 40
-    expr       go to state 34
-    arg        go to state 16
-    primary    go to state 17
-    fcall      go to state 18
-    operation  go to state 19
+    stmt       go to state 52
+    expr       go to state 42
+    arg        go to state 18
+    primary    go to state 19
+    fcall      go to state 20
+    operation  go to state 21
 
 
-State 40
+State 52
 
     2 stmt: k_while expr do stmt • k_end (k_do: 0)
 
-    k_end  shift, and go to state 41
+    k_end  shift, and go to state 53
 
 
-State 41
+State 53
 
     2 stmt: k_while expr do stmt k_end • (k_do: 0)
 
