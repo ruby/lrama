@@ -694,7 +694,7 @@ module Lrama
 
             # No risk of conflict when
             # * the state only has single reduce
-            # * the state only has term_transitions (GOTO)
+            # * the state only has nterm_transitions (GOTO)
             next if state.reduces.count == 1 && state.term_transitions.count == 0
 
             state.set_look_ahead(rule, bitmap_to_terms(look_ahead))
