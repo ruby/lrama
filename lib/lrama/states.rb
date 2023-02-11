@@ -574,7 +574,6 @@ module Lrama
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
           nterm = shift.next_sym
-          bit = 0
 
           ary = next_state.term_transitions.map do |shift, _|
             shift.next_sym.number
