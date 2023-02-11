@@ -721,7 +721,7 @@ module Lrama
 
     def compute_conflicts
       compute_shift_reduce_conflicts
-      compute_reduece_reduce_conflicts
+      compute_reduce_reduce_conflicts
     end
 
     def compute_shift_reduce_conflicts
@@ -786,7 +786,7 @@ module Lrama
       end
     end
 
-    def compute_reduece_reduce_conflicts
+    def compute_reduce_reduce_conflicts
       states.each do |state|
         a = []
 
