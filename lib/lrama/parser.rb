@@ -268,13 +268,21 @@ module Lrama
       while true do
         case ts.current_type
         when T::Bang
+          # expr(!REDUCE_DO)
+          #
           # If ! is specified, it means the attr should be false
           bang = ts.consume!(T::Bang)
           id = grammar.find_attr_by_id!(ts.consume!(T::Ident))
           h[id] = false
         when T::Ident
+          # expr(REDUCE_DO)
           id = grammar.find_attr_by_id!(ts.consume!(T::Ident))
           h[id] = true
+        when T::Ident_Colon
+          # expr(k_do: 0)
+          id = grammar.find_symbol_by_s_value!(ts.consume!(T::Ident_Colon).s_value)
+          number = ts.consume!(T::Number)
+          h[id] = number.s_value
         else
           break
         end

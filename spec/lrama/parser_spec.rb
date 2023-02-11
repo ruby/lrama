@@ -1184,7 +1184,7 @@ emp: /* none */
     end
 
     describe "nonterminal attributes" do
-      it "can parse %attr" do
+      it "can parse boolean %attr" do
         y = <<~INPUT
 %{
 // Prologue
@@ -1245,6 +1245,68 @@ command_arg: expr ;
           nil,
           nil,
           {attr_0 => false},
+          nil,
+        ])
+      end
+
+      it "can parse number %attr" do
+        y = <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+  int i;
+}
+
+%token <i> k_while
+%token <i> k_do
+%token <i> k_end
+
+%token <i> tSTRING
+%token <i> tIDENTIFIER
+
+%%
+
+program: stmt ;
+
+stmt  : k_while expr(k_do: 1) k_do stmt k_end {}
+      | expr
+      ;
+
+expr  : tSTRING
+      | tIDENTIFIER command_arg {}
+      | tIDENTIFIER command_arg k_do stmt k_end {}
+      ;
+
+command_arg: expr(k_do: 0) ;
+
+%%
+        INPUT
+
+        grammar = Lrama::Parser.new(y).parse
+        k_do = grammar.find_symbol_by_s_value!("k_do")
+
+        expect(grammar.attrs).to eq([
+        ])
+        expect(grammar.rules.map(&:attrs)).to eq([
+          [],
+          [nil],
+          [nil, {k_do => 1}, nil, nil, nil, nil],
+          [nil],
+          [nil],
+          [nil, nil, nil],
+          [nil, nil, nil, nil, nil, nil],
+          [{k_do => 0}],
+        ])
+        expect(grammar.rules.map(&:lhs_attr)).to eq([
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
           nil,
         ])
       end
