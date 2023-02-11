@@ -575,13 +575,11 @@ module Lrama
         state.nterm_transitions.each do |shift, next_state|
           nterm = shift.next_sym
           bit = 0
-          a = []
 
           next_state.term_transitions.each do |shift, _|
             sym = shift.next_sym
             # Encode terms into bitmap
             bit |= (1 << sym.number)
-            a << sym
           end
 
           key = [state.id, nterm.token_id]
@@ -635,7 +633,6 @@ module Lrama
               sym = rule.rhs[i]
 
               break if sym.term?
-              beta = []
               state2 = transition(state, rule.rhs[0...i])
               # p' = state, B = nterm, p = state2, A = sym
               key = [state2.id, sym.token_id]
