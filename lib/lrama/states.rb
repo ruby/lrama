@@ -300,8 +300,6 @@ module Lrama
       # value is array of [state.id, nterm.token_id].
       @reads_relation = {}
 
-      # `read_sets` is a hash whose key is [state.id, nterm.token_id]
-      #
       # `@read_sets` is a hash whose
       # key is [state.id, nterm.token_id],
       # value is bitmap of term.
