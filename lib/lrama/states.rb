@@ -264,7 +264,7 @@ module Lrama
         attrs.select do |k, v|
           v
         end.map do |k, v|
-          k.number
+          [k.class.name, k.number]
         end.sort
       end
 
