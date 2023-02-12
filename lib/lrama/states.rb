@@ -73,7 +73,7 @@ module Lrama
 
     Conflict = Struct.new(:symbols, :reduce, :type, keyword_init: true)
 
-    attr_reader :id, :accessing_symbol, :kernels, :attrs, :conflicts, :resolved_conflicts,
+    attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
                 :default_reduction_rule, :closure, :items
     attr_accessor :shifts, :reduces
 
@@ -82,7 +82,6 @@ module Lrama
       @accessing_symbol = accessing_symbol
       @kernels = kernels.freeze
       @items = @kernels
-      @attrs = attrs.freeze
 
       # Manage relationships between items to state
       # to resolve next state
