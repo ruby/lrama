@@ -260,10 +260,8 @@ module Lrama
 
       # For comparison
       def attrs_to_array
-        attrs.select do |k, v|
-          v
-        end.map do |k, v|
-          [k.class.name, k.number]
+        attrs.map do |k, v|
+          [k.class.name, k.number, v]
         end.sort
       end
 
