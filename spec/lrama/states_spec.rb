@@ -2079,12 +2079,8 @@ fname : tIDENTIFIER
 
           str = ""
           states.reporter.report(str, states: true, itemsets: true, lookaheads: true, verbose: false)
-puts str
+
           expect(str).to eq(<<~STR)
-State 4 conflicts: 1 reduce/reduce
-State 15 conflicts: 1 reduce/reduce
-
-
 State 0
 
     0 $accept: • program "end of file" (k_do: 0)
@@ -2160,15 +2156,11 @@ State 3
 
 State 4
 
-   10 primary: tFID •  ["end of file", k_do, k_end, ';', ')'] (k_do: 2)
+   10 primary: tFID •  ["end of file", k_end, ';', ')'] (k_do: 2)
    14 operation: tFID •  [k_do] (k_do: 2)
 
-    "end of file"  reduce using rule 10 (primary)
-    k_do           reduce using rule 10 (primary)
-    k_do           reduce using rule 14 (operation)
-    k_end          reduce using rule 10 (primary)
-    ';'            reduce using rule 10 (primary)
-    ')'            reduce using rule 10 (primary)
+    k_do      reduce using rule 14 (operation)
+    $default  reduce using rule 10 (primary)
 
 
 State 5
@@ -2265,12 +2257,9 @@ State 14
 State 15
 
    10 primary: tFID •  [k_do, k_end, ';'] (k_do: 0)
-   14 operation: tFID •  [k_do] (k_do: 0)
+   14 operation: tFID • (k_do: 0)
 
-    k_do   reduce using rule 10 (primary)
-    k_do   reduce using rule 14 (operation)
-    k_end  reduce using rule 10 (primary)
-    ';'    reduce using rule 10 (primary)
+    $default  reduce using rule 10 (primary)
 
 
 State 16

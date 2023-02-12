@@ -869,7 +869,30 @@ module Lrama
           state.reduces[(i + 1)..].each do |reduce_2|
             next if reduce_2.look_ahead.nil?
 
-            intersection = reduce_1.look_ahead.intersection(reduce_2.look_ahead)
+            intersection = reduce_1.look_ahead.intersection(reduce_2.look_ahead).reject do |sym|
+              reduce_1_prec = reduce_1.look_ahead_attrs.find {|attr| attr.term_id == sym.id }&.precedence
+              reduce_2_prec = reduce_2.look_ahead_attrs.find {|attr| attr.term_id == sym.id }&.precedence
+
+              case
+              when reduce_1_prec.nil?
+                false
+              when reduce_2_prec.nil?
+                false
+              when reduce_1_prec < reduce_2_prec
+                reduce_1.add_not_selected_symbol(sym)
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce_2, which: :reduce)
+                true
+              when reduce_1_prec > reduce_2_prec
+                reduce_2.add_not_selected_symbol(sym)
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce_1, which: :reduce)
+                true
+              when reduce_1_prec == reduce_2_prec
+                false
+              else
+                raise "Unexpected #{reduce_1}, #{reduce_2}, #{sym}"
+              end
+            end
+
             if !intersection.empty?
               state.conflicts << State::Conflict.new(symbols: intersection.dup, reduce: reduce_2, type: :reduce_reduce)
             end

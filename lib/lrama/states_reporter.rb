@@ -154,7 +154,7 @@ module Lrama
         ary = []
 
         state.non_default_reduces.each do |reduce|
-          reduce.look_ahead.each do |term|
+          reduce.selected_look_ahead.each do |term|
             ary << [term, reduce]
           end
         end
