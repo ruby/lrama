@@ -1298,6 +1298,7 @@ command_arg: expr(do_LOWEST) ;
             T.new(type: T::Ident, s_value: "do_COND"),
           ],
           number: 0,
+          base_number: 0,
           lineno: 17,
         )
 

@@ -282,7 +282,8 @@ module Lrama
   end
 
   BooleanAttr = Struct.new(:id, :number, :lineno, keyword_init: true)
-  IntegerAttr = Struct.new(:id, :precs, :number, :lineno, keyword_init: true)
+  # base_number is used to calculate sequence number of each prec.
+  IntegerAttr = Struct.new(:id, :precs, :number, :base_number, :lineno, keyword_init: true)
 
   Token = Lrama::Lexer::Token
 
@@ -303,6 +304,7 @@ module Lrama
       @printers = []
       @boolean_attrs = []
       @integer_attrs = []
+      @integer_attrs_base_number = 0
       @id_to_attr = {}
       @symbols = []
       @types = []
@@ -330,11 +332,12 @@ module Lrama
     end
 
     def add_integer_attr(id:, precs:, lineno:)
-      attr = IntegerAttr.new(id: id, precs: precs, number: @integer_attrs.count, lineno: lineno)
+      attr = IntegerAttr.new(id: id, precs: precs, number: @integer_attrs.count, base_number: @integer_attrs_base_number, lineno: lineno)
       @integer_attrs << attr
       precs.each_with_index do |prec, i|
         @id_to_attr[prec] = {attr => i}
       end
+      @integer_attrs_base_number += precs.count
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
