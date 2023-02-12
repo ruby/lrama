@@ -36,12 +36,16 @@ module Lrama
     end
 
     class Shift
-      attr_reader :next_sym, :next_items
+      attr_reader :next_sym, :items
       attr_accessor :not_selected
 
-      def initialize(next_sym, next_items)
+      def initialize(next_sym, items)
         @next_sym = next_sym
-        @next_items = next_items
+        @items = items
+      end
+
+      def next_items
+        @next_items ||= items.flat_map(&:next_position_item)
       end
     end
 
@@ -112,15 +116,15 @@ module Lrama
         else
           key = item.next_sym
           _shifts[key] ||= []
-          _shifts[key] << item.next_position_item
+          _shifts[key] << item
         end
       end
 
       # It seems Bison 3.8.2 iterates transitions order by symbol number
-      shifts = _shifts.sort_by do |next_sym, new_items|
+      shifts = _shifts.sort_by do |next_sym, _|
         next_sym.number
-      end.map do |next_sym, new_items|
-        Shift.new(next_sym, new_items.flatten)
+      end.map do |next_sym, items|
+        Shift.new(next_sym, items)
       end
       self.shifts = shifts.freeze
       self.reduces = reduces.freeze
