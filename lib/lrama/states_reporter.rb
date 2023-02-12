@@ -82,7 +82,13 @@ module Lrama
         list.sort_by {|i| [i.rule_id, i.position] }.each do |item|
           rule = item.rule
           position = item.position
-          attrs = item.attrs.map {|k, v| "#{k.id.s_value}: #{v}" }
+          attrs = item.attrs.map do |k, v|
+            if v.is_a?(IntegerAttrPrec)
+              "#{k.id.s_value}: #{v.precedence}"
+            else
+              "#{k.id.s_value}: #{v}"
+            end
+          end
 
           if rule.rhs.empty?
             r = "ε •"

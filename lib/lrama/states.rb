@@ -5,12 +5,13 @@ module Lrama
   class State
     class Reduce
       # https://www.gnu.org/software/bison/manual/html_node/Default-Reductions.html
-      attr_reader :item, :look_ahead, :not_selected_symbols
+      attr_reader :item, :look_ahead, :look_ahead_attrs, :not_selected_symbols
       attr_accessor :default_reduction
 
       def initialize(item)
         @item = item
         @look_ahead = nil
+        @look_ahead_attrs = nil
         @not_selected_symbols = []
       end
 
@@ -20,6 +21,10 @@ module Lrama
 
       def look_ahead=(look_ahead)
         @look_ahead = look_ahead.freeze
+      end
+
+      def look_ahead_attrs=(look_ahead_attrs)
+        @look_ahead_attrs = look_ahead_attrs.freeze
       end
 
       def add_not_selected_symbol(sym)
@@ -46,6 +51,20 @@ module Lrama
 
       def next_items
         @next_items ||= items.flat_map(&:next_position_item)
+      end
+
+      def attr_sequence
+        a = []
+
+        @items.each do |item|
+          item.attrs.each do |attr, prec|
+            if attr.id == @next_sym.id
+              a << prec.number
+            end
+          end
+        end
+
+        a
       end
     end
 
@@ -141,6 +160,14 @@ module Lrama
       end
 
       reduce.look_ahead = look_ahead
+    end
+
+    def set_look_ahead_attrs(rule, look_ahead_attrs)
+      reduce = reduces.find do |r|
+        r.rule == rule
+      end
+
+      reduce.look_ahead_attrs = look_ahead_attrs
     end
 
     # Returns array of [nterm, next_state]
@@ -365,6 +392,10 @@ module Lrama
       @la = {}
     end
 
+    def inspect
+      self.class.name
+    end
+
     def compute
       # Look Ahead Sets
       report_duration(:compute_lr0_states) { compute_lr0_states }
@@ -396,7 +427,8 @@ module Lrama
       h = {}
 
       @direct_read_sets.each do |k, v|
-        h[k] = bitmap_to_terms(v)
+        terms, attrs = bitmap_to_terms(v)
+        h[k] = terms
       end
 
       return h
@@ -406,7 +438,8 @@ module Lrama
       h = {}
 
       @read_sets.each do |k, v|
-        h[k] = bitmap_to_terms(v)
+        terms, attrs = bitmap_to_terms(v)
+        h[k] = terms
       end
 
       return h
@@ -416,7 +449,8 @@ module Lrama
       h = {}
 
       @follow_sets.each do |k, v|
-        h[k] = bitmap_to_terms(v)
+        terms, attrs = bitmap_to_terms(v)
+        h[k] = terms
       end
 
       return h
@@ -426,7 +460,8 @@ module Lrama
       h = {}
 
       @la.each do |k, v|
-        h[k] = bitmap_to_terms(v)
+        terms, attrs = bitmap_to_terms(v)
+        h[k] = terms
       end
 
       return h
@@ -618,6 +653,8 @@ module Lrama
 
           ary = next_state.term_transitions.map do |shift, _|
             shift.next_sym.number
+          end + next_state.term_transitions.flat_map do |shift, _|
+            shift.attr_sequence.map {|int| int + terms.count  }
           end
 
           key = [state.id, nterm.token_id]
@@ -734,17 +771,28 @@ module Lrama
             # * the state only has nterm_transitions (GOTO)
             next if state.reduces.count == 1 && state.term_transitions.count == 0
 
-            state.set_look_ahead(rule, bitmap_to_terms(look_ahead))
+            terms, attrs = bitmap_to_terms(look_ahead)
+
+            state.set_look_ahead(rule, terms)
+            state.set_look_ahead_attrs(rule, attrs)
           end
         end
       end
     end
 
     def bitmap_to_terms(bit)
-      ary = Bitmap.to_array(bit)
-      ary.map do |i|
-        @grammar.find_symbol_by_number!(i)
+      terms = []
+      attrs = []
+
+      Bitmap.to_array(bit).each do |i|
+        if i < self.terms.count
+          terms << @grammar.find_symbol_by_number!(i)
+        else
+          attrs << @grammar.find_integer_attr_prec_by_number!(i - self.terms.count)
+        end
       end
+
+      [terms, attrs]
     end
 
     def compute_conflicts
@@ -816,16 +864,15 @@ module Lrama
 
     def compute_reduce_reduce_conflicts
       states.each do |state|
-        a = []
+        state.reduces.each_with_index do |reduce_1, i|
+          next if reduce_1.look_ahead.nil?
+          state.reduces[(i + 1)..].each do |reduce_2|
+            next if reduce_2.look_ahead.nil?
 
-        state.reduces.each do |reduce|
-          next if reduce.look_ahead.nil?
-
-          intersection = a.intersection(reduce.look_ahead)
-          a += reduce.look_ahead
-
-          if !intersection.empty?
-            state.conflicts << State::Conflict.new(symbols: intersection.dup, reduce: reduce, type: :reduce_reduce)
+            intersection = reduce_1.look_ahead.intersection(reduce_2.look_ahead)
+            if !intersection.empty?
+              state.conflicts << State::Conflict.new(symbols: intersection.dup, reduce: reduce_2, type: :reduce_reduce)
+            end
           end
         end
       end

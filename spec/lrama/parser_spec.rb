@@ -8,6 +8,7 @@ RSpec.describe Lrama::Parser do
   Code = Lrama::Code
   BooleanAttr = Lrama::BooleanAttr
   IntegerAttr = Lrama::IntegerAttr
+  IntegerAttrPrec = Lrama::IntegerAttrPrec
 
   let(:header) do
     <<~HEADER
@@ -1291,14 +1292,28 @@ command_arg: expr(do_LOWEST) ;
         INPUT
 
         grammar = Lrama::Parser.new(y).parse
+        k_do = T.new(type: T::Ident, s_value: "k_do")
+        prec_0 = IntegerAttrPrec.new(
+          id: T.new(type: T::Ident, s_value: "do_LOWEST"),
+          number: 0,
+          precedence: 0,
+          term_id: k_do,
+          lineno: 17
+        )
+        prec_1 = IntegerAttrPrec.new(
+          id: T.new(type: T::Ident, s_value: "do_COND"), 
+          number: 1,
+          precedence: 1,
+          term_id: k_do,
+          lineno: 17
+        )
         attr_0 = IntegerAttr.new(
-          id: T.new(type: T::Ident, s_value: "k_do"),
+          id: k_do,
           precs: [
-            T.new(type: T::Ident, s_value: "do_LOWEST"),
-            T.new(type: T::Ident, s_value: "do_COND"),
+            prec_0,
+            prec_1,
           ],
           number: 0,
-          base_number: 0,
           lineno: 17,
         )
 
@@ -1310,12 +1325,12 @@ command_arg: expr(do_LOWEST) ;
         expect(grammar.rules.map(&:attrs)).to eq([
           [],
           [nil],
-          [nil, {attr_0 => 1}, nil, nil, nil, nil],
+          [nil, {attr_0 => prec_1}, nil, nil, nil, nil],
           [nil],
           [nil],
           [nil, nil, nil],
           [nil, nil, nil, nil, nil, nil],
-          [{attr_0 => 0}],
+          [{attr_0 => prec_0}],
         ])
         expect(grammar.rules.map(&:lhs_attr)).to eq([
           nil,

@@ -282,8 +282,11 @@ module Lrama
   end
 
   BooleanAttr = Struct.new(:id, :number, :lineno, keyword_init: true)
-  # base_number is used to calculate sequence number of each prec.
-  IntegerAttr = Struct.new(:id, :precs, :number, :base_number, :lineno, keyword_init: true)
+
+  # number is sequence number among IntegerAttrs
+  IntegerAttrPrec = Struct.new(:id, :number, :precedence, :term_id, :lineno, keyword_init: true)
+
+  IntegerAttr = Struct.new(:id, :precs, :number, :lineno, keyword_init: true)
 
   Token = Lrama::Lexer::Token
 
@@ -304,7 +307,7 @@ module Lrama
       @printers = []
       @boolean_attrs = []
       @integer_attrs = []
-      @integer_attrs_base_number = 0
+      @integer_attr_precs = []
       @id_to_attr = {}
       @symbols = []
       @types = []
@@ -331,13 +334,18 @@ module Lrama
       @id_to_attr[id] = {attr => true}
     end
 
-    def add_integer_attr(id:, precs:, lineno:)
-      attr = IntegerAttr.new(id: id, precs: precs, number: @integer_attrs.count, base_number: @integer_attrs_base_number, lineno: lineno)
-      @integer_attrs << attr
-      precs.each_with_index do |prec, i|
-        @id_to_attr[prec] = {attr => i}
+    def add_integer_attr(id:, prec_ids:, lineno:)
+      precs = prec_ids.each_with_index.map do |prec_id, i|
+        prec = IntegerAttrPrec.new(id: prec_id, number: @integer_attr_precs.count, precedence: i, term_id: id, lineno: lineno)
+        @integer_attr_precs << prec
+        prec
       end
-      @integer_attrs_base_number += precs.count
+
+      attr = IntegerAttr.new(id: id, precs: precs, number: @integer_attrs.count, lineno: lineno)
+      @integer_attrs << attr
+      precs.each do |prec|
+        @id_to_attr[prec.id] = {attr => prec}
+      end
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
@@ -550,6 +558,10 @@ module Lrama
       else
         attr
       end
+    end
+
+    def find_integer_attr_prec_by_number!(number)
+      @integer_attr_precs[number] || (raise "Attr Prec not found: #{number}")
     end
 
     def terms_count

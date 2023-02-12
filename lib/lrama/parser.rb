@@ -143,17 +143,17 @@ module Lrama
           # %int-attr nterm prec_name ...
           lineno = ts.current_token.line
           ts.next
-          precs = []
+          prec_ids = []
           id = ts.consume!(T::Ident)
           while true do
             case ts.current_type
             when T::Ident
-              precs << ts.consume!(T::Ident)
+              prec_ids << ts.consume!(T::Ident)
             else
               break
             end
           end
-          grammar.add_integer_attr(id: id, precs: precs, lineno: lineno)
+          grammar.add_integer_attr(id: id, prec_ids: prec_ids, lineno: lineno)
         when T::P_token
           # %token tag? (ident number? string?)+
           #
