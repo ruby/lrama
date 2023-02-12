@@ -138,7 +138,22 @@ module Lrama
           lineno = ts.current_token.line
           ts.next
           id = ts.consume!(T::Ident)
-          grammar.add_attr(id: id, lineno: lineno)
+          grammar.add_boolean_attr(id: id, lineno: lineno)
+        when T::P_int_attr
+          # %int-attr nterm prec_name ...
+          lineno = ts.current_token.line
+          ts.next
+          precs = []
+          id = ts.consume!(T::Ident)
+          while true do
+            case ts.current_type
+            when T::Ident
+              precs << ts.consume!(T::Ident)
+            else
+              break
+            end
+          end
+          grammar.add_integer_attr(id: id, precs: precs, lineno: lineno)
         when T::P_token
           # %token tag? (ident number? string?)+
           #
@@ -272,17 +287,12 @@ module Lrama
           #
           # If ! is specified, it means the attr should be false
           bang = ts.consume!(T::Bang)
-          id = grammar.find_attr_by_id!(ts.consume!(T::Ident))
-          h[id] = false
+          attr = grammar.find_attr_by_id!(ts.consume!(T::Ident), true)
+          h.merge!(attr)
         when T::Ident
           # expr(REDUCE_DO)
-          id = grammar.find_attr_by_id!(ts.consume!(T::Ident))
-          h[id] = true
-        when T::Ident_Colon
-          # expr(k_do: 0)
-          id = grammar.find_symbol_by_s_value!(ts.consume!(T::Ident_Colon).s_value)
-          number = ts.consume!(T::Number)
-          h[id] = number.s_value
+          attr = grammar.find_attr_by_id!(ts.consume!(T::Ident))
+          h.merge!(attr)
         else
           break
         end

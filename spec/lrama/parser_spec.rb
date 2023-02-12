@@ -6,7 +6,8 @@ RSpec.describe Lrama::Parser do
   Rule = Lrama::Rule
   Printer = Lrama::Printer
   Code = Lrama::Code
-  Attr = Lrama::Attr
+  BooleanAttr = Lrama::BooleanAttr
+  IntegerAttr = Lrama::IntegerAttr
 
   let(:header) do
     <<~HEADER
@@ -1222,10 +1223,12 @@ command_arg: expr ;
         INPUT
 
         grammar = Lrama::Parser.new(y).parse
-        attr_0 = Attr.new(id: T.new(type: T::Ident, s_value: "REDUCE_DO"), number: 0, lineno: 16)
+        attr_0 = BooleanAttr.new(id: T.new(type: T::Ident, s_value: "REDUCE_DO"), number: 0, lineno: 16)
 
-        expect(grammar.attrs).to eq([
+        expect(grammar.boolean_attrs).to eq([
           attr_0
+        ])
+        expect(grammar.integer_attrs).to eq([
         ])
         expect(grammar.rules.map(&:attrs)).to eq([
           [],
@@ -1266,11 +1269,14 @@ command_arg: expr ;
 %token <i> tSTRING
 %token <i> tIDENTIFIER
 
+/* k_do: do_LOWEST = 0, do_COND = 1 */
+%int-attr k_do do_LOWEST do_COND
+
 %%
 
 program: stmt ;
 
-stmt  : k_while expr(k_do: 1) k_do stmt k_end {}
+stmt  : k_while expr(do_COND) k_do stmt k_end {}
       | expr
       ;
 
@@ -1279,25 +1285,36 @@ expr  : tSTRING
       | tIDENTIFIER command_arg k_do stmt k_end {}
       ;
 
-command_arg: expr(k_do: 0) ;
+command_arg: expr(do_LOWEST) ;
 
 %%
         INPUT
 
         grammar = Lrama::Parser.new(y).parse
-        k_do = grammar.find_symbol_by_s_value!("k_do")
+        attr_0 = IntegerAttr.new(
+          id: T.new(type: T::Ident, s_value: "k_do"),
+          precs: [
+            T.new(type: T::Ident, s_value: "do_LOWEST"),
+            T.new(type: T::Ident, s_value: "do_COND"),
+          ],
+          number: 0,
+          lineno: 17,
+        )
 
-        expect(grammar.attrs).to eq([
+        expect(grammar.boolean_attrs).to eq([
+        ])
+        expect(grammar.integer_attrs).to eq([
+          attr_0
         ])
         expect(grammar.rules.map(&:attrs)).to eq([
           [],
           [nil],
-          [nil, {k_do => 1}, nil, nil, nil, nil],
+          [nil, {attr_0 => 1}, nil, nil, nil, nil],
           [nil],
           [nil],
           [nil, nil, nil],
           [nil, nil, nil, nil, nil, nil],
-          [{k_do => 0}],
+          [{attr_0 => 0}],
         ])
         expect(grammar.rules.map(&:lhs_attr)).to eq([
           nil,

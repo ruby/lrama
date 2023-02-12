@@ -43,6 +43,7 @@ module Lrama
       define_type(:P_left)           # %left
       define_type(:P_right)          # %right
       define_type(:P_prec)           # %prec
+      define_type(:P_int_attr)       # %int-attr
       define_type(:User_code)        # { ... }
       define_type(:Tag)              # <int>
       define_type(:Number)           # 0
@@ -214,6 +215,8 @@ module Lrama
           tokens << create_token(Token::P_right, ss[0], line, ss.pos - column)
         when ss.scan(/%prec/)
           tokens << create_token(Token::P_prec, ss[0], line, ss.pos - column)
+        when ss.scan(/%int-attr/)
+          tokens << create_token(Token::P_int_attr, ss[0], line, ss.pos - column)
         when ss.scan(/{/)
           token, line = lex_user_code(ss, line, ss.pos - column, lines)
           tokens << token

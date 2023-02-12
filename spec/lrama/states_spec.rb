@@ -2032,12 +2032,13 @@ State 20
 %token <i> tFID
 
 /* k_do: do_LOWEST = 0, do_COND = 1, do_HIGHEST = 2 */
+%int-attr k_do do_LOWEST do_COND do_HIGHEST
 
 %%
 
-program: stmt(k_do: 2) ;
+program: stmt(do_HIGHEST) ;
 
-stmt  : k_while expr(k_do: 0) do(k_do: 1) stmt k_end {...}
+stmt  : k_while expr(do_LOWEST) do(do_COND) stmt k_end {...}
       | expr
       ;
 
@@ -2048,14 +2049,14 @@ do    : ';'
 expr  : arg
       ;
 
-arg   : k_def fname '(' tIDENTIFIER ')' '=' arg(k_do: 2)
+arg   : k_def fname '(' tIDENTIFIER ')' '=' arg(do_HIGHEST)
       | primary
       ;
 
 primary  : tSTRING
          | tFID {...}
          | fcall k_do stmt k_end {...}
-         | '(' expr(k_do: 2) ')'
+         | '(' expr(do_HIGHEST) ')'
          ;
 
 fcall : operation
@@ -2086,8 +2087,8 @@ State 15 conflicts: 1 reduce/reduce
 
 State 0
 
-    0 $accept: • program "end of file"
-    1 program: • stmt
+    0 $accept: • program "end of file" (k_do: 0)
+    1 program: • stmt (k_do: 0)
     2 stmt: • k_while expr do stmt k_end (k_do: 2)
     3     | • expr (k_do: 2)
     6 expr: • arg (k_do: 2)
@@ -2197,14 +2198,14 @@ State 5
 
 State 6
 
-    0 $accept: program • "end of file"
+    0 $accept: program • "end of file" (k_do: 0)
 
     "end of file"  shift, and go to state 25
 
 
 State 7
 
-    1 program: stmt •
+    1 program: stmt • (k_do: 0)
 
     $default  reduce using rule 1 (program)
 
@@ -2360,7 +2361,7 @@ State 24
 
 State 25
 
-    0 $accept: program "end of file" •
+    0 $accept: program "end of file" • (k_do: 0)
 
     $default  accept
 

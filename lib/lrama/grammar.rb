@@ -281,7 +281,8 @@ module Lrama
     end
   end
 
-  Attr = Struct.new(:id, :number, :lineno, keyword_init: true)
+  BooleanAttr = Struct.new(:id, :number, :lineno, keyword_init: true)
+  IntegerAttr = Struct.new(:id, :precs, :number, :lineno, keyword_init: true)
 
   Token = Lrama::Lexer::Token
 
@@ -292,7 +293,7 @@ module Lrama
 
     attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
-                  :printers, :attrs,
+                  :printers, :boolean_attrs, :integer_attrs,
                   :lex_param, :parse_param, :initial_action,
                   :symbols, :types,
                   :rules, :_rules,
@@ -300,7 +301,9 @@ module Lrama
 
     def initialize
       @printers = []
-      @attrs = []
+      @boolean_attrs = []
+      @integer_attrs = []
+      @id_to_attr = {}
       @symbols = []
       @types = []
       @_rules = []
@@ -320,8 +323,18 @@ module Lrama
       @printers << Printer.new(ident_or_tags: ident_or_tags, code: code, lineno: lineno)
     end
 
-    def add_attr(id:, lineno:)
-      @attrs << Attr.new(id: id, number: @attrs.count, lineno: lineno)
+    def add_boolean_attr(id:, lineno:)
+      attr = BooleanAttr.new(id: id, number: @boolean_attrs.count, lineno: lineno)
+      @boolean_attrs << attr
+      @id_to_attr[id] = {attr => true}
+    end
+
+    def add_integer_attr(id:, precs:, lineno:)
+      attr = IntegerAttr.new(id: id, precs: precs, number: @integer_attrs.count, lineno: lineno)
+      @integer_attrs << attr
+      precs.each_with_index do |prec, i|
+        @id_to_attr[prec] = {attr => i}
+      end
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
@@ -524,10 +537,16 @@ module Lrama
       @sym_to_rules[sym.number]
     end
 
-    def find_attr_by_id!(id)
-      @attrs.find do |attr|
-        attr.id == id
-      end || (raise "Attr not found: #{id}")
+    def find_attr_by_id!(id, bang = false)
+      attr = @id_to_attr[id]
+      raise "Attr not found: #{id}" unless attr
+
+      if bang
+        raise "Can not specify '!' for integer attr. #{id}" if attr.keys.first.is_a?(IntegerAttr)
+        attr.transform_values { false }
+      else
+        attr
+      end
     end
 
     def terms_count

@@ -391,10 +391,6 @@ module Lrama
       @states.count
     end
 
-    def attrs
-      @grammar.attrs
-    end
-
     def direct_read_sets
       h = {}
 
@@ -448,8 +444,12 @@ module Lrama
     def initial_attrs
       h = {}
 
-      attrs.each do |attr|
+      @grammar.boolean_attrs.each do |attr|
         h[attr] = false
+      end
+
+      @grammar.integer_attrs.each do |attr|
+        h[attr] = 0
       end
 
       h
