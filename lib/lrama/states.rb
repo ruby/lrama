@@ -69,29 +69,9 @@ module Lrama
       end
     end
 
-    # * symbol: A symbol under discussion
-    # * reduce: A reduce under discussion
-    # * which: For which a conflict is resolved. :shift, :reduce or :error (for nonassociative)
-    ResolvedConflict = Struct.new(:symbol, :reduce, :which, :same_prec, keyword_init: true) do
+    ResolvedConflict = Struct.new(:symbol, :which, :message, keyword_init: true) do
       def report_message
-        s = symbol.display_name
-        r = reduce.rule.precedence_sym.display_name
-        case
-        when which == :shift && same_prec
-          msg = "resolved as #{which} (%right #{s})"
-        when which == :shift
-          msg = "resolved as #{which} (#{r} < #{s})"
-        when which == :reduce && same_prec
-          msg = "resolved as #{which} (%left #{s})"
-        when which == :reduce
-          msg = "resolved as #{which} (#{s} < #{r})"
-        when which == :error
-          msg = "resolved as an #{which} (%nonassoc #{s})"
-        else
-          raise "Unknown direction. #{self}"
-        end
-
-        "Conflict between rule #{reduce.rule.id} and token #{s} #{msg}."
+        message
       end
     end
 
@@ -822,12 +802,16 @@ module Lrama
               next
             when -1
               # Reduce is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce)
+              s = sym.display_name
+              r = reduce.rule.precedence_sym&.display_name
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :reduce, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as reduce (#{s} < #{r}).")
               shift.not_selected = true
               next
             when 1
               # Shift is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift)
+              s = sym.display_name
+              r = reduce.rule.precedence_sym&.display_name
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :shift, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as shift (#{r} < #{s}).")
               reduce.add_not_selected_symbol(sym)
               next
             when 0
@@ -842,12 +826,14 @@ module Lrama
             case sym.precedence.type
             when :right
               # Shift is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift, same_prec: true)
+              s = sym.display_name
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :shift, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as shift (%right #{s}).")
               reduce.add_not_selected_symbol(sym)
               next
             when :left
               # Reduce is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce, same_prec: true)
+              s = sym.display_name
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :reduce, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as reduce (%left #{s}).")
               shift.not_selected = true
               next
             when :nonassoc
@@ -857,7 +843,8 @@ module Lrama
               # Then omit both the shift and reduce.
               #
               # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :error)
+              s = sym.display_name
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :error, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as an error (%nonassoc #{s}).")
               shift.not_selected = true
               reduce.add_not_selected_symbol(sym)
               next
