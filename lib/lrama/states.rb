@@ -814,7 +814,7 @@ module Lrama
             # Shift/Reduce conflict
             # TODO: Need to separate term precedence from %int-attr precedence
             shift_precs = [sym.precedence&.precedence].compact + shift.next_sym_precedences.map(&:precedence)
-            reduce_precs = [reduce.item.rule.precedence&.precedence].compact + reduce.look_ahead_attrs.select {|attr| attr.term_id == sym.id }.map(&:precedence)
+            reduce_precs = [reduce.rule.precedence&.precedence].compact + reduce.look_ahead_attrs.select {|attr| attr.term_id == sym.id }.map(&:precedence)
 
             case compare_precedences(shift_precs, reduce_precs)
             when nil
