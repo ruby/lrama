@@ -536,23 +536,24 @@ module Lrama
       queued = {}
       items = state.kernels.dup
 
-      items.each do |item|
-        queued[item] = true
-      end
-
       while (item = items.shift) do
+        next_attrs = item.next_attrs
+
         if (sym = item.next_sym) && sym.nterm?
+          key = [sym, next_attrs]
+          next if queued[key]
+
           @grammar.find_rules_by_symbol!(sym).each do |rule|
             if rule.lhs_attr
               next unless rule.lhs_attr.all? {|k, v| item.next_attrs[k] == v }
             end
 
-            i = Item.new(rule: rule, position: 0, attrs: item.next_attrs)
-            next if queued[i]
+            i = Item.new(rule: rule, position: 0, attrs: next_attrs)
             closure << i
             items << i
-            queued[i] = true
           end
+
+          queued[key] = true
         end
       end
 
