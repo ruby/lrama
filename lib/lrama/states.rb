@@ -274,7 +274,7 @@ module Lrama
 
       # Optimization for States#setup_state
       def hash
-        [rule.id, position, attrs].hash
+        rule.id + position * 10
       end
 
       def rule_id
