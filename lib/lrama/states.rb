@@ -10,7 +10,8 @@ module Lrama
 
       def initialize(item)
         @item = item
-        @look_ahead = nil
+        # @look_ahead = nil
+        @look_ahead = []
         @look_ahead_attrs = nil
         @not_selected_symbols = []
       end
@@ -53,13 +54,13 @@ module Lrama
         @next_items ||= items.flat_map(&:next_position_item)
       end
 
-      def attr_sequence
+      def next_sym_precedences
         a = []
 
         @items.each do |item|
           item.attrs.each do |attr, prec|
             if attr.id == @next_sym.id
-              a << prec.number
+              a << prec
             end
           end
         end
@@ -292,7 +293,11 @@ module Lrama
       # For comparison
       def attrs_to_array
         attrs.map do |k, v|
-          [k.class.name, k.number, v]
+          if v.is_a?(IntegerAttrPrec)
+            [k.number, v.number]
+          else
+            [k.number, v]
+          end
         end.sort
       end
 
@@ -654,7 +659,7 @@ module Lrama
           ary = next_state.term_transitions.map do |shift, _|
             shift.next_sym.number
           end + next_state.term_transitions.flat_map do |shift, _|
-            shift.attr_sequence.map {|int| int + terms.count  }
+            shift.next_sym_precedences.map(&:number).map {|int| int + terms.count  }
           end
 
           key = [state.id, nterm.token_id]
@@ -810,28 +815,32 @@ module Lrama
             next if !reduce.look_ahead.include?(sym)
 
             # Shift/Reduce conflict
-            shift_prec = sym.precedence
-            reduce_prec = reduce.item.rule.precedence
+            # TODO: Need to separate term precedence from %int-attr precedence
+            shift_precs = [sym.precedence&.precedence].compact + shift.next_sym_precedences.map(&:precedence)
+            reduce_precs = [reduce.item.rule.precedence&.precedence].compact + reduce.look_ahead_attrs.select {|attr| attr.term_id == sym.id }.map(&:precedence)
 
-            # Can resolve only when both have prec
-            unless shift_prec && reduce_prec
+            case compare_precedences(shift_precs, reduce_precs)
+            when nil
               state.conflicts << State::Conflict.new(symbols: [sym], reduce: reduce, type: :shift_reduce)
               next
-            end
-
-            case
-            when shift_prec < reduce_prec
+            when -1
               # Reduce is selected
               state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce)
               shift.not_selected = true
               next
-            when shift_prec > reduce_prec
+            when 1
               # Shift is selected
               state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift)
               reduce.add_not_selected_symbol(sym)
               next
+            when 0
+              # fall through to check associativity
+            else
+              raise "Unexpected #{shift}, #{reduce}, #{sym}"
             end
 
+            # TODO: Consider to restrict %int-attr for only terms not specified for prec?
+            #
             # shift_prec == reduce_prec, then check associativity
             case sym.precedence.type
             when :right
@@ -854,6 +863,7 @@ module Lrama
               state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :error)
               shift.not_selected = true
               reduce.add_not_selected_symbol(sym)
+              next
             else
               raise "Unknown precedence type. #{sym}"
             end
@@ -870,23 +880,21 @@ module Lrama
             next if reduce_2.look_ahead.nil?
 
             intersection = reduce_1.look_ahead.intersection(reduce_2.look_ahead).reject do |sym|
-              reduce_1_prec = reduce_1.look_ahead_attrs.find {|attr| attr.term_id == sym.id }&.precedence
-              reduce_2_prec = reduce_2.look_ahead_attrs.find {|attr| attr.term_id == sym.id }&.precedence
+              reduce_1_precs = reduce_1.look_ahead_attrs.select {|attr| attr.term_id == sym.id }.map(&:precedence)
+              reduce_2_precs = reduce_2.look_ahead_attrs.select {|attr| attr.term_id == sym.id }.map(&:precedence)
 
-              case
-              when reduce_1_prec.nil?
+              case compare_precedences(reduce_1_precs, reduce_2_precs)
+              when nil
                 false
-              when reduce_2_prec.nil?
-                false
-              when reduce_1_prec < reduce_2_prec
+              when -1
                 reduce_1.add_not_selected_symbol(sym)
-                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce_2, which: :reduce)
+                # state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce_2, which: :reduce)
                 true
-              when reduce_1_prec > reduce_2_prec
+              when 1
                 reduce_2.add_not_selected_symbol(sym)
-                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce_1, which: :reduce)
+                # state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce_1, which: :reduce)
                 true
-              when reduce_1_prec == reduce_2_prec
+              when 0
                 false
               else
                 raise "Unexpected #{reduce_1}, #{reduce_2}, #{sym}"
@@ -898,6 +906,21 @@ module Lrama
             end
           end
         end
+      end
+    end
+
+    def compare_precedences(precs_1, precs_2)
+      return nil if precs_1.empty? || precs_2.empty?
+
+      case
+      when precs_1.max < precs_2.min
+        -1
+      when precs_2.max < precs_1.min
+        1
+      when precs_1.sort == precs_2.sort
+        0
+      else
+        nil
       end
     end
 
