@@ -1417,7 +1417,7 @@ yybackup:
   if (yychar == YYEMPTY)
     {
       YYDPRINTF ((stderr, "Reading a token\n"));
-      yychar = yylex (&yylval, &yylloc, p);
+      yychar = yylex <%= output.yylex_formals %>;
     }
 
   if (yychar <= <%= output.eof_symbol.id.s_value %>)

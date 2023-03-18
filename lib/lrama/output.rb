@@ -175,11 +175,22 @@ module Lrama
       str
     end
 
+    def omit_braces(param)
+      param[1..-2]
+    end
+
     # b4_parse_param
     def parse_param
       if @grammar.parse_param
-        # Omit "{}"
-        @grammar.parse_param[1..-2]
+        omit_braces(@grammar.parse_param)
+      else
+        ""
+      end
+    end
+
+    def lex_param
+      if @grammar.lex_param
+        omit_braces(@grammar.lex_param)
       else
         ""
       end
@@ -194,9 +205,21 @@ module Lrama
       end
     end
 
+    def extract_param_name(param)
+      /\A(.)+([a-zA-Z0-9_]+)\z/.match(param)[2]
+    end
+
     def parse_param_name
       if @grammar.parse_param
-        /\A(.)+([a-zA-Z0-9_]+)\z/.match(parse_param)[2]
+        extract_param_name(parse_param)
+      else
+        ""
+      end
+    end
+
+    def lex_param_name
+      if @grammar.lex_param
+        extract_param_name(lex_param)
       else
         ""
       end
@@ -214,6 +237,17 @@ module Lrama
       end
 
       str
+    end
+
+    # b4_yylex_formals
+    def yylex_formals
+      ary = ["&yylval", "&yylloc"]
+
+      if @grammar.lex_param
+        ary << lex_param_name
+      end
+
+      "(#{ary.join(', ')})"
     end
 
     # b4_table_value_equals

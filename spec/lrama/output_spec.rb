@@ -38,4 +38,11 @@ RSpec.describe Lrama::Output do
       expect(output.parse_param_name).to eq("p")
     end
   end
+
+  describe "#lex_param_name" do
+    it "returns name of lex param" do
+      allow(grammar).to receive(:lex_param).and_return("{struct parser_params *p}")
+      expect(output.lex_param_name).to eq("p")
+    end
+  end
 end
