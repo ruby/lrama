@@ -259,6 +259,17 @@ module Lrama
       end
     end
 
+    # b4_yyerror_args
+    def yyerror_args
+      ary = ["&yylloc"]
+
+      if @grammar.parse_param
+        ary << parse_param_name
+      end
+
+      "#{ary.join(', ')}"
+    end
+
     def template_basename
       File.basename(template_file)
     end

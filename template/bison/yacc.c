@@ -668,7 +668,7 @@ enum { YYENOMEM = -2 };
       }                                                           \
     else                                                          \
       {                                                           \
-        yyerror (&yylloc, p, YY_("syntax error: cannot back up")); \
+        yyerror (<%= output.yyerror_args %>, YY_("syntax error: cannot back up")); \
         YYERROR;                                                  \
       }                                                           \
   while (0)
@@ -1583,7 +1583,7 @@ yyerrlab:
                 yysyntax_error_status = YYENOMEM;
               }
           }
-        yyerror (&yylloc, p, yymsgp);
+        yyerror (<%= output.yyerror_args %>, yymsgp);
         if (yysyntax_error_status == YYENOMEM)
           YYNOMEM;
       }
@@ -1701,7 +1701,7 @@ yyabortlab:
 | yyexhaustedlab -- YYNOMEM (memory exhaustion) comes here.  |
 `-----------------------------------------------------------*/
 yyexhaustedlab:
-  yyerror (&yylloc, p, YY_("memory exhausted"));
+  yyerror (<%= output.yyerror_args %>, YY_("memory exhausted"));
   yyresult = 2;
   goto yyreturnlab;
 
