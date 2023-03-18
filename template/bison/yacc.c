@@ -802,9 +802,7 @@ yy_symbol_value_print (FILE *yyo,
                        yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp<%= output.user_formals %>)
 {
   FILE *yyoutput = yyo;
-  YY_USE (yyoutput);
-  YY_USE (yylocationp);
-  YY_USE (p);
+<%= output.parse_param_use("yyoutput", "yylocationp") %>
   if (!yyvaluep)
     return;
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
@@ -1199,9 +1197,7 @@ static void
 yydestruct (const char *yymsg,
             yysymbol_kind_t yykind, YYSTYPE *yyvaluep, YYLTYPE *yylocationp<%= output.user_formals %>)
 {
-  YY_USE (yyvaluep);
-  YY_USE (yylocationp);
-  YY_USE (p);
+<%= output.parse_param_use("yyvaluep", "yylocationp") %>
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);

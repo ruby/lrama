@@ -194,6 +194,28 @@ module Lrama
       end
     end
 
+    def parse_param_name
+      if @grammar.parse_param
+        /\A(.)+([a-zA-Z0-9_]+)\z/.match(parse_param)[2]
+      else
+        ""
+      end
+    end
+
+    # b4_parse_param_use
+    def parse_param_use(val, loc)
+      str = <<-STR
+  YY_USE (#{val});
+  YY_USE (#{loc});
+      STR
+
+      if @grammar.parse_param
+        str << "  YY_USE (#{parse_param_name});"
+      end
+
+      str
+    end
+
     # b4_table_value_equals
     def table_value_equals(table, value, literal, symbol)
       if literal < table.min || table.max < literal
