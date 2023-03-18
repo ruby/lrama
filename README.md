@@ -29,9 +29,14 @@ $ lrama --version
 ## Usage
 
 ```shell
-# "y.tab.c" is generated
-$ lrama parse.y
+# "y.tab.c" and "y.tab.h" are generated
+$ lrama -d sample/parse.y
 ```
+
+## Build Ruby
+
+1. Install Lrama
+2. Run `make YACC=lrama`
 
 ## License
 
