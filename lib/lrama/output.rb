@@ -205,6 +205,15 @@ module Lrama
       end
     end
 
+    # b4_user_args
+    def user_args
+      if @grammar.parse_param
+        ", #{parse_param_name}"
+      else
+        ""
+      end
+    end
+
     def extract_param_name(param)
       /\A(.)+([a-zA-Z0-9_]+)\z/.match(param)[2]
     end

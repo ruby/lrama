@@ -1604,7 +1604,7 @@ yyerrlab:
       else
         {
           yydestruct ("Error: discarding",
-                      yytoken, &yylval, &yylloc, p);
+                      yytoken, &yylval, &yylloc<%= output.user_args %>);
           yychar = YYEMPTY;
         }
     }
@@ -1660,7 +1660,7 @@ yyerrlab1:
 
       yyerror_range[1] = *yylsp;
       yydestruct ("Error: popping",
-                  YY_ACCESSING_SYMBOL (yystate), yyvsp, yylsp, p);
+                  YY_ACCESSING_SYMBOL (yystate), yyvsp, yylsp<%= output.user_args %>);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1716,7 +1716,7 @@ yyreturnlab:
          user semantic actions for why this is necessary.  */
       yytoken = YYTRANSLATE (yychar);
       yydestruct ("Cleanup: discarding lookahead",
-                  yytoken, &yylval, &yylloc, p);
+                  yytoken, &yylval, &yylloc<%= output.user_args %>);
     }
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYABORT or YYACCEPT.  */
@@ -1725,7 +1725,7 @@ yyreturnlab:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp, yylsp, p);
+                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp, yylsp<%= output.user_args %>);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
