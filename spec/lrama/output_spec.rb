@@ -26,9 +26,18 @@ RSpec.describe Lrama::Output do
   end
 
   describe "#user_formals" do
-    it "returns declaration of parse param without braces with a leading comma" do
-      allow(grammar).to receive(:parse_param).and_return("{struct parser_params *p}")
-      expect(output.user_formals).to eq(", struct parser_params *p")
+    context "when parse_param exists" do
+      it "returns declaration of parse param without braces with a leading comma" do
+        allow(grammar).to receive(:parse_param).and_return("{struct parser_params *p}")
+        expect(output.user_formals).to eq(", struct parser_params *p")
+      end
+    end
+
+    context "when parse_param does not exist" do
+      it "returns blank" do
+        allow(grammar).to receive(:parse_param).and_return(nil)
+        expect(output.user_formals).to eq("")
+      end
     end
   end
 
