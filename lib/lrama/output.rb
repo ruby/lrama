@@ -135,6 +135,17 @@ module Lrama
       str
     end
 
+    # b4_user_initial_action
+    def user_initial_action(comment = "")
+      return "" unless @grammar.initial_action
+
+      <<-STR
+        #{comment}
+        #line #{@grammar.initial_action.line} "#{@grammar_file_path}"
+        #{@grammar.initial_action.translated_code}
+      STR
+    end
+
     # b4_user_actions
     def user_actions
       str = ""

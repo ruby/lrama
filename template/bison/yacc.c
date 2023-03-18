@@ -1301,10 +1301,7 @@ YYLTYPE yylloc = yyloc_default;
 
 
 <%# b4_user_initial_action -%>
-/* User initialization code.  */
-#line <%= output.grammar.initial_action.line %> "<%= output.grammar_file_path %>"
-<%= output.grammar.initial_action.translated_code %>
-
+<%= output.user_initial_action("/* User initialization code.  */") %>
 #line [@oline@] [@ofile@]
 
   yylsp[0] = yylloc;
