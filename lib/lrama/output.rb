@@ -166,8 +166,12 @@ module Lrama
 
     # b4_parse_param
     def parse_param
-      # Omit "{}"
-      @grammar.parse_param[1..-2]
+      if @grammar.parse_param
+        # Omit "{}"
+        @grammar.parse_param[1..-2]
+      else
+        ""
+      end
     end
 
     # b4_user_formals
