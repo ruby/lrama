@@ -19,16 +19,22 @@ RSpec.describe Lrama::Output do
   let(:grammar) { double("grammar") }
 
   describe "#parse_param" do
-    it "returns declaration of parse param without braces" do
+    it "returns declaration of parse param without braces/blanks" do
       allow(grammar).to receive(:parse_param).and_return("{struct parser_params *p}")
+      expect(output.parse_param).to eq("struct parser_params *p")
+
+      allow(grammar).to receive(:parse_param).and_return("{ struct parser_params *p  }")
       expect(output.parse_param).to eq("struct parser_params *p")
     end
   end
 
   describe "#user_formals" do
     context "when parse_param exists" do
-      it "returns declaration of parse param without braces with a leading comma" do
+      it "returns declaration of parse param without braces/blanks with a leading comma" do
         allow(grammar).to receive(:parse_param).and_return("{struct parser_params *p}")
+        expect(output.user_formals).to eq(", struct parser_params *p")
+
+        allow(grammar).to receive(:parse_param).and_return("{ struct parser_params *p  }")
         expect(output.user_formals).to eq(", struct parser_params *p")
       end
     end
@@ -43,8 +49,11 @@ RSpec.describe Lrama::Output do
 
   describe "#user_args" do
     context "when parse_param exists" do
-      it "returns name of parse param without braces with a leading comma" do
+      it "returns name of parse param without braces/blanks with a leading comma" do
         allow(grammar).to receive(:parse_param).and_return("{struct parser_params *p}")
+        expect(output.user_args).to eq(", p")
+
+        allow(grammar).to receive(:parse_param).and_return("{ struct parser_params *p  }")
         expect(output.user_args).to eq(", p")
       end
     end
@@ -61,12 +70,18 @@ RSpec.describe Lrama::Output do
     it "returns name of parse param" do
       allow(grammar).to receive(:parse_param).and_return("{struct parser_params *p}")
       expect(output.parse_param_name).to eq("p")
+
+      allow(grammar).to receive(:parse_param).and_return("{ struct parser_params *p  }")
+      expect(output.parse_param_name).to eq("p")
     end
   end
 
   describe "#lex_param_name" do
     it "returns name of lex param" do
       allow(grammar).to receive(:lex_param).and_return("{struct parser_params *p}")
+      expect(output.lex_param_name).to eq("p")
+
+      allow(grammar).to receive(:lex_param).and_return("{ struct parser_params *p  }")
       expect(output.lex_param_name).to eq("p")
     end
   end
