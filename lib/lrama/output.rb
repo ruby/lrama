@@ -175,14 +175,14 @@ module Lrama
       str
     end
 
-    def omit_braces(param)
-      param[1..-2]
+    def omit_braces_and_blanks(param)
+      param[1..-2].strip
     end
 
     # b4_parse_param
     def parse_param
       if @grammar.parse_param
-        omit_braces(@grammar.parse_param)
+        omit_braces_and_blanks(@grammar.parse_param)
       else
         ""
       end
@@ -190,7 +190,7 @@ module Lrama
 
     def lex_param
       if @grammar.lex_param
-        omit_braces(@grammar.lex_param)
+        omit_braces_and_blanks(@grammar.lex_param)
       else
         ""
       end
