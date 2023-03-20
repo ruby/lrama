@@ -668,7 +668,7 @@ enum { YYENOMEM = -2 };
       }                                                           \
     else                                                          \
       {                                                           \
-        yyerror (&yylloc, p, YY_("syntax error: cannot back up")); \
+        yyerror (<%= output.yyerror_args %>, YY_("syntax error: cannot back up")); \
         YYERROR;                                                  \
       }                                                           \
   while (0)
@@ -802,9 +802,7 @@ yy_symbol_value_print (FILE *yyo,
                        yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp<%= output.user_formals %>)
 {
   FILE *yyoutput = yyo;
-  YY_USE (yyoutput);
-  YY_USE (yylocationp);
-  YY_USE (p);
+<%= output.parse_param_use("yyoutput", "yylocationp") %>
   if (!yyvaluep)
     return;
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
@@ -1199,9 +1197,7 @@ static void
 yydestruct (const char *yymsg,
             yysymbol_kind_t yykind, YYSTYPE *yyvaluep, YYLTYPE *yylocationp<%= output.user_formals %>)
 {
-  YY_USE (yyvaluep);
-  YY_USE (yylocationp);
-  YY_USE (p);
+<%= output.parse_param_use("yyvaluep", "yylocationp") %>
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);
@@ -1301,10 +1297,7 @@ YYLTYPE yylloc = yyloc_default;
 
 
 <%# b4_user_initial_action -%>
-/* User initialization code.  */
-#line <%= output.grammar.initial_action.line %> "<%= output.grammar_file_path %>"
-<%= output.grammar.initial_action.translated_code %>
-
+<%= output.user_initial_action("/* User initialization code.  */") %>
 #line [@oline@] [@ofile@]
 
   yylsp[0] = yylloc;
@@ -1424,7 +1417,7 @@ yybackup:
   if (yychar == YYEMPTY)
     {
       YYDPRINTF ((stderr, "Reading a token\n"));
-      yychar = yylex (&yylval, &yylloc, p);
+      yychar = yylex <%= output.yylex_formals %>;
     }
 
   if (yychar <= <%= output.eof_symbol.id.s_value %>)
@@ -1590,7 +1583,7 @@ yyerrlab:
                 yysyntax_error_status = YYENOMEM;
               }
           }
-        yyerror (&yylloc, p, yymsgp);
+        yyerror (<%= output.yyerror_args %>, yymsgp);
         if (yysyntax_error_status == YYENOMEM)
           YYNOMEM;
       }
@@ -1611,7 +1604,7 @@ yyerrlab:
       else
         {
           yydestruct ("Error: discarding",
-                      yytoken, &yylval, &yylloc, p);
+                      yytoken, &yylval, &yylloc<%= output.user_args %>);
           yychar = YYEMPTY;
         }
     }
@@ -1667,7 +1660,7 @@ yyerrlab1:
 
       yyerror_range[1] = *yylsp;
       yydestruct ("Error: popping",
-                  YY_ACCESSING_SYMBOL (yystate), yyvsp, yylsp, p);
+                  YY_ACCESSING_SYMBOL (yystate), yyvsp, yylsp<%= output.user_args %>);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1708,7 +1701,7 @@ yyabortlab:
 | yyexhaustedlab -- YYNOMEM (memory exhaustion) comes here.  |
 `-----------------------------------------------------------*/
 yyexhaustedlab:
-  yyerror (&yylloc, p, YY_("memory exhausted"));
+  yyerror (<%= output.yyerror_args %>, YY_("memory exhausted"));
   yyresult = 2;
   goto yyreturnlab;
 
@@ -1723,7 +1716,7 @@ yyreturnlab:
          user semantic actions for why this is necessary.  */
       yytoken = YYTRANSLATE (yychar);
       yydestruct ("Cleanup: discarding lookahead",
-                  yytoken, &yylval, &yylloc, p);
+                  yytoken, &yylval, &yylloc<%= output.user_args %>);
     }
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYABORT or YYACCEPT.  */
@@ -1732,7 +1725,7 @@ yyreturnlab:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp, yylsp, p);
+                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp, yylsp<%= output.user_args %>);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow

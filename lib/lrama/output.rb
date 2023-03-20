@@ -135,6 +135,17 @@ module Lrama
       str
     end
 
+    # b4_user_initial_action
+    def user_initial_action(comment = "")
+      return "" unless @grammar.initial_action
+
+      <<-STR
+        #{comment}
+        #line #{@grammar.initial_action.line} "#{@grammar_file_path}"
+        #{@grammar.initial_action.translated_code}
+      STR
+    end
+
     # b4_user_actions
     def user_actions
       str = ""
@@ -164,10 +175,25 @@ module Lrama
       str
     end
 
+    def omit_braces(param)
+      param[1..-2]
+    end
+
     # b4_parse_param
     def parse_param
-      # Omit "{}"
-      @grammar.parse_param[1..-2]
+      if @grammar.parse_param
+        omit_braces(@grammar.parse_param)
+      else
+        ""
+      end
+    end
+
+    def lex_param
+      if @grammar.lex_param
+        omit_braces(@grammar.lex_param)
+      else
+        ""
+      end
     end
 
     # b4_user_formals
@@ -179,6 +205,60 @@ module Lrama
       end
     end
 
+    # b4_user_args
+    def user_args
+      if @grammar.parse_param
+        ", #{parse_param_name}"
+      else
+        ""
+      end
+    end
+
+    def extract_param_name(param)
+      /\A(.)+([a-zA-Z0-9_]+)\z/.match(param)[2]
+    end
+
+    def parse_param_name
+      if @grammar.parse_param
+        extract_param_name(parse_param)
+      else
+        ""
+      end
+    end
+
+    def lex_param_name
+      if @grammar.lex_param
+        extract_param_name(lex_param)
+      else
+        ""
+      end
+    end
+
+    # b4_parse_param_use
+    def parse_param_use(val, loc)
+      str = <<-STR
+  YY_USE (#{val});
+  YY_USE (#{loc});
+      STR
+
+      if @grammar.parse_param
+        str << "  YY_USE (#{parse_param_name});"
+      end
+
+      str
+    end
+
+    # b4_yylex_formals
+    def yylex_formals
+      ary = ["&yylval", "&yylloc"]
+
+      if @grammar.lex_param
+        ary << lex_param_name
+      end
+
+      "(#{ary.join(', ')})"
+    end
+
     # b4_table_value_equals
     def table_value_equals(table, value, literal, symbol)
       if literal < table.min || table.max < literal
@@ -186,6 +266,17 @@ module Lrama
       else
         "((#{value}) == #{symbol})"
       end
+    end
+
+    # b4_yyerror_args
+    def yyerror_args
+      ary = ["&yylloc"]
+
+      if @grammar.parse_param
+        ary << parse_param_name
+      end
+
+      "#{ary.join(', ')}"
     end
 
     def template_basename
