@@ -194,12 +194,14 @@ module Lrama
       if sym.term?
         term_transitions.each do |shift, next_state|
           term = shift.next_sym
-          result = next_state if term == sym
+          # TODO: Need to override Lrama::Symbol#== ?
+          result = next_state if term.number == sym.number
         end
       else
         nterm_transitions.each do |shift, next_state|
           nterm = shift.next_sym
-          result = next_state if nterm == sym
+          # TODO: Need to override Lrama::Symbol#== ?
+          result = next_state if nterm.number == sym.number
         end
       end
 
