@@ -519,7 +519,6 @@ parser_token2id(enum yytokentype tok)
       TOKEN2ID(keyword_retry);
       TOKEN2ID(keyword_in);
       TOKEN2ID(keyword_do);
-      TOKEN2ID(keyword_do_LAMBDA);
       TOKEN2ID(keyword_return);
       TOKEN2ID(keyword_yield);
       TOKEN2ID(keyword_super);
@@ -1415,7 +1414,6 @@ static int looking_at_eol_p(struct parser_params *p);
         keyword_retry        "`retry'"
         keyword_in           "`in'"
         keyword_do           "`do'"
-        keyword_do_LAMBDA    "`do' for lambda"
         keyword_return       "`return'"
         keyword_yield        "`yield'"
         keyword_super        "`super'"
@@ -1585,11 +1583,12 @@ static int looking_at_eol_p(struct parser_params *p);
 /* 
  * keyword_do:
  *   do_LOWEST  = 0.
- *   do_BLOCK   = 1. keyword_do_block (CMDARG_P)
- *   do_COND    = 2. keyword_do_cond  (COND_P)
- *   do_HIGHEST = 3. 
+ *   do_BLOCK   = 1. keyword_do_block  (CMDARG_P)
+ *   do_COND    = 2. keyword_do_cond   (COND_P)
+ *   do_LAMBDA  = 3. keyword_do_LAMBDA (lambda_beginning_p)
+ *   do_HIGHEST = 4.
  */
-%int-attr keyword_do do_LOWEST do_BLOCK do_COND do_HIGHEST
+%int-attr keyword_do do_LOWEST do_BLOCK do_COND do_LAMBDA do_HIGHEST
 
 %%
 program		:  {
@@ -4127,11 +4126,11 @@ lambda		: tLAMBDA
 		    {
 			$<node>$ = numparam_push(p);
 		    }
-		  f_larglist
+		  f_larglist(do_LOWEST)
 		    {
 			CMDARG_PUSH(0);
 		    }
-		  lambda_body
+		  lambda_body(do_LAMBDA)
 		    {
 			int max_numparam = p->max_numparam;
 			p->lex.lpar_beg = $<num>2;
@@ -4178,13 +4177,13 @@ lambda_body	: tLAMBEG compstmt '}'
 			token_info_pop(p, "}", &@3);
 			$$ = $2;
 		    }
-		| keyword_do_LAMBDA
+		| keyword_do
 		    {
 		    /*%%%*/
 			push_end_expect_token_locations(p, &@1.beg_pos);
 		    /*% %*/
 		    }
-		  bodystmt k_end
+		  bodystmt(do_HIGHEST) k_end
 		    {
 			$$ = $3;
 		    }
@@ -9720,7 +9719,7 @@ parse_ident(struct parser_params *p, int c)
 	    if (kw->id[0] == keyword_do) {
 		if (lambda_beginning_p()) {
 		    p->lex.lpar_beg = -1; /* make lambda_beginning_p() == FALSE in the body of "-> do ... end" */
-		    return keyword_do_LAMBDA;
+		    return keyword_do; /* keyword_do_LAMBDA */
 		}
 		if (COND_P()) return keyword_do; /* keyword_do_cond */
 		if (CMDARG_P() && !IS_lex_state_for(state, EXPR_CMDARG))
@@ -10610,7 +10609,6 @@ rb_update_lex_state(struct parser_params *p, enum yytokentype t, const int cmd_s
 
       case keyword_begin:
       case keyword_do:
-      case keyword_do_LAMBDA:
       case keyword_else:
       case keyword_ensure:
       case keyword_then:
