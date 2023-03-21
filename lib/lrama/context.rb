@@ -284,7 +284,7 @@ module Lrama
           # Entry of @_actions is an array of
           #
           # * State id
-          # * Array of tuple, [from, to] where from is term number and to is action.
+          # * Array of tuple, [from, to] where "from" is term number and "to" is action.
           # * The number of "Array of tuple" used by sort_actions
           # * "width" used by sort_actions
           @_actions << [state.id, s, s.count, s.last[0] - s.first[0] + 1]
