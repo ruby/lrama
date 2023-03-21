@@ -208,6 +208,12 @@ module Lrama
       result
     end
 
+    # `@grammar.find_rules_by_symbol!(nterm)` does not work well because
+    # which rules can be used depend on each state when %attr (boolean attribute) is used.
+    def find_rules_by_nterm(nterm)
+      rules_group_by_nterm[nterm]
+    end
+
     def find_reduce_by_item!(item)
       reduces.find do |r|
         r.item == item
@@ -234,6 +240,22 @@ module Lrama
       @conflicts.select do |conflict|
         conflict.type == :reduce_reduce
       end
+    end
+
+    private
+
+    def rules_group_by_nterm
+      return @rules_group_by_nterm if @rules_group_by_nterm
+
+      @rules_group_by_nterm = @items.select do |item|
+        item.beginning_of_rule?
+      end.map do |item|
+        item.rule
+      end.group_by do |rule|
+        rule.lhs
+      end
+
+      @rules_group_by_nterm
     end
   end
 
@@ -682,11 +704,9 @@ module Lrama
 
     def compute_includes_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
+        state.nterm_transitions.each do |shift, _next_state|
           nterm = shift.next_sym
-          # `@grammar.find_rules_by_symbol!(nterm)` does not work well because
-          # which rules can be used depend on each state when %attr (boolean attribute) is used.
-          rules = state.items.select {|item| item.beginning_of_rule? && item.rule.lhs == nterm }.map(&:rule)
+          rules = state.find_rules_by_nterm(nterm)
           rules.each do |rule|
             i = rule.rhs.count - 1
 
@@ -710,11 +730,9 @@ module Lrama
 
     def compute_lookback_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
+        state.nterm_transitions.each do |shift, _next_state|
           nterm = shift.next_sym
-          # `@grammar.find_rules_by_symbol!(nterm)` does not work well because
-          # which rules can be used depend on each state when %attr (boolean attribute) is used.
-          rules = state.items.select {|item| item.beginning_of_rule? && item.rule.lhs == nterm }.map(&:rule)
+          rules = state.find_rules_by_nterm(nterm)
           rules.each do |rule|
             state2 = transition(state, rule.rhs)
             # p = state, A = nterm, q = state2, A -> ω = rule
