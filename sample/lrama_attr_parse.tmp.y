@@ -1653,7 +1653,7 @@ top_stmt	: stmt
 		    }
 		;
 
-begin_block	: '{' top_compstmt '}'
+begin_block	: '{' top_compstmt(do_HIGHEST) '}'
 		    {
 		    /*%%%*/
 			p->eval_tree_begin = block_append(p, p->eval_tree_begin,
@@ -1819,7 +1819,7 @@ stmt		: keyword_alias fitem {SET_LEX_STATE(EXPR_FNAME|EXPR_FITEM);} fitem
 		    /*% %*/
 		    /*% ripper: rescue_mod!($1, $3) %*/
 		    }
-		| keyword_END '{' compstmt '}'
+		| keyword_END '{' compstmt(do_HIGHEST) '}'
 		    {
 			if (p->ctxt.in_def) {
 			    rb_warn0("END in method; use at_exit");
@@ -3274,7 +3274,7 @@ primary		: literal
 		    /*% %*/
 		    /*% ripper: paren!(0) %*/
 		    }
-		| tLPAREN_ARG stmt {SET_LEX_STATE(EXPR_ENDARG);} rparen
+		| tLPAREN_ARG stmt(do_HIGHEST) {SET_LEX_STATE(EXPR_ENDARG);} rparen
 		    {
 		    /*%%%*/
 			if (nd_type_p($2, NODE_SELF)) $2->nd_state = 0;
@@ -3311,7 +3311,7 @@ primary		: literal
 		    /*% %*/
 		    /*% ripper: array!(escape_Qundef($2)) %*/
 		    }
-		| tLBRACE assoc_list '}'
+		| tLBRACE assoc_list(do_HIGHEST) '}'
 		    {
 		    /*%%%*/
 			$$ = new_hash(p, $2, &@$);
@@ -4311,7 +4311,7 @@ method_call	: fcall paren_args
 		    }
 		;
 
-brace_block	: '{' brace_body '}'
+brace_block	: '{' brace_body(do_HIGHEST) '}'
 		    {
 			$$ = $2;
 		    /*%%%*/
