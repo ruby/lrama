@@ -811,68 +811,95 @@ module Lrama
           state.reduces.each do |reduce|
             sym = shift.next_sym
 
-            next unless reduce.look_ahead
-            next if !reduce.look_ahead.include?(sym)
+            next if (!reduce.look_ahead || !reduce.look_ahead.include?(sym))
 
             # Shift/Reduce conflict
-            # TODO: Need to separate term precedence from %int-attr precedence
-            shift_precs = [sym.precedence&.precedence].compact + shift.next_sym_precedences.map(&:precedence)
-            reduce_precs = [reduce.rule.precedence&.precedence].compact + reduce.look_ahead_attrs.select {|attr| attr.term_id == sym.id }.map(&:precedence)
+            shift_precs = [sym.precedence&.precedence].compact
+            shift_arrt_precs = shift.next_sym_precedences.map(&:precedence)
+            reduce_precs = [reduce.rule.precedence&.precedence].compact
+            reduce_attr_precs = reduce.look_ahead_attrs.select {|attr| attr.term_id == sym.id }.map(&:precedence)
 
-            case compare_precedences(shift_precs, reduce_precs)
-            when nil
+            case
+            when sym.precedence
+              case compare_precedences(shift_precs, reduce_precs)
+              when nil
+                state.conflicts << State::Conflict.new(symbols: [sym], reduce: reduce, type: :shift_reduce)
+                next
+              when -1
+                # Reduce is selected
+                s = sym.display_name
+                r = reduce.rule.precedence_sym&.display_name
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :reduce, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as reduce (#{s} < #{r}).")
+                shift.not_selected = true
+                next
+              when 1
+                # Shift is selected
+                s = sym.display_name
+                r = reduce.rule.precedence_sym&.display_name
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :shift, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as shift (#{r} < #{s}).")
+                reduce.add_not_selected_symbol(sym)
+                next
+              when 0
+                # fall through to check associativity
+              else
+                raise "Unexpected #{shift}, #{reduce}, #{sym}"
+              end
+
+              # shift_prec == reduce_prec, then check associativity
+              case sym.precedence.type
+              when :right
+                # Shift is selected
+                s = sym.display_name
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :shift, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as shift (%right #{s}).")
+                reduce.add_not_selected_symbol(sym)
+                next
+              when :left
+                # Reduce is selected
+                s = sym.display_name
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :reduce, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as reduce (%left #{s}).")
+                shift.not_selected = true
+                next
+              when :nonassoc
+                # Can not resolve
+                #
+                # nonassoc creates "run-time" error, precedence creates "compile-time" error.
+                # Then omit both the shift and reduce.
+                #
+                # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
+                s = sym.display_name
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :error, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as an error (%nonassoc #{s}).")
+                shift.not_selected = true
+                reduce.add_not_selected_symbol(sym)
+                next
+              else
+                raise "Unknown precedence type. #{sym}"
+              end
+            when !shift_arrt_precs.empty?
+              case compare_precedences(shift_arrt_precs, reduce_attr_precs)
+              when nil
+                state.conflicts << State::Conflict.new(symbols: [sym], reduce: reduce, type: :shift_reduce)
+                next
+              when -1
+                # Reduce is selected
+                s = sym.display_name
+                r = reduce.rule.precedence_sym&.display_name
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :reduce, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as reduce (#{s} < #{r}).")
+                shift.not_selected = true
+                next
+              when 1
+                # Shift is selected
+                s = sym.display_name
+                r = reduce.rule.precedence_sym&.display_name
+                state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :shift, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as shift (#{r} < #{s}).")
+                reduce.add_not_selected_symbol(sym)
+                next
+              when 0
+                # No check for associativity
+              else
+                raise "Unexpected #{shift}, #{reduce}, #{sym}"
+              end
+            else
               state.conflicts << State::Conflict.new(symbols: [sym], reduce: reduce, type: :shift_reduce)
-              next
-            when -1
-              # Reduce is selected
-              s = sym.display_name
-              r = reduce.rule.precedence_sym&.display_name
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :reduce, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as reduce (#{s} < #{r}).")
-              shift.not_selected = true
-              next
-            when 1
-              # Shift is selected
-              s = sym.display_name
-              r = reduce.rule.precedence_sym&.display_name
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :shift, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as shift (#{r} < #{s}).")
-              reduce.add_not_selected_symbol(sym)
-              next
-            when 0
-              # fall through to check associativity
-            else
-              raise "Unexpected #{shift}, #{reduce}, #{sym}"
-            end
-
-            # TODO: Consider to restrict %int-attr for only terms not specified for prec?
-            #
-            # shift_prec == reduce_prec, then check associativity
-            case sym.precedence.type
-            when :right
-              # Shift is selected
-              s = sym.display_name
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :shift, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as shift (%right #{s}).")
-              reduce.add_not_selected_symbol(sym)
-              next
-            when :left
-              # Reduce is selected
-              s = sym.display_name
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :reduce, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as reduce (%left #{s}).")
-              shift.not_selected = true
-              next
-            when :nonassoc
-              # Can not resolve
-              #
-              # nonassoc creates "run-time" error, precedence creates "compile-time" error.
-              # Then omit both the shift and reduce.
-              #
-              # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
-              s = sym.display_name
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, which: :error, message: "Conflict between rule #{reduce.rule.id} and token #{s} resolved as an error (%nonassoc #{s}).")
-              shift.not_selected = true
-              reduce.add_not_selected_symbol(sym)
-              next
-            else
-              raise "Unknown precedence type. #{sym}"
             end
           end
         end
