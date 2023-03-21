@@ -684,7 +684,8 @@ module Lrama
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
           nterm = shift.next_sym
-          # rules = state.items.map(&:rule).select {|rule| rule.lhs == nterm }
+          # `@grammar.find_rules_by_symbol!(nterm)` does not work well because
+          # which rules can be used depend on each state when %attr (boolean attribute) is used.
           rules = state.items.select {|item| item.beginning_of_rule? && item.rule.lhs == nterm }.map(&:rule)
           rules.each do |rule|
             i = rule.rhs.count - 1
@@ -711,7 +712,8 @@ module Lrama
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
           nterm = shift.next_sym
-          # rules = state.items.map(&:rule).select {|rule| rule.lhs == nterm }
+          # `@grammar.find_rules_by_symbol!(nterm)` does not work well because
+          # which rules can be used depend on each state when %attr (boolean attribute) is used.
           rules = state.items.select {|item| item.beginning_of_rule? && item.rule.lhs == nterm }.map(&:rule)
           rules.each do |rule|
             state2 = transition(state, rule.rhs)
