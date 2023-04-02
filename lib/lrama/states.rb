@@ -300,7 +300,7 @@ module Lrama
           if v.is_a?(IntegerAttrPrec)
             [k.number, v.number]
           else
-            [k.number, v]
+            [k.number, v ? 1 : 0]
           end
         end.sort
       end
@@ -336,7 +336,6 @@ module Lrama
         if !other.is_a?(Item)
           raise ArgumentError, "Item is expected but #{other} is given."
         end
-
         [rule.id, attrs_to_array] <=> [other.rule.id, other.attrs_to_array]
       end
     end
