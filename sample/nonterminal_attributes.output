@@ -1,0 +1,197 @@
+Grammar
+
+    0 $accept: program "end of file"
+
+    1 program: stmt
+
+    2 stmt: k_while expr k_do stmt k_end
+    3     | expr
+
+    4 expr: tSTRING
+    5     | command_call
+
+    6 command_call: tIDENTIFIER
+    7             | tIDENTIFIER k_do stmt k_end
+
+
+State 0
+
+    0 $accept: • program "end of file" (DO_ALLOWED: false)
+    1 program: • stmt (DO_ALLOWED: false)
+    2 stmt: • k_while expr k_do stmt k_end (DO_ALLOWED: true)
+    3     | • expr (DO_ALLOWED: true)
+    4 expr: • tSTRING (DO_ALLOWED: true)
+    5     | • command_call (DO_ALLOWED: true)
+    6 command_call: • tIDENTIFIER (DO_ALLOWED: true)
+    7             | • tIDENTIFIER k_do stmt k_end (DO_ALLOWED: true)
+
+    k_while      shift, and go to state 1
+    tSTRING      shift, and go to state 2
+    tIDENTIFIER  shift, and go to state 3
+
+    program       go to state 4
+    stmt          go to state 5
+    expr          go to state 6
+    command_call  go to state 7
+
+
+State 1
+
+    2 stmt: k_while • expr k_do stmt k_end (DO_ALLOWED: true)
+    4 expr: • tSTRING (DO_ALLOWED: false)
+    5     | • command_call (DO_ALLOWED: false)
+    6 command_call: • tIDENTIFIER (DO_ALLOWED: false)
+
+    tSTRING      shift, and go to state 8
+    tIDENTIFIER  shift, and go to state 9
+
+    expr          go to state 10
+    command_call  go to state 11
+
+
+State 2
+
+    4 expr: tSTRING • (DO_ALLOWED: true)
+
+    $default  reduce using rule 4 (expr)
+
+
+State 3
+
+    6 command_call: tIDENTIFIER •  ["end of file", k_end] (DO_ALLOWED: true)
+    7             | tIDENTIFIER • k_do stmt k_end (DO_ALLOWED: true)
+
+    k_do  shift, and go to state 12
+
+    $default  reduce using rule 6 (command_call)
+
+
+State 4
+
+    0 $accept: program • "end of file" (DO_ALLOWED: false)
+
+    "end of file"  shift, and go to state 13
+
+
+State 5
+
+    1 program: stmt • (DO_ALLOWED: false)
+
+    $default  reduce using rule 1 (program)
+
+
+State 6
+
+    3 stmt: expr • (DO_ALLOWED: true)
+
+    $default  reduce using rule 3 (stmt)
+
+
+State 7
+
+    5 expr: command_call • (DO_ALLOWED: true)
+
+    $default  reduce using rule 5 (expr)
+
+
+State 8
+
+    4 expr: tSTRING • (DO_ALLOWED: false)
+
+    $default  reduce using rule 4 (expr)
+
+
+State 9
+
+    6 command_call: tIDENTIFIER • (DO_ALLOWED: false)
+
+    $default  reduce using rule 6 (command_call)
+
+
+State 10
+
+    2 stmt: k_while expr • k_do stmt k_end (DO_ALLOWED: true)
+
+    k_do  shift, and go to state 14
+
+
+State 11
+
+    5 expr: command_call • (DO_ALLOWED: false)
+
+    $default  reduce using rule 5 (expr)
+
+
+State 12
+
+    2 stmt: • k_while expr k_do stmt k_end (DO_ALLOWED: true)
+    3     | • expr (DO_ALLOWED: true)
+    4 expr: • tSTRING (DO_ALLOWED: true)
+    5     | • command_call (DO_ALLOWED: true)
+    6 command_call: • tIDENTIFIER (DO_ALLOWED: true)
+    7             | • tIDENTIFIER k_do stmt k_end (DO_ALLOWED: true)
+    7             | tIDENTIFIER k_do • stmt k_end (DO_ALLOWED: true)
+
+    k_while      shift, and go to state 1
+    tSTRING      shift, and go to state 2
+    tIDENTIFIER  shift, and go to state 3
+
+    stmt          go to state 15
+    expr          go to state 6
+    command_call  go to state 7
+
+
+State 13
+
+    0 $accept: program "end of file" • (DO_ALLOWED: false)
+
+    $default  accept
+
+
+State 14
+
+    2 stmt: • k_while expr k_do stmt k_end (DO_ALLOWED: true)
+    2     | k_while expr k_do • stmt k_end (DO_ALLOWED: true)
+    3     | • expr (DO_ALLOWED: true)
+    4 expr: • tSTRING (DO_ALLOWED: true)
+    5     | • command_call (DO_ALLOWED: true)
+    6 command_call: • tIDENTIFIER (DO_ALLOWED: true)
+    7             | • tIDENTIFIER k_do stmt k_end (DO_ALLOWED: true)
+
+    k_while      shift, and go to state 1
+    tSTRING      shift, and go to state 2
+    tIDENTIFIER  shift, and go to state 3
+
+    stmt          go to state 16
+    expr          go to state 6
+    command_call  go to state 7
+
+
+State 15
+
+    7 command_call: tIDENTIFIER k_do stmt • k_end (DO_ALLOWED: true)
+
+    k_end  shift, and go to state 17
+
+
+State 16
+
+    2 stmt: k_while expr k_do stmt • k_end (DO_ALLOWED: true)
+
+    k_end  shift, and go to state 18
+
+
+State 17
+
+    7 command_call: tIDENTIFIER k_do stmt k_end • (DO_ALLOWED: true)
+
+    $default  reduce using rule 7 (command_call)
+
+
+State 18
+
+    2 stmt: k_while expr k_do stmt k_end • (DO_ALLOWED: true)
+
+    $default  reduce using rule 2 (stmt)
+
+
