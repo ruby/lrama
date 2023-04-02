@@ -519,7 +519,6 @@ parser_token2id(enum yytokentype tok)
       TOKEN2ID(keyword_retry);
       TOKEN2ID(keyword_in);
       TOKEN2ID(keyword_do);
-      TOKEN2ID(keyword_do_block);
       TOKEN2ID(keyword_do_LAMBDA);
       TOKEN2ID(keyword_return);
       TOKEN2ID(keyword_yield);
@@ -1407,7 +1406,6 @@ static int looking_at_eol_p(struct parser_params *p);
         keyword_retry        "`retry'"
         keyword_in           "`in'"
         keyword_do           "`do'"
-        keyword_do_block     "`do' for block"
         keyword_do_LAMBDA    "`do' for lambda"
         keyword_return       "`return'"
         keyword_yield        "`yield'"
@@ -3238,7 +3236,7 @@ primary		: literal
 		    {
 			CMDARG_PUSH(0);
 		    }
-		  bodystmt
+		  bodystmt(DO_ALLOWED)
 		  k_end
 		    {
 			CMDARG_POP();
@@ -3735,7 +3733,7 @@ k_do		: keyword_do
 		    }
 		;
 
-k_do_block	: keyword_do_block
+k_do_block	: keyword_do
 		    {
 			token_info_push(p, "do", &@$);
 		    /*%%%*/
@@ -4112,7 +4110,7 @@ lambda		: tLAMBDA
 		    {
 			CMDARG_PUSH(0);
 		    }
-		  lambda_body
+		  lambda_body(DO_ALLOWED)
 		    {
 			int max_numparam = p->max_numparam;
 			p->lex.lpar_beg = $<num>2;
@@ -4181,7 +4179,7 @@ do_block	: k_do_block do_body k_end
 		    }
 		;
 
-block_call	: command do_block
+block_call	: command(!DO_ALLOWED) do_block
 		    {
 		    /*%%%*/
 			if (nd_type_p($1, NODE_YIELD)) {
@@ -4209,7 +4207,7 @@ block_call	: command do_block
 		    /*% %*/
 		    /*% ripper: opt_event(:method_add_block!, command_call!($1, $2, $3, $4), $5) %*/
 		    }
-		| block_call call_op2 operation2 command_args do_block
+		| block_call call_op2 operation2 command_args(!DO_ALLOWED) do_block
 		    {
 		    /*%%%*/
 			$$ = new_command_qcall(p, $2, $1, $3, $4, $5, &@3, &@$);
@@ -4342,7 +4340,7 @@ do_body 	: {$<vars>$ = dyna_push(p);}
 			$<node>$ = numparam_push(p);
 			CMDARG_PUSH(0);
 		    }
-		  opt_block_param bodystmt
+		  opt_block_param(DO_ALLOWED) bodystmt(DO_ALLOWED)
 		    {
 			int max_numparam = p->max_numparam;
 			p->max_numparam = $<num>2;
@@ -9715,7 +9713,7 @@ parse_ident(struct parser_params *p, int c, int cmd_state)
 		}
 		if (COND_P()) return keyword_do;
 		if (CMDARG_P() && !IS_lex_state_for(state, EXPR_CMDARG))
-		    return keyword_do_block;
+		    return keyword_do;
 		return keyword_do;
 	    }
 	    if (IS_lex_state_for(state, (EXPR_BEG | EXPR_LABELED | EXPR_CLASS)))
