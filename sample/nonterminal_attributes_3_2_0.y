@@ -519,7 +519,6 @@ parser_token2id(enum yytokentype tok)
       TOKEN2ID(keyword_retry);
       TOKEN2ID(keyword_in);
       TOKEN2ID(keyword_do);
-      TOKEN2ID(keyword_do_cond);
       TOKEN2ID(keyword_do_block);
       TOKEN2ID(keyword_do_LAMBDA);
       TOKEN2ID(keyword_return);
@@ -1408,7 +1407,6 @@ static int looking_at_eol_p(struct parser_params *p);
         keyword_retry        "`retry'"
         keyword_in           "`in'"
         keyword_do           "`do'"
-        keyword_do_cond      "`do' for condition"
         keyword_do_block     "`do' for block"
         keyword_do_LAMBDA    "`do' for lambda"
         keyword_return       "`return'"
@@ -1576,12 +1574,14 @@ static int looking_at_eol_p(struct parser_params *p);
 
 %token tLAST_TOKEN
 
+%attr DO_ALLOWED
+
 %%
 program		:  {
 			SET_LEX_STATE(EXPR_BEG);
 			local_push(p, ifndef_ripper(1)+0);
 		    }
-		  top_compstmt
+		  top_compstmt(DO_ALLOWED)
 		    {
 		    /*%%%*/
 			if ($2 && !compile_for_eval) {
@@ -1639,7 +1639,7 @@ top_stmt	: stmt
 		    }
 		;
 
-begin_block	: '{' top_compstmt '}'
+begin_block	: '{' top_compstmt(DO_ALLOWED) '}'
 		    {
 		    /*%%%*/
 			p->eval_tree_begin = block_append(p, p->eval_tree_begin,
@@ -1805,7 +1805,7 @@ stmt		: keyword_alias fitem {SET_LEX_STATE(EXPR_FNAME|EXPR_FITEM);} fitem
 		    /*% %*/
 		    /*% ripper: rescue_mod!($1, $3) %*/
 		    }
-		| keyword_END '{' compstmt '}'
+		| keyword_END '{' compstmt(DO_ALLOWED) '}'
 		    {
 			if (p->ctxt.in_def) {
 			    rb_warn0("END in method; use at_exit");
@@ -1910,7 +1910,7 @@ command_asgn	: lhs '=' lex_ctxt command_rhs
 		    /*% %*/
 		    /*% ripper: opassign!(field!($1, ID2VAL(idCOLON2), $3), $4, $6) %*/
 		    }
-		| defn_head f_opt_paren_args '=' command
+		| defn_head f_opt_paren_args(DO_ALLOWED) '=' command(DO_ALLOWED)
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -1921,7 +1921,7 @@ command_asgn	: lhs '=' lex_ctxt command_rhs
 		    /*% ripper: def!(get_value($1), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defn_head f_opt_paren_args '=' command modifier_rescue arg
+		| defn_head f_opt_paren_args(DO_ALLOWED) '=' command(DO_ALLOWED) modifier_rescue arg(DO_ALLOWED)
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -1933,7 +1933,7 @@ command_asgn	: lhs '=' lex_ctxt command_rhs
 		    /*% ripper: def!(get_value($1), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defs_head f_opt_paren_args '=' command
+		| defs_head f_opt_paren_args(DO_ALLOWED) '=' command(DO_ALLOWED)
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -1946,7 +1946,7 @@ command_asgn	: lhs '=' lex_ctxt command_rhs
 		    /*% ripper: defs!(AREF($1, 0), AREF($1, 1), AREF($1, 2), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defs_head f_opt_paren_args '=' command modifier_rescue arg
+		| defs_head f_opt_paren_args(DO_ALLOWED) '=' command(DO_ALLOWED) modifier_rescue arg(DO_ALLOWED)
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -2109,14 +2109,14 @@ expr_value	: expr
 		    }
 		;
 
-expr_value_do	: {COND_PUSH(1);} expr_value do {COND_POP();}
+expr_value_do	: {COND_PUSH(1);} expr_value(!DO_ALLOWED) do {COND_POP();}
 		    {
 			$$ = $2;
 		    }
 		;
 
 command_call	: command
-		| block_command
+		| @lhs(DO_ALLOWED) block_command
 		;
 
 block_command	: block_call
@@ -2129,7 +2129,7 @@ block_command	: block_call
 		    }
 		;
 
-cmd_brace_block	: tLBRACE_ARG brace_body '}'
+cmd_brace_block	: tLBRACE_ARG brace_body(DO_ALLOWED) '}'
 		    {
 			$$ = $2;
 		    /*%%%*/
@@ -2237,7 +2237,7 @@ command		: fcall command_args       %prec tLOWEST
 		;
 
 mlhs		: mlhs_basic
-		| tLPAREN mlhs_inner rparen
+		| tLPAREN mlhs_inner(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			$$ = $2;
@@ -2247,7 +2247,7 @@ mlhs		: mlhs_basic
 		;
 
 mlhs_inner	: mlhs_basic
-		| tLPAREN mlhs_inner rparen
+		| tLPAREN mlhs_inner(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			$$ = NEW_MASGN(NEW_LIST($2, &@$), 0, &@$);
@@ -2329,7 +2329,7 @@ mlhs_basic	: mlhs_head
 		;
 
 mlhs_item	: mlhs_node
-		| tLPAREN mlhs_inner rparen
+		| tLPAREN mlhs_inner(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			$$ = $2;
@@ -2853,7 +2853,7 @@ arg		: lhs '=' lex_ctxt arg_rhs
 		    /*% %*/
 		    /*% ripper: ifop!($1, $3, $6) %*/
 		    }
-		| defn_head f_opt_paren_args '=' arg
+		| defn_head f_opt_paren_args(DO_ALLOWED) '=' arg(DO_ALLOWED)
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -2864,7 +2864,7 @@ arg		: lhs '=' lex_ctxt arg_rhs
 		    /*% ripper: def!(get_value($1), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defn_head f_opt_paren_args '=' arg modifier_rescue arg
+		| defn_head f_opt_paren_args(DO_ALLOWED) '=' arg(DO_ALLOWED) modifier_rescue arg(DO_ALLOWED)
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -2876,7 +2876,7 @@ arg		: lhs '=' lex_ctxt arg_rhs
 		    /*% ripper: def!(get_value($1), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defs_head f_opt_paren_args '=' arg
+		| defs_head f_opt_paren_args(DO_ALLOWED) '=' arg(DO_ALLOWED)
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -2889,7 +2889,7 @@ arg		: lhs '=' lex_ctxt arg_rhs
 		    /*% ripper: defs!(AREF($1, 0), AREF($1, 1), AREF($1, 2), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defs_head f_opt_paren_args '=' arg modifier_rescue arg
+		| defs_head f_opt_paren_args(DO_ALLOWED) '=' arg(DO_ALLOWED) modifier_rescue arg(DO_ALLOWED)
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -2975,14 +2975,14 @@ arg_rhs 	: arg   %prec tOP_ASGN
 		    }
 		;
 
-paren_args	: '(' opt_call_args rparen
+paren_args	: '(' opt_call_args(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			$$ = $2;
 		    /*% %*/
 		    /*% ripper: arg_paren!(escape_Qundef($2)) %*/
 		    }
-		| '(' args ',' args_forward rparen
+		| '(' args(DO_ALLOWED) ',' args_forward(DO_ALLOWED) rparen
 		    {
 			if (!check_forwarding_args(p)) {
 			    $$ = Qnone;
@@ -2994,7 +2994,7 @@ paren_args	: '(' opt_call_args rparen
 			/*% ripper: arg_paren!(args_add!($2, $4)) %*/
 			}
 		    }
-		| '(' args_forward rparen
+		| '(' args_forward(DO_ALLOWED) rparen
 		    {
 			if (!check_forwarding_args(p)) {
 			    $$ = Qnone;
@@ -3256,7 +3256,7 @@ primary		: literal
 		    /*% %*/
 		    /*% ripper: paren!(0) %*/
 		    }
-		| tLPAREN_ARG stmt {SET_LEX_STATE(EXPR_ENDARG);} rparen
+		| tLPAREN_ARG stmt(DO_ALLOWED) {SET_LEX_STATE(EXPR_ENDARG);} rparen
 		    {
 		    /*%%%*/
 			if (nd_type_p($2, NODE_SELF)) $2->nd_state = 0;
@@ -3264,7 +3264,7 @@ primary		: literal
 		    /*% %*/
 		    /*% ripper: paren!($2) %*/
 		    }
-		| tLPAREN compstmt ')'
+		| tLPAREN compstmt(DO_ALLOWED) ')'
 		    {
 		    /*%%%*/
 			if (nd_type_p($2, NODE_SELF)) $2->nd_state = 0;
@@ -3286,14 +3286,14 @@ primary		: literal
 		    /*% %*/
 		    /*% ripper: top_const_ref!($2) %*/
 		    }
-		| tLBRACK aref_args ']'
+		| tLBRACK aref_args(DO_ALLOWED) ']'
 		    {
 		    /*%%%*/
 			$$ = make_list($2, &@$);
 		    /*% %*/
 		    /*% ripper: array!(escape_Qundef($2)) %*/
 		    }
-		| tLBRACE assoc_list '}'
+		| tLBRACE assoc_list(DO_ALLOWED) '}'
 		    {
 		    /*%%%*/
 			$$ = new_hash(p, $2, &@$);
@@ -3308,7 +3308,7 @@ primary		: literal
 		    /*% %*/
 		    /*% ripper: return0! %*/
 		    }
-		| keyword_yield '(' call_args rparen
+		| keyword_yield '(' call_args(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			$$ = new_yield(p, $3, &@$);
@@ -3329,12 +3329,12 @@ primary		: literal
 		    /*% %*/
 		    /*% ripper: yield0! %*/
 		    }
-		| keyword_defined opt_nl '(' {p->ctxt.in_defined = 1;} expr rparen
+		| keyword_defined opt_nl '(' {p->ctxt.in_defined = 1;} expr(DO_ALLOWED) rparen
 		    {
 			p->ctxt.in_defined = 0;
 			$$ = new_defined(p, $5, &@$);
 		    }
-		| keyword_not '(' expr rparen
+		| keyword_not '(' expr(DO_ALLOWED) rparen
 		    {
 			$$ = call_uni_op(p, method_cond(p, $3, &@3), METHOD_NOT, &@1, &@$);
 		    }
@@ -3492,7 +3492,7 @@ primary		: literal
 			p->ctxt.in_class = 1;
 			local_push(p, 0);
 		    }
-		  bodystmt
+		  bodystmt(DO_ALLOWED)
 		  k_end
 		    {
 		    /*%%%*/
@@ -3513,7 +3513,7 @@ primary		: literal
 			local_push(p, 0);
 		    }
 		  term
-		  bodystmt
+		  bodystmt(DO_ALLOWED)
 		  k_end
 		    {
 		    /*%%%*/
@@ -3537,7 +3537,7 @@ primary		: literal
 			p->ctxt.in_class = 1;
 			local_push(p, 0);
 		    }
-		  bodystmt
+		  bodystmt(DO_ALLOWED)
 		  k_end
 		    {
 		    /*%%%*/
@@ -3552,13 +3552,13 @@ primary		: literal
 			p->ctxt.shareable_constant_value = $<ctxt>1.shareable_constant_value;
 		    }
 		| defn_head
-		  f_arglist
+		  f_arglist(DO_ALLOWED)
 		    {
 		    /*%%%*/
 			push_end_expect_token_locations(p, &@1.beg_pos);
 		    /*% %*/
 		    }
-		  bodystmt
+		  bodystmt(DO_ALLOWED)
 		  k_end
 		    {
 			restore_defun(p, $<node>1->nd_defn);
@@ -3569,13 +3569,13 @@ primary		: literal
 			local_pop(p);
 		    }
 		| defs_head
-		  f_arglist
+		  f_arglist(DO_ALLOWED)
 		    {
 		    /*%%%*/
 			push_end_expect_token_locations(p, &@1.beg_pos);
 		    /*% %*/
 		    }
-		  bodystmt
+		  bodystmt(DO_ALLOWED)
 		  k_end
 		    {
 			restore_defun(p, $<node>1->nd_defn);
@@ -3810,7 +3810,7 @@ then		: term
 		;
 
 do		: term
-		| keyword_do_cond
+		| keyword_do
 		;
 
 if_tail		: opt_else
@@ -3848,7 +3848,7 @@ f_marg		: f_norm_arg
 		    /*% %*/
 		    /*% ripper: assignable(p, $1) %*/
 		    }
-		| tLPAREN f_margs rparen
+		| tLPAREN f_margs(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			$$ = $2;
@@ -4134,7 +4134,7 @@ lambda		: tLAMBDA
 		    }
 		;
 
-f_larglist	: '(' f_args opt_bv_decl ')'
+f_larglist	: '(' f_args(DO_ALLOWED) opt_bv_decl(DO_ALLOWED) ')'
 		    {
 			p->ctxt.in_argdef = 0;
 		    /*%%%*/
@@ -4154,7 +4154,7 @@ f_larglist	: '(' f_args opt_bv_decl ')'
 		    }
 		;
 
-lambda_body	: tLAMBEG compstmt '}'
+lambda_body	: tLAMBEG compstmt(DO_ALLOWED) '}'
 		    {
 			token_info_pop(p, "}", &@3);
 			$$ = $2;
@@ -4293,7 +4293,7 @@ method_call	: fcall paren_args
 		    }
 		;
 
-brace_block	: '{' brace_body '}'
+brace_block	: '{' brace_body(DO_ALLOWED) '}'
 		    {
 			$$ = $2;
 		    /*%%%*/
@@ -4301,7 +4301,7 @@ brace_block	: '{' brace_body '}'
 			nd_set_line($$, @1.end_pos.lineno);
 		    /*% %*/
 		    }
-		| k_do do_body k_end
+		| @lhs(DO_ALLOWED) k_do do_body k_end
 		    {
 			$$ = $2;
 		    /*%%%*/
@@ -4577,11 +4577,11 @@ p_expr_basic	: p_value
 			$$ = new_array_pattern_tail(p, Qnone, 0, 0, Qnone, &@$);
 			$$ = new_array_pattern(p, $1, Qnone, $$, &@$);
 		    }
-		| tLBRACK p_args rbracket
+		| tLBRACK p_args(DO_ALLOWED) rbracket
 		    {
 			$$ = new_array_pattern(p, Qnone, Qnone, $2, &@$);
 		    }
-		| tLBRACK p_find rbracket
+		| tLBRACK p_find(DO_ALLOWED) rbracket
 		    {
 			$$ = new_find_pattern(p, Qnone, $2, &@$);
 		    }
@@ -4596,7 +4596,7 @@ p_expr_basic	: p_value
 			$<ctxt>1 = p->ctxt;
 			p->ctxt.in_kwarg = 0;
 		    }
-		  p_kwargs rbrace
+		  p_kwargs(DO_ALLOWED) rbrace
 		    {
 			pop_pktbl(p, $<tbl>2);
 			p->ctxt.in_kwarg = $<ctxt>1.in_kwarg;
@@ -4607,7 +4607,7 @@ p_expr_basic	: p_value
 			$$ = new_hash_pattern_tail(p, Qnone, 0, &@$);
 			$$ = new_hash_pattern(p, Qnone, $$, &@$);
 		    }
-		| tLPAREN {$<tbl>$ = push_pktbl(p);} p_expr rparen
+		| tLPAREN {$<tbl>$ = push_pktbl(p);} p_expr(DO_ALLOWED) rparen
 		    {
 			pop_pktbl(p, $<tbl>2);
 			$$ = $3;
@@ -4905,7 +4905,7 @@ p_var_ref	: '^' tIDENTIFIER
                     }
 		;
 
-p_expr_ref	: '^' tLPAREN expr_value rparen
+p_expr_ref	: '^' tLPAREN expr_value(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			$$ = NEW_BEGIN($3, &@$);
@@ -5300,7 +5300,7 @@ string_content	: tSTRING_CONTENT
 			$<num>$ = p->heredoc_indent;
 			p->heredoc_indent = 0;
 		    }
-		  compstmt tSTRING_DEND
+		  compstmt(DO_ALLOWED) tSTRING_DEND
 		    {
 			COND_POP();
 			CMDARG_POP();
@@ -5474,7 +5474,7 @@ f_opt_paren_args: f_paren_args
 		    }
 		;
 
-f_paren_args	: '(' f_args rparen
+f_paren_args	: '(' f_args(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			$$ = $2;
@@ -5679,7 +5679,7 @@ f_arg_item	: f_arg_asgn
 		    /*% %*/
 		    /*% ripper: get_value($1) %*/
 		    }
-		| tLPAREN f_margs rparen
+		| tLPAREN f_margs(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			ID tid = internal_id(p);
@@ -5939,7 +5939,7 @@ singleton	: var_ref
 			value_expr($1);
 			$$ = $1;
 		    }
-		| '(' {SET_LEX_STATE(EXPR_BEG);} expr rparen
+		| '(' {SET_LEX_STATE(EXPR_BEG);} expr(DO_ALLOWED) rparen
 		    {
 		    /*%%%*/
 			switch (nd_type($3)) {
@@ -9713,7 +9713,7 @@ parse_ident(struct parser_params *p, int c, int cmd_state)
 		    p->lex.lpar_beg = -1; /* make lambda_beginning_p() == FALSE in the body of "-> do ... end" */
 		    return keyword_do_LAMBDA;
 		}
-		if (COND_P()) return keyword_do_cond;
+		if (COND_P()) return keyword_do;
 		if (CMDARG_P() && !IS_lex_state_for(state, EXPR_CMDARG))
 		    return keyword_do_block;
 		return keyword_do;
