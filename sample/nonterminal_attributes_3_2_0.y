@@ -2853,7 +2853,7 @@ arg		: lhs '=' lex_ctxt arg_rhs
 		    /*% %*/
 		    /*% ripper: ifop!($1, $3, $6) %*/
 		    }
-		| defn_head f_opt_paren_args(DO_ALLOWED) '=' arg(DO_ALLOWED)
+		| defn_head f_opt_paren_args(DO_ALLOWED) '=' arg
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -2864,7 +2864,7 @@ arg		: lhs '=' lex_ctxt arg_rhs
 		    /*% ripper: def!(get_value($1), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defn_head f_opt_paren_args(DO_ALLOWED) '=' arg(DO_ALLOWED) modifier_rescue arg(DO_ALLOWED)
+		| defn_head f_opt_paren_args(DO_ALLOWED) '=' arg modifier_rescue arg
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -2876,7 +2876,7 @@ arg		: lhs '=' lex_ctxt arg_rhs
 		    /*% ripper: def!(get_value($1), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defs_head f_opt_paren_args(DO_ALLOWED) '=' arg(DO_ALLOWED)
+		| defs_head f_opt_paren_args(DO_ALLOWED) '=' arg
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
@@ -2889,7 +2889,7 @@ arg		: lhs '=' lex_ctxt arg_rhs
 		    /*% ripper: defs!(AREF($1, 0), AREF($1, 1), AREF($1, 2), $2, $4) %*/
 			local_pop(p);
 		    }
-		| defs_head f_opt_paren_args(DO_ALLOWED) '=' arg(DO_ALLOWED) modifier_rescue arg(DO_ALLOWED)
+		| defs_head f_opt_paren_args(DO_ALLOWED) '=' arg modifier_rescue arg
 		    {
 			endless_method_name(p, $<node>1, &@1);
 			restore_defun(p, $<node>1->nd_defn);
