@@ -519,7 +519,7 @@ parser_token2id(enum yytokentype tok)
       TOKEN2ID(keyword_retry);
       TOKEN2ID(keyword_in);
       TOKEN2ID(keyword_do);
-      TOKEN2ID(keyword_do_block);
+      TOKEN2ID(keyword_do_cond);
       TOKEN2ID(keyword_do_LAMBDA);
       TOKEN2ID(keyword_return);
       TOKEN2ID(keyword_yield);
@@ -1407,7 +1407,7 @@ static int looking_at_eol_p(struct parser_params *p);
         keyword_retry        "`retry'"
         keyword_in           "`in'"
         keyword_do           "`do'"
-        keyword_do_block     "`do' for block"
+        keyword_do_cond      "`do' for condition"
         keyword_do_LAMBDA    "`do' for lambda"
         keyword_return       "`return'"
         keyword_yield        "`yield'"
@@ -2109,7 +2109,7 @@ expr_value	: expr
 		    }
 		;
 
-expr_value_do	: {COND_PUSH(1);} expr_value(!DO_ALLOWED) do {COND_POP();}
+expr_value_do	: {COND_PUSH(1);} expr_value do {COND_POP();}
 		    {
 			$$ = $2;
 		    }
@@ -3086,7 +3086,7 @@ command_args	:   {
 			CMDARG_PUSH(1);
 			if (lookahead) CMDARG_PUSH(0);
 		    }
-		  call_args
+		  call_args(!DO_ALLOWED)
 		    {
 			/* call_args can be followed by tLBRACE_ARG (that does CMDARG_PUSH(0) in the lexer)
 			 * but the push must be done after CMDARG_POP() in the parser.
@@ -3735,7 +3735,7 @@ k_do		: keyword_do
 		    }
 		;
 
-k_do_block	: keyword_do_block
+k_do_block	: keyword_do
 		    {
 			token_info_push(p, "do", &@$);
 		    /*%%%*/
@@ -3810,7 +3810,7 @@ then		: term
 		;
 
 do		: term
-		| keyword_do
+		| keyword_do_cond
 		;
 
 if_tail		: opt_else
@@ -9713,9 +9713,9 @@ parse_ident(struct parser_params *p, int c, int cmd_state)
 		    p->lex.lpar_beg = -1; /* make lambda_beginning_p() == FALSE in the body of "-> do ... end" */
 		    return keyword_do_LAMBDA;
 		}
-		if (COND_P()) return keyword_do;
+		if (COND_P()) return keyword_do_cond;
 		if (CMDARG_P() && !IS_lex_state_for(state, EXPR_CMDARG))
-		    return keyword_do_block;
+		    return keyword_do;
 		return keyword_do;
 	    }
 	    if (IS_lex_state_for(state, (EXPR_BEG | EXPR_LABELED | EXPR_CLASS)))
