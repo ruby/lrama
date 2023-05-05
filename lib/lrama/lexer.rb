@@ -44,6 +44,7 @@ module Lrama
       define_type(:P_right)          # %right
       define_type(:P_prec)           # %prec
       define_type(:P_int_attr)       # %int-attr
+      define_type(:P_uds)            # %user-defined-stack
       define_type(:User_code)        # { ... }
       define_type(:Tag)              # <int>
       define_type(:Number)           # 0
@@ -68,8 +69,6 @@ module Lrama
     BisonDeclarations = 2
     GrammarRules = 3
     Epilogue = 4
-
-    # Token types
 
     attr_reader :prologue, :bison_declarations, :grammar_rules, :epilogue,
                 :bison_declarations_tokens, :grammar_rules_tokens
@@ -217,6 +216,8 @@ module Lrama
           tokens << create_token(Token::P_prec, ss[0], line, ss.pos - column)
         when ss.scan(/%int-attr/)
           tokens << create_token(Token::P_int_attr, ss[0], line, ss.pos - column)
+        when ss.scan(/%user-defined-stack/)
+          tokens << create_token(Token::P_uds, ss[0], line, ss.pos - column)
         when ss.scan(/{/)
           token, line = lex_user_code(ss, line, ss.pos - column, lines)
           tokens << token
@@ -272,26 +273,36 @@ module Lrama
           next
         when ss.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
           tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
-          references << [:dollar, "$", tag, str.length, str.length + ss[0].length - 1]
+          references << [:dollar, nil, "$", tag, str.length, str.length + ss[0].length - 1]
         when ss.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
           tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
-          references << [:dollar, Integer(ss[2]), tag, str.length, str.length + ss[0].length - 1]
+          references << [:dollar, nil, Integer(ss[2]), tag, str.length, str.length + ss[0].length - 1]
+        when ss.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_.][-a-zA-Z0-9_.]*)_\$/) # $rpv_$, $<long>rpv_$
+          tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
+          uds_name = ss[2]
+          references << [:uds_dollar, uds_name, "$", tag, str.length, str.length + ss[0].length - 1]
+        when ss.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_.][-a-zA-Z0-9_.]*)_(\d+)/) # $rpv_1, $<long>rpv_1
+          tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
+          uds_name = ss[2]
+          references << [:uds_dollar, uds_name, Integer(ss[3]), tag, str.length, str.length + ss[0].length - 1]
         when ss.scan(/@\$/) # @$
-          references << [:at, "$", nil, str.length, str.length + ss[0].length - 1]
+          references << [:at, nil, "$", nil, str.length, str.length + ss[0].length - 1]
         when ss.scan(/@(\d)+/) # @1
-          references << [:at, Integer(ss[1]), nil, str.length, str.length + ss[0].length - 1]
+          references << [:at, nil, Integer(ss[1]), nil, str.length, str.length + ss[0].length - 1]
         when ss.scan(/{/)
           brace_count += 1
         when ss.scan(/}/)
           brace_count -= 1
 
-          debug("Return lex_user_code: #{line}")
           if brace_count == 0
             str << ss[0]
             user_code = Token.new(type: Token::User_code, s_value: str.freeze)
             user_code.line = first_line
             user_code.column = first_column
             user_code.references = references
+
+            debug("Return lex_user_code: #{line}")
+
             return [user_code, line]
           end
         when ss.scan(/\/\*/)

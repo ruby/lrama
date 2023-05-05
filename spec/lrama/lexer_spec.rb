@@ -347,22 +347,22 @@ lambda: tLAMBDA
 
       expect(user_codes.map(&:references)).to eq([
         [
-          [:dollar, 1, T.new(type: T::Tag, s_value: "<int>"), 2, 8],
-          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 15, 21]
+          [:dollar, nil, 1, T.new(type: T::Tag, s_value: "<int>"), 2, 8],
+          [:dollar, nil, "$", T.new(type: T::Tag, s_value: "<int>"), 15, 21]
         ],
         [
-          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 2, 8]
+          [:dollar, nil, "$", T.new(type: T::Tag, s_value: "<int>"), 2, 8]
         ],
         [
-          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 2, 8]
+          [:dollar, nil, "$", T.new(type: T::Tag, s_value: "<int>"), 2, 8]
         ],
         [],
         [
-          [:dollar, 2, nil, 2, 3],
-          [:dollar, 3, nil, 6, 7],
-          [:dollar, 5, nil, 10, 11],
-          [:dollar, 7, nil, 14, 15],
-          [:dollar, "$", nil, 18, 19]
+          [:dollar, nil, 2, nil, 2, 3],
+          [:dollar, nil, 3, nil, 6, 7],
+          [:dollar, nil, 5, nil, 10, 11],
+          [:dollar, nil, 7, nil, 14, 15],
+          [:dollar, nil, "$", nil, 18, 19]
         ],
       ])
     end

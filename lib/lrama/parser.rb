@@ -154,6 +154,15 @@ module Lrama
             end
           end
           grammar.add_integer_attr(id: id, prec_ids: prec_ids, lineno: lineno)
+        when T::P_uds
+          # %user-defined-stack ident user_code tag
+          lineno = ts.current_token.line
+          ts.next
+          id = ts.consume!(T::Ident)
+          code = ts.consume!(T::User_code)
+          code = grammar.build_code(:user_defined_stack, code)
+          tag = ts.consume!(T::Tag)
+          grammar.set_user_defined_stack(id, code, tag, lineno)
         when T::P_token
           # %token tag? (ident number? string?)+
           #

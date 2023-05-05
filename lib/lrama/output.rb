@@ -287,6 +287,10 @@ module Lrama
       @grammar.aux
     end
 
+    def has_user_defined_stacks?
+      !@grammar.user_defined_stacks.empty?
+    end
+
     def int_array_to_string(ary)
       last = ary.count - 1
 

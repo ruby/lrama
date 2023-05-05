@@ -183,6 +183,10 @@ module Lrama
 
     # * ($1) yyvsp[i]
     # * ($$) yyval
+    #
+    # * ($uds_1) yyudsvsp[i]
+    # * ($uds_$) yyudsval
+    #
     # * (@1) yylsp[i]
     # * (@$) yyloc
     def translated_user_code
@@ -207,8 +211,19 @@ module Lrama
         when ref.type == :at # @n
           i = -ref.position_in_rhs + ref.number
           str = "(yylsp[#{i}])"
+        when ref.number == "$" && ref.type == :uds_dollar
+          val = ref.stack_name
+          # Omit "<>"
+          member = ref.tag.s_value[1..-2]
+          str = "(yy#{val}val.#{member})"
+        when ref.type == :uds_dollar
+          val = ref.stack_name
+          i = -ref.position_in_rhs + ref.number
+          # Omit "<>"
+          member = ref.tag.s_value[1..-2]
+          str = "(yy#{val}vsp[#{i}].#{member})"
         else
-          raise "Unexpected. #{code}, #{ref}"
+          raise "Unexpected. #{t_code}, #{ref}"
         end
 
         t_code[first_column..last_column] = str
@@ -250,7 +265,7 @@ module Lrama
 
   # type: :dollar or :at
   # ex_tag: "$<tag>1" (Optional)
-  Reference = Struct.new(:type, :number, :ex_tag, :first_column, :last_column, :referring_symbol, :position_in_rhs, keyword_init: true) do
+  Reference = Struct.new(:type, :stack_name, :number, :ex_tag, :first_column, :last_column, :referring_symbol, :position_in_rhs, keyword_init: true) do
     def tag
       if ex_tag
         ex_tag
@@ -281,6 +296,8 @@ module Lrama
     end
   end
 
+  UserDefinedStack = Struct.new(:id, :code, :tag, :lineno, keyword_init: true)
+
   BooleanAttr = Struct.new(:id, :number, :lineno, keyword_init: true)
 
   # number is sequence number among IntegerAttrs
@@ -299,6 +316,7 @@ module Lrama
     attr_accessor :union, :expect,
                   :printers, :boolean_attrs, :integer_attrs,
                   :lex_param, :parse_param, :initial_action,
+                  :user_defined_stacks,
                   :symbols, :types,
                   :rules, :_rules,
                   :sym_to_rules
@@ -313,6 +331,7 @@ module Lrama
       @types = []
       @_rules = []
       @rules = []
+      @user_defined_stacks = []
       @sym_to_rules = {}
       @empty_symbol = nil
       @eof_symbol = nil
@@ -415,9 +434,13 @@ module Lrama
       @_rules << [lhs, rhs, attrs, lhs_attr, lineno]
     end
 
+    def set_user_defined_stack(id, code, tag, lineno)
+      @user_defined_stacks << UserDefinedStack.new(id: id, code: code, tag: tag, lineno: lineno)
+    end
+
     def build_references(token_code)
-      token_code.references.map! do |type, number, tag, first_column, last_column|
-        Reference.new(type: type, number: number, ex_tag: tag, first_column: first_column, last_column: last_column)
+      token_code.references.map! do |type, stack_name, number, tag, first_column, last_column|
+        Reference.new(type: type, stack_name: stack_name, number: number, ex_tag: tag, first_column: first_column, last_column: last_column)
       end
 
       token_code
@@ -564,6 +587,10 @@ module Lrama
       @integer_attr_precs[number] || (raise "Attr Prec not found: #{number}")
     end
 
+    def find_user_defined_stack_by_name!(name)
+      find_user_defined_stack_by_name(name) || (raise "UserDefinedStack for #{name} not found")
+    end
+
     def terms_count
       terms.count
     end
@@ -586,6 +613,12 @@ module Lrama
       nterms.find do |nterm|
         nterm.id == id
       end || (raise "Nterm not found: #{id}")
+    end
+
+    def find_user_defined_stack_by_name(name)
+      @user_defined_stacks.find do |stack|
+        stack.id.s_value == name
+      end
     end
 
     def append_special_symbols
@@ -676,17 +709,27 @@ module Lrama
             token.references.each do |ref|
               # Need to keep position_in_rhs for actions in the middle of RHS
               ref.position_in_rhs = i - 1
-              next if ref.type == :at
-              # $$, $n, @$, @n can be used in any actions
-              number = ref.number
 
-              if number == "$"
-                # TODO: Should be postponed after middle actions are extracted?
-                ref.referring_symbol = lhs
+              case ref.type
+              when :at
+                next
+              when :dollar
+                # $$, $n, @$, @n can be used in any actions
+                number = ref.number
+
+                if number == "$"
+                  # TODO: Should be postponed after middle actions are extracted?
+                  ref.referring_symbol = lhs
+                else
+                  raise "Can not refer following component. #{number} >= #{i}. #{token}" if number >= i
+                  rhs1[number - 1].referred = true
+                  ref.referring_symbol = rhs1[number - 1]
+                end
+              when :uds_dollar
+                uds = find_user_defined_stack_by_name!(ref.stack_name)
+                ref.ex_tag = uds.tag
               else
-                raise "Can not refer following component. #{number} >= #{i}. #{token}" if number >= i
-                rhs1[number - 1].referred = true
-                ref.referring_symbol = rhs1[number - 1]
+                raise "Unknown #{ref}"
               end
             end
           end
@@ -824,7 +867,7 @@ module Lrama
           rule.code.references.each do |ref|
             next if ref.type == :at
 
-            if ref.referring_symbol.type != Token::User_code
+            if ref.referring_symbol && (ref.referring_symbol.type != Token::User_code)
               ref.referring_symbol = token_to_symbol(ref.referring_symbol)
             end
           end

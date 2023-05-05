@@ -55,4 +55,65 @@ RSpec.describe Lrama::Grammar do
       end
     end
   end
+
+  describe Lrama::Code do
+    describe "#translated_code" do
+      let(:y) do
+        <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+  int i;
+  long l;
+}
+
+%type <i> class
+
+%token <i> keyword_class
+%token <i> tSTRING
+%token <i> keyword_end
+
+%user-defined-stack rpv { long l2; } <l2>
+
+%%
+
+program: class ;
+
+class : keyword_class tSTRING keyword_end
+        {
+            $$ = 0;
+            $1 = 1;
+            $rpv_$ = 10;
+            $rpv_1 = 11;
+            @$ = 20;
+            @1 = 21;
+        }
+      ;
+
+%%
+        INPUT
+      end
+      let(:grammar) do
+        Lrama::Parser.new(y).parse
+      end
+      let(:code) do
+        grammar.rules.last.code
+      end
+
+      it "translates DSL to C code" do
+        expect(code.translated_code).to eq(<<~CODE.chomp)
+          {
+                      (yyval.i) = 0;
+                      (yyvsp[-2].i) = 1;
+                      (yyrpvval.l2) = 10;
+                      (yyrpvvsp[-2].l2) = 11;
+                      (yyloc) = 20;
+                      (yylsp[-2]) = 21;
+                  }
+        CODE
+      end
+    end
+  end
 end

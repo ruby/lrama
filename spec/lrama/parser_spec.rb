@@ -1436,4 +1436,58 @@ class : keyword_class tSTRING keyword_end
       end
     end
   end
+
+  describe "user defined stack" do
+    it "uses a tag specified in code" do
+      y = <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+  int i;
+  long l;
+}
+
+%token <i> keyword_class
+%token <i> tSTRING
+%token <i> keyword_end
+
+%user-defined-stack rpv { long l2; } <l2>
+
+%%
+
+program: class ;
+
+class : keyword_class tSTRING keyword_end
+        {
+            $rpv_$ = 0;
+            $rpv_1 = 1;
+        }
+      ;
+
+%%
+      INPUT
+      grammar = Lrama::Parser.new(y).parse
+      stacks = grammar.user_defined_stacks
+      stack = stacks.first
+      code = stack.code
+      codes = grammar.rules.map(&:code)
+
+      expect(stacks.count).to eq(1)
+
+      expect(stack.id.s_value).to eq("rpv")
+      expect(stack.code.s_value).to eq("{ long l2; }")
+
+      expect(codes.count).to eq(3)
+      expect(codes[0]).to be nil
+      expect(codes[1]).to be nil
+      expect(codes[2].references.count).to eq(2)
+
+      expect(codes[2].references[0].stack_name).to eq("rpv")
+      expect(codes[2].references[0].number).to eq("$")
+      expect(codes[2].references[1].stack_name).to eq("rpv")
+      expect(codes[2].references[1].number).to eq(1)
+    end
+  end
 end
