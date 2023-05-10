@@ -129,7 +129,7 @@ module Lrama
       @items_to_state[items] = next_state
     end
 
-    # 
+    #
     def set_look_ahead(rule, look_ahead)
       reduce = reduces.find do |r|
         r.rule == rule
