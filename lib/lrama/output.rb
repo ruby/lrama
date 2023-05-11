@@ -152,7 +152,7 @@ module Lrama
 
       <<-STR
         #{comment}
-        #line #{@grammar.initial_action.line} "#{@grammar_file_path}"
+#line #{@grammar.initial_action.line} "#{@grammar_file_path}"
         #{@grammar.initial_action.translated_code}
       STR
     end
