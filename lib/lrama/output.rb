@@ -25,8 +25,18 @@ module Lrama
       @grammar = grammar
     end
 
+    if ERB.instance_method(:initialize).parameters.last.first == :key
+      def self.erb(input)
+        ERB.new(input, trim_mode: '-')
+      end
+    else
+      def self.erb(input)
+        ERB.new(input, nil, '-')
+      end
+    end
+
     def eval_template(file, path)
-      erb = ERB.new(File.read(file), trim_mode: '-')
+      erb = self.class.erb(File.read(file))
       erb.filename = file
       tmp = erb.result_with_hash(context: @context, output: self)
       replace_special_variables(tmp, path)
