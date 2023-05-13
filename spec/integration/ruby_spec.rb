@@ -25,11 +25,15 @@ RSpec.describe "integration" do
     out.close
     header_out.close
 
-    out, err, status = Open3.capture3("git diff --exit-code -U0 --ignore-all-space --no-index #{out.path} #{fixture_path("integration/#{version}/y.tab.c")}")
-    expect(status.exitstatus).to eq(0), out
-
-    out, err, status = Open3.capture3("git diff --exit-code -U0 --ignore-all-space --no-index #{header_out.path} #{fixture_path("integration/#{version}/y.tab.h")}")
-    expect(status.exitstatus).to eq(0), out
+    {"y.tab.c"=>out.path, "y.tab.h"=>header_out.path}.each do |expected, actual|
+      content = File.read(fixture_path("integration/#{version}/#{expected}"))
+      content.sub!(/\A.*\KGNU Bison \d+(?:\.\d)*/) {"Lrama #{Lrama::VERSION}"}
+      Tempfile.create(expected) do |tmp|
+        tmp.write(content)
+        out, err, status = Open3.capture3("git diff --exit-code -U0 --ignore-all-space --no-index #{actual} #{tmp.path}")
+        expect(status.success?).to be_truthy, out
+      end
+    end
   end
 
   describe "Ruby 3.2" do
