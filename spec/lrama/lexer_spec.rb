@@ -1,5 +1,5 @@
 RSpec.describe Lrama::Lexer do
-  T = Lrama::Lexer::Token
+  T ||= Lrama::Lexer::Token
 
   describe '#lex' do
     it "basic" do
