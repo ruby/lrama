@@ -1,5 +1,5 @@
 RSpec.describe Lrama::Parser do
-  T = Lrama::Lexer::Token
+  T ||= Lrama::Lexer::Token
   Type = Lrama::Type
   Sym = Lrama::Symbol
   Precedence = Lrama::Precedence
