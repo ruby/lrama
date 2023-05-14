@@ -10,7 +10,7 @@ RSpec.describe Lrama::Output do
       header_out: header_out,
       header_file_path: "y.tab.h",
       context: context,
-      grammar: grammar,      
+      grammar: grammar,
     )
   }
   let(:out) { StringIO.new }
