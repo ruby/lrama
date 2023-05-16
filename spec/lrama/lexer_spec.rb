@@ -52,7 +52,7 @@ RSpec.describe Lrama::Lexer do
         %token tEQ    "="
         %token tEQEQ  "=="
 
-        %type <i> class /* comment for class */
+        %type <i> class /* comment for class */ // line-comment for class
 
         %nonassoc tEQEQ
         %left  tPLUS tMINUS '>'
