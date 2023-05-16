@@ -1,0 +1,7 @@
+module Lrama
+  module Bitmap
+    def self.from_array: (Array[int] arr) -> Integer
+
+    def self.to_array: (Integer int) -> Array[Integer]
+  end
+end
