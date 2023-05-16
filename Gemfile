@@ -6,3 +6,5 @@ gem "rspec"
 gem "pry"
 gem "stackprof"
 gem "rake"
+gem "rbs", require: false
+gem "steep", require: false
