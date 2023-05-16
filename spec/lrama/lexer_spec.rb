@@ -52,7 +52,7 @@ RSpec.describe Lrama::Lexer do
         %token tEQ    "="
         %token tEQEQ  "=="
 
-        %type <i> class /* comment for class */
+        %type <i> class /* comment for class */ // line-comment for class
 
         %nonassoc tEQEQ
         %left  tPLUS tMINUS '>'
@@ -387,11 +387,11 @@ program: stmt ;
 
 stmt: tBODY
         {
-          int i = 1; /* @ */
-          int j = 1; /* $ */
-          int k = 1; /* @1 */
-          int l = 1; /* $$ */
-          int m = 1; /* $2 */
+          int i = 1; /* @ */ // @
+          int j = 1; /* $ */ // $
+          int k = 1; /* @1 */ // @1
+          int l = 1; /* $$ */ // $$
+          int m = 1; /* $2 */ // $2
         }
     ;
 %%
@@ -403,11 +403,11 @@ stmt: tBODY
 
         expected = <<-CODE.chomp
 {
-          int i = 1; /* @ */
-          int j = 1; /* $ */
-          int k = 1; /* @1 */
-          int l = 1; /* $$ */
-          int m = 1; /* $2 */
+          int i = 1; /* @ */ // @
+          int j = 1; /* $ */ // $
+          int k = 1; /* @1 */ // @1
+          int l = 1; /* $$ */ // $$
+          int m = 1; /* $2 */ // $2
         }
         CODE
 
