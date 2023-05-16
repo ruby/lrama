@@ -218,7 +218,7 @@ module Lrama
           l = line - lines.first[1]
           split = ss.string.split("\n")
           col = ss.pos - split[0...l].join("\n").length
-          raise "Parse error (unknow token): #{split[l]} \"#{ss.string[ss.pos]}\" (#{line}: #{col})"
+          raise "Parse error (unknown token): #{split[l]} \"#{ss.string[ss.pos]}\" (#{line}: #{col})"
         end
       end
     end
