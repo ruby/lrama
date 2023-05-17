@@ -1,0 +1,263 @@
+Grammar
+
+    0 $accept: list "end of file"
+
+    1 list: ε
+    2     | list LF
+    3     | list expr LF
+
+    4 expr: NUM
+    5     | expr '+' expr
+    6     | expr '-' expr
+    7     | expr '*' expr
+    8     | expr '/' expr
+    9     | '(' expr ')'
+
+
+State 0
+
+    0 $accept: • list "end of file"
+    1 list: ε •
+    2     | • list LF
+    3     | • list expr LF
+
+    $default  reduce using rule 1 (list)
+
+    list  go to state 1
+
+
+State 1
+
+    0 $accept: list • "end of file"
+    2 list: list • LF
+    3     | list • expr LF
+    4 expr: • NUM
+    5     | • expr '+' expr
+    6     | • expr '-' expr
+    7     | • expr '*' expr
+    8     | • expr '/' expr
+    9     | • '(' expr ')'
+
+    "end of file"  shift, and go to state 2
+    LF             shift, and go to state 3
+    NUM            shift, and go to state 4
+    '('            shift, and go to state 5
+
+    expr  go to state 6
+
+
+State 2
+
+    0 $accept: list "end of file" •
+
+    $default  accept
+
+
+State 3
+
+    2 list: list LF •
+
+    $default  reduce using rule 2 (list)
+
+
+State 4
+
+    4 expr: NUM •
+
+    $default  reduce using rule 4 (expr)
+
+
+State 5
+
+    4 expr: • NUM
+    5     | • expr '+' expr
+    6     | • expr '-' expr
+    7     | • expr '*' expr
+    8     | • expr '/' expr
+    9     | • '(' expr ')'
+    9     | '(' • expr ')'
+
+    NUM  shift, and go to state 4
+    '('  shift, and go to state 5
+
+    expr  go to state 7
+
+
+State 6
+
+    3 list: list expr • LF
+    5 expr: expr • '+' expr
+    6     | expr • '-' expr
+    7     | expr • '*' expr
+    8     | expr • '/' expr
+
+    LF   shift, and go to state 8
+    '+'  shift, and go to state 9
+    '-'  shift, and go to state 10
+    '*'  shift, and go to state 11
+    '/'  shift, and go to state 12
+
+
+State 7
+
+    5 expr: expr • '+' expr
+    6     | expr • '-' expr
+    7     | expr • '*' expr
+    8     | expr • '/' expr
+    9     | '(' expr • ')'
+
+    '+'  shift, and go to state 9
+    '-'  shift, and go to state 10
+    '*'  shift, and go to state 11
+    '/'  shift, and go to state 12
+    ')'  shift, and go to state 13
+
+
+State 8
+
+    3 list: list expr LF •
+
+    $default  reduce using rule 3 (list)
+
+
+State 9
+
+    4 expr: • NUM
+    5     | • expr '+' expr
+    5     | expr '+' • expr
+    6     | • expr '-' expr
+    7     | • expr '*' expr
+    8     | • expr '/' expr
+    9     | • '(' expr ')'
+
+    NUM  shift, and go to state 4
+    '('  shift, and go to state 5
+
+    expr  go to state 14
+
+
+State 10
+
+    4 expr: • NUM
+    5     | • expr '+' expr
+    6     | • expr '-' expr
+    6     | expr '-' • expr
+    7     | • expr '*' expr
+    8     | • expr '/' expr
+    9     | • '(' expr ')'
+
+    NUM  shift, and go to state 4
+    '('  shift, and go to state 5
+
+    expr  go to state 15
+
+
+State 11
+
+    4 expr: • NUM
+    5     | • expr '+' expr
+    6     | • expr '-' expr
+    7     | • expr '*' expr
+    7     | expr '*' • expr
+    8     | • expr '/' expr
+    9     | • '(' expr ')'
+
+    NUM  shift, and go to state 4
+    '('  shift, and go to state 5
+
+    expr  go to state 16
+
+
+State 12
+
+    4 expr: • NUM
+    5     | • expr '+' expr
+    6     | • expr '-' expr
+    7     | • expr '*' expr
+    8     | • expr '/' expr
+    8     | expr '/' • expr
+    9     | • '(' expr ')'
+
+    NUM  shift, and go to state 4
+    '('  shift, and go to state 5
+
+    expr  go to state 17
+
+
+State 13
+
+    9 expr: '(' expr ')' •
+
+    $default  reduce using rule 9 (expr)
+
+
+State 14
+
+    5 expr: expr • '+' expr
+    5     | expr '+' expr •  [LF, '+', '-', ')']
+    6     | expr • '-' expr
+    7     | expr • '*' expr
+    8     | expr • '/' expr
+
+    '*'  shift, and go to state 11
+    '/'  shift, and go to state 12
+
+    $default  reduce using rule 5 (expr)
+
+    Conflict between rule 5 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 5 and token '-' resolved as reduce (%left '-').
+    Conflict between rule 5 and token '*' resolved as shift ('+' < '*').
+    Conflict between rule 5 and token '/' resolved as shift ('+' < '/').
+
+
+State 15
+
+    5 expr: expr • '+' expr
+    6     | expr • '-' expr
+    6     | expr '-' expr •  [LF, '+', '-', ')']
+    7     | expr • '*' expr
+    8     | expr • '/' expr
+
+    '*'  shift, and go to state 11
+    '/'  shift, and go to state 12
+
+    $default  reduce using rule 6 (expr)
+
+    Conflict between rule 6 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 6 and token '-' resolved as reduce (%left '-').
+    Conflict between rule 6 and token '*' resolved as shift ('-' < '*').
+    Conflict between rule 6 and token '/' resolved as shift ('-' < '/').
+
+
+State 16
+
+    5 expr: expr • '+' expr
+    6     | expr • '-' expr
+    7     | expr • '*' expr
+    7     | expr '*' expr •  [LF, '+', '-', '*', '/', ')']
+    8     | expr • '/' expr
+
+    $default  reduce using rule 7 (expr)
+
+    Conflict between rule 7 and token '+' resolved as reduce ('+' < '*').
+    Conflict between rule 7 and token '-' resolved as reduce ('-' < '*').
+    Conflict between rule 7 and token '*' resolved as reduce (%left '*').
+    Conflict between rule 7 and token '/' resolved as reduce (%left '/').
+
+
+State 17
+
+    5 expr: expr • '+' expr
+    6     | expr • '-' expr
+    7     | expr • '*' expr
+    8     | expr • '/' expr
+    8     | expr '/' expr •  [LF, '+', '-', '*', '/', ')']
+
+    $default  reduce using rule 8 (expr)
+
+    Conflict between rule 8 and token '+' resolved as reduce ('+' < '/').
+    Conflict between rule 8 and token '-' resolved as reduce ('-' < '/').
+    Conflict between rule 8 and token '*' resolved as reduce (%left '*').
+    Conflict between rule 8 and token '/' resolved as reduce (%left '/').
+
+
