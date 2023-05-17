@@ -92,6 +92,7 @@ static int yyerror(YYLTYPE *loc, const char *str) {
 }
 
 int main() {
+    printf("Enter the formula:\n");
     yyparse();
     return 0;
 }
