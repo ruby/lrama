@@ -21,9 +21,11 @@ $ gem install lrama
 From source codes,
 
 ```shell
+$ cd "$(lrama root)"
+$ bundle install
 $ bundle exec rake install
-$ lrama --version
-0.1.0
+$ bundle exec lrama --version
+0.5.0
 ```
 
 ## Usage
