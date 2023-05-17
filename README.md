@@ -35,6 +35,18 @@ $ bundle exec lrama --version
 $ lrama -d sample/parse.y
 ```
 
+```shell
+# "calc", "calc.c", and "calc.h" are generated
+$ lrama -d sample/calc.y -o calc.c && gcc -Wall calc.c -o calc && ./calc
+Enter the formula:
+1
+=> 1
+1+2*3
+=> 7
+(1+2)*3
+=> 9
+```
+
 ## Build Ruby
 
 1. Install Lrama
