@@ -1,5 +1,4 @@
 module Lrama
-  Token: untyped
   VERSION: String
   include Comparable
 
@@ -244,6 +243,70 @@ module Lrama
   end
 
   class Lexer
+    include Report::Duration
+
+    class Token
+      def initialize: (type: untyped, s_value: ::String | Integer) -> void
+
+      self.@i: Integer
+      self.@types: Array[untyped]
+      def self.define_type: (::Symbol) -> void
+
+      attr_accessor line: Integer
+      attr_accessor column: Integer
+      attr_accessor referred: untyped
+      attr_accessor references: untyped
+
+      class Type
+        def initialize: (id: untyped, name: ::String) -> void
+      end
+
+      class P_expect         # %expect
+      end
+      class P_define         # %define
+      end
+      class P_printer        # %printer
+      end
+      class P_lex_param      # %lex-param
+      end
+      class P_parse_param    # %parse-param
+      end
+      class P_initial_action # %initial-action
+      end
+      class P_union          # %union
+      end
+      class P_token          # %token
+      end
+      class P_type           # %type
+      end
+      class P_nonassoc       # %nonassoc
+      end
+      class P_left           # %left
+      end
+      class P_right          # %right
+      end
+      class P_prec           # %prec
+      end
+      class User_code        # { ... }
+      end
+      class Tag              # <int>
+      end
+      class Number           # 0
+      end
+      class Ident_Colon      # k_if:, k_if  : (spaces can be there)
+      end
+      class Ident            # api.pure, tNUMBER
+      end
+      class Semicolon        # ;
+      end
+      class Bar              # |
+      end
+      class String           # "str"
+      end
+      class Char             # '+'
+      end
+    end
+
     Initial: Integer
     Prologue: Integer
     BisonDeclarations: Integer
@@ -264,22 +327,18 @@ module Lrama
     def initialize: (untyped text) -> void
 
     private
-    def create_token: (untyped `type`, (Integer | String)? s_value, untyped line, Complex | Float | Integer | Rational column) -> Parser::T
+    def create_token: (untyped `type`, (Integer | String) s_value, untyped line, Integer column) -> Token
     def lex_text: -> untyped
     def lex_common: (Array[untyped] lines, Array[untyped] tokens) -> nil
     def lex_bison_declarations_tokens: -> nil
-    def lex_user_code: (StringScanner | false ss, untyped line, Complex | Float | Integer | Rational column, Array[untyped] lines) -> [Parser::T, untyped]
-    def lex_string: (StringScanner | false ss, String terminator, untyped line, Array[untyped] lines) -> [String, untyped]
-    def lex_comment: (StringScanner | false ss, untyped line, Array[untyped] lines, String str) -> untyped
-    def lex_line_comment: (StringScanner | false ss, untyped line, String str) -> untyped
+    def lex_user_code: (StringScanner ss, untyped line, Integer column, Array[untyped] lines) -> [Token, untyped]
+    def lex_string: (StringScanner ss, String terminator, untyped line, Array[untyped] lines) -> [String, untyped]
+    def lex_comment: (StringScanner ss, untyped line, Array[untyped] lines, String str) -> untyped
+    def lex_line_comment: (StringScanner ss, untyped line, String str) -> untyped
     def lex_grammar_rules_tokens: -> nil
     def debug: (String msg) -> nil
 
     public
-    attr_accessor line: bot
-    attr_accessor column: bot
-    attr_accessor referred: untyped
-    attr_accessor references: untyped
     def to_s: -> String
     def self.define_type: (:Bar | :Char | :Ident | :Ident_Colon | :Number | :P_define | :P_expect | :P_initial_action | :P_left | :P_lex_param | :P_nonassoc | :P_parse_param | :P_prec | :P_printer | :P_right | :P_token | :P_type | :P_union | :Semicolon | :String | :Tag | :User_code name) -> Integer
 
@@ -383,7 +442,7 @@ module Lrama
 
       def self.enable: -> true
       def self.enabled?: -> true
-      def report_duration: (:compute_conflicts | :compute_default_reduction | :compute_direct_read_sets | :compute_follow_sets | :compute_includes_relation | :compute_look_ahead_sets | :compute_lookback_relation | :compute_lr0_states | :compute_read_sets | :compute_reads_relation | :report method_name) ?{ -> ((Array[State] | Hash[untyped, nil])?) } -> ((Array[State] | Hash[untyped, nil])?)
+      def report_duration: (::Symbol) ?{ -> ((Array[State] | Hash[untyped, nil])?) } -> ((Array[State] | Hash[untyped, nil])?)
     end
   end
 
