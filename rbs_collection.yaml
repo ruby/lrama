@@ -20,3 +20,4 @@ gems:
     ignore: true
   - name: strscan
   - name: erb
+  - name: forwardable

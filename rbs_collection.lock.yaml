@@ -11,6 +11,10 @@ gems:
   version: '0'
   source:
     type: stdlib
+- name: forwardable
+  version: '0'
+  source:
+    type: stdlib
 - name: stackprof
   version: '0.2'
   source:

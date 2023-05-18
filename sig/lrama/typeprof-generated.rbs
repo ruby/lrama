@@ -100,10 +100,10 @@ module Lrama
     @base_function: Hash[untyped, nil]
     @stack: Array[[Integer, untyped]]
     @h: Hash[untyped, Float | Integer]
-    @result: Hash[untyped, nil]
+    @result: Hash[untyped, Integer]
 
-    def initialize: (Array[[Integer, untyped]] sets, Hash[untyped, untyped] relation, Hash[untyped, nil] base_function) -> void
-    def compute: -> Hash[untyped, nil]
+    def initialize: (Array[[Integer, untyped]] sets, Hash[untyped, untyped] relation, Hash[untyped, Integer] base_function) -> void
+    def compute: -> Hash[untyped, Integer]
 
     private
     def traverse: ([Integer, untyped] x) -> nil
@@ -213,7 +213,7 @@ module Lrama
     def find_symbol_by_id: (Symbol id) -> Symbol?
     def find_symbol_by_id!: (Symbol id) -> Symbol
     def find_symbol_by_number!: (Integer number) -> Symbol
-    def find_rules_by_symbol!: (Symbol sym) -> bot
+    def find_rules_by_symbol!: (Symbol sym) -> untyped
     def find_rules_by_symbol: (Symbol sym) -> nil
     def terms_count: -> Integer
     def terms: -> Array[Symbol]
@@ -442,7 +442,7 @@ module Lrama
 
       def self.enable: -> true
       def self.enabled?: -> true
-      def report_duration: (::Symbol) ?{ -> ((Array[State] | Hash[untyped, nil])?) } -> ((Array[State] | Hash[untyped, nil])?)
+      def report_duration: [R] (::Symbol) { -> R } -> R
     end
   end
 
@@ -467,10 +467,10 @@ module Lrama
     def compute_shifts_reduces: -> Array[Reduce]
     def set_items_to_state: (untyped items, untyped next_state) -> untyped
     def set_look_ahead: (untyped rule, untyped look_ahead) -> untyped
-    def nterm_transitions: -> Array[untyped]?
-    def term_transitions: -> Array[untyped]?
+    def nterm_transitions: -> Array[[untyped, untyped, untyped]]
+    def term_transitions: -> Array[[untyped, untyped]]
     def selected_term_transitions: -> Array[untyped]
-    def transition: (untyped sym) -> bot
+    def transition: (untyped sym) -> untyped
     def find_reduce_by_item!: (untyped item) -> Reduce
     def default_reduction_rule=: (untyped default_reduction_rule) -> Array[Reduce]
     def sr_conflicts: -> Array[untyped]
@@ -479,7 +479,7 @@ module Lrama
 
     class Reduce
       attr_reader item: States::Item
-      attr_reader look_ahead: nil
+      attr_reader look_ahead: Array[::Symbol] | nil
       attr_reader not_selected_symbols: Array[untyped]
       attr_accessor default_reduction: true
       def initialize: (States::Item item) -> void
@@ -497,13 +497,17 @@ module Lrama
     end
 
     class ResolvedConflict < Struct[untyped]
+      def initialize: (symbol: ::Symbol, reduce: Reduce, which: (:error | :reduce | :shift), ?same_prec: bool) -> void
+
       attr_accessor symbol(): untyped
       attr_accessor reduce(): Reduce
       attr_accessor which(): :error | :reduce | :shift
-      attr_accessor same_prec(): true
+      attr_accessor same_prec(): bool
     end
 
-    class Conflict < Struct[untyped]
+    class Conflict
+      def initialize: (symbols: Array[::Symbol], reduce: Reduce, type: (:reduce_reduce | :shift_reduce)) -> void
+
       attr_accessor symbols(): [untyped] | false
       attr_accessor reduce(): Reduce
       attr_accessor type(): :reduce_reduce | :shift_reduce
@@ -511,13 +515,23 @@ module Lrama
   end
 
   class States
+    extend Forwardable
+
+    # Forwardable methods for Grammer
+    def symbols: -> Array[Symbol]
+    def terms: -> Array[Symbol]
+    def nterms: -> Array[Symbol]
+    def rules: -> Array[Rule]
+    def accept_symbol: -> Symbol?
+    def find_symbol_by_s_value!: (String s_value) -> Symbol
+
     include Report::Duration
-    @grammar: untyped
+    @grammar: Grammar
     @warning: untyped
     @trace_state: false
     @direct_read_sets: Hash[untyped, untyped]
-    @read_sets: Hash[untyped, nil]
-    @follow_sets: Hash[untyped, nil]
+    @read_sets: Hash[untyped, Integer]
+    @follow_sets: Hash[[Integer, Integer], Integer]
     @la: Hash[untyped, untyped]
 
     attr_reader states: Array[State]
@@ -538,20 +552,20 @@ module Lrama
     def rr_conflicts: -> Array[Array[untyped]]
     def initial_attrs: -> Hash[untyped, untyped]
     def trace_state: { (IO) -> IO } -> IO?
-    def create_state: (untyped accessing_symbol, [Item] kernels, Hash[untyped, untyped] states_creted) -> [State?, bool]
+    def create_state: (untyped accessing_symbol, [Item] kernels, Hash[untyped, untyped] states_creted) -> [State, bool]
     def setup_state: (untyped state) -> untyped
-    def enqueue_state: (Array[untyped] states, State? state) -> Array[untyped]
+    def enqueue_state: (Array[untyped] states, State state) -> Array[untyped]
     def compute_lr0_states: -> nil
-    def nterm_transitions: -> Array[Array[State?]]
+    def nterm_transitions: -> Array[[State, untyped, untyped]]
     def compute_direct_read_sets: -> Array[State]
     def compute_reads_relation: -> Array[State]
-    def compute_read_sets: -> Hash[untyped, nil]
+    def compute_read_sets: -> Hash[untyped, Integer]
     def transition: (State state, untyped symbols) -> State
     def compute_includes_relation: -> Array[State]
     def compute_lookback_relation: -> Array[State]
-    def compute_follow_sets: -> Hash[untyped, nil]
+    def compute_follow_sets: -> Hash[untyped, Integer]
     def compute_look_ahead_sets: -> Array[State]
-    def bitmap_to_terms: (nil bit) -> Array[untyped]
+    def bitmap_to_terms: (Integer bit) -> Array[untyped]
     def compute_conflicts: -> Array[State]
     def compute_shift_reduce_conflicts: -> Array[State]
     def compute_reduce_reduce_conflicts: -> Array[State]
@@ -559,18 +573,19 @@ module Lrama
     def check_conflicts: -> nil
 
     public
-    def hash: -> Integer
-    def rule_id: -> untyped
-    def next_sym: -> untyped
-    def end_of_rule?: -> untyped
-    def new_by_next_position: -> Item
-    def previous_sym: -> untyped
-    def display_name: -> String
-    def display_rest: -> String
 
     class Item < Struct[untyped]
+      def initialize: (rule: untyped, position: Integer) -> void
       attr_accessor rule(): untyped
       attr_accessor position(): Integer
+      def hash: -> Integer
+      def rule_id: -> untyped
+      def next_sym: -> untyped
+      def end_of_rule?: -> untyped
+      def new_by_next_position: -> Item
+      def previous_sym: -> untyped
+      def display_name: -> String
+      def display_rest: -> String
     end
   end
 
