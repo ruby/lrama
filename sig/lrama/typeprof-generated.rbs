@@ -8,10 +8,6 @@ module Lrama
   def initial_rule?: -> untyped
   def term?: -> untyped
   def nterm?: -> untyped
-  def eof_symbol?: -> false
-  def error_symbol?: -> false
-  def undef_symbol?: -> false
-  def accept_symbol?: -> false
 
   public
   def tag: -> untyped
@@ -417,19 +413,41 @@ module Lrama
   end
 
   class Output
+    extend Forwardable
+    include Report::Duration
+
     @out: untyped
     @output_file_path: untyped
     @template_name: untyped
-    @header_out: nil
-    @header_file_path: nil
+    @header_out: IO?
+    @header_file_path: String?
+    @context: Context
+    @grammar: Grammar
+
+    # Forwardable methods for Context
+    def yyfinal: -> untyped
+    def yylast: -> Integer?
+    def yyntokens: -> untyped
+    def yynnts: -> untyped
+    def yynrules: -> untyped
+    def yynstates: -> untyped
+    def yymaxutok: -> untyped
+    def yypact_ninf: -> ((Float | Integer)?)
+    def yytable_ninf: -> Integer?
+
+    # Forwardable methods for Grammer
+    def eof_symbol?: -> bool
+    def error_symbol?: -> bool
+    def undef_symbol?: -> bool
+    def accept_symbol?: -> bool
 
     attr_reader grammar_file_path: untyped
     attr_reader context: untyped
     attr_reader grammar: untyped
-    def initialize: (out: untyped, output_file_path: untyped, template_name: untyped, grammar_file_path: untyped, context: untyped, grammar: untyped, ?header_out: nil, ?header_file_path: nil) -> void
+    def initialize: (out: untyped, output_file_path: untyped, template_name: untyped, grammar_file_path: untyped, context: untyped, grammar: untyped, ?header_out: IO?, ?header_file_path: String?) -> void
     def self.erb: (String input) -> ERB
                 | (String input) -> ERB
-    def eval_template: (String file, nil path) -> untyped
+    def eval_template: (String file, String path) -> untyped
     def render: -> untyped
     def token_enums: -> String
     def symbol_enum: -> String
@@ -445,9 +463,9 @@ module Lrama
     def lex_param: -> String
     def user_formals: -> String
     def user_args: -> String
-    def extract_param_name: (String param) -> String?
-    def parse_param_name: -> String?
-    def lex_param_name: -> String?
+    def extract_param_name: (String param) -> String
+    def parse_param_name: -> String
+    def lex_param_name: -> String
     def parse_param_use: (untyped val, untyped loc) -> String
     def yylex_formals: -> String
     def table_value_equals: (untyped table, untyped value, untyped literal, untyped symbol) -> String
@@ -455,7 +473,7 @@ module Lrama
     def template_basename: -> String
     def aux: -> untyped
     def int_array_to_string: (untyped ary) -> untyped
-    def spec_mapped_header_file: -> nil
+    def spec_mapped_header_file: -> String?
     def b4_cpp_guard__b4_spec_mapped_header_file: -> String
 
     private
@@ -463,7 +481,7 @@ module Lrama
     def header_template_file: -> String
     def template_dir: -> String
     def string_array_to_string: (untyped ary) -> String
-    def replace_special_variables: (untyped str, nil ofile) -> untyped
+    def replace_special_variables: (String str, String ofile) -> untyped
   end
 
   class Report

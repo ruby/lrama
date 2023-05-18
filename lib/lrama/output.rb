@@ -25,15 +25,17 @@ module Lrama
       @grammar = grammar
     end
 
-    if ERB.instance_method(:initialize).parameters.last.first == :key
-      def self.erb(input)
-        ERB.new(input, trim_mode: '-')
+    eval <<-END # to make Steep skip type-checking
+      if ERB.instance_method(:initialize).parameters.last.first == :key
+        def self.erb(input)
+          ERB.new(input, trim_mode: '-')
+        end
+      else
+        def self.erb(input)
+          ERB.new(input, nil, '-')
+        end
       end
-    else
-      def self.erb(input)
-        ERB.new(input, nil, '-')
-      end
-    end
+    END
 
     def eval_template(file, path)
       erb = self.class.erb(File.read(file))
@@ -47,13 +49,15 @@ module Lrama
         tmp = eval_template(template_file, @output_file_path)
         @out << tmp
 
-        if @header_file_path
-          tmp = eval_template(header_template_file, @header_file_path)
+        header_file_path = @header_file_path
+        if header_file_path
+          tmp = eval_template(header_template_file, header_file_path)
 
-          if @header_out
-            @header_out << tmp
+          header_out = @header_out
+          if header_out
+            header_out << tmp
           else
-            File.write(@header_file_path, tmp)
+            File.write(header_file_path, tmp)
           end
         end
       end
@@ -224,7 +228,7 @@ module Lrama
     end
 
     def extract_param_name(param)
-      /\A(.)+([a-zA-Z0-9_]+)\z/.match(param)[2]
+      (/\A(.)+([a-zA-Z0-9_]+)\z/.match(param) || raise)[2] || raise
     end
 
     def parse_param_name
@@ -317,8 +321,9 @@ module Lrama
     end
 
     def b4_cpp_guard__b4_spec_mapped_header_file
-      if @header_file_path
-        "YY_YY_" + @header_file_path.gsub(/[^a-zA-Z_0-9]+/, "_").upcase + "_INCLUDED"
+      header_file_path = @header_file_path
+      if header_file_path
+        "YY_YY_" + header_file_path.gsub(/[^a-zA-Z_0-9]+/, "_").upcase + "_INCLUDED"
       else
         ""
       end
