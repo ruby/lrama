@@ -82,7 +82,7 @@ module Lrama
   class Digraph
     @sets: Array[[Integer, untyped]]
     @relation: Hash[untyped, untyped]
-    @base_function: Hash[untyped, nil]
+    @base_function: Hash[untyped, Integer]
     @stack: Array[[Integer, untyped]]
     @h: Hash[untyped, Float | Integer]
     @result: Hash[untyped, Integer]
