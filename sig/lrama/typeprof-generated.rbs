@@ -488,7 +488,7 @@ module Lrama
 
   class Report
     module Profile
-      def self.report_profile: -> untyped
+      def self.report_profile: { -> untyped } -> untyped
     end
 
     module Duration
