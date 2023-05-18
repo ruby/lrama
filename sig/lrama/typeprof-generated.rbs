@@ -23,18 +23,20 @@ module Lrama
   end
 
   class Context
+    include Report::Duration
+
     ErrorActionNumber: Float
     BaseMin: Float
     @yydefact: Array[Integer]?
     @yydefgoto: Array[Integer]?
-    @_actions: Array[untyped]
+    @_actions: Array[[Integer, Array[[Integer, Integer]], Integer, Integer]]
     @yylast: Integer
     @yypact_ninf: Float | Integer
     @yytable_ninf: Integer
     @base: Array[Float | Integer]
     @table: Array[Integer]
     @check: Array[untyped]
-    @sorted_actions: Array[untyped]
+    @sorted_actions: Array[[Integer, Array[[Integer, Integer]], Integer, Integer]]
 
     attr_reader states: untyped
     def initialize: (untyped states) -> void
@@ -48,7 +50,7 @@ module Lrama
     def yynstates: -> untyped
     def yymaxutok: -> untyped
     def yytranslate: -> Array[Integer]
-    def yyrline: -> [Integer]
+    def yyrline: -> Array[Integer]
     def yytname: -> untyped
     def yypact_ninf: -> ((Float | Integer)?)
     def yytable_ninf: -> Integer?
@@ -59,8 +61,8 @@ module Lrama
     def yytable: -> Array[Integer]?
     def yycheck: -> Array[untyped]?
     def yystos: -> untyped
-    def yyr1: -> [Integer]
-    def yyr2: -> [Integer]
+    def yyr1: -> Array[Integer]
+    def yyr2: -> Array[Integer]
 
     private
     def compute_tables: -> untyped
@@ -72,7 +74,7 @@ module Lrama
     def compute_yydefgoto: -> untyped
     def sort_actions: -> Array[untyped]
     def debug_sorted_actions: -> untyped
-    def compute_packed_table: -> Array[untyped]
+    def compute_packed_table: -> void
   end
 
   class Digraph
