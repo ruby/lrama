@@ -139,6 +139,7 @@ module Lrama
         nl = false
         max_len = state.non_default_reduces.flat_map(&:look_ahead).compact.map(&:display_name).map(&:length).max || 0
         max_len = [max_len, "$default".length].max if state.default_reduction_rule
+        # @type var ary: Array[[untyped, State::Reduce]]
         ary = []
 
         state.non_default_reduces.each do |reduce|
@@ -284,6 +285,7 @@ module Lrama
 
           # Report LA
           io << "  [Look-Ahead Sets]\n"
+          # @type var tmp: Array[[Rule, Array[Symbol]]]
           tmp = []
           max_len = 0
           @states.rules.each do |rule|
@@ -295,7 +297,7 @@ module Lrama
           end
           tmp.each do |rule, syms|
             syms.each do |sym|
-              io << "    #{sym.id.s_value.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.id.s_value})\n"
+              io << "    #{sym.id.s_value_str.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.id.s_value})\n"
             end
           end
           io << "\n" if !tmp.empty?
