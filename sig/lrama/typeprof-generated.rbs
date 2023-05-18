@@ -6,27 +6,12 @@ module Lrama
   def as_comment: -> String
   def precedence: -> untyped
   def initial_rule?: -> untyped
-  def translated_code: (untyped member) -> untyped
-                     | -> nil
-                     | -> nil
-  attr_writer eof_symbol: bot
-  attr_writer error_symbol: bot
-  attr_writer undef_symbol: bot
-  attr_writer accept_symbol: bot
   def term?: -> untyped
   def nterm?: -> untyped
   def eof_symbol?: -> false
   def error_symbol?: -> false
   def undef_symbol?: -> false
   def accept_symbol?: -> false
-  def display_name: -> untyped
-  def enum_name: -> String
-  def comment: -> untyped
-  def translated_printer_code: (untyped tag) -> untyped
-
-  private
-  def translated_user_code: -> untyped
-  def translated_initial_action_code: -> untyped
 
   public
   def tag: -> untyped
@@ -109,7 +94,9 @@ module Lrama
     def traverse: ([Integer, untyped] x) -> nil
   end
 
-  class Rule < Struct[untyped]
+  class Rule
+    def initialize: (id: Integer, lhs: untyped, rhs: untyped, code: untyped, ?nullable: untyped, ?precedence_sym: untyped, lineno: Integer) -> void
+
     attr_accessor id(): Integer
     attr_accessor lhs(): Symbol
     attr_accessor rhs(): Array[Symbol]
@@ -117,31 +104,65 @@ module Lrama
     attr_accessor nullable(): bool
     attr_accessor precedence_sym(): Symbol?
     attr_accessor lineno(): Integer
+    def translated_code: -> untyped
   end
 
-  class Symbol < Struct[untyped]
-    attr_accessor id(): Array[Symbol] | Symbol
+  class Symbol
+    def initialize: (id: Token, alias_name: untyped, number: untyped, tag: untyped, term: untyped, token_id: untyped, nullable: untyped, ?precedence: untyped, ?printer: untyped) -> void
+    attr_accessor id(): Token
     attr_accessor alias_name(): String?
     attr_accessor number(): Integer?
     attr_accessor tag(): nil
     attr_accessor term(): bool
     attr_accessor token_id(): Integer?
-    attr_accessor nullable(): false?
+    attr_accessor nullable(): bool
     attr_accessor precedence(): Precedence
     attr_accessor printer(): Printer
+    attr_writer eof_symbol: bool
+    attr_writer error_symbol: bool
+    attr_writer undef_symbol: bool
+    attr_writer accept_symbol: bool
+    def term?: -> bool
+    def nterm?: -> bool
+    def eof_symbol?: -> bool
+    def error_symbol?: -> bool
+    def undef_symbol?: -> bool
+    def accept_symbol?: -> bool
+    def display_name: -> untyped
+    def enum_name: -> String
+    def comment: -> untyped
   end
 
-  class Type < Struct[untyped]
+  class Type
+    def initialize: (id: untyped, tag: untyped) -> void
     attr_accessor id(): untyped
     attr_accessor tag(): nil
   end
 
-  class Code < Struct[untyped]
+  class Code
+    def initialize: (type: :initial_action | :lex_param | :parse_param | :printer | :union | :user_code, token_code: Token) -> void
+
+    extend Forwardable
+
+    # Forwardable methods for Grammer
+    def s_value: -> untyped
+    def line: -> Integer
+    def column: -> Integer
+    def references: -> untyped
+
     attr_accessor type(): :initial_action | :lex_param | :parse_param | :printer | :union | :user_code
     attr_accessor token_code(): untyped
+
+    def translated_code: -> untyped
+    def translated_printer_code: (untyped tag) -> untyped
+
+    private
+    def translated_user_code: -> untyped
+    def translated_initial_action_code: -> untyped
   end
 
-  class Reference < Struct[untyped]
+  class Reference
+    def initialize: (type: untyped, number: untyped, ex_tag: untyped, first_column: untyped, last_column: untyped, ?referring_symbol: untyped, ?position_in_rhs: untyped) -> void
     attr_accessor type(): untyped
     attr_accessor number(): untyped
     attr_accessor ex_tag(): untyped
@@ -151,26 +172,32 @@ module Lrama
     attr_accessor position_in_rhs(): untyped
   end
 
-  class Precedence < Struct[untyped]
+  class Precedence
+    def initialize: (type: :left | :nonassoc | :right, precedence: Integer) -> void
     attr_accessor type(): :left | :nonassoc | :right
     attr_accessor precedence(): Integer
   end
 
-  class Printer < Struct[untyped]
+  class Printer
+    def initialize: (ident_or_tags: untyped, code: Code, lineno: Integer) -> void
     attr_accessor ident_or_tags(): Array[untyped]
     attr_accessor code(): Code
-    attr_accessor lineno(): untyped
+    attr_accessor lineno(): Integer
+    def translated_code: (untyped member) -> untyped
   end
 
-  class Union < Struct[untyped]
+  class Union
+    def initialize: (code: Code, lineno: Integer) -> void
     attr_accessor code(): Code
     attr_accessor lineno(): untyped
   end
 
   class Grammar
+    @symbols: Array[untyped]
     @empty_symbol: nil
     @terms: Array[Symbol]?
     @nterms: Array[Symbol]?
+    @rules: Array[untyped]
 
     attr_reader eof_symbol: Symbol?
     attr_reader error_symbol: Symbol?
@@ -190,7 +217,7 @@ module Lrama
     attr_accessor sym_to_rules: Hash[untyped, untyped]
     def initialize: -> void
     def add_printer: (ident_or_tags: Array[untyped], code: Code, lineno: untyped) -> Array[Printer]
-    def add_term: (id: Array[Symbol] | Symbol, ?alias_name: String?, ?tag: nil, ?token_id: Integer?, ?replace: bool) -> Symbol
+    def add_term: (id: Token, ?alias_name: String?, ?tag: nil, ?token_id: Integer?, ?replace: bool) -> Symbol
     def add_nterm: (id: untyped, ?alias_name: nil, ?tag: nil) -> Symbol?
     def add_type: (id: untyped, tag: nil) -> Array[Type]
     def add_nonassoc: (Symbol sym, Integer precedence) -> Precedence
@@ -205,13 +232,13 @@ module Lrama
     def prologue=: (String prologue) -> String
     def epilogue_first_lineno=: (untyped epilogue_first_lineno) -> untyped
     def epilogue=: (String epilogue) -> String
-    def prepare: -> bot
+    def prepare: -> Array[Symbol]
     def validate!: -> nil
-    def compute_nullable: -> bot
+    def compute_nullable: -> void
     def find_symbol_by_s_value: (String s_value) -> Symbol?
     def find_symbol_by_s_value!: (String s_value) -> Symbol
-    def find_symbol_by_id: (Symbol id) -> Symbol?
-    def find_symbol_by_id!: (Symbol id) -> Symbol
+    def find_symbol_by_id: (Token id) -> Symbol?
+    def find_symbol_by_id!: (Token id) -> Symbol
     def find_symbol_by_number!: (Integer number) -> Symbol
     def find_rules_by_symbol!: (Symbol sym) -> untyped
     def find_rules_by_symbol: (Symbol sym) -> nil
@@ -225,16 +252,17 @@ module Lrama
     def append_special_symbols: -> Symbol?
     def normalize_rules: -> Array[[untyped, Array[untyped], untyped]]
     def collect_symbols: -> (Array[Array[Symbol] | Symbol])
-    def fill_symbol_number: -> bot
+    def fill_symbol_number: -> void
     def replace_token_with_symbol: -> Array[Rule]
-    def token_to_symbol: (Symbol token) -> Symbol
+    def token_to_symbol: (Token | Symbol token) -> Symbol
     def fill_default_precedence: -> Array[Rule]
     def fill_sym_to_rules: -> Array[Rule]
     def fill_nterm_type: -> Array[Type]
     def fill_symbol_printer: -> Array[Symbol]
     def validate_symbol_number_uniqueness!: -> nil
 
-    class Aux < Struct[untyped]
+    class Aux
+      def initialize: (?prologue_first_lineno: untyped, ?prologue: untyped, ?epilogue_first_lineno: untyped, ?epilogue: untyped) -> void
       attr_accessor prologue_first_lineno(): untyped
       attr_accessor prologue(): String
       attr_accessor epilogue_first_lineno(): untyped
@@ -242,11 +270,17 @@ module Lrama
     end
   end
 
+  class Token = Lexer::Token
+
   class Lexer
     include Report::Duration
 
     class Token
-      def initialize: (type: untyped, s_value: ::String | Integer) -> void
+      def initialize: (type: untyped, s_value: (::String | Integer)) -> void
+
+      def type: -> untyped
+      def s_value: -> (::String | Integer)
+      def s_value_str: -> ::String
 
       self.@i: Integer
       self.@types: Array[untyped]

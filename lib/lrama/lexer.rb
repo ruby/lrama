@@ -8,6 +8,12 @@ module Lrama
 
     # s_value is semantic value
     class Token < Struct.new(:type, :s_value, keyword_init: true)
+      def s_value_str
+        s = s_value
+        raise if s.is_a?(Integer)
+        s
+      end
+
       class Type < Struct.new(:id, :name, keyword_init: true)
       end
 
