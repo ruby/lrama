@@ -21,3 +21,4 @@ gems:
   - name: strscan
   - name: erb
   - name: forwardable
+  - name: optparse

@@ -15,10 +15,10 @@ module Lrama
   def braces_less_code: -> untyped
 
   class Command
-    def run: (untyped argv) -> bot
+    def run: (untyped argv) -> void
 
     private
-    def validate_report: (untyped report) -> {grammar: true}
+    def validate_report: (untyped report) -> Hash[::Symbol, bool]
     def validate_trace: (untyped trace) -> Hash[untyped, untyped]
   end
 
