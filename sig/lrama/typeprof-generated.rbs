@@ -110,7 +110,7 @@ module Lrama
     attr_accessor id(): Token
     attr_accessor alias_name(): String?
     attr_accessor number(): Integer?
-    attr_accessor tag(): nil
+    attr_accessor tag(): Token?
     attr_accessor term(): bool
     attr_accessor token_id(): Integer?
     attr_accessor nullable(): bool
@@ -215,15 +215,15 @@ module Lrama
     attr_accessor sym_to_rules: Hash[untyped, untyped]
     def initialize: -> void
     def add_printer: (ident_or_tags: Array[untyped], code: Code, lineno: untyped) -> Array[Printer]
-    def add_term: (id: Token, ?alias_name: String?, ?tag: nil, ?token_id: Integer?, ?replace: bool) -> Symbol
+    def add_term: (id: Token, ?alias_name: String?, ?tag: Token?, ?token_id: Integer?, ?replace: bool) -> Symbol
     def add_nterm: (id: untyped, ?alias_name: nil, ?tag: nil) -> Symbol?
-    def add_type: (id: untyped, tag: nil) -> Array[Type]
+    def add_type: (id: untyped, tag: untyped) -> Array[Type]
     def add_nonassoc: (Symbol sym, Integer precedence) -> Precedence
     def add_left: (Symbol sym, Integer precedence) -> Precedence
     def add_right: (Symbol sym, Integer precedence) -> Precedence
     def set_precedence: (Symbol sym, Precedence precedence) -> Precedence
     def set_union: (Code code, untyped lineno) -> Union
-    def add_rule: (lhs: untyped, rhs: Array[Symbol], lineno: untyped) -> Array[[untyped, Array[untyped], untyped]]
+    def add_rule: (lhs: untyped, rhs: Array[Symbol | Token], lineno: untyped) -> Array[[untyped, Array[untyped], untyped]]
     def build_references: (untyped token_code) -> untyped
     def build_code: (:initial_action | :lex_param | :parse_param | :printer | :union `type`, untyped token_code) -> Code
     def prologue_first_lineno=: (untyped prologue_first_lineno) -> untyped
@@ -277,7 +277,9 @@ module Lrama
       def initialize: (type: untyped, s_value: (::String | Integer)) -> void
 
       def type: -> untyped
+      def type=: (untyped) -> untyped
       def s_value: -> (::String | Integer)
+      def s_value_int: -> Integer
       def s_value_str: -> ::String
 
       self.@i: Integer
@@ -381,6 +383,10 @@ module Lrama
   end
 
   class Parser
+    include Lrama::Report::Duration
+
+    class T = Lexer::Token
+
     @text: untyped
 
     def initialize: (untyped text) -> void
@@ -392,12 +398,7 @@ module Lrama
     def parse_bison_declarations: (TokenScanner ts, Grammar grammar) -> nil
     def parse_grammar_rules: (TokenScanner ts, Grammar grammar) -> nil
     def parse_grammar_rule: (TokenScanner ts, Grammar grammar) -> nil
-    def parse_grammar_rule_rhs: (TokenScanner ts, Grammar grammar) -> Array[Symbol]
-
-    class T < Struct[untyped]
-      attr_accessor type(): untyped
-      attr_accessor s_value(): (Integer | String)?
-    end
+    def parse_grammar_rule_rhs: (TokenScanner ts, Grammar grammar) -> Array[Token]
 
     class TokenScanner
       @tokens: Array[untyped]
@@ -407,8 +408,8 @@ module Lrama
       def current_token: -> untyped
       def current_type: -> untyped
       def next: -> untyped
-      def consume: (*untyped token_types) -> nil
-      def consume!: (*untyped token_types) -> untyped
+      def consume: (*untyped token_types) -> Token?
+      def consume!: (*untyped token_types) -> Token
       def consume_multi: (*untyped token_types) -> Array[untyped]
       def eots?: -> untyped
     end
