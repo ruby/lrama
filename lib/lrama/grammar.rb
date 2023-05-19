@@ -166,7 +166,7 @@ module Lrama
         when ref.type == :at # @n
           raise "@#{ref.number} can not be used in %printer."
         else
-          raise "Unexpected. #{code}, #{ref}"
+          raise "Unexpected. #{self}, #{ref}"
         end
 
         t_code[first_column..last_column] = str
@@ -205,7 +205,7 @@ module Lrama
           i = -ref.position_in_rhs + ref.number
           str = "(yylsp[#{i}])"
         else
-          raise "Unexpected. #{code}, #{ref}"
+          raise "Unexpected. #{self}, #{ref}"
         end
 
         t_code[first_column..last_column] = str
@@ -235,7 +235,7 @@ module Lrama
         when ref.type == :at # @n
           raise "@#{ref.number} can not be used in initial_action."
         else
-          raise "Unexpected. #{code}, #{ref}"
+          raise "Unexpected. #{self}, #{ref}"
         end
 
         t_code[first_column..last_column] = str

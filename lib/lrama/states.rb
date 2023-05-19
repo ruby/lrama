@@ -198,7 +198,7 @@ module Lrama
     def find_reduce_by_item!(item)
       reduces.find do |r|
         r.item == item
-      end || (raise "reduce is not found. #{item}, #{state}")
+      end || (raise "reduce is not found. #{item}")
     end
 
     def default_reduction_rule=(default_reduction_rule)
