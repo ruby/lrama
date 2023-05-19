@@ -411,16 +411,6 @@ module Lrama
       @states.flat_map(&:rr_conflicts)
     end
 
-    def initial_attrs
-      h = {}
-
-      attrs.each do |attr|
-        h[attr.id] = false
-      end
-
-      h
-    end
-
     def trace_state
       if @trace_state
         yield STDERR
