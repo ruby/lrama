@@ -171,43 +171,43 @@ module Lrama
         when ss.scan(/\s+/)
           # skip
         when ss.scan(/;/)
-          tokens << create_token(Token::Semicolon, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::Semicolon, ss[0], line, ss.pos - column)
         when ss.scan(/\|/)
-          tokens << create_token(Token::Bar, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::Bar, ss[0], line, ss.pos - column)
         when ss.scan(/(\d+)/)
-          tokens << create_token(Token::Number, Integer(ss[0] || raise), line, ss.pos - column)
+          tokens << create_token(Token::Number, Integer(ss[0]), line, ss.pos - column)
         when ss.scan(/(<[a-zA-Z0-9_]+>)/)
-          tokens << create_token(Token::Tag, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::Tag, ss[0], line, ss.pos - column)
         when ss.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)\s*:/)
-          tokens << create_token(Token::Ident_Colon, ss[1] || raise, line, ss.pos - column)
+          tokens << create_token(Token::Ident_Colon, ss[1], line, ss.pos - column)
         when ss.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
-          tokens << create_token(Token::Ident, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::Ident, ss[0], line, ss.pos - column)
         when ss.scan(/%expect/)
-          tokens << create_token(Token::P_expect, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_expect, ss[0], line, ss.pos - column)
         when ss.scan(/%define/)
-          tokens << create_token(Token::P_define, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_define, ss[0], line, ss.pos - column)
         when ss.scan(/%printer/)
-          tokens << create_token(Token::P_printer, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_printer, ss[0], line, ss.pos - column)
         when ss.scan(/%lex-param/)
-          tokens << create_token(Token::P_lex_param, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_lex_param, ss[0], line, ss.pos - column)
         when ss.scan(/%parse-param/)
-          tokens << create_token(Token::P_parse_param, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_parse_param, ss[0], line, ss.pos - column)
         when ss.scan(/%initial-action/)
-          tokens << create_token(Token::P_initial_action, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_initial_action, ss[0], line, ss.pos - column)
         when ss.scan(/%union/)
-          tokens << create_token(Token::P_union, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_union, ss[0], line, ss.pos - column)
         when ss.scan(/%token/)
-          tokens << create_token(Token::P_token, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_token, ss[0], line, ss.pos - column)
         when ss.scan(/%type/)
-          tokens << create_token(Token::P_type, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_type, ss[0], line, ss.pos - column)
         when ss.scan(/%nonassoc/)
-          tokens << create_token(Token::P_nonassoc, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_nonassoc, ss[0], line, ss.pos - column)
         when ss.scan(/%left/)
-          tokens << create_token(Token::P_left, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_left, ss[0], line, ss.pos - column)
         when ss.scan(/%right/)
-          tokens << create_token(Token::P_right, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_right, ss[0], line, ss.pos - column)
         when ss.scan(/%prec/)
-          tokens << create_token(Token::P_prec, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::P_prec, ss[0], line, ss.pos - column)
         when ss.scan(/{/)
           token, line = lex_user_code(ss, line, ss.pos - column, lines)
           tokens << token
@@ -221,11 +221,11 @@ module Lrama
         when ss.scan(/\/\//)
           line = lex_line_comment(ss, line, "")
         when ss.scan(/'(.)'/)
-          tokens << create_token(Token::Char, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::Char, ss[0], line, ss.pos - column)
         when ss.scan(/'\\(.)'/) # '\\', '\t'
-          tokens << create_token(Token::Char, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::Char, ss[0], line, ss.pos - column)
         when ss.scan(/'\\(\d+)'/) # '\13'
-          tokens << create_token(Token::Char, ss[0] || raise, line, ss.pos - column)
+          tokens << create_token(Token::Char, ss[0], line, ss.pos - column)
         when ss.scan(/%empty/)
           # skip
         else
@@ -264,15 +264,15 @@ module Lrama
           str << string
           next
         when ss.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
-          tag = ss[1] ? create_token(Token::Tag, ss[1] || raise, line, str.length) : nil
-          references << [:dollar, "$", tag, str.length, str.length + (ss[0] || raise).length - 1]
+          tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
+          references << [:dollar, "$", tag, str.length, str.length + ss[0].length - 1]
         when ss.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
-          tag = ss[1] ? create_token(Token::Tag, ss[1] || raise, line, str.length) : nil
-          references << [:dollar, Integer(ss[2] || raise), tag, str.length, str.length + (ss[0] || raise).length - 1]
+          tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
+          references << [:dollar, Integer(ss[2]), tag, str.length, str.length + ss[0].length - 1]
         when ss.scan(/@\$/) # @$
-          references << [:at, "$", nil, str.length, str.length + (ss[0] || raise).length - 1]
+          references << [:at, "$", nil, str.length, str.length + ss[0].length - 1]
         when ss.scan(/@(\d)+/) # @1
-          references << [:at, Integer(ss[1] || raise), nil, str.length, str.length + (ss[0] || raise).length - 1]
+          references << [:at, Integer(ss[1]), nil, str.length, str.length + ss[0].length - 1]
         when ss.scan(/{/)
           brace_count += 1
         when ss.scan(/}/)
@@ -280,7 +280,7 @@ module Lrama
 
           debug("Return lex_user_code: #{line}")
           if brace_count == 0
-            str << (ss[0] || raise)
+            str << ss[0]
             user_code = Token.new(type: Token::User_code, s_value: str.freeze)
             user_code.line = first_line
             user_code.column = first_column
@@ -288,10 +288,10 @@ module Lrama
             return [user_code, line]
           end
         when ss.scan(/\/\*/)
-          str << (ss[0] || raise)
+          str << ss[0]
           line = lex_comment(ss, line, lines, str)
         when ss.scan(/\/\//)
-          str << (ss[0] || raise)
+          str << ss[0]
           line = lex_line_comment(ss, line, str)
         else
           # noop, just consume char
@@ -299,7 +299,7 @@ module Lrama
           next
         end
 
-        str << (ss[0] || raise)
+        str << ss[0]
       end
 
       # Reach to end of input but brace does not match
@@ -344,7 +344,7 @@ module Lrama
           next
         end
 
-        str << (ss[0] || raise)
+        str << ss[0]
       end
 
       # Reach to end of input but quote does not match
@@ -363,7 +363,7 @@ module Lrama
           next
         end
 
-        str << (ss[0] || raise)
+        str << ss[0]
       end
 
       line # Reach to end of input

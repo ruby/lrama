@@ -25,7 +25,7 @@ module Lrama
       @grammar = grammar
     end
 
-    eval <<-END # to make Steep skip type-checking
+    __skip__ = begin
       if ERB.instance_method(:initialize).parameters.last.first == :key
         def self.erb(input)
           ERB.new(input, trim_mode: '-')
@@ -35,7 +35,7 @@ module Lrama
           ERB.new(input, nil, '-')
         end
       end
-    END
+    end
 
     def eval_template(file, path)
       erb = self.class.erb(File.read(file))

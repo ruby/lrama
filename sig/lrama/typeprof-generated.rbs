@@ -1,3 +1,8 @@
+# Prevent so many false positives in lib/lrama/lexer.rb
+class StringScanner
+  def []: (Integer) -> String | ...
+end
+
 module Lrama
   VERSION: String
   include Comparable
