@@ -716,7 +716,7 @@ module Lrama
         # If id is Token::Char, it uses ASCII code
         if sym.term? && sym.token_id.nil?
           if sym.id.type == Token::Char
-            # Igonre ' on the both sides
+            # Ignore ' on the both sides
             case sym.id.s_value[1..-2]
             when "\\b"
               sym.token_id = 8
@@ -844,7 +844,7 @@ module Lrama
 
       return if invalid.empty?
 
-      raise "Symbol number is dupulicated. #{invalid}"
+      raise "Symbol number is duplicated. #{invalid}"
     end
   end
 end

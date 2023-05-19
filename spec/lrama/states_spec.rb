@@ -1673,7 +1673,7 @@ string: tSTRING
       end
 
       describe "expect is specified" do
-        describe "the nubmer of s/r conflicts is same with expect" do
+        describe "the number of s/r conflicts is same with expect" do
           let(:header) do
             <<~STR
               %{
@@ -1697,7 +1697,7 @@ string: tSTRING
           end
         end
 
-        describe "the nubmer of s/r conflicts is not same with expect" do
+        describe "the number of s/r conflicts is not same with expect" do
           let(:header) do
             <<~STR
               %{

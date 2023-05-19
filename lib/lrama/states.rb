@@ -417,7 +417,7 @@ module Lrama
       end
     end
 
-    def create_state(accessing_symbol, kernels, states_creted)
+    def create_state(accessing_symbol, kernels, states_created)
       # A item can appear in some states,
       # so need to use `kernels` (not `kernels.first`) as a key.
       #
@@ -454,11 +454,11 @@ module Lrama
       #    string_1: string •
       #    string_2: string • '+'
       #
-      return [states_creted[kernels], false] if states_creted[kernels]
+      return [states_created[kernels], false] if states_created[kernels]
 
       state = State.new(@states.count, accessing_symbol, kernels)
       @states << state
-      states_creted[kernels] = state
+      states_created[kernels] = state
 
       return [state, true]
     end
@@ -522,9 +522,9 @@ module Lrama
     def compute_lr0_states
       # State queue
       states = []
-      states_creted = {}
+      states_created = {}
 
-      state, _ = create_state(symbols.first, [Item.new(rule: @grammar.rules.first, position: 0)], states_creted)
+      state, _ = create_state(symbols.first, [Item.new(rule: @grammar.rules.first, position: 0)], states_created)
       enqueue_state(states, state)
 
       while (state = states.shift) do
@@ -540,7 +540,7 @@ module Lrama
         setup_state(state)
 
         state.shifts.each do |shift|
-          new_state, created = create_state(shift.next_sym, shift.next_items, states_creted)
+          new_state, created = create_state(shift.next_sym, shift.next_items, states_created)
           state.set_items_to_state(shift.next_items, new_state)
           enqueue_state(states, new_state) if created
         end
