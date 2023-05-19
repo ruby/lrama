@@ -35,7 +35,7 @@ module Lrama
 
       @relation[x] && @relation[x].each do |y|
         traverse(y) if @h[y] == 0
-        @h[x] = [@h[x], @h[y]].min
+        @h[x] = [@h[x], @h[y]].min || raise
         @result[x] |= @result[y] # F x = F x + F y
       end
 

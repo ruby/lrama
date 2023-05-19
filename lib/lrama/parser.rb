@@ -159,8 +159,8 @@ module Lrama
             # Can replace 0 (EOF)
             grammar.add_term(
               id: id,
-              alias_name: opt_string && opt_string.s_value,
-              token_id: opt_number && opt_number.s_value,
+              alias_name: opt_string && opt_string.s_value_str,
+              token_id: opt_number && opt_number.s_value_int,
               tag: opt_tag,
               replace: true,
             )
@@ -229,7 +229,7 @@ module Lrama
 
       rhs = parse_grammar_rule_rhs(ts, grammar)
 
-      grammar.add_rule(lhs: lhs, rhs: rhs, lineno: rhs.first ? rhs.first.line : lhs.line)
+      grammar.add_rule(lhs: lhs, rhs: rhs, lineno: rhs.first ? (rhs.first || raise).line : lhs.line)
 
       while true do
         case ts.current_type
@@ -238,7 +238,7 @@ module Lrama
           bar_lineno = ts.current_token.line
           ts.next
           rhs = parse_grammar_rule_rhs(ts, grammar)
-          grammar.add_rule(lhs: lhs, rhs: rhs, lineno: rhs.first ? rhs.first.line : bar_lineno)
+          grammar.add_rule(lhs: lhs, rhs: rhs, lineno: rhs.first ? (rhs.first || raise).line : bar_lineno)
         when T::Semicolon
           # ;
           ts.next

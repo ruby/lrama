@@ -2,7 +2,7 @@ require "forwardable"
 require "lrama/lexer"
 
 module Lrama
-  Rule = Struct.new(:id, :lhs, :rhs, :code, :nullable, :precedence_sym, :lineno, keyword_init: true) do
+  class Rule < Struct.new(:id, :lhs, :rhs, :code, :nullable, :precedence_sym, :lineno, keyword_init: true)
     # TODO: Change this to display_name
     def to_s
       l = lhs.id.s_value
@@ -41,7 +41,7 @@ module Lrama
   # `token_id` is tokentype for term, internal sequence number for nterm
   #
   # TODO: Add validation for ASCII code range for Token::Char
-  Symbol = Struct.new(:id, :alias_name, :number, :tag, :term, :token_id, :nullable, :precedence, :printer, keyword_init: true) do
+  class Symbol < Struct.new(:id, :alias_name, :number, :tag, :term, :token_id, :nullable, :precedence, :printer, keyword_init: true)
     attr_writer :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol
 
     def term?
@@ -89,19 +89,19 @@ module Lrama
         if alias_name
           name = number.to_s + alias_name
         else
-          name = number.to_s + id.s_value
+          name = number.to_s + id.s_value_str
         end
       when term? && id.type == Token::Ident
-        name = id.s_value
-      when nterm? && (id.s_value.include?("$") || id.s_value.include?("@"))
-        name = number.to_s + id.s_value
+        name = id.s_value_str
+      when nterm? && (id.s_value_str.include?("$") || id.s_value_str.include?("@"))
+        name = number.to_s + id.s_value_str
       when nterm?
-        name = id.s_value
+        name = id.s_value_str
       else
         raise "Unexpected #{self}"
       end
 
-      "YYSYMBOL_" + name.gsub(/[^a-zA-Z_0-9]+/, "_")
+      "YYSYMBOL_" + (name || raise).gsub(/[^a-zA-Z_0-9]+/, "_")
     end
 
     # comment for yysymbol_kind_t
@@ -113,22 +113,23 @@ module Lrama
       when eof_symbol?
         # YYEOF
         alias_name
-      when (term? && 0 < token_id && token_id < 128)
+      when (term? && 0 < (token_id || raise) && (token_id || raise) < 128)
         # YYSYMBOL_3_backslash_, YYSYMBOL_14_
         alias_name || id.s_value
-      when id.s_value.include?("$") || id.s_value.include?("@")
+      when id.s_value_str.include?("$") || id.s_value_str.include?("@")
         # YYSYMBOL_21_1
-        id.s_value
+        id.s_value_str
       else
         # YYSYMBOL_keyword_class, YYSYMBOL_strings_1
-        alias_name || id.s_value
+        alias_name || id.s_value_str
       end
     end
   end
 
-  Type = Struct.new(:id, :tag, keyword_init: true)
+  class Type < Struct.new(:id, :tag, keyword_init: true)
+  end
 
-  Code = Struct.new(:type, :token_code, keyword_init: true) do
+  class Code < Struct.new(:type, :token_code, keyword_init: true)
     extend Forwardable
 
     def_delegators "token_code", :s_value, :line, :column, :references
@@ -247,7 +248,7 @@ module Lrama
 
   # type: :dollar or :at
   # ex_tag: "$<tag>1" (Optional)
-  Reference = Struct.new(:type, :number, :ex_tag, :first_column, :last_column, :referring_symbol, :position_in_rhs, keyword_init: true) do
+  class Reference < Struct.new(:type, :number, :ex_tag, :first_column, :last_column, :referring_symbol, :position_in_rhs, keyword_init: true)
     def tag
       if ex_tag
         ex_tag
@@ -257,7 +258,7 @@ module Lrama
     end
   end
 
-  Precedence = Struct.new(:type, :precedence, keyword_init: true) do
+  class Precedence < Struct.new(:type, :precedence, keyword_init: true)
     include Comparable
 
     def <=>(other)
@@ -265,13 +266,13 @@ module Lrama
     end
   end
 
-  Printer = Struct.new(:ident_or_tags, :code, :lineno, keyword_init: true) do
+  class Printer < Struct.new(:ident_or_tags, :code, :lineno, keyword_init: true)
     def translated_code(member)
       code.translated_printer_code(member)
     end
   end
 
-  Union = Struct.new(:code, :lineno, keyword_init: true) do
+  class Union < Struct.new(:code, :lineno, keyword_init: true)
     def braces_less_code
       # Remove braces
       code.s_value[1..-2]
@@ -283,7 +284,8 @@ module Lrama
   # Grammar is the result of parsing an input grammar file
   class Grammar
     # Grammar file information not used by States but by Output
-    Aux = Struct.new(:prologue_first_lineno, :prologue, :epilogue_first_lineno, :epilogue, keyword_init: true)
+    class Aux < Struct.new(:prologue_first_lineno, :prologue, :epilogue_first_lineno, :epilogue, keyword_init: true)
+    end
 
     attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
@@ -565,7 +567,7 @@ module Lrama
 
       # $accept
       term = add_nterm(id: Token.new(type: Token::Ident, s_value: "$accept"))
-      term.accept_symbol = true
+      (term || raise).accept_symbol = true
       @accept_symbol = term
     end
 
@@ -595,15 +597,18 @@ module Lrama
       # 1. Add $accept rule to the top of rules
       accept = find_symbol_by_s_value!("$accept")
       eof = find_symbol_by_number!(0)
-      lineno = @_rules.first ? @_rules.first[2] : 0
-      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [@_rules.first[0], eof], code: nil, lineno: lineno)
+      lineno = @_rules.first ? (@_rules.first || raise)[2] : 0
+      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [(@_rules.first || raise)[0], eof], code: nil, lineno: lineno)
 
       extracted_action_number = 1 # @n as nterm
 
       @_rules.each do |lhs, rhs, lineno|
+        # @type var a: Array[[Token, Token]]
         a = []
         rhs1 = []
+        # @type var code: Token?
         code = nil
+        # @type var precedence_sym: Symbol?
         precedence_sym = nil
 
         # 2. Extract precedence and last action
@@ -672,6 +677,7 @@ module Lrama
     # Collect symbols from rules
     def collect_symbols
       @rules.flat_map(&:rhs).each do |s|
+        # @type var s: Token | Symbol
         case s
         when Token
           if s.type == Token::Char
@@ -704,6 +710,7 @@ module Lrama
       end
 
       (@symbols.select(&:term?) + @symbols.select(&:nterm?)).each do |sym|
+        # @type var sym: Symbol
         while used_numbers[number] do
           number += 1
         end
@@ -795,6 +802,7 @@ module Lrama
         # Explicitly specified precedence has the highest priority
         next if rule.precedence_sym
 
+        # @type var precedence_sym: Symbol?
         precedence_sym = nil
         rule.rhs.each do |sym|
           precedence_sym = sym if sym.term?

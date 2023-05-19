@@ -1,0 +1,676 @@
+# Prevent so many false positives in lib/lrama/lexer.rb
+class StringScanner
+  def []: (Integer) -> String | ...
+end
+
+module Lrama
+  VERSION: String
+  include Comparable
+
+  def to_s: -> String
+  def as_comment: -> String
+  def precedence: -> untyped
+  def initial_rule?: -> untyped
+  def term?: -> untyped
+  def nterm?: -> untyped
+
+  public
+  def tag: -> untyped
+  def <=>: (untyped other) -> untyped
+  def braces_less_code: -> untyped
+
+  class Command
+    def run: (untyped argv) -> void
+
+    private
+    def validate_report: (untyped report) -> Hash[::Symbol, bool]
+    def validate_trace: (untyped trace) -> Hash[untyped, untyped]
+  end
+
+  class Context
+    include Report::Duration
+
+    ErrorActionNumber: Float
+    BaseMin: Float
+    @yydefact: Array[Integer]?
+    @yydefgoto: Array[Integer]?
+    @_actions: Array[[Integer, Array[[Integer, Integer]], Integer, Integer]]
+    @yylast: Integer
+    @yypact_ninf: Float | Integer
+    @yytable_ninf: Integer
+    @base: Array[Float | Integer]
+    @table: Array[Integer]
+    @check: Array[untyped]
+    @sorted_actions: Array[[Integer, Array[[Integer, Integer]], Integer, Integer]]
+
+    attr_reader states: untyped
+    def initialize: (untyped states) -> void
+    def yytokentype: -> untyped
+    def yysymbol_kind_t: -> untyped
+    def yyfinal: -> untyped
+    def yylast: -> Integer?
+    def yyntokens: -> untyped
+    def yynnts: -> untyped
+    def yynrules: -> untyped
+    def yynstates: -> untyped
+    def yymaxutok: -> untyped
+    def yytranslate: -> Array[Integer]
+    def yyrline: -> Array[Integer]
+    def yytname: -> untyped
+    def yypact_ninf: -> ((Float | Integer)?)
+    def yytable_ninf: -> Integer?
+    def yypact: -> (Array[Float | Integer])
+    def yydefact: -> Array[Integer]?
+    def yypgoto: -> (Array[Float | Integer])
+    def yydefgoto: -> Array[Integer]?
+    def yytable: -> Array[Integer]?
+    def yycheck: -> Array[untyped]?
+    def yystos: -> untyped
+    def yyr1: -> Array[Integer]
+    def yyr2: -> Array[Integer]
+
+    private
+    def compute_tables: -> untyped
+    def vectors_count: -> untyped
+    def rule_id_to_action_number: (untyped rule_id) -> untyped
+    def nterm_number_to_sequence_number: (untyped nterm_number) -> untyped
+    def nterm_number_to_vector_number: (untyped nterm_number) -> untyped
+    def compute_yydefact: -> untyped
+    def compute_yydefgoto: -> untyped
+    def sort_actions: -> Array[untyped]
+    def debug_sorted_actions: -> untyped
+    def compute_packed_table: -> void
+  end
+
+  class Digraph
+    @sets: Array[[Integer, untyped]]
+    @relation: Hash[untyped, untyped]
+    @base_function: Hash[untyped, Integer]
+    @stack: Array[[Integer, untyped]]
+    @h: Hash[untyped, Float | Integer]
+    @result: Hash[untyped, Integer]
+
+    def initialize: (Array[[Integer, untyped]] sets, Hash[untyped, untyped] relation, Hash[untyped, Integer] base_function) -> void
+    def compute: -> Hash[untyped, Integer]
+
+    private
+    def traverse: ([Integer, untyped] x) -> nil
+  end
+
+  class Rule
+    def initialize: (id: Integer, lhs: untyped, rhs: untyped, code: untyped, ?nullable: untyped, ?precedence_sym: untyped, lineno: Integer) -> void
+
+    attr_accessor id(): Integer
+    attr_accessor lhs(): Symbol
+    attr_accessor rhs(): Array[Symbol]
+    attr_accessor code(): Code?
+    attr_accessor nullable(): bool
+    attr_accessor precedence_sym(): Symbol?
+    attr_accessor lineno(): Integer
+    def translated_code: -> untyped
+  end
+
+  class Symbol
+    def initialize: (id: Token, alias_name: untyped, number: untyped, tag: untyped, term: untyped, token_id: untyped, nullable: untyped, ?precedence: untyped, ?printer: untyped) -> void
+    attr_accessor id(): Token
+    attr_accessor alias_name(): String?
+    attr_accessor number(): Integer?
+    attr_accessor tag(): Token?
+    attr_accessor term(): bool
+    attr_accessor token_id(): Integer?
+    attr_accessor nullable(): bool
+    attr_accessor precedence(): Precedence
+    attr_accessor printer(): Printer
+    attr_writer eof_symbol: bool
+    attr_writer error_symbol: bool
+    attr_writer undef_symbol: bool
+    attr_writer accept_symbol: bool
+    def term?: -> bool
+    def nterm?: -> bool
+    def eof_symbol?: -> bool
+    def error_symbol?: -> bool
+    def undef_symbol?: -> bool
+    def accept_symbol?: -> bool
+    def display_name: -> untyped
+    def enum_name: -> String
+    def comment: -> untyped
+  end
+
+  class Type
+    def initialize: (id: untyped, tag: untyped) -> void
+    attr_accessor id(): untyped
+    attr_accessor tag(): nil
+  end
+
+  class Code
+    def initialize: (type: :initial_action | :lex_param | :parse_param | :printer | :union | :user_code, token_code: Token) -> void
+
+    extend Forwardable
+
+    # Forwardable methods for Grammer
+    def s_value: -> untyped
+    def line: -> Integer
+    def column: -> Integer
+    def references: -> untyped
+
+    attr_accessor type(): :initial_action | :lex_param | :parse_param | :printer | :union | :user_code
+    attr_accessor token_code(): untyped
+
+    def translated_code: -> untyped
+    def translated_printer_code: (untyped tag) -> untyped
+
+    private
+    def translated_user_code: -> untyped
+    def translated_initial_action_code: -> untyped
+  end
+
+  class Reference
+    def initialize: (type: untyped, number: untyped, ex_tag: untyped, first_column: untyped, last_column: untyped, ?referring_symbol: untyped, ?position_in_rhs: untyped) -> void
+    attr_accessor type(): untyped
+    attr_accessor number(): untyped
+    attr_accessor ex_tag(): untyped
+    attr_accessor first_column(): untyped
+    attr_accessor last_column(): untyped
+    attr_accessor referring_symbol(): untyped
+    attr_accessor position_in_rhs(): untyped
+  end
+
+  class Precedence
+    def initialize: (type: :left | :nonassoc | :right, precedence: Integer) -> void
+    attr_accessor type(): :left | :nonassoc | :right
+    attr_accessor precedence(): Integer
+  end
+
+  class Printer
+    def initialize: (ident_or_tags: untyped, code: Code, lineno: Integer) -> void
+    attr_accessor ident_or_tags(): Array[untyped]
+    attr_accessor code(): Code
+    attr_accessor lineno(): Integer
+    def translated_code: (untyped member) -> untyped
+  end
+
+  class Union
+    def initialize: (code: Code, lineno: Integer) -> void
+    attr_accessor code(): Code
+    attr_accessor lineno(): untyped
+  end
+
+  class Grammar
+    @symbols: Array[untyped]
+    @empty_symbol: nil
+    @terms: Array[Symbol]?
+    @nterms: Array[Symbol]?
+    @rules: Array[untyped]
+
+    attr_reader eof_symbol: Symbol?
+    attr_reader error_symbol: Symbol?
+    attr_reader undef_symbol: Symbol?
+    attr_reader accept_symbol: Symbol?
+    attr_reader aux: Aux
+    attr_accessor union: Union
+    attr_accessor expect: untyped
+    attr_accessor printers: Array[Printer]
+    attr_accessor lex_param: untyped
+    attr_accessor parse_param: untyped
+    attr_accessor initial_action: Code
+    attr_accessor symbols: Array[Symbol]
+    attr_accessor types: Array[Type]
+    attr_accessor rules: Array[Rule]
+    attr_accessor _rules: Array[[untyped, Array[untyped], untyped]]
+    attr_accessor sym_to_rules: Hash[untyped, untyped]
+    def initialize: -> void
+    def add_printer: (ident_or_tags: Array[untyped], code: Code, lineno: untyped) -> Array[Printer]
+    def add_term: (id: Token, ?alias_name: String?, ?tag: Token?, ?token_id: Integer?, ?replace: bool) -> Symbol
+    def add_nterm: (id: untyped, ?alias_name: nil, ?tag: nil) -> Symbol?
+    def add_type: (id: untyped, tag: untyped) -> Array[Type]
+    def add_nonassoc: (Symbol sym, Integer precedence) -> Precedence
+    def add_left: (Symbol sym, Integer precedence) -> Precedence
+    def add_right: (Symbol sym, Integer precedence) -> Precedence
+    def set_precedence: (Symbol sym, Precedence precedence) -> Precedence
+    def set_union: (Code code, untyped lineno) -> Union
+    def add_rule: (lhs: untyped, rhs: Array[Symbol | Token], lineno: untyped) -> Array[[untyped, Array[untyped], untyped]]
+    def build_references: (untyped token_code) -> untyped
+    def build_code: (:initial_action | :lex_param | :parse_param | :printer | :union `type`, untyped token_code) -> Code
+    def prologue_first_lineno=: (untyped prologue_first_lineno) -> untyped
+    def prologue=: (String prologue) -> String
+    def epilogue_first_lineno=: (untyped epilogue_first_lineno) -> untyped
+    def epilogue=: (String epilogue) -> String
+    def prepare: -> Array[Symbol]
+    def validate!: -> nil
+    def compute_nullable: -> void
+    def find_symbol_by_s_value: (String s_value) -> Symbol?
+    def find_symbol_by_s_value!: (String s_value) -> Symbol
+    def find_symbol_by_id: (Token id) -> Symbol?
+    def find_symbol_by_id!: (Token id) -> Symbol
+    def find_symbol_by_number!: (Integer number) -> Symbol
+    def find_rules_by_symbol!: (Symbol sym) -> untyped
+    def find_rules_by_symbol: (Symbol sym) -> nil
+    def terms_count: -> Integer
+    def terms: -> Array[Symbol]
+    def nterms_count: -> Integer
+    def nterms: -> Array[Symbol]
+
+    private
+    def find_nterm_by_id!: (untyped id) -> Symbol
+    def append_special_symbols: -> Symbol?
+    def normalize_rules: -> Array[[untyped, Array[untyped], untyped]]
+    def collect_symbols: -> (Array[Array[Symbol] | Symbol])
+    def fill_symbol_number: -> void
+    def replace_token_with_symbol: -> Array[Rule]
+    def token_to_symbol: (Token | Symbol token) -> Symbol
+    def fill_default_precedence: -> Array[Rule]
+    def fill_sym_to_rules: -> Array[Rule]
+    def fill_nterm_type: -> Array[Type]
+    def fill_symbol_printer: -> Array[Symbol]
+    def validate_symbol_number_uniqueness!: -> nil
+
+    class Aux
+      def initialize: (?prologue_first_lineno: untyped, ?prologue: untyped, ?epilogue_first_lineno: untyped, ?epilogue: untyped) -> void
+      attr_accessor prologue_first_lineno(): untyped
+      attr_accessor prologue(): String
+      attr_accessor epilogue_first_lineno(): untyped
+      attr_accessor epilogue(): String
+    end
+  end
+
+  class Token = Lexer::Token
+
+  class Lexer
+    include Report::Duration
+
+    class Token
+      def initialize: (type: untyped, s_value: (::String | Integer)) -> void
+
+      def type: -> untyped
+      def type=: (untyped) -> untyped
+      def s_value: -> (::String | Integer)
+      def s_value_int: -> Integer
+      def s_value_str: -> ::String
+
+      self.@i: Integer
+      self.@types: Array[untyped]
+      def self.define_type: (::Symbol) -> void
+
+      attr_accessor line: Integer
+      attr_accessor column: Integer
+      attr_accessor referred: untyped
+      attr_accessor references: untyped
+
+      class Type
+        def initialize: (id: untyped, name: ::String) -> void
+      end
+
+      class P_expect         # %expect
+      end
+      class P_define         # %define
+      end
+      class P_printer        # %printer
+      end
+      class P_lex_param      # %lex-param
+      end
+      class P_parse_param    # %parse-param
+      end
+      class P_initial_action # %initial-action
+      end
+      class P_union          # %union
+      end
+      class P_token          # %token
+      end
+      class P_type           # %type
+      end
+      class P_nonassoc       # %nonassoc
+      end
+      class P_left           # %left
+      end
+      class P_right          # %right
+      end
+      class P_prec           # %prec
+      end
+      class User_code        # { ... }
+      end
+      class Tag              # <int>
+      end
+      class Number           # 0
+      end
+      class Ident_Colon      # k_if:, k_if  : (spaces can be there)
+      end
+      class Ident            # api.pure, tNUMBER
+      end
+      class Semicolon        # ;
+      end
+      class Bar              # |
+      end
+      class String           # "str"
+      end
+      class Char             # '+'
+      end
+    end
+
+    Initial: Integer
+    Prologue: Integer
+    BisonDeclarations: Integer
+    GrammarRules: Integer
+    Epilogue: Integer
+    self.@i: Integer
+    self.@types: Array[Type]
+    @text: untyped
+    @state: Integer
+    @debug: false
+
+    attr_reader prologue: Array[untyped]
+    attr_reader bison_declarations: Array[untyped]
+    attr_reader grammar_rules: Array[untyped]
+    attr_reader epilogue: Array[untyped]
+    attr_reader bison_declarations_tokens: Array[untyped]
+    attr_reader grammar_rules_tokens: Array[untyped]
+    def initialize: (untyped text) -> void
+
+    private
+    def create_token: (untyped `type`, (Integer | String) s_value, untyped line, Integer column) -> Token
+    def lex_text: -> untyped
+    def lex_common: (Array[untyped] lines, Array[untyped] tokens) -> nil
+    def lex_bison_declarations_tokens: -> nil
+    def lex_user_code: (StringScanner ss, untyped line, Integer column, Array[untyped] lines) -> [Token, untyped]
+    def lex_string: (StringScanner ss, String terminator, untyped line, Array[untyped] lines) -> [String, untyped]
+    def lex_comment: (StringScanner ss, untyped line, Array[untyped] lines, String str) -> untyped
+    def lex_line_comment: (StringScanner ss, untyped line, String str) -> untyped
+    def lex_grammar_rules_tokens: -> nil
+    def debug: (String msg) -> nil
+
+    public
+    def to_s: -> String
+    def self.define_type: (:Bar | :Char | :Ident | :Ident_Colon | :Number | :P_define | :P_expect | :P_initial_action | :P_left | :P_lex_param | :P_nonassoc | :P_parse_param | :P_prec | :P_printer | :P_right | :P_token | :P_type | :P_union | :Semicolon | :String | :Tag | :User_code name) -> Integer
+
+    class Type < Struct[untyped]
+      attr_accessor id(): Integer
+      attr_accessor name(): String
+    end
+  end
+
+  class Parser
+    include Lrama::Report::Duration
+
+    class T = Lexer::Token
+
+    @text: untyped
+
+    def initialize: (untyped text) -> void
+    def parse: -> untyped
+
+    private
+    def process_prologue: (Grammar grammar, Lexer lexer) -> String
+    def process_epilogue: (Grammar grammar, Lexer lexer) -> String
+    def parse_bison_declarations: (TokenScanner ts, Grammar grammar) -> nil
+    def parse_grammar_rules: (TokenScanner ts, Grammar grammar) -> nil
+    def parse_grammar_rule: (TokenScanner ts, Grammar grammar) -> nil
+    def parse_grammar_rule_rhs: (TokenScanner ts, Grammar grammar) -> Array[Token]
+
+    class TokenScanner
+      @tokens: Array[untyped]
+      @index: Integer
+
+      def initialize: (Array[untyped] tokens) -> void
+      def current_token: -> untyped
+      def current_type: -> untyped
+      def next: -> untyped
+      def consume: (*untyped token_types) -> Token?
+      def consume!: (*untyped token_types) -> Token
+      def consume_multi: (*untyped token_types) -> Array[untyped]
+      def eots?: -> untyped
+    end
+  end
+
+  class Output
+    extend Forwardable
+    include Report::Duration
+
+    @out: untyped
+    @output_file_path: untyped
+    @template_name: untyped
+    @header_out: IO?
+    @header_file_path: String?
+    @context: Context
+    @grammar: Grammar
+
+    # Forwardable methods for Context
+    def yyfinal: -> untyped
+    def yylast: -> Integer?
+    def yyntokens: -> untyped
+    def yynnts: -> untyped
+    def yynrules: -> untyped
+    def yynstates: -> untyped
+    def yymaxutok: -> untyped
+    def yypact_ninf: -> ((Float | Integer)?)
+    def yytable_ninf: -> Integer?
+
+    # Forwardable methods for Grammer
+    def eof_symbol?: -> bool
+    def error_symbol?: -> bool
+    def undef_symbol?: -> bool
+    def accept_symbol?: -> bool
+
+    attr_reader grammar_file_path: untyped
+    attr_reader context: untyped
+    attr_reader grammar: untyped
+    def initialize: (out: untyped, output_file_path: untyped, template_name: untyped, grammar_file_path: untyped, context: untyped, grammar: untyped, ?header_out: IO?, ?header_file_path: String?) -> void
+    def self.erb: (String input) -> ERB
+                | (String input) -> ERB
+    def eval_template: (String file, String path) -> untyped
+    def render: -> untyped
+    def token_enums: -> String
+    def symbol_enum: -> String
+    def yytranslate: -> untyped
+    def yyrline: -> untyped
+    def yytname: -> String
+    def int_type_for: (untyped ary) -> String
+    def symbol_actions_for_printer: -> String
+    def user_initial_action: (?String comment) -> String
+    def user_actions: -> String
+    def omit_braces_and_blanks: (untyped param) -> untyped
+    def parse_param: -> String
+    def lex_param: -> String
+    def user_formals: -> String
+    def user_args: -> String
+    def extract_param_name: (String param) -> String
+    def parse_param_name: -> String
+    def lex_param_name: -> String
+    def parse_param_use: (untyped val, untyped loc) -> String
+    def yylex_formals: -> String
+    def table_value_equals: (untyped table, untyped value, untyped literal, untyped symbol) -> String
+    def yyerror_args: -> String
+    def template_basename: -> String
+    def aux: -> untyped
+    def int_array_to_string: (untyped ary) -> untyped
+    def spec_mapped_header_file: -> String?
+    def b4_cpp_guard__b4_spec_mapped_header_file: -> String
+
+    private
+    def template_file: -> String
+    def header_template_file: -> String
+    def template_dir: -> String
+    def string_array_to_string: (untyped ary) -> String
+    def replace_special_variables: (String str, String ofile) -> untyped
+  end
+
+  class Report
+    module Profile
+      def self.report_profile: { -> untyped } -> untyped
+    end
+
+    module Duration
+      self.@_report_duration_enabled: true
+
+      def self.enable: -> true
+      def self.enabled?: -> true
+      def report_duration: [R] (::Symbol) { -> R } -> R
+    end
+  end
+
+  class State
+    @items_to_state: Hash[untyped, untyped]
+    @nterm_transitions: Array[untyped]
+    @term_transitions: Array[untyped]
+
+    attr_reader id: Integer
+    attr_reader accessing_symbol: untyped
+    attr_reader kernels: [States::Item]
+    attr_reader conflicts: Array[untyped]
+    attr_reader resolved_conflicts: Array[untyped]
+    attr_reader default_reduction_rule: nil
+    attr_reader closure: untyped
+    attr_reader items: Array[States::Item]
+    attr_accessor shifts: Array[Shift]
+    attr_accessor reduces: Array[Reduce]
+    def initialize: (Integer id, untyped accessing_symbol, [States::Item] kernels) -> void
+    def closure=: (untyped closure) -> Array[States::Item]
+    def non_default_reduces: -> Array[Reduce]
+    def compute_shifts_reduces: -> Array[Reduce]
+    def set_items_to_state: (untyped items, untyped next_state) -> untyped
+    def set_look_ahead: (untyped rule, untyped look_ahead) -> untyped
+    def nterm_transitions: -> Array[[untyped, untyped, untyped]]
+    def term_transitions: -> Array[[untyped, untyped]]
+    def selected_term_transitions: -> Array[untyped]
+    def transition: (untyped sym) -> untyped
+    def find_reduce_by_item!: (untyped item) -> Reduce
+    def default_reduction_rule=: (untyped default_reduction_rule) -> Array[Reduce]
+    def sr_conflicts: -> Array[untyped]
+    def rr_conflicts: -> Array[untyped]
+    def report_message: -> String
+
+    class Reduce
+      attr_reader item: States::Item
+      attr_reader look_ahead: Array[::Symbol] | nil
+      attr_reader not_selected_symbols: Array[untyped]
+      attr_accessor default_reduction: true
+      def initialize: (States::Item item) -> void
+      def rule: -> untyped
+      def look_ahead=: (untyped look_ahead) -> untyped
+      def add_not_selected_symbol: (untyped sym) -> Array[untyped]
+      def selected_look_ahead: -> Array[untyped]
+    end
+
+    class Shift
+      attr_reader next_sym: untyped
+      attr_reader next_items: Array[untyped]
+      attr_accessor not_selected: true
+      def initialize: (untyped next_sym, Array[untyped] next_items) -> void
+    end
+
+    class ResolvedConflict < Struct[untyped]
+      def initialize: (symbol: ::Symbol, reduce: Reduce, which: (:error | :reduce | :shift), ?same_prec: bool) -> void
+
+      attr_accessor symbol(): untyped
+      attr_accessor reduce(): Reduce
+      attr_accessor which(): :error | :reduce | :shift
+      attr_accessor same_prec(): bool
+    end
+
+    class Conflict
+      def initialize: (symbols: Array[::Symbol], reduce: Reduce, type: (:reduce_reduce | :shift_reduce)) -> void
+
+      attr_accessor symbols(): [untyped] | false
+      attr_accessor reduce(): Reduce
+      attr_accessor type(): :reduce_reduce | :shift_reduce
+    end
+  end
+
+  class States
+    extend Forwardable
+
+    # Forwardable methods for Grammer
+    def symbols: -> Array[Symbol]
+    def terms: -> Array[Symbol]
+    def nterms: -> Array[Symbol]
+    def rules: -> Array[Rule]
+    def accept_symbol: -> Symbol?
+    def find_symbol_by_s_value!: (String s_value) -> Symbol
+
+    include Report::Duration
+    @grammar: Grammar
+    @warning: untyped
+    @trace_state: false
+    @direct_read_sets: Hash[untyped, untyped]
+    @read_sets: Hash[untyped, Integer]
+    @follow_sets: Hash[[Integer, Integer], Integer]
+    @la: Hash[untyped, untyped]
+
+    attr_reader states: Array[State]
+    attr_reader reads_relation: Hash[untyped, untyped]
+    attr_reader includes_relation: Hash[untyped, untyped]
+    attr_reader lookback_relation: Hash[untyped, untyped]
+    def initialize: (untyped grammar, untyped warning, ?trace_state: false) -> void
+    def compute: -> nil
+    def reporter: -> untyped
+    def states_count: -> Integer
+    def direct_read_sets: -> Hash[untyped, untyped]
+    def read_sets: -> Hash[untyped, Array[untyped]]
+    def follow_sets: -> Hash[untyped, Array[untyped]]
+    def la: -> Hash[untyped, untyped]
+
+    private
+    def sr_conflicts: -> Array[Array[untyped]]
+    def rr_conflicts: -> Array[Array[untyped]]
+    def initial_attrs: -> Hash[untyped, untyped]
+    def trace_state: { (IO) -> IO } -> IO?
+    def create_state: (untyped accessing_symbol, [Item] kernels, Hash[untyped, untyped] states_creted) -> [State, bool]
+    def setup_state: (untyped state) -> untyped
+    def enqueue_state: (Array[untyped] states, State state) -> Array[untyped]
+    def compute_lr0_states: -> nil
+    def nterm_transitions: -> Array[[State, untyped, untyped]]
+    def compute_direct_read_sets: -> Array[State]
+    def compute_reads_relation: -> Array[State]
+    def compute_read_sets: -> Hash[untyped, Integer]
+    def transition: (State state, untyped symbols) -> State
+    def compute_includes_relation: -> Array[State]
+    def compute_lookback_relation: -> Array[State]
+    def compute_follow_sets: -> Hash[untyped, Integer]
+    def compute_look_ahead_sets: -> Array[State]
+    def bitmap_to_terms: (Integer bit) -> Array[untyped]
+    def compute_conflicts: -> Array[State]
+    def compute_shift_reduce_conflicts: -> Array[State]
+    def compute_reduce_reduce_conflicts: -> Array[State]
+    def compute_default_reduction: -> Array[State]
+    def check_conflicts: -> nil
+
+    public
+
+    class Item < Struct[untyped]
+      def initialize: (rule: untyped, position: Integer) -> void
+      attr_accessor rule(): untyped
+      attr_accessor position(): Integer
+      def hash: -> Integer
+      def rule_id: -> untyped
+      def next_sym: -> untyped
+      def end_of_rule?: -> untyped
+      def new_by_next_position: -> Item
+      def previous_sym: -> untyped
+      def display_name: -> String
+      def display_rest: -> String
+    end
+  end
+
+  class StatesReporter
+    include Report::Duration
+    @states: untyped
+
+    def initialize: (untyped states) -> void
+    def report: (untyped io, **untyped) -> ((Array[State] | Hash[untyped, nil])?)
+
+    private
+    def _report: (untyped io, ?grammar: false, ?states: false, ?itemsets: false, ?lookaheads: false, ?solved: false, ?verbose: false) -> untyped
+    def report_conflicts: (untyped io) -> nil
+    def report_grammar: (untyped io) -> untyped
+    def report_states: (untyped io, false itemsets, false lookaheads, false solved, false verbose) -> untyped
+  end
+
+  class Warning
+    @out: IO
+
+    attr_reader errors: Array[untyped]
+    attr_reader warns: Array[untyped]
+    def initialize: (?IO `out`) -> void
+    def error: (untyped message) -> Array[untyped]
+    def warn: (untyped message) -> Array[untyped]
+    def has_error?: -> bool
+  end
+end

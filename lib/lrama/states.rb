@@ -28,7 +28,7 @@ module Lrama
 
       def selected_look_ahead
         if @look_ahead
-          @look_ahead - @not_selected_symbols
+          (@look_ahead || raise) - @not_selected_symbols
         else
           []
         end
@@ -48,7 +48,7 @@ module Lrama
     # * symbol: A symbol under discussion
     # * reduce: A reduce under discussion
     # * which: For which a conflict is resolved. :shift, :reduce or :error (for nonassociative)
-    ResolvedConflict = Struct.new(:symbol, :reduce, :which, :same_prec, keyword_init: true) do
+    class ResolvedConflict < Struct.new(:symbol, :reduce, :which, :same_prec, keyword_init: true)
       def report_message
         s = symbol.display_name
         r = reduce.rule.precedence_sym.display_name
@@ -71,7 +71,8 @@ module Lrama
       end
     end
 
-    Conflict = Struct.new(:symbols, :reduce, :type, keyword_init: true)
+    class Conflict < Struct.new(:symbols, :reduce, :type, keyword_init: true)
+    end
 
     attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
                 :default_reduction_rule, :closure, :items
@@ -133,7 +134,7 @@ module Lrama
     def set_look_ahead(rule, look_ahead)
       reduce = reduces.find do |r|
         r.rule == rule
-      end
+      end || raise
 
       reduce.look_ahead = look_ahead
     end
@@ -236,7 +237,7 @@ module Lrama
       :accept_symbol, :eof_symbol, :find_symbol_by_s_value!
 
     # TODO: Validate position is not over rule rhs
-    Item = Struct.new(:rule, :position, keyword_init: true) do
+    class Item < Struct.new(:rule, :position, keyword_init: true)
       # Optimization for States#setup_state
       def hash
         [rule.id, position].hash
@@ -593,7 +594,7 @@ module Lrama
 
     def compute_read_sets
       sets = nterm_transitions.map do |state, nterm, next_state|
-        [state.id, nterm.token_id]
+        [state.id, nterm.token_id] #: [::Integer, untyped]
       end
 
       @read_sets = Digraph.new(sets, @reads_relation, @direct_read_sets).compute
@@ -651,7 +652,7 @@ module Lrama
 
     def compute_follow_sets
       sets = nterm_transitions.map do |state, nterm, next_state|
-        [state.id, nterm.token_id]
+        [state.id, nterm.token_id] #: [::Integer, untyped]
       end
 
       @follow_sets = Digraph.new(sets, @includes_relation, @read_sets).compute
@@ -784,11 +785,11 @@ module Lrama
         # Do not set, if shift with `error` exists.
         next if state.shifts.map(&:next_sym).include?(@grammar.error_symbol)
 
-        state.default_reduction_rule = state.reduces.map do |r|
+        state.default_reduction_rule = (state.reduces.map do |r|
           [r.rule, r.rule.id, (r.look_ahead || []).count]
         end.sort_by do |rule, rule_id, count|
           [-count, rule_id]
-        end.first.first
+        end.first || raise).first
       end
     end
 

@@ -1,0 +1,34 @@
+---
+sources:
+- type: git
+  name: ruby/gem_rbs_collection
+  revision: d0d7aeed98fa74427b30b336fc402ea86d526f35
+  remote: https://github.com/ruby/gem_rbs_collection.git
+  repo_dir: gems
+path: ".gem_rbs_collection"
+gems:
+- name: erb
+  version: '0'
+  source:
+    type: stdlib
+- name: forwardable
+  version: '0'
+  source:
+    type: stdlib
+- name: optparse
+  version: '0'
+  source:
+    type: stdlib
+- name: stackprof
+  version: '0.2'
+  source:
+    type: git
+    name: ruby/gem_rbs_collection
+    revision: d0d7aeed98fa74427b30b336fc402ea86d526f35
+    remote: https://github.com/ruby/gem_rbs_collection.git
+    repo_dir: gems
+- name: strscan
+  version: '0'
+  source:
+    type: stdlib
+gemfile_lock_path: Gemfile.lock

@@ -118,7 +118,7 @@ module Lrama
     end
 
     def yypact
-      @base[0...yynstates]
+      @base[0...yynstates] || raise
     end
 
     def yydefact
@@ -126,7 +126,7 @@ module Lrama
     end
 
     def yypgoto
-      @base[yynstates..-1]
+      @base[yynstates..-1] || raise
     end
 
     def yydefgoto
@@ -227,6 +227,7 @@ module Lrama
         # * number = -Float::INFINITY, error by %nonassoc
         # * number > 0, shift then move to state "number"
         # * number < 0, reduce by "-number" rule. Rule "number" is already added by 1.
+        # @type var actions: Array[Integer | Float]
         actions = Array.new(@states.terms.count, 0)
 
         if state.reduces.map(&:selected_look_ahead).any? {|la| !la.empty? }
@@ -273,9 +274,11 @@ module Lrama
           end
         end
 
+        # @type var s: Array[[Integer, Integer]]
         s = actions.each_with_index.map do |n, i|
-          [i, n]
-        end.select do |i, n|
+          [i, n] #: [Integer, Integer]
+        end
+        s = s.select do |i, n|
           # Remove default_reduction_rule entries
           n != 0
         end
@@ -287,10 +290,10 @@ module Lrama
           # * Array of tuple, [from, to] where from is term number and to is action.
           # * The number of "Array of tuple" used by sort_actions
           # * "width" used by sort_actions
-          @_actions << [state.id, s, s.count, s.last[0] - s.first[0] + 1]
+          @_actions << [state.id, s, s.count, (s.last || raise)[0] - (s.first || raise)[0] + 1]
         end
 
-        @yydefact[state.id] = state.default_reduction_rule ? state.default_reduction_rule.id + 1 : 0
+        (@yydefact || raise)[state.id] = state.default_reduction_rule ? state.default_reduction_rule.id + 1 : 0
       end
     end
 
@@ -327,7 +330,7 @@ module Lrama
         end
 
         k = nterm_number_to_sequence_number(nterm.number)
-        @yydefgoto[k] = default_goto
+        (@yydefgoto || raise)[k] = default_goto
 
         if not_default_gotos.count != 0
           v = nterm_number_to_vector_number(nterm.number)
@@ -427,7 +430,7 @@ module Lrama
           next
         end
 
-        res = lowzero - froms_and_tos.first[0]
+        res = lowzero - (froms_and_tos.first || raise)[0]
 
         while true do
           ok = true
@@ -476,7 +479,7 @@ module Lrama
       @yylast = high
 
       # replace_ninf
-      @yypact_ninf = (@base.select {|i| i != BaseMin } + [0]).min - 1
+      @yypact_ninf = ((@base.select {|i| i != BaseMin } + [0]).min || raise) - 1
       @base.map! do |i|
         case i
         when BaseMin
@@ -486,7 +489,7 @@ module Lrama
         end
       end
 
-      @yytable_ninf = (@table.compact.select {|i| i != ErrorActionNumber } + [0]).min - 1
+      @yytable_ninf = ((@table.compact.select {|i| i != ErrorActionNumber } + [0]).min || raise) - 1
       @table.map! do |i|
         case i
         when nil

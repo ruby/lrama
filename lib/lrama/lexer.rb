@@ -7,8 +7,20 @@ module Lrama
     include Lrama::Report::Duration
 
     # s_value is semantic value
-    Token = Struct.new(:type, :s_value, keyword_init: true) do
-      Type = Struct.new(:id, :name, keyword_init: true)
+    class Token < Struct.new(:type, :s_value, keyword_init: true)
+      def s_value_int
+        s = s_value
+        raise unless s.is_a?(Integer)
+        s
+      end
+      def s_value_str
+        s = s_value
+        raise unless s.is_a?(String)
+        s
+      end
+
+      class Type < Struct.new(:id, :name, keyword_init: true)
+      end
 
       attr_accessor :line, :column, :referred
       # For User_code
@@ -219,7 +231,7 @@ module Lrama
         else
           l = line - lines.first[1]
           split = ss.string.split("\n")
-          col = ss.pos - split[0...l].join("\n").length
+          col = ss.pos - (split[0...l] || raise).join("\n").length
           raise "Parse error (unknown token): #{split[l]} \"#{ss.string[ss.pos]}\" (#{line}: #{col})"
         end
       end
@@ -283,7 +295,7 @@ module Lrama
           line = lex_line_comment(ss, line, str)
         else
           # noop, just consume char
-          str << ss.getch
+          str << (ss.getch || raise)
           next
         end
 
@@ -328,7 +340,7 @@ module Lrama
         when ss.scan(/\*\//)
           return line
         else
-          str << ss.getch
+          str << (ss.getch || raise)
           next
         end
 
@@ -347,7 +359,7 @@ module Lrama
         when ss.scan(/\n/)
           return line + 1
         else
-          str << ss.getch
+          str << (ss.getch || raise)
           next
         end
 
