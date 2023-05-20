@@ -47,10 +47,23 @@ Enter the formula:
 => 9
 ```
 
+## Versions and Branches
+
+### v0_4 (`lrama_0_4` branch)
+
+This branch generates "parse.c" compatible with Bison 3.8.2 for ruby 3.0, 3.1, 3.2. The first version migrated to ruby is ["0.4.0"](https://github.com/ruby/ruby/pull/7798) therefore keep this branch for Bison compatible branch.
+
 ## Build Ruby
 
 1. Install Lrama
 2. Run `make YACC=lrama`
+
+## Release flow
+
+1. Update `Lrama::VERSION`
+2. Release as a gem by `rake release`
+3. Update Lrama in ruby/ruby by `cp -r exe lib ruby/tool/lrama`
+4. Create new release on [GitHub](https://github.com/ruby/lrama/releases)
 
 ## License
 
