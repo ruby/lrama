@@ -47,6 +47,7 @@ module Lrama
       define_type(:Number)           # 0
       define_type(:Ident_Colon)      # k_if:, k_if  : (spaces can be there)
       define_type(:Ident)            # api.pure, tNUMBER
+      define_type(:Named_Ref)        # [foo]
       define_type(:Semicolon)        # ;
       define_type(:Bar)              # |
       define_type(:String)           # "str"
@@ -166,10 +167,15 @@ module Lrama
           tokens << create_token(Token::Number, Integer(ss[0]), line, ss.pos - column)
         when ss.scan(/(<[a-zA-Z0-9_]+>)/)
           tokens << create_token(Token::Tag, ss[0], line, ss.pos - column)
+        when ss.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]\s*:/)
+          tokens << create_token(Token::Ident_Colon, ss[1], line, ss.pos - column)
+          tokens << create_token(Token::Named_Ref, ss[2], line, ss.pos - column)
         when ss.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)\s*:/)
           tokens << create_token(Token::Ident_Colon, ss[1], line, ss.pos - column)
         when ss.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
           tokens << create_token(Token::Ident, ss[0], line, ss.pos - column)
+        when ss.scan(/\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/)
+          tokens << create_token(Token::Named_Ref, ss[1], line, ss.pos - column)
         when ss.scan(/%expect/)
           tokens << create_token(Token::P_expect, ss[0], line, ss.pos - column)
         when ss.scan(/%define/)
@@ -257,6 +263,9 @@ module Lrama
         when ss.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
           tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
           references << [:dollar, Integer(ss[2]), tag, str.length, str.length + ss[0].length - 1]
+        when ss.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_.][-a-zA-Z0-9_.]*)/) # $foo, $expr, $<long>program
+          tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
+          references << [:dollar, ss[2], tag, str.length, str.length + ss[0].length - 1]
         when ss.scan(/@\$/) # @$
           references << [:at, "$", nil, str.length, str.length + ss[0].length - 1]
         when ss.scan(/@(\d)+/) # @1
