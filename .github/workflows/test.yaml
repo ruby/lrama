@@ -35,6 +35,7 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - run: bundle install
+      - run: bundle exec rbs collection install
       - run: bundle exec steep check
   test-ruby:
     runs-on: ubuntu-20.04
