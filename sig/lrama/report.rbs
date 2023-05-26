@@ -1,0 +1,15 @@
+module Lrama
+  class Report
+    module Profile
+      def self.report_profile: { -> void } -> StackProf::result
+    end
+
+    module Duration
+      self.@_report_duration_enabled: bool | nil
+
+      def self.enable: -> void
+      def self.enabled?: -> bool
+      def report_duration: [T] (_ToS method_name) { -> T } -> T
+    end
+  end
+end
