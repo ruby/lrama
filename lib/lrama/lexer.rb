@@ -7,8 +7,10 @@ module Lrama
     include Lrama::Report::Duration
 
     # s_value is semantic value
-    Token = Struct.new(:type, :s_value, keyword_init: true) do
-      Type = Struct.new(:id, :name, keyword_init: true)
+    Token = _ = Struct.new(:type, :s_value, keyword_init: true) do
+      # @implements Token[SValue]
+
+      Type = _ = Struct.new(:id, :name, keyword_init: true)
 
       attr_accessor :line, :column, :referred
       # For User_code
@@ -18,8 +20,8 @@ module Lrama
         "#{super} line: #{line}, column: #{column}"
       end
 
-      @i = 0
-      @types = []
+      instance_variable_set :@i, 0
+      instance_variable_set :@types, []
 
       def self.define_type(name)
         type = Type.new(id: @i, name: name.to_s)
@@ -64,6 +66,7 @@ module Lrama
 
     # Token types
 
+    # @dynamic prologue, bison_declarations, grammar_rules, epilogue, bison_declarations_tokens, grammar_rules_tokens
     attr_reader :prologue, :bison_declarations, :grammar_rules, :epilogue,
                 :bison_declarations_tokens, :grammar_rules_tokens
 
@@ -147,7 +150,7 @@ module Lrama
     #   * https://www.gnu.org/software/bison/manual/html_node/Symbol-Decls.html
     #   * https://www.gnu.org/software/bison/manual/html_node/Empty-Rules.html
     def lex_common(lines, tokens)
-      line = lines.first[1]
+      line = lines.fetch(0)[1]
       column = 0
       ss = StringScanner.new(lines.map(&:first).join)
 
@@ -217,9 +220,9 @@ module Lrama
         when ss.scan(/%empty/)
           # skip
         else
-          l = line - lines.first[1]
+          l = line - lines.fetch(0)[1]
           split = ss.string.split("\n")
-          col = ss.pos - split[0...l].join("\n").length
+          col = ss.pos - split.take(l).join("\n").length
           raise "Parse error (unknown token): #{split[l]} \"#{ss.string[ss.pos]}\" (#{line}: #{col})"
         end
       end
@@ -237,7 +240,7 @@ module Lrama
       str = "{"
       # Array of [type, $n, tag, first column, last column]
       # TODO: Is it better to keep string, like "$$", and use gsub?
-      references = []
+      references = [] #: Array[reference]
 
       while !ss.eos? do
         case
@@ -291,7 +294,7 @@ module Lrama
       end
 
       # Reach to end of input but brace does not match
-      l = line - lines.first[1]
+      l = line - lines.fetch(0)[1]
       raise "Parse error (brace mismatch): #{ss.string.split("\n")[l]} \"#{ss.string[ss.pos]}\" (#{line}: #{ss.pos})"
     end
 
@@ -315,7 +318,7 @@ module Lrama
       end
 
       # Reach to end of input but quote does not match
-      l = line - lines.first[1]
+      l = line - lines.fetch(0)[1]
       raise "Parse error (quote mismatch): #{ss.string.split("\n")[l]} \"#{ss.string[ss.pos]}\" (#{line}: #{ss.pos})"
     end
 
@@ -336,7 +339,7 @@ module Lrama
       end
 
       # Reach to end of input but quote does not match
-      l = line - lines.first[1]
+      l = line - lines.fetch(0)[1]
       raise "Parse error (comment mismatch): #{ss.string.split("\n")[l]} \"#{ss.string[ss.pos]}\" (#{line}: #{ss.pos})"
     end
 

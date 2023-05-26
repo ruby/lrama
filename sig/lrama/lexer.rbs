@@ -1,0 +1,84 @@
+module Lrama
+  class Lexer
+    type line_data = [String, Integer]
+    type reference = [::Symbol, Integer | String, Token[untyped]?, Integer, Integer]
+
+    class Type[SValue] < Struct[untyped]
+      attr_accessor id(): Integer
+      attr_accessor name(): String
+
+      def self.new: (id: Integer, name: String) -> Type[untyped]
+    end
+
+    class Token[SValue] < Struct[untyped]
+      P_expect: Type[String]
+      P_define: Type[String]
+      P_printer: Type[String]
+      P_lex_param: Type[String]
+      P_parse_param: Type[String]
+      P_initial_action: Type[String]
+      P_union: Type[String]
+      P_token: Type[String]
+      P_type: Type[String]
+      P_nonassoc: Type[String]
+      P_left: Type[String]
+      P_right: Type[String]
+      P_prec: Type[String]
+      User_code: Type[String]
+      Tag: Type[String]
+      Number: Type[Integer]
+      Ident_Colon: Type[String]
+      Ident: Type[String]
+      Semicolon: Type[String]
+      Bar: Type[String]
+      String: Type[String]
+      Char: Type[String]
+
+      attr_reader type(): Type[SValue]
+      attr_reader s_value(): SValue
+      attr_accessor line: Integer
+      attr_accessor column: Integer
+      attr_accessor referred: untyped
+      attr_accessor references: Array[reference]
+
+      self.@i: Integer
+      self.@types: Array[Type[untyped]]
+
+      def self.new: [SValue] (type: Type[SValue], s_value: SValue) -> Token[SValue]
+      def self.define_type: (::Symbol name) -> void
+    end
+
+    include Report::Duration
+
+    Initial: Integer
+    Prologue: Integer
+    BisonDeclarations: Integer
+    GrammarRules: Integer
+    Epilogue: Integer
+
+    attr_reader prologue: Array[line_data]
+    attr_reader bison_declarations: Array[line_data]
+    attr_reader grammar_rules: Array[line_data]
+    attr_reader epilogue: Array[line_data]
+    attr_reader bison_declarations_tokens: Array[Token[untyped]]
+    attr_reader grammar_rules_tokens: Array[Token[untyped]]
+
+    @text: String
+    @state: Integer
+    @debug: boolish
+
+    def initialize: (String text) -> void
+
+    private
+    def create_token: [SValue] (Type[SValue] type, SValue s_value, Integer line, Integer column) -> Token[SValue]
+    def lex_text: -> void
+    def lex_common: (Array[line_data] lines, Array[Token[untyped]] tokens) -> void
+    def lex_bison_declarations_tokens: -> void
+    def lex_user_code: (StringScanner, Integer line, Integer column, Array[line_data] lines) -> [Token[String], Integer]
+    def lex_string: (StringScanner, String terminator, Integer line, Array[line_data] lines) -> line_data
+    def lex_comment: (StringScanner, Integer line, Array[line_data] lines, String str) -> Integer
+    def lex_line_comment: (StringScanner, Integer line, String str) -> Integer
+    def lex_grammar_rules_tokens: -> void
+    def debug: (String msg) -> void
+  end
+end
