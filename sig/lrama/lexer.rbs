@@ -38,7 +38,7 @@ module Lrama
       attr_reader s_value(): SValue
       attr_accessor line: Integer
       attr_accessor column: Integer
-      attr_accessor referred: untyped
+      attr_accessor referred: bool?
       attr_accessor references: Array[reference]
 
       self.@i: Integer
