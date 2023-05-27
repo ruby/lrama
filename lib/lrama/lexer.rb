@@ -64,8 +64,6 @@ module Lrama
     GrammarRules = 3
     Epilogue = 4
 
-    # Token types
-
     # @dynamic prologue, bison_declarations, grammar_rules, epilogue, bison_declarations_tokens, grammar_rules_tokens
     attr_reader :prologue, :bison_declarations, :grammar_rules, :epilogue,
                 :bison_declarations_tokens, :grammar_rules_tokens
