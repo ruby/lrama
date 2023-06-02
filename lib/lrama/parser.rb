@@ -211,7 +211,7 @@ module Lrama
       code_after_prec = false
 
       while true do
-        # TODO: Srting can be here
+        # TODO: String can be here
         case ts.current_type
         when T::Ident
           # keyword_class
