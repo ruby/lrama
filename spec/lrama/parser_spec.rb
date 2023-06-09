@@ -1143,6 +1143,139 @@ emp: /* none */
             ),
           ])
         end
+
+        context "includes named references" do
+          it "can parse" do
+            y = <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+  int i;
+}
+
+%token NUM
+%type <val> expr
+
+%%
+
+input       : /* empty */
+            | input line
+;
+
+line        : '\\n'
+            | expr '\\n'
+                { printf("\\t%.10g\\n", $expr); }
+;
+
+expr[result]: NUM
+            | expr[left] expr[right] '+'
+                { $result = $left + $right; }
+            | expr expr '-'
+                { $$ = $1 - $2; }
+;
+            INPUT
+            grammar = Lrama::Parser.new(y).parse
+
+            expect(grammar.rules).to eq([
+              Rule.new(
+                id: 0,
+                lhs: grammar.find_symbol_by_s_value!("$accept"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("input"),
+                  grammar.find_symbol_by_s_value!("YYEOF"),
+                ],
+                code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+                lineno: 14,
+              ),
+              Rule.new(
+                id: 1,
+                lhs: grammar.find_symbol_by_s_value!("input"),
+                rhs: [
+                ],
+                code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 14,
+              ),
+              Rule.new(
+                id: 2,
+                lhs: grammar.find_symbol_by_s_value!("input"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("input"),
+                  grammar.find_symbol_by_s_value!("line"),
+                ],
+                code: nil,
+                nullable: false,
+                precedence_sym: nil,
+                lineno: 15,
+              ),
+              Rule.new(
+                id: 3,
+                lhs: grammar.find_symbol_by_s_value!("line"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("'\\n'"),
+                ],
+                code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("'\\n'"),
+                lineno: 18,
+              ),
+              Rule.new(
+                id: 4,
+                lhs: grammar.find_symbol_by_s_value!("line"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("expr"),
+                  grammar.find_symbol_by_s_value!("'\\n'"),
+                ],
+                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ printf(\"\\t%.10g\\n\", $expr); }")),
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("'\\n'"),
+                lineno: 19,
+              ),
+              Rule.new(
+                id: 5,
+                lhs: grammar.find_symbol_by_s_value!("expr"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("NUM"),
+                ],
+                code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("NUM"),
+                lineno: 23,
+              ),
+              Rule.new(
+                id: 6,
+                lhs: grammar.find_symbol_by_s_value!("expr"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("expr"),
+                  grammar.find_symbol_by_s_value!("expr"),
+                  grammar.find_symbol_by_s_value!("'+'"),
+                ],
+                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $result = $left + $right; }")),
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
+                lineno: 24,
+              ),
+              Rule.new(
+                id: 7,
+                lhs: grammar.find_symbol_by_s_value!("expr"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("expr"),
+                  grammar.find_symbol_by_s_value!("expr"),
+                  grammar.find_symbol_by_s_value!("'-'"),
+                ],
+                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $$ = $1 - $2; }")),
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
+                lineno: 26,
+              ),
+            ])
+          end
+        end
       end
     end
   end
