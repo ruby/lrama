@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         baseruby: ['3.0']
-        ruby_branch: ['master']
+        ruby_branch: ['ruby_3_2']
     defaults:
       run:
         working-directory: ../ruby/build
