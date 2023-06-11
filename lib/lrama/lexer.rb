@@ -18,6 +18,10 @@ module Lrama
         "#{super} line: #{line}, column: #{column}"
       end
 
+      def referred_by?(string)
+        [self.s_value, self.alias].include?(string)
+      end
+
       @i = 0
       @types = []
 

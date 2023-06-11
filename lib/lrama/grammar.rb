@@ -631,10 +631,19 @@ module Lrama
               if ref.value == "$"
                 # TODO: Should be postponed after middle actions are extracted?
                 ref.referring_symbol = lhs
-              else
+              elsif ref.value.is_a?(Integer)
                 raise "Can not refer following component. #{ref.value} >= #{i}. #{token}" if ref.value >= i
                 rhs1[ref.value - 1].referred = true
                 ref.referring_symbol = rhs1[ref.value - 1]
+              elsif ref.value.is_a?(String)
+                target_tokens = ([lhs] + rhs1 + [code]).compact.first(i)
+                referring_symbol_candidate = target_tokens.filter {|token| token.referred_by?(ref.value) }
+                raise "Referring symbol `#{ref.value}` is duplicated. #{token}" if referring_symbol_candidate.size >= 2
+                raise "Referring symbol `#{ref.value}` is not found. #{token}" if referring_symbol_candidate.count == 0
+
+                referring_symbol = referring_symbol_candidate.first
+                referring_symbol.referred = true
+                ref.referring_symbol = referring_symbol
               end
             end
           end
