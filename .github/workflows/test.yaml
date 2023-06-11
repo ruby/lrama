@@ -58,9 +58,7 @@ jobs:
       - run: mkdir -p tool/lrama
         working-directory: ../ruby
       - name: Copy Lrama to ruby/tool
-        run: cp -r exe lib ../ruby/tool/lrama
-        # TODO: Consider how to manage changes on ruby/ruby master and ruby/lrama
-        # run: cp -r exe lib template ../ruby/tool/lrama
+        run: cp -r exe lib template ../ruby/tool/lrama
         working-directory:
       - run: tree tool/lrama
         working-directory: ../ruby
