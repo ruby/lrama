@@ -175,6 +175,9 @@ module Lrama
       # LHS
       lhs = ts.consume!(T::Ident_Colon) # class:
       lhs.type = T::Ident
+      if named_ref = ts.consume(T::Named_Ref)
+        lhs.alias = named_ref.s_value
+      end
 
       rhs = parse_grammar_rule_rhs(ts, grammar)
 
@@ -246,6 +249,9 @@ module Lrama
           code = ts.current_token
           grammar.build_references(code)
           a << code
+          ts.next
+        when T::Named_Ref
+          ts.previous_token.alias = ts.current_token.s_value
           ts.next
         when T::Bar
           # |

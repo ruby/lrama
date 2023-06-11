@@ -7,7 +7,7 @@ module Lrama
     include Lrama::Report::Duration
 
     # s_value is semantic value
-    Token = Struct.new(:type, :s_value, keyword_init: true) do
+    Token = Struct.new(:type, :s_value, :alias, keyword_init: true) do
       Type = Struct.new(:id, :name, keyword_init: true)
 
       attr_accessor :line, :column, :referred
@@ -20,6 +20,10 @@ module Lrama
 
       def referred_by?(string)
         [self.s_value, self.alias].include?(string)
+      end
+
+      def ==(other)
+        self.class == other.class && self.type == other.type && self.s_value == other.s_value
       end
 
       @i = 0
