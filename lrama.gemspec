@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "LALR (1) parser generator written by Ruby"
   spec.description   = "LALR (1) parser generator written by Ruby"
-  spec.homepage      = "https://github.com/yui-knk/lrama"
+  spec.homepage      = "https://github.com/ruby/lrama"
   # See LEGAL.md file for detail
   spec.license       = "GNU GPLv3"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.5.0")
