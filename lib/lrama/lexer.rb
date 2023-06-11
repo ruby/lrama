@@ -26,6 +26,23 @@ module Lrama
         self.class == other.class && self.type == other.type && self.s_value == other.s_value
       end
 
+      def numberize_references(lhs, rhs)
+        self.references.map! {|ref|
+          ref_name = ref[1]
+          if ref_name.is_a?(String) && ref_name != '$'
+            value =
+              if lhs.referred_by?(ref_name)
+                '$'
+              else
+                rhs.find_index {|token| token.referred_by?(ref_name) } + 1
+              end
+            [ref[0], value, ref[2], ref[3], ref[4]]
+          else
+            ref
+          end
+        }
+      end
+
       @i = 0
       @types = []
 

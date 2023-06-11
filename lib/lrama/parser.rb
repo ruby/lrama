@@ -179,7 +179,7 @@ module Lrama
         lhs.alias = named_ref.s_value
       end
 
-      rhs = parse_grammar_rule_rhs(ts, grammar)
+      rhs = parse_grammar_rule_rhs(ts, grammar, lhs)
 
       grammar.add_rule(lhs: lhs, rhs: rhs, lineno: rhs.first ? rhs.first.line : lhs.line)
 
@@ -189,7 +189,7 @@ module Lrama
           # |
           bar_lineno = ts.current_token.line
           ts.next
-          rhs = parse_grammar_rule_rhs(ts, grammar)
+          rhs = parse_grammar_rule_rhs(ts, grammar, lhs)
           grammar.add_rule(lhs: lhs, rhs: rhs, lineno: rhs.first ? rhs.first.line : bar_lineno)
         when T::Semicolon
           # ;
@@ -208,7 +208,7 @@ module Lrama
       end
     end
 
-    def parse_grammar_rule_rhs(ts, grammar)
+    def parse_grammar_rule_rhs(ts, grammar, lhs)
       a = []
       prec_seen = false
       code_after_prec = false
@@ -247,6 +247,7 @@ module Lrama
           end
 
           code = ts.current_token
+          code.numberize_references(lhs, a)
           grammar.build_references(code)
           a << code
           ts.next
