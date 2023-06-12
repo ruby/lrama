@@ -62,7 +62,7 @@ This branch generates "parse.c" compatible with Bison 3.8.2 for ruby 3.0, 3.1, 3
 
 1. Update `Lrama::VERSION`
 2. Release as a gem by `rake release`
-3. Update Lrama in ruby/ruby by `cp -r exe lib ruby/tool/lrama`
+3. Update Lrama in ruby/ruby by `cp -r LEGAL.md MIT exe lib ruby/tool/lrama`
 4. Create new release on [GitHub](https://github.com/ruby/lrama/releases)
 
 ## License
