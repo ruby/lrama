@@ -367,6 +367,65 @@ lambda: tLAMBDA
       ])
     end
 
+    it "named references" do
+      y = <<~INPUT
+%{
+// Prologue
+%}
+
+%token NUM
+
+%%
+
+line: expr
+        { printf("\t%.10g\n", $expr); }
+    ;
+
+expr[result]: NUM
+            | expr[left] expr[right] '+'
+                { $result = $left + $right; }
+            ;
+%%
+      INPUT
+      lexer = Lrama::Lexer.new(y)
+
+      expect(lexer.grammar_rules_tokens).to eq([
+        T.new(type: T::Ident_Colon, s_value: "line"),
+        T.new(type: T::Ident, s_value: "expr"),
+        T.new(type: T::User_code, s_value: %Q({ printf("\t%.10g\n", $expr); })),
+        T.new(type: T::Semicolon, s_value: ";"),
+
+        T.new(type: T::Ident_Colon, s_value: "expr"),
+        T.new(type: T::Named_Ref, s_value: "result"),
+
+        T.new(type: T::Ident, s_value: "NUM"),
+
+        T.new(type: T::Bar, s_value: "|"),
+        T.new(type: T::Ident, s_value: "expr"),
+        T.new(type: T::Named_Ref, s_value: "left"),
+        T.new(type: T::Ident, s_value: "expr"),
+        T.new(type: T::Named_Ref, s_value: "right"),
+        T.new(type: T::Char, s_value: "'+'"),
+        T.new(type: T::User_code, s_value: "{ $result = $left + $right; }"),
+        T.new(type: T::Semicolon, s_value: ";"),
+      ])
+
+      user_codes = lexer.grammar_rules_tokens.select do |t|
+        t.type == T::User_code
+      end
+
+      expect(user_codes.map(&:references)).to eq([
+        [
+          [:dollar, "expr", nil, 20, 24],
+        ],
+        [
+          [:dollar, "result", nil, 2, 8],
+          [:dollar, "left", nil, 12, 16],
+          [:dollar, "right", nil, 20, 25],
+        ]
+      ])
+    end
+
     describe "user codes" do
       it "parses comments correctly" do
         y = <<~INPUT
