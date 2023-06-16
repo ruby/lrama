@@ -11,7 +11,7 @@ module Lrama
     include Lrama::Report::Duration
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules,
-      :accept_symbol, :eof_symbol, :find_symbol_by_s_value!
+      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!
 
     # TODO: Validate position is not over rule rhs
     Item = Struct.new(:rule, :position, keyword_init: true) do
