@@ -89,6 +89,16 @@ module Lrama
       return a
     end
 
+    def yytranslate_inverted
+      a = Array.new(@states.symbols.count, @states.undef_symbol.token_id)
+
+      @states.terms.each do |term|
+        a[term.number] = term.token_id
+      end
+
+      return a
+    end
+
     # Mapping from rule number to line number of the rule is defined.
     # Dummy rule is appended as the first element whose value is 0
     # because 0 means error in yydefact.
