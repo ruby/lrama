@@ -1737,7 +1737,7 @@ yybackup:
           yylval = term.value;
           yylloc = term.location;
           yychar = yytranslate_inverted[yytoken];
-          YY_SYMBOL_PRINT ("Next error recovery token is", yytoken, &yylval, &yylloc);
+          YY_SYMBOL_PRINT ("Next error recovery token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
           rep_terms_index++;
         }
       else
@@ -1747,7 +1747,7 @@ yybackup:
           yylval = term_backup.value;
           yylloc = term_backup.location;
           yychar = yychar_backup;
-          YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc);
+          YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
 
           free (rep_terms);
           rep_terms = 0;
@@ -1987,7 +1987,7 @@ yyerrlab1:
         for (int i = 0; i < rep_terms->length; i++)
           {
             yy_term *term = &rep_terms->terms[i];
-            yy_error_token_initialize (term->kind, &term->value, &term->location, p);
+            yy_error_token_initialize (term->kind, &term->value, &term->location<%= output.user_args %>);
           }
 
         yychar_backup = yychar;
