@@ -96,7 +96,7 @@ module Lrama
       reduce.look_ahead = look_ahead
     end
 
-    # Returns array of [nterm, next_state]
+    # Returns array of [Shift, next_state]
     def nterm_transitions
       return @nterm_transitions if @nterm_transitions
 
@@ -111,7 +111,7 @@ module Lrama
       @nterm_transitions
     end
 
-    # Returns array of [term, next_state]
+    # Returns array of [Shift, next_state]
     def term_transitions
       return @term_transitions if @term_transitions
 
