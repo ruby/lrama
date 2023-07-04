@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description   = "LALR (1) parser generator written by Ruby"
   spec.homepage      = "https://github.com/ruby/lrama"
   # See LEGAL.md file for detail
-  spec.license       = "GNU GPLv3"
+  spec.license       = "GPL-3.0-or-later"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.5.0")
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do

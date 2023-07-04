@@ -5,7 +5,7 @@ mentioned below.
 
 ## GNU General Public License version 3
 
-These files are licensed under the GNU General Public License version 3. See these files for more information.
+These files are licensed under the GNU General Public License version 3 or later. See these files for more information.
 
 * template/bison/yacc.c
 * template/bison/yacc.h
