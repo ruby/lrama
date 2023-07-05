@@ -2,12 +2,6 @@ require "lrama/lexer"
 module Lrama
   Type = Struct.new(:id, :tag, keyword_init: true)
 
-  ErrorToken = Struct.new(:ident_or_tags, :code, :lineno, keyword_init: true) do
-    def translated_code(member)
-      code.translated_error_token_code(member)
-    end
-  end
-
   Union = Struct.new(:code, :lineno, keyword_init: true) do
     def braces_less_code
       # Remove braces
