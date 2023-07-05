@@ -2,18 +2,6 @@ require "lrama/lexer"
 module Lrama
   Type = Struct.new(:id, :tag, keyword_init: true)
 
-  # type: :dollar or :at
-  # ex_tag: "$<tag>1" (Optional)
-  Reference = Struct.new(:type, :value, :ex_tag, :first_column, :last_column, :referring_symbol, :position_in_rhs, keyword_init: true) do
-    def tag
-      if ex_tag
-        ex_tag
-      else
-        referring_symbol.tag
-      end
-    end
-  end
-
   Precedence = Struct.new(:type, :precedence, keyword_init: true) do
     include Comparable
 
