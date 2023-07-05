@@ -2,14 +2,6 @@ require "lrama/lexer"
 module Lrama
   Type = Struct.new(:id, :tag, keyword_init: true)
 
-  Precedence = Struct.new(:type, :precedence, keyword_init: true) do
-    include Comparable
-
-    def <=>(other)
-      self.precedence <=> other.precedence
-    end
-  end
-
   Printer = Struct.new(:ident_or_tags, :code, :lineno, keyword_init: true) do
     def translated_code(member)
       code.translated_printer_code(member)
