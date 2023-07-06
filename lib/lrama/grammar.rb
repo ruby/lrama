@@ -1,14 +1,6 @@
 require "lrama/lexer"
 module Lrama
   Type = Struct.new(:id, :tag, keyword_init: true)
-
-  Union = Struct.new(:code, :lineno, keyword_init: true) do
-    def braces_less_code
-      # Remove braces
-      code.s_value[1..-2]
-    end
-  end
-
   Token = Lrama::Lexer::Token
 
   # Grammar is the result of parsing an input grammar file
