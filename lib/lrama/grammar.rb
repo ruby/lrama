@@ -1,4 +1,6 @@
+require "lrama/grammar/union"
 require "lrama/lexer"
+
 module Lrama
   Type = Struct.new(:id, :tag, keyword_init: true)
   Token = Lrama::Lexer::Token
