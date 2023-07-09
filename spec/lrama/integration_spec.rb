@@ -7,7 +7,7 @@ RSpec.describe "integration" do
       cases = input.each_with_index.map do |(token, union, semantic_value), i|
         str = ""
         str << "    case #{i}:\n"
-        str << "        yylval->#{union} = #{semantic_value};\n"
+        str << "        yylval->#{union} = #{semantic_value};\n" if union && semantic_value
         str << "        return #{token};\n"
       end.join("\n")
 
@@ -73,12 +73,12 @@ int main() {
     it "returns 9 for '(1+2)*3'" do
       # (1+2)*3 #=> 9
       input = [
-        %w['(' val 0],
+        %w['('],
         %w[NUM val 1],
-        %w['+' val 0],
+        %w['+'],
         %w[NUM val 2],
-        %w[')' val 0],
-        %w['*' val 0],
+        %w[')'],
+        %w['*'],
         %w[NUM val 3]
       ]
       expected = "9"
