@@ -4,7 +4,7 @@ RSpec.describe Lrama::Parser do
   Sym = Lrama::Symbol
   Precedence = Lrama::Grammar::Precedence
   Rule = Lrama::Rule
-  Printer = Lrama::Printer
+  Printer = Lrama::Grammar::Printer
   Code = Lrama::Grammar::Code
 
   let(:header) do
