@@ -1,3 +1,4 @@
+require "lrama/grammar/code"
 require "lrama/grammar/union"
 require "lrama/lexer"
 
