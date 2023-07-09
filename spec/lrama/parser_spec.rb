@@ -1,7 +1,7 @@
 RSpec.describe Lrama::Parser do
   T ||= Lrama::Lexer::Token
   Type = Lrama::Type
-  Sym = Lrama::Symbol
+  Sym = Lrama::Grammar::Symbol
   Precedence = Lrama::Grammar::Precedence
   Rule = Lrama::Grammar::Rule
   Printer = Lrama::Grammar::Printer
