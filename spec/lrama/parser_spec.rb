@@ -3,7 +3,7 @@ RSpec.describe Lrama::Parser do
   Type = Lrama::Type
   Sym = Lrama::Symbol
   Precedence = Lrama::Grammar::Precedence
-  Rule = Lrama::Rule
+  Rule = Lrama::Grammar::Rule
   Printer = Lrama::Grammar::Printer
   Code = Lrama::Grammar::Code
 

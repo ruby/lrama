@@ -1,6 +1,7 @@
 require "lrama/grammar/code"
 require "lrama/grammar/precedence"
 require "lrama/grammar/printer"
+require "lrama/grammar/rule"
 require "lrama/grammar/union"
 require "lrama/lexer"
 
