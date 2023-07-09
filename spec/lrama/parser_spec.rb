@@ -1,11 +1,11 @@
 RSpec.describe Lrama::Parser do
   T ||= Lrama::Lexer::Token
   Type = Lrama::Type
-  Sym = Lrama::Symbol
-  Precedence = Lrama::Precedence
-  Rule = Lrama::Rule
-  Printer = Lrama::Printer
-  Code = Lrama::Code
+  Sym = Lrama::Grammar::Symbol
+  Precedence = Lrama::Grammar::Precedence
+  Rule = Lrama::Grammar::Rule
+  Printer = Lrama::Grammar::Printer
+  Code = Lrama::Grammar::Code
 
   let(:header) do
     <<~HEADER

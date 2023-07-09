@@ -1,3 +1,10 @@
+require "lrama/grammar/code"
+require "lrama/grammar/error_token"
+require "lrama/grammar/precedence"
+require "lrama/grammar/printer"
+require "lrama/grammar/reference"
+require "lrama/grammar/rule"
+require "lrama/grammar/symbol"
 require "lrama/grammar/union"
 require "lrama/lexer"
 
