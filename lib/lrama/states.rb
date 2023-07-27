@@ -1,5 +1,5 @@
 require "forwardable"
-require "lrama/report"
+require "lrama/report/duration"
 require "lrama/states/item"
 
 module Lrama

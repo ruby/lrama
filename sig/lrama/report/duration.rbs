@@ -1,9 +1,5 @@
 module Lrama
   class Report
-    module Profile
-      def self.report_profile: { -> void } -> StackProf::result
-    end
-
     module Duration
       self.@_report_duration_enabled: bool | nil
 

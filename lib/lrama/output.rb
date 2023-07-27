@@ -1,6 +1,6 @@
 require "erb"
 require "forwardable"
-require "lrama/report"
+require "lrama/report/duration"
 
 module Lrama
   class Output

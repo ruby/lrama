@@ -1,5 +1,5 @@
 require "strscan"
-require "lrama/report"
+require "lrama/report/duration"
 require "lrama/lexer/token"
 
 module Lrama
