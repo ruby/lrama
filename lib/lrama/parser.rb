@@ -1,4 +1,4 @@
-require "lrama/report"
+require "lrama/report/duration"
 require "lrama/parser/token_scanner"
 
 module Lrama
