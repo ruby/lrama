@@ -20,6 +20,14 @@ module Lrama
       end
     end
 
+    def col
+      @scanner.pos
+    end
+
+    def row
+      @scanner.pos
+    end
+
     def lex_token
       while !@scanner.eos? do
         case

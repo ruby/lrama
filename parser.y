@@ -1,22 +1,24 @@
 class Lrama::NewParser
 rule
-  input: prologue_declarations "%%" grammar epilogue_opt { result = Lrama::Grammar.new; result.prologue = val[0] }
+  input: prologue_declaration bison_declarations "%%" grammar epilogue_opt
 
-  prologue_declarations: /* empty */ { result = "" }
-                       | prologue_declarations prologue_declaration { result = val[0] + val[1] }
+  prologue_declaration: /* empty */
+                      | "%{" {@lexer.status = :c_declaration; @lexer.end_symbol = '%}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "%}" { @grammar.prologue = val[2].lstrip }
 
-  prologue_declaration: grammar_declaration
-                      | "%{" {@lexer.status = :c_declaration; @lexer.end_symbol = '%}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "%}" { result = val[2] }
-                      | "%expect" INTEGER
-                      | "%define" variable value
-                      | "%require" STRING
-                      | "%param" params
-                      | "%lex-param" params
-                      | "%parse-param" params
-                      | "%initial-action" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}"
-                      | ";"
+  bison_declarations: /* empty */ { result = "" }
+                    | bison_declarations bison_declaration
 
-  grammar_declaration: "%union" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}"
+  bison_declaration: grammar_declaration
+                   | "%expect" INTEGER
+                   | "%define" variable value
+                   | "%require" STRING
+                   | "%param" params
+                   | "%lex-param" params
+                   | "%parse-param" params
+                   | "%initial-action" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}"
+                   | ";"
+
+  grammar_declaration: "%union" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" { token = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::User_code, s_value: "{#{val[3]}}"); token.references = []; @grammar.set_union(@grammar.build_code(:union, token), nil) }
                      | symbol_declaration
                      | code_props_type "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" generic_symlist
 
@@ -120,7 +122,9 @@ end
 
 def parse
   @lexer = Lrama::NewLexer.new(@text)
-  @grammar = do_parse.tap { p _1 }
+  @grammar = Lrama::Grammar.new
+  do_parse
+  @grammar
 end
 
 def next_token
