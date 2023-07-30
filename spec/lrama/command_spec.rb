@@ -64,4 +64,94 @@ RSpec.describe Lrama::Command do
       end
     end
   end
+
+  describe "@grammar_file" do
+    context "file is specified" do
+      it "@grammar_file is file name" do
+        command = Lrama::Command.new([fixture_path("command/basic.y")])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@grammar_file)).to match(/command\/basic\.y/)
+      end
+    end
+
+    context "file name is specified after '-'" do
+      it "@grammar_file is file name" do
+        command = Lrama::Command.new(["-", "test.y"])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@grammar_file)).to eq "test.y"
+      end
+    end
+  end
+
+  describe "@outfile" do
+    context "output option is not passed" do
+      it "@outfile is default value" do
+        command = Lrama::Command.new(["-", "test.y"])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@outfile)).to eq "y.tab.c"
+      end
+    end
+
+    context "output option is passed" do
+      it "@outfile is same with passed value" do
+        command = Lrama::Command.new(["-o", "parse.c", "-", "test.y"])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@outfile)).to eq "parse.c"
+      end
+    end
+  end
+
+  describe "@header_file" do
+    context "header file name is not passed" do
+      context "outfile option is passed" do
+        it "@header_file is set based on outfile" do
+          command = Lrama::Command.new(["-h", "-o", "parse.c", "-", "test.y"])
+          command.send(:parse_option)
+          expect(command.instance_variable_get(:@header_file)).to eq "./parse.h"
+        end
+      end
+
+      context "outfile option is not passed" do
+        it "@header_file is set based on outfile default value" do
+          command = Lrama::Command.new(["-h", "-", "test.y"])
+          command.send(:parse_option)
+          expect(command.instance_variable_get(:@header_file)).to eq "./y.tab.h"
+        end
+      end
+    end
+
+    context "header file name is passed" do
+      it "@header_file is same with passed value" do
+        command = Lrama::Command.new(["-hparse.h", "-", "test.y"])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@header_file)).to eq "parse.h"
+      end
+    end
+  end
+
+  describe "@report_file" do
+    context "report file name is not passed" do
+      it "@report_file is set based on grammar file name" do
+        command = Lrama::Command.new(["--report=all", fixture_path("command/basic.y")])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@report_file)).to match(/command\/basic\.output/)
+
+        command = Lrama::Command.new(["--report=all", "-", "test.y"])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@report_file)).to eq "./-.output"
+      end
+    end
+
+    context "report file name is passed" do
+      it "@report_file is same with passed value" do
+        command = Lrama::Command.new(["--report-file=report.output", fixture_path("command/basic.y")])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@report_file)).to eq "report.output"
+
+        command = Lrama::Command.new(["--report-file=report.output", "-", "test.y"])
+        command.send(:parse_option)
+        expect(command.instance_variable_get(:@report_file)).to eq "report.output"
+      end
+    end
+  end
 end

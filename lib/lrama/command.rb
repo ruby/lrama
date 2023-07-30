@@ -31,7 +31,7 @@ module Lrama
       Report::Duration.enable if @trace_opts[:time]
 
       warning = Lrama::Warning.new
-      grammar = Lrama::Parser.new(@y).parse
+      grammar = Lrama::Parser.new(@y.read).parse
       states = Lrama::States.new(grammar, warning, trace_state: (@trace_opts[:automaton] || @trace_opts[:closure]))
       states.compute
       context = Lrama::Context.new(states)
@@ -158,9 +158,9 @@ module Lrama
 
       if @grammar_file == '-'
         @grammar_file = @argv.shift or abort "File name for STDIN should be specified\n"
-        @y = STDIN.read
+        @y = STDIN
       else
-        @y = File.read(@grammar_file)
+        @y = File.open(@grammar_file, 'r')
       end
     end
   end
