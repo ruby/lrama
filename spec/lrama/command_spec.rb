@@ -1,10 +1,9 @@
 RSpec.describe Lrama::Command do
   describe "#run" do
-    let(:command) { Lrama::Command.new }
-
     describe "a grammar file is specified " do
       it "ends successfully" do
-        expect(command.run([fixture_path("command/basic.y")])).to be_nil
+        command = Lrama::Command.new([fixture_path("command/basic.y")])
+        expect(command.run).to be_nil
       end
     end
 
@@ -12,7 +11,8 @@ RSpec.describe Lrama::Command do
       it "ends successfully" do
         File.open(fixture_path("command/basic.y")) do |f|
           allow(STDIN).to receive(:read).and_return(f)
-          expect(command.run(["-", "test.y"])).to be_nil
+          command = Lrama::Command.new(["-", "test.y"])
+          expect(command.run).to be_nil
         end
       end
     end
@@ -20,7 +20,8 @@ RSpec.describe Lrama::Command do
     describe "invalid argv" do
       describe "a grammar file isn't specified" do
         it "returns stderr" do
-          expect{ command.run([]) }.to raise_error(SystemExit) do |e|
+          command = Lrama::Command.new([])
+          expect{ command.run }.to raise_error(SystemExit) do |e|
             expect(e.message).to eq("File should be specified\n")
           end
         end
@@ -28,7 +29,8 @@ RSpec.describe Lrama::Command do
 
       describe "STDIN mode, but a grammar file isn't specified" do
         it "returns stderr" do
-          expect{ command.run(["-"]) }.to raise_error(SystemExit) do |e|
+          command = Lrama::Command.new(["-"])
+          expect{ command.run }.to raise_error(SystemExit) do |e|
             expect(e.message).to eq("File name for STDIN should be specified\n")
           end
         end
@@ -37,7 +39,7 @@ RSpec.describe Lrama::Command do
   end
 
   describe "#validate_report" do
-    let(:command) { Lrama::Command.new }
+    let(:command) { Lrama::Command.new([]) }
 
     describe "valid options are passed" do
       it "returns option hash" do
