@@ -54,7 +54,7 @@ int main() {
         c_path = File.dirname(f.path) + "/test.c"
         obj_path = File.dirname(f.path) + "/test"
 
-        Lrama::Command.new.run(%W[-d #{f.path} -o #{c_path}])
+        Lrama::Command.new(%W[-d #{f.path} -o #{c_path}]).run
 
         `gcc -Wall #{c_path} -o #{obj_path}`
 
