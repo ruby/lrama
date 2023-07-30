@@ -138,7 +138,7 @@ RSpec.describe Lrama::Command do
 
         command = Lrama::Command.new(["--report=all", "-", "test.y"])
         command.send(:parse_option)
-        expect(command.instance_variable_get(:@report_file)).to eq "./-.output"
+        expect(command.instance_variable_get(:@report_file)).to eq "./test.output"
       end
     end
 

@@ -139,6 +139,17 @@ module Lrama
 
       @grammar_file = @argv.shift
 
+      if !@grammar_file
+        abort "File should be specified\n"
+      end
+
+      if @grammar_file == '-'
+        @grammar_file = @argv.shift or abort "File name for STDIN should be specified\n"
+        @y = STDIN
+      else
+        @y = File.open(@grammar_file, 'r')
+      end
+
       if !@report.empty? && @report_file.nil? && @grammar_file
         @report_file = File.dirname(@grammar_file) + "/" + File.basename(@grammar_file, ".*") + ".output"
       end
@@ -150,17 +161,6 @@ module Lrama
         when @grammar_file
           @header_file = File.dirname(@grammar_file) + "/" + File.basename(@grammar_file, ".*") + ".h"
         end
-      end
-
-      if !@grammar_file
-        abort "File should be specified\n"
-      end
-
-      if @grammar_file == '-'
-        @grammar_file = @argv.shift or abort "File name for STDIN should be specified\n"
-        @y = STDIN
-      else
-        @y = File.open(@grammar_file, 'r')
       end
     end
   end
