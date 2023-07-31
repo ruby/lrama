@@ -81,7 +81,6 @@ int main() {
         %w['*'],
         %w[NUM val 3]
       ]
-      expected = "9"
 
       test_rules(<<~Rules, input, "=> 9")
   %union {
@@ -104,6 +103,38 @@ int main() {
        | expr '/' expr { $$ = $1 / $3; }
        | '(' expr ')'  { $$ = $2; }
        ;
+
+  %%
+      Rules
+    end
+  end
+
+  describe "named references" do
+    it "returns 3 for '1 2 +" do
+      # 1 2 + #=> 3
+      input = [
+        %w[NUM val 1],
+        %w[NUM val 2],
+        %w['+'],
+      ]
+
+      test_rules(<<~Rules, input, "=> 3")
+  %union {
+      int val;
+  }
+  %token <val> NUM
+  %type <val> expr
+
+  %%
+
+  line: expr
+          { printf("=> %d", $expr); }
+      ;
+
+  expr[result]: NUM
+              | expr[left] expr[right] '+'
+                  { $result = $left + $right; }
+              ;
 
   %%
       Rules
