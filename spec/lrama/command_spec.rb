@@ -21,8 +21,10 @@ RSpec.describe Lrama::Command do
       describe "a grammar file isn't specified" do
         it "returns stderr" do
           command = Lrama::Command.new([])
+          message = "File should be specified\n"
+          allow(STDERR).to receive(:write).with(message)
           expect{ command.run }.to raise_error(SystemExit) do |e|
-            expect(e.message).to eq("File should be specified\n")
+            expect(e.message).to eq(message)
           end
         end
       end
@@ -30,8 +32,10 @@ RSpec.describe Lrama::Command do
       describe "STDIN mode, but a grammar file isn't specified" do
         it "returns stderr" do
           command = Lrama::Command.new(["-"])
+          message = "File name for STDIN should be specified\n"
+          allow(STDERR).to receive(:write).with(message)
           expect{ command.run }.to raise_error(SystemExit) do |e|
-            expect(e.message).to eq("File name for STDIN should be specified\n")
+            expect(e.message).to eq(message)
           end
         end
       end
