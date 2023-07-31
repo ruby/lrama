@@ -968,13 +968,13 @@ class : keyword_class tSTRING keyword_end { code 1 }
 program: lambda ;
 
 lambda: tLAMBDA
-          { $<int>1 = 1; $<int>$ = 2; }
-          { $<int>$ = 3; }
-          { $<int>$ = 4; }
+          { $<i>1 = 1; $<i>$ = 2; }
+          { $<i>$ = 3; }
+          { $<i>$ = 4; }
         tARGS
           { 5; }
         tBODY
-          { $2; $3; $5; $7; $$ = 1; }
+          { $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; }
         ;
 %%
           INPUT
@@ -1008,7 +1008,7 @@ lambda: tLAMBDA
               id: 2,
               lhs: grammar.find_symbol_by_s_value!("@1"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<int>1 = 1; $<int>$ = 2; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<i>1 = 1; $<i>$ = 2; }")),
               nullable: true,
               precedence_sym: nil,
               lineno: 17,
@@ -1017,7 +1017,7 @@ lambda: tLAMBDA
               id: 3,
               lhs: grammar.find_symbol_by_s_value!("@2"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<int>$ = 3; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<i>$ = 3; }")),
               nullable: true,
               precedence_sym: nil,
               lineno: 18,
@@ -1026,7 +1026,7 @@ lambda: tLAMBDA
               id: 4,
               lhs: grammar.find_symbol_by_s_value!("$@3"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<int>$ = 4; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<i>$ = 4; }")),
               nullable: true,
               precedence_sym: nil,
               lineno: 19,
@@ -1052,7 +1052,7 @@ lambda: tLAMBDA
                 grammar.find_symbol_by_s_value!("$@4"),
                 grammar.find_symbol_by_s_value!("tBODY"),
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $2; $3; $5; $7; $$ = 1; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; }")),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("tBODY"),
               lineno: 16,
@@ -1071,6 +1071,7 @@ lambda: tLAMBDA
 }
 
 %token EOI 0 "EOI"
+%type <int> emp
 
 %%
 
@@ -1098,7 +1099,7 @@ emp: /* none */
               code: nil,
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("EOI"),
-              lineno: 13,
+              lineno: 14,
             ),
             Rule.new(
               id: 1,
@@ -1109,7 +1110,7 @@ emp: /* none */
               code: nil,
               nullable: true,
               precedence_sym: nil,
-              lineno: 13,
+              lineno: 14,
             ),
             Rule.new(
               id: 2,
@@ -1119,7 +1120,7 @@ emp: /* none */
               code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $$; }")),
               nullable: true,
               precedence_sym: nil,
-              lineno: 16,
+              lineno: 17,
             ),
             Rule.new(
               id: 3,
@@ -1129,7 +1130,7 @@ emp: /* none */
               code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ @$; }")),
               nullable: true,
               precedence_sym: nil,
-              lineno: 18,
+              lineno: 19,
             ),
             Rule.new(
               id: 4,
@@ -1139,7 +1140,7 @@ emp: /* none */
               code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ @0; }")),
               nullable: true,
               precedence_sym: nil,
-              lineno: 20,
+              lineno: 21,
             ),
           ])
         end
@@ -1367,6 +1368,56 @@ class : keyword_class tSTRING keyword_end
         expect(codes[1]).to be nil
         expect(codes[2].references.count).to eq(1)
         expect(codes[2].references[0].tag.s_value).to eq("<l>")
+      end
+    end
+  end
+
+  describe "Grammar#validate!" do
+    describe "#validate_no_declared_type_reference!" do
+      it "raises error when referred nterm, term and action have no tag so that type is not declared" do
+        y = <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+    int val;
+}
+
+%token NUM
+
+%%
+
+program : stmt
+        ;
+
+stmt : {} {} expr { $$ = $1 + $<val>2; }
+     ;
+
+expr : expr1
+     | expr2
+     ;
+
+expr1 : NUM { $$ = $1; }
+      ;
+
+expr2 : expr '+' expr { $$ = $1 + $3; }
+      ;
+
+%%
+        INPUT
+
+        expect { Lrama::Parser.new(y).parse }.to raise_error(RuntimeError) do |e|
+          expect(e.message).to eq(<<~MSG.chomp)
+            $$ of 'stmt' has no declared type
+            $1 of 'stmt' has no declared type
+            $$ of 'expr1' has no declared type
+            $1 of 'expr1' has no declared type
+            $$ of 'expr2' has no declared type
+            $1 of 'expr2' has no declared type
+            $3 of 'expr2' has no declared type
+          MSG
+        end
       end
     end
   end
