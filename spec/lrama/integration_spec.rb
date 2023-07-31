@@ -81,7 +81,6 @@ int main() {
         %w['*'],
         %w[NUM val 3]
       ]
-      expected = "9"
 
       test_rules(<<~Rules, input, "=> 9")
   %union {
