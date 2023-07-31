@@ -1368,6 +1368,34 @@ class : keyword_class tSTRING keyword_end
         expect(codes[2].references.count).to eq(1)
         expect(codes[2].references[0].tag.s_value).to eq("<l>")
       end
+
+      it "reports reference without declared type" do
+        y = <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+  int i;
+}
+
+%token tSTRING
+%type <i> stmt
+
+%%
+
+stmt : tSTRING
+        {
+          $$ = $1;
+        }
+    ;
+%%
+        INPUT
+        grammar = Lrama::Parser.new(y).parse
+        stmt = grammar.rules[1]
+        expect(stmt.lhs.id.s_value).to eq("stmt")
+        expect { stmt.translated_code }.to raise_error("$1 of `stmt' has no declared type")
+      end
     end
   end
 end

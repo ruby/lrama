@@ -11,6 +11,13 @@ module Lrama
           referring_symbol.tag
         end
       end
+
+      def member
+        if tag = self.tag
+          # Omit "<>"
+          tag.s_value[1..-2]
+        end
+      end
     end
   end
 end

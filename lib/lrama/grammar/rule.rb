@@ -27,7 +27,7 @@ module Lrama
 
       def translated_code
         if code
-          code.translated_code
+          code.translated_code(lhs.id)
         else
           nil
         end

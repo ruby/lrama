@@ -8,10 +8,10 @@ module Lrama
       def_delegators "token_code", :s_value, :line, :column, :references
 
       # $$, $n, @$, @n is translated to C code
-      def translated_code
+      def translated_code(rule = nil)
         case type
         when :user_code
-          translated_user_code
+          translated_user_code(rule)
         when :initial_action
           translated_initial_action_code
         end
@@ -57,7 +57,7 @@ module Lrama
       # * ($$) yyval
       # * (@1) yylsp[i]
       # * (@$) yyloc
-      def translated_user_code
+      def translated_user_code(rule)
         t_code = s_value.dup
 
         references.reverse.each do |ref|
@@ -66,15 +66,17 @@ module Lrama
 
           case
           when ref.value == "$" && ref.type == :dollar # $$
-            # Omit "<>"
-            member = ref.tag.s_value[1..-2]
+            unless member = ref.member
+              raise "$$ of `#{rule.s_value}' has no declared type"
+            end
             str = "(yyval.#{member})"
           when ref.value == "$" && ref.type == :at # @$
             str = "(yyloc)"
           when ref.type == :dollar # $n
             i = -ref.position_in_rhs + ref.value
-            # Omit "<>"
-            member = ref.tag.s_value[1..-2]
+            unless member = ref.member
+              raise "$#{ref.value} of `#{rule.s_value}' has no declared type"
+            end
             str = "(yyvsp[#{i}].#{member})"
           when ref.type == :at # @n
             i = -ref.position_in_rhs + ref.value
