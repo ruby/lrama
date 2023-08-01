@@ -3,3 +3,4 @@
 .irbrc
 /Gemfile.lock
 /pkg/
+coverage/
