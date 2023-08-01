@@ -163,6 +163,7 @@ module Lrama
     # TODO: More validation methods
     def validate!
       validate_symbol_number_uniqueness!
+      validate_no_declared_type_reference!
     end
 
     def compute_nullable
@@ -608,6 +609,24 @@ module Lrama
       return if invalid.empty?
 
       raise "Symbol number is duplicated. #{invalid}"
+    end
+
+    def validate_no_declared_type_reference!
+      errors = []
+
+      rules.each do |rule|
+        next unless rule.code
+
+        rule.code.references.select do |ref|
+          ref.type == :dollar && !ref.tag
+        end.each do |ref|
+          errors << "$#{ref.value} of '#{rule.lhs.id.s_value}' has no declared type"
+        end
+      end
+
+      return if errors.empty?
+
+      raise errors.join("\n")
     end
   end
 end

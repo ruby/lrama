@@ -8,7 +8,13 @@ module Lrama
         if ex_tag
           ex_tag
         else
-          referring_symbol.tag
+          # FIXME: Remove this class check
+          if referring_symbol.is_a?(Symbol)
+            referring_symbol.tag
+          else
+            # Lrama::Lexer::Token (User_code) case
+            nil
+          end
         end
       end
     end
