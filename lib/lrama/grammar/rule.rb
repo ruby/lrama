@@ -12,13 +12,13 @@ module Lrama
       # Used by #user_actions
       def as_comment
         l = lhs.id.s_value
-        r = rhs.empty? ? "%empty" : rhs.map {|r| r.display_name }.join(" ")
+        r = rhs.empty? ? "%empty" : rhs.map(&:display_name).join(" ")
 
         "#{l}: #{r}"
       end
 
       def precedence
-        precedence_sym && precedence_sym.precedence
+        precedence_sym&.precedence
       end
 
       def initial_rule?
@@ -26,11 +26,7 @@ module Lrama
       end
 
       def translated_code
-        if code
-          code.translated_code
-        else
-          nil
-        end
+        code&.translated_code
       end
     end
   end
