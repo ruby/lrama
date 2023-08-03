@@ -93,7 +93,7 @@ int main() {
 
   %%
 
-  program : /* empty */
+  program : { (void)yynerrs; }
        | expr { printf("=> %d", $1); }
        ;
   expr : NUM
@@ -128,7 +128,7 @@ int main() {
   %%
 
   line: expr
-          { printf("=> %d", $expr); }
+          { (void)yynerrs; printf("=> %d", $expr); }
       ;
 
   expr[result]: NUM
