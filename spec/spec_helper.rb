@@ -1,3 +1,21 @@
+require "simplecov"
+
+SimpleCov.start do
+  track_files "lib/**/*.rb"
+
+  # Created Groups based on the folder structures
+  add_group "Grammar", "lib/lrama/grammar"
+  add_group "Lexer", "lib/lrama/lexer"
+  add_group "Parser", "lib/lrama/parser"
+  add_group "Report", "lib/lrama/report"
+  add_group "State", "lib/lrama/state/"
+  add_group "States", "lib/lrama/states/"
+
+  add_filter "spec/"
+
+  enable_coverage :branch
+end
+
 require "lrama"
 
 RSpec.configure do |config|
