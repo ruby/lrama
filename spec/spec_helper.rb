@@ -25,6 +25,13 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  # Randomize specs run order.
+  config.order = :random
+  Kernel.srand config.seed
+
+  # Allow to limit the run of the specs
+  config.filter_run_when_matching :focus
 end
 
 def fixture_path(file_name)
