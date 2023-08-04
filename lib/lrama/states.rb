@@ -120,7 +120,7 @@ module Lrama
     end
 
     def la
-      @la.transform_values |v|
+      @la.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
