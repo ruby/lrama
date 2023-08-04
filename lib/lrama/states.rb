@@ -102,43 +102,27 @@ module Lrama
     end
 
     def direct_read_sets
-      h = {}
-
-      @direct_read_sets.each do |k, v|
-        h[k] = bitmap_to_terms(v)
+      @direct_read_sets.transform_values do |v|
+        bitmap_to_terms(v)
       end
-
-      return h
     end
 
     def read_sets
-      h = {}
-
-      @read_sets.each do |k, v|
-        h[k] = bitmap_to_terms(v)
+      @read_sets.transform_values do |v|
+        bitmap_to_terms(v)
       end
-
-      return h
     end
 
     def follow_sets
-      h = {}
-
-      @follow_sets.each do |k, v|
-        h[k] = bitmap_to_terms(v)
+      @follow_sets.transform_values do |v|
+        bitmap_to_terms(v)
       end
-
-      return h
     end
 
     def la
-      h = {}
-
-      @la.each do |k, v|
-        h[k] = bitmap_to_terms(v)
+      @la.transform_values |v|
+        bitmap_to_terms(v)
       end
-
-      return h
     end
 
     private
