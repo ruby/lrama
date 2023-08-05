@@ -121,13 +121,13 @@ module Lrama
       # Output Files:
       opt.on('-h', '--header=[FILE]') {|v| @header = true; @header_file = v }
       opt.on('-d') { @header = true }
-      opt.on('-r', '--report=THINGS') {|v| @report = v.split(',') }
+      opt.on('-r', '--report=THINGS', Array) {|v| @report = v }
       opt.on('--report-file=FILE')    {|v| @report_file = v }
       opt.on('-v') {  } # Do nothing
       opt.on('-o', '--output=FILE')   {|v| @outfile = v }
 
       # Hidden
-      opt.on('--trace=THINGS') {|v| @trace = v.split(',') }
+      opt.on('--trace=THINGS', Array) {|v| @trace = v }
 
       # Error Recovery
       opt.on('-e') {|v| @error_recovery = true }
