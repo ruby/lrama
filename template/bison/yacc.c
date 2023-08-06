@@ -1281,7 +1281,7 @@ switch (yykind)
 }
 
 static repair_terms *
-yy_create_repair_terms(repairs *reps)
+yy_create_repair_terms(repairs *reps<%= output.user_formals %>)
 {
   repairs *r = reps;
   repair_terms *rep_terms;
@@ -1293,7 +1293,7 @@ yy_create_repair_terms(repairs *reps)
     r = r->prev_repair;
   }
 
-  rep_terms = (repair_terms *) malloc (sizeof (repair_terms) + sizeof (yy_term) * count);
+  rep_terms = (repair_terms *) YYMALLOC (sizeof (repair_terms) + sizeof (yy_term) * count);
   rep_terms->id = reps->id;
   rep_terms->length = count;
 
@@ -1309,41 +1309,41 @@ yy_create_repair_terms(repairs *reps)
 }
 
 static void
-yy_print_repairs(repairs *reps)
+yy_print_repairs(repairs *reps<%= output.user_formals %>)
 {
   repairs *r = reps;
 
-  fprintf (stderr,
+  YYDPRINTF ((stderr,
         "id: %d, repair_length: %d, repair_state: %d, prev_repair_id: %d\n",
-        reps->id, reps->repair_length, *reps->state, reps->prev_repair->id);
+        reps->id, reps->repair_length, *reps->state, reps->prev_repair->id));
 
   while (r->prev_repair)
   {
-    fprintf (stderr, "%s ", yysymbol_name (r->repair.term));
+    YYDPRINTF ((stderr, "%s ", yysymbol_name (r->repair.term)));
     r = r->prev_repair;
   }
 
-  fprintf (stderr, "\n");
+  YYDPRINTF ((stderr, "\n"));
 }
 
 static void
-yy_print_repair_terms(repair_terms *rep_terms)
+yy_print_repair_terms(repair_terms *rep_terms<%= output.user_formals %>)
 {
   for (int i = 0; i < rep_terms->length; i++)
-    fprintf (stderr, "%s ", yysymbol_name (rep_terms->terms[i].kind));
+    YYDPRINTF ((stderr, "%s ", yysymbol_name (rep_terms->terms[i].kind)));
 
-  fprintf (stderr, "\n");
+  YYDPRINTF ((stderr, "\n"));
 }
 
 static void
-yy_free_repairs(repairs *reps)
+yy_free_repairs(repairs *reps<%= output.user_formals %>)
 {
   while (reps)
     {
       repairs *r = reps;
       reps = reps->next;
-      free (r->states);
-      free (r);
+      YYFREE (r->states);
+      YYFREE (r);
     }
 }
 
@@ -1418,13 +1418,13 @@ yyrecover_errlab:
 }
 
 static repair_terms *
-yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
+yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals %>)
 {
   yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
   repair_terms *rep_terms = YY_NULLPTR;
   int count = 0;
 
-  repairs *head = (repairs *) malloc (sizeof (repairs));
+  repairs *head = (repairs *) YYMALLOC (sizeof (repairs));
   repairs *current = head;
   repairs *tail = head;
   YYPTRDIFF_T stack_length = yyssp - yyss + 1;
@@ -1432,7 +1432,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
   head->id = count;
   head->next = 0;
   head->stack_length = stack_length;
-  head->states = (yy_state_t *) malloc (sizeof (yy_state_t) * (stack_length));
+  head->states = (yy_state_t *) YYMALLOC (sizeof (yy_state_t) * (stack_length));
   head->state = head->states + (yyssp - yyss);
   YYCOPY (head->states, yyss, stack_length);
   head->repair_length = 0;
@@ -1459,11 +1459,11 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
                   if (current->repair_length + 1 > YYMAXREPAIR)
                     continue;
 
-                  repairs *new = (repairs *) malloc (sizeof (repairs));
+                  repairs *new = (repairs *) YYMALLOC (sizeof (repairs));
                   new->id = count;
                   new->next = 0;
                   new->stack_length = stack_length;
-                  new->states = (yy_state_t *) malloc (sizeof (yy_state_t) * (stack_length));
+                  new->states = (yy_state_t *) YYMALLOC (sizeof (yy_state_t) * (stack_length));
                   new->state = new->states + (current->state - current->states);
                   YYCOPY (new->states, current->states, current->state - current->states + 1);
                   new->repair_length = current->repair_length + 1;
@@ -1474,7 +1474,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
                   /* Process PDA assuming next token is yyx */
                   if (! yy_process_repairs (new, yyx))
                     {
-                      free (new);
+                      YYFREE (new);
                       continue;
                     }
 
@@ -1484,18 +1484,18 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
 
                   if (yyx == yytoken)
                     {
-                      rep_terms = yy_create_repair_terms (current);
-                      fprintf (stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length);
-                      yy_print_repairs (current);
-                      yy_print_repair_terms (rep_terms);
+                      rep_terms = yy_create_repair_terms (current<%= output.user_args %>);
+                      YYDPRINTF ((stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length));
+                      yy_print_repairs (current<%= output.user_args %>);
+                      yy_print_repair_terms (rep_terms<%= output.user_args %>);
 
                       goto done;
                     }
 
-                  fprintf (stderr,
+                  YYDPRINTF ((stderr,
                         "New repairs is enqueued. count: %d, yystate: %d, yyx: %d\n",
-                        count, yystate, yyx);
-                  yy_print_repairs (new);
+                        count, yystate, yyx));
+                  yy_print_repairs (new<%= output.user_args %>);
                 }
             }
         }
@@ -1505,11 +1505,11 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar)
 
 done:
 
-  yy_free_repairs(head);
+  yy_free_repairs(head<%= output.user_args %>);
 
   if (!rep_terms)
     {
-      fprintf (stderr, "repair_terms not found\n");
+      YYDPRINTF ((stderr, "repair_terms not found\n"));
     }
 
   return rep_terms;
@@ -1749,7 +1749,7 @@ yybackup:
           yychar = yychar_backup;
           YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
 
-          free (rep_terms);
+          YYFREE (rep_terms);
           rep_terms = 0;
           yychar_backup = 0;
         }
@@ -1981,7 +1981,7 @@ yyerrorlab:
 yyerrlab1:
 <%- if output.error_recovery -%>
   {
-    rep_terms = yyrecover (yyss, yyssp, yychar);
+    rep_terms = yyrecover (yyss, yyssp, yychar<%= output.user_args %>);
     if (rep_terms)
       {
         for (int i = 0; i < rep_terms->length; i++)
