@@ -47,7 +47,7 @@
 * Error Tolerance
   * [x] Corchuelo et al. algorithm with N = 1 (this means the next token when error is raised)
   * [x] Add new decl for error token semantic value initialization (%error-token)
-  * [ ] Use YYMALLOC & YYFREE
+  * [x] Use YYMALLOC & YYFREE
 * Lex state
 * CI
   * [x] Setup CI
