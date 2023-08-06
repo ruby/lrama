@@ -1220,7 +1220,11 @@ yydestruct (const char *yymsg,
 
 <%- if output.error_recovery -%>
 #ifndef YYMAXREPAIR
-# define YYMAXREPAIR 3
+# define YYMAXREPAIR(<%= output.parse_param_name %>) (3)
+#endif
+
+#ifndef YYERROR_RECOVERY_ENABLED
+# define YYERROR_RECOVERY_ENABLED(<%= output.parse_param_name %>) (1)
 #endif
 
 enum repair_type {
@@ -1456,7 +1460,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
             {
               if (yyx != YYSYMBOL_YYerror)
                 {
-                  if (current->repair_length + 1 > YYMAXREPAIR)
+                  if (current->repair_length + 1 > YYMAXREPAIR(<%= output.parse_param_name %>))
                     continue;
 
                   repairs *new = (repairs *) YYMALLOC (sizeof (repairs));
@@ -1726,32 +1730,35 @@ yybackup:
   /* Not known => get a lookahead token if don't already have one.  */
 
 <%- if output.error_recovery -%>
-  if (yychar == YYEMPTY && rep_terms)
+  if (YYERROR_RECOVERY_ENABLED(<%= output.parse_param_name %>))
     {
-
-      if (rep_terms_index < rep_terms->length)
+      if (yychar == YYEMPTY && rep_terms)
         {
-          YYDPRINTF ((stderr, "An error recovery token is used\n"));
-          yy_term term = rep_terms->terms[rep_terms_index];
-          yytoken = term.kind;
-          yylval = term.value;
-          yylloc = term.location;
-          yychar = yytranslate_inverted[yytoken];
-          YY_SYMBOL_PRINT ("Next error recovery token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
-          rep_terms_index++;
-        }
-      else
-        {
-          YYDPRINTF ((stderr, "Error recovery is completed\n"));
-          yytoken = term_backup.kind;
-          yylval = term_backup.value;
-          yylloc = term_backup.location;
-          yychar = yychar_backup;
-          YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
 
-          YYFREE (rep_terms);
-          rep_terms = 0;
-          yychar_backup = 0;
+          if (rep_terms_index < rep_terms->length)
+            {
+              YYDPRINTF ((stderr, "An error recovery token is used\n"));
+              yy_term term = rep_terms->terms[rep_terms_index];
+              yytoken = term.kind;
+              yylval = term.value;
+              yylloc = term.location;
+              yychar = yytranslate_inverted[yytoken];
+              YY_SYMBOL_PRINT ("Next error recovery token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
+              rep_terms_index++;
+            }
+          else
+            {
+              YYDPRINTF ((stderr, "Error recovery is completed\n"));
+              yytoken = term_backup.kind;
+              yylval = term_backup.value;
+              yylloc = term_backup.location;
+              yychar = yychar_backup;
+              YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
+
+              YYFREE (rep_terms);
+              rep_terms = 0;
+              yychar_backup = 0;
+            }
         }
     }
 <%- end -%>
@@ -1980,27 +1987,28 @@ yyerrorlab:
 `-------------------------------------------------------------*/
 yyerrlab1:
 <%- if output.error_recovery -%>
-  {
-    rep_terms = yyrecover (yyss, yyssp, yychar<%= output.user_args %>);
-    if (rep_terms)
-      {
-        for (int i = 0; i < rep_terms->length; i++)
-          {
-            yy_term *term = &rep_terms->terms[i];
-            yy_error_token_initialize (term->kind, &term->value, &term->location<%= output.user_args %>);
-          }
+  if (YYERROR_RECOVERY_ENABLED(<%= output.parse_param_name %>))
+    {
+      rep_terms = yyrecover (yyss, yyssp, yychar<%= output.user_args %>);
+      if (rep_terms)
+        {
+          for (int i = 0; i < rep_terms->length; i++)
+            {
+              yy_term *term = &rep_terms->terms[i];
+              yy_error_token_initialize (term->kind, &term->value, &term->location<%= output.user_args %>);
+            }
 
-        yychar_backup = yychar;
-        /* Can be packed into (the tail of) rep_terms? */
-        term_backup.kind = yytoken;
-        term_backup.value = yylval;
-        term_backup.location = yylloc;
-        rep_terms_index = 0;
-        yychar = YYEMPTY;
+          yychar_backup = yychar;
+          /* Can be packed into (the tail of) rep_terms? */
+          term_backup.kind = yytoken;
+          term_backup.value = yylval;
+          term_backup.location = yylloc;
+          rep_terms_index = 0;
+          yychar = YYEMPTY;
 
-        goto yybackup;
-      }
-  }
+          goto yybackup;
+        }
+    }
 <%- end -%>
   yyerrstatus = 3;      /* Each real token shifted decrements this.  */
 
