@@ -48,7 +48,7 @@ module Lrama
     end
 
     def add_error_token(ident_or_tags:, code:, lineno:)
-      @error_tokens << ErrorToken.new(ident_or_tags, code, lineno)
+      @error_tokens << ErrorToken.new(ident_or_tags: ident_or_tags, code: code, lineno: lineno)
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
