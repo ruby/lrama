@@ -67,7 +67,7 @@ module Lrama
       bison_list = %w[states itemsets lookaheads solved counterexamples cex all none]
       others = %w[verbose]
       list = bison_list + others
-      not_supported = %w[counterexamples cex none]
+      not_supported = %w[cex none]
       h = { grammar: true }
 
       report.each do |r|

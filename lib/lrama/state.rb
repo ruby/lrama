@@ -1,7 +1,8 @@
-require "lrama/state/conflict"
 require "lrama/state/reduce"
+require "lrama/state/reduce_reduce_conflict"
 require "lrama/state/resolved_conflict"
 require "lrama/state/shift"
+require "lrama/state/shift_reduce_conflict"
 
 module Lrama
   class State
@@ -100,6 +101,10 @@ module Lrama
       @term_transitions
     end
 
+    def transitions
+      term_transitions + nterm_transitions
+    end
+
     def selected_term_transitions
       term_transitions.select do |shift, next_state|
         !shift.not_selected
@@ -141,6 +146,10 @@ module Lrama
           r.default_reduction = true
         end
       end
+    end
+
+    def has_conflicts?
+      !@conflicts.empty?
     end
 
     def sr_conflicts
