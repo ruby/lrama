@@ -1309,30 +1309,30 @@ yy_create_repair_terms(repairs *reps<%= output.user_formals %>)
 }
 
 static void
-yy_print_repairs(repairs *reps)
+yy_print_repairs(repairs *reps<%= output.user_formals %>)
 {
   repairs *r = reps;
 
-  fprintf (stderr,
+  YYDPRINTF ((stderr,
         "id: %d, repair_length: %d, repair_state: %d, prev_repair_id: %d\n",
-        reps->id, reps->repair_length, *reps->state, reps->prev_repair->id);
+        reps->id, reps->repair_length, *reps->state, reps->prev_repair->id));
 
   while (r->prev_repair)
   {
-    fprintf (stderr, "%s ", yysymbol_name (r->repair.term));
+    YYDPRINTF ((stderr, "%s ", yysymbol_name (r->repair.term)));
     r = r->prev_repair;
   }
 
-  fprintf (stderr, "\n");
+  YYDPRINTF ((stderr, "\n"));
 }
 
 static void
-yy_print_repair_terms(repair_terms *rep_terms)
+yy_print_repair_terms(repair_terms *rep_terms<%= output.user_formals %>)
 {
   for (int i = 0; i < rep_terms->length; i++)
-    fprintf (stderr, "%s ", yysymbol_name (rep_terms->terms[i].kind));
+    YYDPRINTF ((stderr, "%s ", yysymbol_name (rep_terms->terms[i].kind)));
 
-  fprintf (stderr, "\n");
+  YYDPRINTF ((stderr, "\n"));
 }
 
 static void
@@ -1485,17 +1485,17 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
                   if (yyx == yytoken)
                     {
                       rep_terms = yy_create_repair_terms (current<%= output.user_args %>);
-                      fprintf (stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length);
-                      yy_print_repairs (current);
-                      yy_print_repair_terms (rep_terms);
+                      YYDPRINTF ((stderr, "repair_terms found. id: %d, length: %d\n", rep_terms->id, rep_terms->length));
+                      yy_print_repairs (current<%= output.user_args %>);
+                      yy_print_repair_terms (rep_terms<%= output.user_args %>);
 
                       goto done;
                     }
 
-                  fprintf (stderr,
+                  YYDPRINTF ((stderr,
                         "New repairs is enqueued. count: %d, yystate: %d, yyx: %d\n",
-                        count, yystate, yyx);
-                  yy_print_repairs (new);
+                        count, yystate, yyx));
+                  yy_print_repairs (new<%= output.user_args %>);
                 }
             }
         }
@@ -1509,7 +1509,7 @@ done:
 
   if (!rep_terms)
     {
-      fprintf (stderr, "repair_terms not found\n");
+      YYDPRINTF ((stderr, "repair_terms not found\n"));
     }
 
   return rep_terms;
