@@ -151,4 +151,47 @@ int main() {
       Rules
     end
   end
+
+  # TODO: Add test case for "(1+2"
+  describe "error_recovery" do
+    it "returns 6 for '(1+)'" do
+      # (1+) #=> 101
+      # '100' is complemented
+      input = [
+        %w['('],
+        %w[NUM val 1],
+        %w['+'],
+        %w[')'],
+      ]
+
+      test_rules(<<~Rules, input, "=> 101", command_args: %W[-e])
+  %union {
+      int val;
+  }
+  %token <val> NUM
+  %type <val> expr
+  %left '+' '-'
+  %left '*' '/'
+
+  %error-token {
+    $$ = 100;
+  } NUM
+
+  %%
+
+  program : { (void)yynerrs; }
+       | expr { printf("=> %d", $1); }
+       ;
+  expr : NUM
+       | expr '+' expr { $$ = $1 + $3; }
+       | expr '-' expr { $$ = $1 - $3; }
+       | expr '*' expr { $$ = $1 * $3; }
+       | expr '/' expr { $$ = $1 / $3; }
+       | '(' expr ')'  { $$ = $2; }
+       ;
+
+  %%
+      Rules
+    end
+  end
 end
