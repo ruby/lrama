@@ -3,7 +3,7 @@ require "open3"
 
 RSpec.describe "integration" do
   module IntegrationHelper
-    def test_rules(rules, input, expected)
+    def test_rules(rules, input, expected, command_args: [], debug: false)
       cases = input.each_with_index.map do |(token, union, semantic_value), i|
         str = ""
         str << "    case #{i}:\n"
@@ -11,8 +11,18 @@ RSpec.describe "integration" do
         str << "        return #{token};\n"
       end.join("\n")
 
+      yydebug_macro = ''
+      yydebug = ''
+
+      if debug
+        yydebug_macro = '#define YYDEBUG 1'
+        yydebug = 'yydebug = 1;'
+        command_args << "--report=all"
+      end
+
       grammar = <<~Grammar
 %{
+#{yydebug_macro}
 #include <stdio.h>
 
 #include "test.h"
@@ -42,6 +52,7 @@ static int yyerror(YYLTYPE *loc, const char *str) {
 }
 
 int main() {
+    #{yydebug}
     yyparse();
     return 0;
 }
@@ -54,7 +65,7 @@ int main() {
         c_path = File.dirname(f.path) + "/test.c"
         obj_path = File.dirname(f.path) + "/test"
 
-        Lrama::Command.new(%W[-d -o #{c_path} #{f.path}]).run
+        Lrama::Command.new(%W[-d -o #{c_path}] + command_args + %W[#{f.path}]).run
 
         `gcc -Wall #{c_path} -o #{obj_path}`
 
