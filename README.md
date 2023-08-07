@@ -72,7 +72,7 @@ This also requires Lrama to be able to run with only default gems and bundled ge
 
 1. Update `Lrama::VERSION`
 2. Release as a gem by `rake release`
-3. Update Lrama in ruby/ruby by `cp -r LEGAL.md MIT exe lib ruby/tool/lrama`
+3. Update Lrama in ruby/ruby by `cp -r LEGAL.md MIT exe lib template ruby/tool/lrama`
 4. Create new release on [GitHub](https://github.com/ruby/lrama/releases)
 
 ## License
