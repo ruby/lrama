@@ -1,11 +1,10 @@
+require "lrama/state/conflict"
 require "lrama/state/reduce"
-require "lrama/state/shift"
 require "lrama/state/resolved_conflict"
+require "lrama/state/shift"
 
 module Lrama
   class State
-    Conflict = Struct.new(:symbols, :reduce, :type, keyword_init: true)
-
     attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
                 :default_reduction_rule, :closure, :items
     attr_accessor :shifts, :reduces
