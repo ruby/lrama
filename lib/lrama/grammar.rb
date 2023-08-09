@@ -7,9 +7,9 @@ require "lrama/grammar/rule"
 require "lrama/grammar/symbol"
 require "lrama/grammar/union"
 require "lrama/lexer"
+require "lrama/type"
 
 module Lrama
-  Type = Struct.new(:id, :tag, keyword_init: true)
   Token = Lrama::Lexer::Token
 
   # Grammar is the result of parsing an input grammar file
