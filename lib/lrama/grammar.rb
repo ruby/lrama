@@ -1,3 +1,4 @@
+require "lrama/grammar/aux"
 require "lrama/grammar/code"
 require "lrama/grammar/error_token"
 require "lrama/grammar/precedence"
@@ -14,9 +15,6 @@ module Lrama
 
   # Grammar is the result of parsing an input grammar file
   class Grammar
-    # Grammar file information not used by States but by Output
-    Aux = Struct.new(:prologue_first_lineno, :prologue, :epilogue_first_lineno, :epilogue, keyword_init: true)
-
     attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
                   :printers, :error_tokens,
