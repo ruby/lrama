@@ -1,7 +1,8 @@
+require 'lrama/lexer/token/type'
+
 module Lrama
   class Lexer
-    class Token < Struct.new(:type, :s_value, :alias, keyword_init: true)
-      require 'lrama/lexer/token/type'
+    class Token
 
       attr_accessor :line, :column, :referred
       # For User_code
