@@ -1,3 +1,4 @@
+require "lrama/grammar/aux"
 require "lrama/grammar/code"
 require "lrama/grammar/error_token"
 require "lrama/grammar/precedence"
@@ -7,16 +8,13 @@ require "lrama/grammar/rule"
 require "lrama/grammar/symbol"
 require "lrama/grammar/union"
 require "lrama/lexer"
+require "lrama/type"
 
 module Lrama
-  Type = Struct.new(:id, :tag, keyword_init: true)
   Token = Lrama::Lexer::Token
 
   # Grammar is the result of parsing an input grammar file
   class Grammar
-    # Grammar file information not used by States but by Output
-    Aux = Struct.new(:prologue_first_lineno, :prologue, :epilogue_first_lineno, :epilogue, keyword_init: true)
-
     attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
                   :printers, :error_tokens,
