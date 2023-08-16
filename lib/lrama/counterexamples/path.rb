@@ -64,6 +64,6 @@ module Lrama
       def production?
         true
       end
-    end    
+    end
   end
 end

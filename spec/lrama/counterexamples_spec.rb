@@ -423,7 +423,7 @@ opt_nl : /* none */
         #
         #     '\n'  shift, and go to state 6
         #     '\n'           reduce using rule 3 (expr)
-        #     
+        #
         #     '+'            reduce using rule 3 (expr)
         #     '+'            reduce using rule 6 (opt_nl)
         state_10 = states.states[10]
