@@ -22,6 +22,20 @@ jobs:
           bundler-cache: true
       - run: bundle install
       - run: bundle exec rspec
+  test-windows:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['head']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - run: bundle install
+      - run: bundle exec rspec
   check-misc:
     runs-on: ubuntu-20.04
     steps:
