@@ -7,6 +7,7 @@
 module Lrama
   class Grammar
     class Symbol < Struct.new(:id, :alias_name, :number, :tag, :term, :token_id, :nullable, :precedence, :printer, :error_token, keyword_init: true)
+      attr_accessor :first_set, :first_set_bitmap
       attr_writer :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol
 
       def term?

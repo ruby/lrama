@@ -436,7 +436,7 @@ module Lrama
 
             # Can resolve only when both have prec
             unless shift_prec && reduce_prec
-              state.conflicts << State::Conflict.new(symbols: [sym], reduce: reduce, type: :shift_reduce)
+              state.conflicts << State::ShiftReduceConflict.new(symbols: [sym], shift: shift, reduce: reduce)
               next
             end
 
@@ -485,16 +485,21 @@ module Lrama
 
     def compute_reduce_reduce_conflicts
       states.each do |state|
-        a = []
+        count = state.reduces.count
 
-        state.reduces.each do |reduce|
-          next if reduce.look_ahead.nil?
+        for i in 0...count do
+          reduce1 = state.reduces[i]
+          next if reduce1.look_ahead.nil?
 
-          intersection = a & reduce.look_ahead
-          a += reduce.look_ahead
+          for j in (i+1)...count do
+            reduce2 = state.reduces[j]
+            next if reduce2.look_ahead.nil?
 
-          if !intersection.empty?
-            state.conflicts << State::Conflict.new(symbols: intersection.dup, reduce: reduce, type: :reduce_reduce)
+            intersection = reduce1.look_ahead & reduce2.look_ahead
+
+            if !intersection.empty?
+              state.conflicts << State::ReduceReduceConflict.new(symbols: intersection, reduce1: reduce1, reduce2: reduce2)
+            end
           end
         end
       end

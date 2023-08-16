@@ -213,6 +213,41 @@ module Lrama
       end
     end
 
+    def compute_first_set
+      terms.each do |term|
+        term.first_set = Set.new([term]).freeze
+        term.first_set_bitmap = Lrama::Bitmap.from_array([term.number])
+      end
+
+      nterms.each do |nterm|
+        nterm.first_set = Set.new([]).freeze
+        nterm.first_set_bitmap = Lrama::Bitmap.from_array([])
+      end
+
+      while true do
+        changed = false
+
+        @rules.each do |rule|
+          rule.rhs.each do |r|
+            if rule.lhs.first_set_bitmap | r.first_set_bitmap != rule.lhs.first_set_bitmap
+              changed = true
+              rule.lhs.first_set_bitmap = rule.lhs.first_set_bitmap | r.first_set_bitmap
+            end
+
+            break unless r.nullable
+          end
+        end
+
+        break unless changed
+      end
+
+      nterms.each do |nterm|
+        nterm.first_set = Lrama::Bitmap.to_array(nterm.first_set_bitmap).map do |number|
+          find_symbol_by_number!(number)
+        end.to_set
+      end
+    end
+
     def find_symbol_by_s_value(s_value)
       @symbols.find do |sym|
         sym.id.s_value == s_value

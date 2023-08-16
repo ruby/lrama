@@ -1,6 +1,7 @@
 require "lrama/bitmap"
 require "lrama/command"
 require "lrama/context"
+require "lrama/counterexamples"
 require "lrama/digraph"
 require "lrama/grammar"
 require "lrama/lexer"
