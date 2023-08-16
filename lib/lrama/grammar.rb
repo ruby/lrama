@@ -1,4 +1,4 @@
-require "lrama/grammar/aux"
+require "lrama/grammar/auxiliary"
 require "lrama/grammar/code"
 require "lrama/grammar/error_token"
 require "lrama/grammar/precedence"
@@ -36,7 +36,7 @@ module Lrama
       @error_symbol = nil
       @undef_symbol = nil
       @accept_symbol = nil
-      @aux = Aux.new
+      @aux = Auxiliary.new
 
       append_special_symbols
     end
