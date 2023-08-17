@@ -32,6 +32,7 @@ module Lrama
 
       warning = Lrama::Warning.new
       grammar = Lrama::Parser.new(@y.read).parse
+      @y.close if @y != STDIN
       states = Lrama::States.new(grammar, warning, trace_state: (@trace_opts[:automaton] || @trace_opts[:closure]))
       states.compute
       context = Lrama::Context.new(states)
