@@ -511,7 +511,7 @@ module Lrama
               sym.token_id = 11
             when "\""
               sym.token_id = 34
-            when "\'"
+            when "'"
               sym.token_id = 39
             when "\\\\"
               sym.token_id = 92
