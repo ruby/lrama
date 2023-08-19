@@ -202,8 +202,8 @@ module Lrama
             label2 = example.type == :shift_reduce ? "Reduce derivation" : "Second Reduce derivation"
 
             io << "    #{label0} conflict on token #{example.conflict_symbol.id.s_value}:\n"
-            io << "        #{example.path1_item.to_s}\n"
-            io << "        #{example.path2_item.to_s}\n"
+            io << "        #{example.path1_item}\n"
+            io << "        #{example.path2_item}\n"
             io << "      #{label1}\n"
             example.derivations1.render_strings_for_report.each do |str|
               io << "        #{str}\n"
@@ -277,7 +277,7 @@ module Lrama
 
             a.each do |state_id2, nterm_id2|
               n = @states.nterms.find {|n| n.token_id == nterm_id2 }
-              io << "    (Rule: #{rule.to_s}) -> (State #{state_id2}, #{n.id.s_value})\n"
+              io << "    (Rule: #{rule}) -> (State #{state_id2}, #{n.id.s_value})\n"
             end
           end
           io << "\n"
