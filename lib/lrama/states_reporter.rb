@@ -197,7 +197,7 @@ module Lrama
           # Report counterexamples
           examples = cex.compute(state)
           examples.each do |example|
-            label0 = example.type == :shift_reduce ? "shift/reduce"  : "reduce/reduce"
+            label0 = example.type == :shift_reduce ? "shift/reduce" : "reduce/reduce"
             label1 = example.type == :shift_reduce ? "Shift derivation"  : "First Reduce derivation"
             label2 = example.type == :shift_reduce ? "Reduce derivation" : "Second Reduce derivation"
 
