@@ -1,6 +1,6 @@
 RSpec.describe Lrama::Command do
   describe "#run" do
-    describe "a grammar file is specified " do
+    describe "a grammar file is specified" do
       it "ends successfully" do
         command = Lrama::Command.new([fixture_path("command/basic.y")])
         expect(command.run).to be_nil

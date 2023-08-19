@@ -648,7 +648,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
       ])
     end
 
-    it "action in the middle of RHS " do
+    it "action in the middle of RHS" do
       y = header + <<~INPUT
 %%
 
@@ -823,7 +823,7 @@ class : keyword_class
       end
     end
 
-    describe " ' in user code" do
+    describe "' in user code" do
       it do
         y = header + <<~INPUT
 %%
