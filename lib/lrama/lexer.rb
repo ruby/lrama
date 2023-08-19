@@ -30,7 +30,6 @@ module Lrama
       @grammar_rules = []
       @epilogue = []
 
-      #
       @bison_declarations_tokens = []
       @grammar_rules_tokens = []
 
