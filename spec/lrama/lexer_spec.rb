@@ -212,7 +212,6 @@ RSpec.describe Lrama::Lexer do
         T.new(type: T::Ident, s_value: "strings_2"),
         T.new(type: T::Semicolon, s_value: ";"),
 
-
         T.new(type: T::Ident_Colon, s_value: "class"),
         T.new(type: T::Ident, s_value: "keyword_class"),
         T.new(type: T::Ident, s_value: "tSTRING"),
@@ -242,11 +241,9 @@ RSpec.describe Lrama::Lexer do
         T.new(type: T::Char, s_value: "'>'"),
         T.new(type: T::Semicolon, s_value: ";"),
 
-
         T.new(type: T::Ident_Colon, s_value: "strings_1"),
         T.new(type: T::Ident, s_value: "string_1"),
         T.new(type: T::Semicolon, s_value: ";"),
-
 
         T.new(type: T::Ident_Colon, s_value: "strings_2"),
         T.new(type: T::Ident, s_value: "string_1"),
@@ -255,17 +252,14 @@ RSpec.describe Lrama::Lexer do
         T.new(type: T::Ident, s_value: "string_2"),
         T.new(type: T::Semicolon, s_value: ";"),
 
-
         T.new(type: T::Ident_Colon, s_value: "string_1"),
         T.new(type: T::Ident, s_value: "string"),
         T.new(type: T::Semicolon, s_value: ";"),
-
 
         T.new(type: T::Ident_Colon, s_value: "string_2"),
         T.new(type: T::Ident, s_value: "string"),
         T.new(type: T::Char, s_value: "'+'"),
         T.new(type: T::Semicolon, s_value: ";"),
-
 
         T.new(type: T::Ident_Colon, s_value: "string"),
         T.new(type: T::Ident, s_value: "tSTRING"),

@@ -310,7 +310,6 @@ module Lrama
       end || (raise "Nterm not found: #{id}")
     end
 
-
     def append_special_symbols
       # YYEMPTY (token_id: -2, number: -2) is added when a template is evaluated
       # term = add_term(id: Token.new(Token::Ident, "YYEMPTY"), token_id: -2)

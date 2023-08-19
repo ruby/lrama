@@ -110,7 +110,6 @@ module Lrama
         end
         io << "\n"
 
-
         # Report shifts
         tmp = state.term_transitions.select do |shift, _|
           !shift.not_selected
@@ -122,7 +121,6 @@ module Lrama
           io << "    #{term.display_name.ljust(max_len)}  shift, and go to state #{state_id}\n"
         end
         io << "\n" if !tmp.empty?
-
 
         # Report error caused by %nonassoc
         nl = false
@@ -137,7 +135,6 @@ module Lrama
           io << "    #{name.ljust(max_len)}  error (nonassociative)\n"
         end
         io << "\n" if !tmp.empty?
-
 
         # Report reduces
         nl = false
@@ -171,7 +168,6 @@ module Lrama
         end
         io << "\n" if nl
 
-
         # Report nonterminal transitions
         tmp = []
         max_len = 0
@@ -188,7 +184,6 @@ module Lrama
           io << "    #{nterm.id.s_value.ljust(max_len)}  go to state #{state_id}\n"
         end
         io << "\n" if !tmp.empty?
-
 
         if solved
           # Report conflict resolutions
@@ -234,7 +229,6 @@ module Lrama
           end
           io << "\n"
 
-
           # Report reads_relation
           io << "  [Reads Relation]\n"
           @states.nterms.each do |nterm|
@@ -247,7 +241,6 @@ module Lrama
             end
           end
           io << "\n"
-
 
           # Report read_sets
           io << "  [Read sets]\n"
@@ -263,7 +256,6 @@ module Lrama
           end
           io << "\n"
 
-
           # Report includes_relation
           io << "  [Includes Relation]\n"
           @states.nterms.each do |nterm|
@@ -276,7 +268,6 @@ module Lrama
             end
           end
           io << "\n"
-
 
           # Report lookback_relation
           io << "  [Lookback Relation]\n"
@@ -291,7 +282,6 @@ module Lrama
           end
           io << "\n"
 
-
           # Report follow_sets
           io << "  [Follow sets]\n"
           follow_sets = @states.follow_sets
@@ -305,7 +295,6 @@ module Lrama
             end
           end
           io << "\n"
-
 
           # Report LA
           io << "  [Look-Ahead Sets]\n"
@@ -325,7 +314,6 @@ module Lrama
           end
           io << "\n" if !tmp.empty?
         end
-
 
         # End of Report State
         io << "\n"
