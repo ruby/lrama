@@ -314,8 +314,6 @@ module Lrama
           str << ss.getch
           next
         end
-
-        str << ss[0]
       end
 
       line # Reach to end of input
