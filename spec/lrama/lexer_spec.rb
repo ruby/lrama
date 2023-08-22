@@ -336,7 +336,8 @@ lambda: tLAMBDA
         tARGS
           { 5; }
         tBODY
-          { $2; $3; $5; $7; $$ = 1; }
+          { $2; $3; $5; $7; $10; $$ = 1;
+            @2; @3; @5; @7; @10; @$ = 1; }
         ;
 %%
       INPUT
@@ -362,7 +363,14 @@ lambda: tLAMBDA
           [:dollar, 3, nil, 6, 7],
           [:dollar, 5, nil, 10, 11],
           [:dollar, 7, nil, 14, 15],
-          [:dollar, "$", nil, 18, 19]
+          [:dollar, 10, nil, 18, 20],
+          [:dollar, "$", nil, 23, 24],
+          [:at, 2, nil, 43, 44],
+          [:at, 3, nil, 47, 48],
+          [:at, 5, nil, 51, 52],
+          [:at, 7, nil, 55, 56],
+          [:at, 10, nil, 59, 61],
+          [:at, "$", nil, 64, 65],
         ],
       ])
     end
