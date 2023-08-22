@@ -515,9 +515,9 @@ module Lrama
 
         state.default_reduction_rule = state.reduces.map do |r|
           [r.rule, r.rule.id, (r.look_ahead || []).count]
-        end.sort_by do |rule, rule_id, count|
+        end.min_by do |rule, rule_id, count|
           [-count, rule_id]
-        end.first.first
+        end.first
       end
     end
 

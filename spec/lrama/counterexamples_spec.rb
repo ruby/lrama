@@ -114,7 +114,6 @@ num  : digit
                                                                       7:   • digit
         STR
 
-
         # State 16
         #
         #     6 expr: expr • '+' expr
@@ -162,7 +161,6 @@ num  : digit
                 6:  expr                 '+' expr
                     6: expr '+' expr  •
         STR
-
 
         # State 17
         #
