@@ -223,7 +223,7 @@ module Lrama
           references << [:dollar, ss[2], tag, str.length, str.length + ss[0].length - 1]
         when ss.scan(/@\$/) # @$
           references << [:at, "$", nil, str.length, str.length + ss[0].length - 1]
-        when ss.scan(/@(\d)+/) # @1
+        when ss.scan(/@(\d+)/) # @1
           references << [:at, Integer(ss[1]), nil, str.length, str.length + ss[0].length - 1]
         when ss.scan(/{/)
           brace_count += 1
