@@ -5,7 +5,6 @@ module Lrama
     def initialize(argv)
       @argv = argv
 
-      @version = nil
       @skeleton = "bison/yacc.c"
       @header = false
       @header_file = nil
@@ -22,11 +21,6 @@ module Lrama
 
     def run
       parse_option
-
-      if @version
-        puts Lrama::VERSION
-        exit 0
-      end
 
       Report::Duration.enable if @trace_opts[:time]
 
@@ -113,7 +107,7 @@ module Lrama
       opt = OptionParser.new
 
       # opt.on('-h') {|v| p v }
-      opt.on('-V', '--version') {|v| @version = true }
+      opt.on('-V', '--version') {|v| puts "lrama #{Lrama::VERSION}"; exit 0 }
 
       # Tuning the Parser
       opt.on('-S', '--skeleton=FILE') {|v| @skeleton = v }

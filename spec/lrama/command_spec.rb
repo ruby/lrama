@@ -1,4 +1,15 @@
+require "open3"
+
 RSpec.describe Lrama::Command do
+  describe "version option" do
+    it "print Lrama version and exit" do
+      result = Open3.popen3("ruby", exe_path("lrama"), "--version") do |stdin, stdout, stderr, wait_thr|
+        stdout.read
+      end
+      expect(result).to eq("lrama #{Lrama::VERSION}\n")
+    end
+  end
+
   describe "#run" do
     describe "a grammar file is specified" do
       it "ends successfully" do
