@@ -154,6 +154,8 @@ module Lrama
           tokens << create_token(Token::P_left, ss[0], line, ss.pos - column)
         when ss.scan(/%right/)
           tokens << create_token(Token::P_right, ss[0], line, ss.pos - column)
+        when ss.scan(/%precedence/)
+          tokens << create_token(Token::P_precedence, ss[0], line, ss.pos - column)
         when ss.scan(/%prec/)
           tokens << create_token(Token::P_prec, ss[0], line, ss.pos - column)
         when ss.scan(/{/)

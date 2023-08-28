@@ -1157,8 +1157,8 @@ State 8
       end
     end
 
-    describe "conflict happens on nonassoc operator" do
-      it "resolved as error" do
+    describe "conflict happens on %nonassoc operator" do
+      it "resolved as 'run-time' error" do
         y = <<~INPUT
 %{
 // Prologue
@@ -1248,6 +1248,137 @@ State 6
     $default  reduce using rule 2 (expr)
 
     Conflict between rule 2 and token "=" resolved as an error (%nonassoc "=").
+
+
+        STR
+      end
+    end
+
+    describe "conflict happens on %precedence operator" do
+      it "resolved as 'run-time' error so that conflict is kept" do
+        y = <<~INPUT
+%{
+// Prologue
+%}
+
+%token NUM
+
+%precedence '+'
+%precedence '*'
+
+%%
+
+program: expr ;
+
+expr: expr '+' expr
+    | expr '*' expr
+    | NUM
+    ;
+
+%%
+        INPUT
+        grammar = Lrama::Parser.new(y).parse
+        states = Lrama::States.new(grammar, warning)
+        states.compute
+
+        str = ""
+        states.reporter.report(str, states: true, solved: true)
+
+        expect(str).to eq(<<~STR)
+State 7 conflicts: 1 shift/reduce
+State 8 conflicts: 1 shift/reduce
+
+
+State 0
+
+    0 $accept: • program "end of file"
+
+    NUM  shift, and go to state 1
+
+    program  go to state 2
+    expr     go to state 3
+
+
+State 1
+
+    4 expr: NUM •
+
+    $default  reduce using rule 4 (expr)
+
+
+State 2
+
+    0 $accept: program • "end of file"
+
+    "end of file"  shift, and go to state 4
+
+
+State 3
+
+    1 program: expr •
+    2 expr: expr • '+' expr
+    3     | expr • '*' expr
+
+    '+'  shift, and go to state 5
+    '*'  shift, and go to state 6
+
+    $default  reduce using rule 1 (program)
+
+
+State 4
+
+    0 $accept: program "end of file" •
+
+    $default  accept
+
+
+State 5
+
+    2 expr: expr '+' • expr
+
+    NUM  shift, and go to state 1
+
+    expr  go to state 7
+
+
+State 6
+
+    3 expr: expr '*' • expr
+
+    NUM  shift, and go to state 1
+
+    expr  go to state 8
+
+
+State 7
+
+    2 expr: expr • '+' expr
+    2     | expr '+' expr •
+    3     | expr • '*' expr
+
+    '+'  shift, and go to state 5
+    '*'  shift, and go to state 6
+
+    "end of file"  reduce using rule 2 (expr)
+    '+'            reduce using rule 2 (expr)
+    '*'            reduce using rule 2 (expr)
+
+    Conflict between rule 2 and token '*' resolved as shift ('+' < '*').
+
+
+State 8
+
+    2 expr: expr • '+' expr
+    3     | expr • '*' expr
+    3     | expr '*' expr •
+
+    '*'  shift, and go to state 6
+
+    "end of file"  reduce using rule 3 (expr)
+    '+'            reduce using rule 3 (expr)
+    '*'            reduce using rule 3 (expr)
+
+    Conflict between rule 3 and token '+' resolved as reduce ('+' < '*').
 
 
         STR

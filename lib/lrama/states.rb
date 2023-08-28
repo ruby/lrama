@@ -455,6 +455,11 @@ module Lrama
 
             # shift_prec == reduce_prec, then check associativity
             case sym.precedence.type
+            when :precedence
+              # %precedence only specifies precedence and not specify associativity
+              # then a conflict is unresolved if precedence is same.
+              state.conflicts << State::ShiftReduceConflict.new(symbols: [sym], shift: shift, reduce: reduce)
+              next
             when :right
               # Shift is selected
               state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift, same_prec: true)

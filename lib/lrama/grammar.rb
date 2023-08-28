@@ -103,6 +103,10 @@ module Lrama
       set_precedence(sym, Precedence.new(type: :right, precedence: precedence))
     end
 
+    def add_precedence(sym, precedence)
+      set_precedence(sym, Precedence.new(type: :precedence, precedence: precedence))
+    end
+
     def set_precedence(sym, precedence)
       raise "" if sym.nterm?
       sym.precedence = precedence
