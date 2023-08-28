@@ -25,6 +25,10 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  # Allow to limit the run of the specs
+  # NOTE: Please do not commit the filter option.
+  # config.filter_run_when_matching :focus
 end
 
 def fixture_path(file_name)
