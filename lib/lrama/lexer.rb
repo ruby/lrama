@@ -226,6 +226,8 @@ module Lrama
           references << [:at, "$", nil, str.length, str.length + ss[0].length - 1]
         when ss.scan(/@(\d+)/) # @1
           references << [:at, Integer(ss[1]), nil, str.length, str.length + ss[0].length - 1]
+        when ss.scan(/@([a-zA-Z_.][-a-zA-Z0-9_.]*)/) # @foo, @expr
+          references << [:at, ss[1], nil, str.length, str.length + ss[0].length - 1]
         when ss.scan(/{/)
           brace_count += 1
         when ss.scan(/}/)

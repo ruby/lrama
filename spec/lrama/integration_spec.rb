@@ -212,8 +212,46 @@ int main() {
         %w[NUM val 2],
         %w['+'],
       ]
+      cases = generate_lexer_body(input)
 
-      test_rules(<<~Rules, input, "=> 3")
+      test_grammar(<<~Grammar, "expr[left]: 0.0-0.1. expr[right]: 1.0-1.1. line: 0.0-2.1. => 3")
+  %{
+  #include <stdio.h>
+
+  #include "test.h"
+
+  typedef struct code_location {
+    int first_line;
+    int first_column;
+    int last_line;
+    int last_column;
+  } code_location_t;
+
+  #define YYLTYPE code_location_t
+  #define YYLLOC_DEFAULT(Current, Rhs, N)                           \
+    do                                                              \
+      if (N)                                                        \
+        {                                                           \
+          (Current).first_line = YYRHSLOC(Rhs, 1).first_line;       \
+          (Current).first_column = YYRHSLOC(Rhs, 1).first_column;   \
+          (Current).last_line = YYRHSLOC(Rhs, N).last_line;         \
+          (Current).last_column = YYRHSLOC(Rhs, N).last_column;     \
+        }                                                           \
+      else                                                          \
+        {                                                           \
+          (Current).first_line = YYRHSLOC(Rhs, 0).last_line;        \
+          (Current).first_column = YYRHSLOC(Rhs, 0).last_column;    \
+          (Current).last_line = YYRHSLOC(Rhs, 0).last_line;         \
+          (Current).last_column = YYRHSLOC(Rhs, 0).last_column;     \
+        }                                                           \
+    while (0)
+
+  static int yylex(YYSTYPE *val, YYLTYPE *loc);
+  static void print_location(YYLTYPE *loc);
+  static int yyerror(YYLTYPE *loc, const char *str);
+
+  %}
+
   %union {
       int val;
   }
@@ -223,16 +261,62 @@ int main() {
   %%
 
   line: expr
-          { (void)yynerrs; printf("=> %d", $expr); }
+          {
+            (void)yynerrs;
+
+            printf("line: ");
+            print_location(&@expr);
+
+            printf("=> %d", $expr);
+          }
       ;
 
   expr[result]: NUM
               | expr[left] expr[right] '+'
-                  { $result = $left + $right; }
+                  {
+                    printf("expr[left]: ");
+                    print_location(&@left);
+
+                    printf("expr[right]: ");
+                    print_location(&@right);
+
+                    $result = $left + $right;
+                  }
               ;
 
   %%
-      Rules
+
+  int c = 0;
+
+  static int yylex(YYSTYPE *yylval, YYLTYPE *loc) {
+      loc->first_line = c;
+      loc->first_column = 0;
+      loc->last_line = c;
+      loc->last_column = 1;
+
+      switch (c++) {
+  #{cases}
+      default:
+          // End of Input
+          return -1;
+      }
+  }
+
+  static void print_location(YYLTYPE *loc) {
+    printf("%d.%d-%d.%d. ", loc->first_line, loc->first_column, loc->last_line, loc->last_column);
+  }
+
+  static int yyerror(YYLTYPE *loc, const char *str) {
+      fprintf(stderr, "parse error: %s\\n", str);
+      return 0;
+  }
+
+  int main() {
+      yyparse();
+      return 0;
+  }
+
+      Grammar
     end
   end
 
