@@ -214,7 +214,7 @@ int main() {
       ]
       cases = generate_lexer_body(input)
 
-      test_grammar(<<~Grammar, "expr[left]: 0.0-0.1. expr[right]: 1.0-1.1. line: 0.0-2.1. => 3")
+      test_grammar(<<~Grammar, "expr[ex-left] (0): 0.0-0.1. expr[ex.right] (1): 1.0-1.1. line (0): 0.0-2.1. => 3")
   %{
   #include <stdio.h>
 
@@ -264,7 +264,7 @@ int main() {
           {
             (void)yynerrs;
 
-            printf("line: ");
+            printf("line (%d): ", @expr.first_line);
             print_location(&@expr);
 
             printf("=> %d", $expr);
@@ -272,15 +272,15 @@ int main() {
       ;
 
   expr[result]: NUM
-              | expr[left] expr[right] '+'
+              | expr[ex-left] expr[ex.right] '+'
                   {
-                    printf("expr[left]: ");
-                    print_location(&@left);
+                    printf("expr[ex-left] (%d): ", @[ex-left].first_line);
+                    print_location(&@[ex-left]);
 
-                    printf("expr[right]: ");
-                    print_location(&@right);
+                    printf("expr[ex.right] (%d): ", @[ex.right].first_line);
+                    print_location(&@[ex.right]);
 
-                    $result = $left + $right;
+                    $result = $[ex-left] + $[ex.right];
                   }
               ;
 

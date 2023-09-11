@@ -28,6 +28,7 @@ module Lrama
               if lhs.referred_by?(ref_name)
                 '$'
               else
+                # TODO: Better error message for wrong reference
                 rhs.find_index {|token| token.referred_by?(ref_name) } + 1
               end
             [ref[0], value, ref[2], ref[3], ref[4]]
