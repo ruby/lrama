@@ -1277,6 +1277,43 @@ expr[result]: NUM
             ])
           end
         end
+
+        context "includes invalid named references" do
+          it "raise an error" do
+            y = <<~INPUT
+%{
+// Prologue
+%}
+
+%union {
+  int i;
+}
+
+%token NUM
+%type <val> expr
+
+%%
+
+input       : /* empty */
+            | input line
+;
+
+line        : '\\n'
+            | expr '\\n'
+                { printf("\\t%.10g\\n", $expr); }
+;
+
+expr[result]: NUM
+            | expr[left] expr[right] '+'
+                { $results = $left + $right; }
+            | expr expr '-'
+                { $$ = $1 - $2; }
+;
+            INPUT
+
+            expect { Lrama::Parser.new(y).parse }.to raise_error("'results' is invalid name.")
+          end
+        end
       end
     end
   end
