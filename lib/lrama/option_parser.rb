@@ -5,14 +5,15 @@ module Lrama
   class OptionParser
     def initialize
       @options = Options.new
+      @trace = []
+      @report = []
     end
 
     def parse(argv)
       parse_by_option_parser(argv)
 
-      @options.trace_opts = validate_trace(@options.trace)
-      @options.report_opts = validate_report(@options.report)
-
+      @options.trace_opts = validate_trace(@trace)
+      @options.report_opts = validate_report(@report)
       @options.grammar_file = argv.shift
 
       if !@options.grammar_file
@@ -25,7 +26,7 @@ module Lrama
         @options.y = File.open(@options.grammar_file, 'r')
       end
 
-      if !@options.report.empty? && @options.report_file.nil? && @options.grammar_file
+      if !@report.empty? && @options.report_file.nil? && @options.grammar_file
         @options.report_file = File.dirname(@options.grammar_file) + "/" + File.basename(@options.grammar_file, ".*") + ".output"
       end
 
@@ -58,10 +59,10 @@ module Lrama
         o.separator 'Output:'
         o.on('-h', '--header=[FILE]', 'also produce a header file named FILE') {|v| @options.header = true; @options.header_file = v }
         o.on('-d', 'also produce a header file') { @options.header = true }
-        o.on('-r', '--report=THINGS', Array, 'also produce details on the automaton') {|v| @options.report = v }
+        o.on('-r', '--report=THINGS', Array, 'also produce details on the automaton') {|v| @report = v }
         o.on('--report-file=FILE', 'also produce details on the automaton output to a file named FILE') {|v| @options.report_file = v }
-        o.on('-o', '--output=FILE', 'leave output to FILE')   {|v| @options.outfile = v }
-        o.on('--trace=THINGS', Array, 'also output trace logs at runtime') {|v| @options.trace = v }
+        o.on('-o', '--output=FILE', 'leave output to FILE') {|v| @options.outfile = v }
+        o.on('--trace=THINGS', Array, 'also output trace logs at runtime') {|v| @trace = v }
         o.on('-v', 'reserved, do nothing') { }
         o.separator ''
         o.separator 'Error Recovery:'
