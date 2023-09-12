@@ -8,30 +8,7 @@ module Lrama
     end
 
     def parse(argv)
-      opt = ::OptionParser.new
-
-      # opt.on('-h') {|v| p v }
-      opt.on('-V', '--version') {|v| puts "lrama #{Lrama::VERSION}"; exit 0 }
-
-      # Tuning the Parser
-      opt.on('-S', '--skeleton=FILE') {|v| @options.skeleton = v }
-      opt.on('-t') {  } # Do nothing
-
-      # Output Files:
-      opt.on('-h', '--header=[FILE]') {|v| @options.header = true; @options.header_file = v }
-      opt.on('-d') { @options.header = true }
-      opt.on('-r', '--report=THINGS', Array) {|v| @options.report = v }
-      opt.on('--report-file=FILE')    {|v| @options.report_file = v }
-      opt.on('-v') {  } # Do nothing
-      opt.on('-o', '--output=FILE')   {|v| @options.outfile = v }
-
-      # Hidden
-      opt.on('--trace=THINGS', Array) {|v| @options.trace = v }
-
-      # Error Recovery
-      opt.on('-e') {|v| @options.error_recovery = true }
-
-      opt.parse!(argv)
+      parse_by_option_parser(argv)
 
       @options.trace_opts = validate_trace(@options.trace)
       @options.report_opts = validate_report(@options.report)
@@ -65,6 +42,34 @@ module Lrama
     end
 
     private
+
+    def parse_by_option_parser(argv)
+      ::OptionParser.new do |o|
+
+        # opt.on('-h') {|v| p v }
+        o.on('-V', '--version') {|v| puts "lrama #{Lrama::VERSION}"; exit 0 }
+
+        # Tuning the Parser
+        o.on('-S', '--skeleton=FILE') {|v| @options.skeleton = v }
+        o.on('-t') {  } # Do nothing
+
+        # Output Files:
+        o.on('-h', '--header=[FILE]') {|v| @options.header = true; @options.header_file = v }
+        o.on('-d') { @options.header = true }
+        o.on('-r', '--report=THINGS', Array) {|v| @options.report = v }
+        o.on('--report-file=FILE')    {|v| @options.report_file = v }
+        o.on('-v') {  } # Do nothing
+        o.on('-o', '--output=FILE')   {|v| @options.outfile = v }
+
+        # Hidden
+        o.on('--trace=THINGS', Array) {|v| @options.trace = v }
+
+        # Error Recovery
+        o.on('-e') {|v| @options.error_recovery = true }
+
+        o.parse!(argv)
+      end
+    end
 
     def validate_report(report)
       bison_list = %w[states itemsets lookaheads solved counterexamples cex all none]
