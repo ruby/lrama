@@ -45,28 +45,32 @@ module Lrama
 
     def parse_by_option_parser(argv)
       ::OptionParser.new do |o|
+        o.banner = <<~BANNER
+          Lrama is LALR (1) parser generator written by Ruby.
 
-        # opt.on('-h') {|v| p v }
-        o.on('-V', '--version') {|v| puts "lrama #{Lrama::VERSION}"; exit 0 }
-
-        # Tuning the Parser
-        o.on('-S', '--skeleton=FILE') {|v| @options.skeleton = v }
-        o.on('-t') {  } # Do nothing
-
-        # Output Files:
-        o.on('-h', '--header=[FILE]') {|v| @options.header = true; @options.header_file = v }
-        o.on('-d') { @options.header = true }
-        o.on('-r', '--report=THINGS', Array) {|v| @options.report = v }
-        o.on('--report-file=FILE')    {|v| @options.report_file = v }
-        o.on('-v') {  } # Do nothing
-        o.on('-o', '--output=FILE')   {|v| @options.outfile = v }
-
-        # Hidden
-        o.on('--trace=THINGS', Array) {|v| @options.trace = v }
-
-        # Error Recovery
-        o.on('-e') {|v| @options.error_recovery = true }
-
+          Usage: #{$0} [options] FILE
+        BANNER
+        o.separator ''
+        o.separator 'Tuning the Parser:'
+        o.on('-S', '--skeleton=FILE', 'specify the skeleton to use') {|v| @options.skeleton = v }
+        o.on('-t', 'reserved, do nothing') { }
+        o.separator ''
+        o.separator 'Output:'
+        o.on('-h', '--header=[FILE]', 'also produce a header file named FILE') {|v| @options.header = true; @options.header_file = v }
+        o.on('-d', 'also produce a header file') { @options.header = true }
+        o.on('-r', '--report=THINGS', Array, 'also produce details on the automaton') {|v| @options.report = v }
+        o.on('--report-file=FILE', 'also produce details on the automaton output to a file named FILE') {|v| @options.report_file = v }
+        o.on('-o', '--output=FILE', 'leave output to FILE')   {|v| @options.outfile = v }
+        o.on('--trace=THINGS', Array, 'also output trace logs at runtime') {|v| @options.trace = v }
+        o.on('-v', 'reserved, do nothing') { }
+        o.separator ''
+        o.separator 'Error Recovery:'
+        o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }
+        o.separator ''
+        o.separator 'Other options:'
+        o.on('-V', '--version', "output version information and exit") {|v| puts "lrama #{Lrama::VERSION}"; exit 0 }
+        o.on('--help', "display this help and exit") {|v| puts o; exit 0 }
+        o.separator ''
         o.parse!(argv)
       end
     end
