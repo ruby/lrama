@@ -7,6 +7,8 @@ module Lrama
 
     def initialize(text)
       @scanner = StringScanner.new(text)
+      @head = @scanner.pos
+      @line = 1
       @status = :initial
       @end_symbol = nil
     end
@@ -20,23 +22,24 @@ module Lrama
       end
     end
 
-    def col
-      @scanner.pos
+    def line
+      @line
     end
 
-    def row
-      @scanner.pos
+    def col
+      @scanner.pos - @head + 1
     end
 
     def lex_token
       while !@scanner.eos? do
         case
+        when @scanner.scan(/\n/)
+          @line += 1
+          @head = @scanner.pos + 1
         when @scanner.scan(/\s+/)
-          pp @scanner.matched
-          next
-        when @scanner.scan(/\/\*[\s\S]*?\*\//)
-          pp @scanner.matched
-          next
+          # noop
+        when @scanner.scan(/\/\*/)
+          lex_comment
         when @scanner.scan(/%{/)
           return [@scanner.matched, @scanner.matched]
         when @scanner.scan(/%}/)
@@ -78,8 +81,6 @@ module Lrama
       code = ''
       while !@scanner.eos? do
         case
-        when @scanner.scan(/"/)
-          code += %Q("#{@scanner.scan_until(/"/)[0..-2]}")
         when @scanner.scan(/{/)
           code += @scanner.matched
           nested += 1
@@ -93,11 +94,41 @@ module Lrama
           end
         when @scanner.check(/#{@end_symbol}/)
           return [:C_DECLARATION, code]
+        when @scanner.scan(/\n/)
+          code += @scanner.matched
+          @line += 1
+          @head = @scanner.pos + 1
+        when @scanner.scan(/"/)
+          code += %Q("#{@scanner.scan_until(/"/)[0..-2]}")
+        when @scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
+          references << [:dollar, "$", tag, str.length, str.length + @scanner[0].length - 1]
+        when @scanner.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
+          references << [:dollar, Integer(@scanner[2]), tag, str.length, str.length + @scanner[0].length - 1]
+        when @scanner.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_.][-a-zA-Z0-9_.]*)/) # $foo, $expr, $<long>program
+          references << [:dollar, @scanner[2], tag, str.length, str.length + @scanner[0].length - 1]
+        when @scanner.scan(/@\$/) # @$
+          references << [:at, "$", nil, str.length, str.length + @scanner[0].length - 1]
+        when @scanner.scan(/@(\d)+/) # @1
+          references << [:at, Integer(@scanner[1]), nil, str.length, str.length + @scanner[0].length - 1]
         else
           code += @scanner.getch
         end
       end
       raise
+    end
+
+    def lex_comment
+      while !@scanner.eos? do
+        case
+        when @scanner.scan(/\n/)
+          @line += 1
+          @head = @scanner.pos + 1
+        when @scanner.scan(/\*\//)
+          return
+        else
+          @scanner.getch
+        end
+      end
     end
   end
 end
