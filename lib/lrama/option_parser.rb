@@ -49,7 +49,7 @@ module Lrama
         o.banner = <<~BANNER
           Lrama is LALR (1) parser generator written by Ruby.
 
-          Usage: #{$0} [options] FILE
+          Usage: lrama [options] FILE
         BANNER
         o.separator ''
         o.separator 'Tuning the Parser:'
