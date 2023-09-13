@@ -10,7 +10,7 @@ RSpec.describe "integration" do
         c_path = File.dirname(f.path) + "/test.c"
         obj_path = File.dirname(f.path) + "/test"
 
-        Lrama::Command.new(%W[-d -o #{c_path}] + command_args + %W[#{f.path}]).run
+        Lrama::Command.new.run(%W[-d -o #{c_path}] + command_args + %W[#{f.path}])
 
         `gcc -Wall #{c_path} -o #{obj_path}`
 
