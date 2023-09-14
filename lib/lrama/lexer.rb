@@ -203,46 +203,46 @@ module Lrama
 
       while !ss.eos? do
         case
-        when ss.scan(/\n/)
+        when ss.skip(/\n/)
           line += 1
-        when ss.scan(/"/)
+        when ss.skip(/"/)
           string, line = lex_string(ss, "\"", line, lines)
           str << string
           next
-        when ss.scan(/'/)
+        when ss.skip(/'/)
           string, line = lex_string(ss, "'", line, lines)
           str << string
           next
 
         # $ references
         # It need to wrap an identifier with brackets to use ".-" for identifiers
-        when ss.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
+        when ss.skip(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
           tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
           references << [:dollar, "$", tag, str.length, str.length + ss[0].length - 1]
-        when ss.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
+        when ss.skip(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
           tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
           references << [:dollar, Integer(ss[2]), tag, str.length, str.length + ss[0].length - 1]
-        when ss.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_][a-zA-Z0-9_]*)/) # $foo, $expr, $<long>program (named reference without brackets)
+        when ss.skip(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_][a-zA-Z0-9_]*)/) # $foo, $expr, $<long>program (named reference without brackets)
           tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
           references << [:dollar, ss[2], tag, str.length, str.length + ss[0].length - 1]
-        when ss.scan(/\$(<[a-zA-Z0-9_]+>)?\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # $expr.right, $expr-right, $<long>program (named reference with brackets)
+        when ss.skip(/\$(<[a-zA-Z0-9_]+>)?\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # $expr.right, $expr-right, $<long>program (named reference with brackets)
           tag = ss[1] ? create_token(Token::Tag, ss[1], line, str.length) : nil
           references << [:dollar, ss[2], tag, str.length, str.length + ss[0].length - 1]
 
         # @ references
         # It need to wrap an identifier with brackets to use ".-" for identifiers
-        when ss.scan(/@\$/) # @$
+        when ss.skip(/@\$/) # @$
           references << [:at, "$", nil, str.length, str.length + ss[0].length - 1]
-        when ss.scan(/@(\d+)/) # @1
+        when ss.skip(/@(\d+)/) # @1
           references << [:at, Integer(ss[1]), nil, str.length, str.length + ss[0].length - 1]
-        when ss.scan(/@([a-zA-Z][a-zA-Z0-9_]*)/) # @foo, @expr (named reference without brackets)
+        when ss.skip(/@([a-zA-Z][a-zA-Z0-9_]*)/) # @foo, @expr (named reference without brackets)
           references << [:at, ss[1], nil, str.length, str.length + ss[0].length - 1]
-        when ss.scan(/@\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # @expr.right, @expr-right  (named reference with brackets)
+        when ss.skip(/@\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # @expr.right, @expr-right  (named reference with brackets)
           references << [:at, ss[1], nil, str.length, str.length + ss[0].length - 1]
 
-        when ss.scan(/{/)
+        when ss.skip(/{/)
           brace_count += 1
-        when ss.scan(/}/)
+        when ss.skip(/}/)
           brace_count -= 1
 
           debug("Return lex_user_code: #{line}")
@@ -253,10 +253,10 @@ module Lrama
             user_code.references = references
             return [user_code, line]
           end
-        when ss.scan(/\/\*/)
+        when ss.skip(/\/\*/)
           str << ss[0]
           line = lex_comment(ss, line, lines, str)
-        when ss.scan(/\/\//)
+        when ss.skip(/\/\//)
           str << ss[0]
           line = lex_line_comment(ss, line, str)
         else
