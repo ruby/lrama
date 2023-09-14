@@ -301,9 +301,9 @@ module Lrama
     def lex_comment(ss, line, lines, str)
       while !ss.eos? do
         case
-        when ss.scan(/\n/)
+        when ss.skip(/\n/)
           line += 1
-        when ss.scan(/\*\//)
+        when ss.skip(/\*\//)
           return line
         else
           str << ss.getch
