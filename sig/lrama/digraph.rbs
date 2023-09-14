@@ -1,0 +1,23 @@
+module Lrama
+  class Digraph
+    def initialize: (Array[Integer] sets, Hash[Integer, Array[Integer]] relation, Hash[Integer, Integer] base_function) -> void
+    # X in the paper
+    @sets: Array[Integer]
+    # R in the paper
+    @relation: Hash[Integer, Array[Integer]]
+    # F' in the paper
+    @base_function: Hash[Integer, Integer]
+    # S in the paper
+    @stack: Array[Integer]
+    # N in the paper
+    @h: Hash[Integer?, (Integer|Float)?]
+    # F in the paper
+    @result: Hash[Integer?, Integer]
+
+    def compute: () -> Hash[Integer?, Integer]
+
+    private
+
+    def traverse: (Integer x) -> void
+  end
+end
