@@ -10,11 +10,11 @@ module Lrama
     # S in the paper
     @stack: Array[Integer]
     # N in the paper
-    @h: Hash[Integer?, (Integer|Float)?]
+    @h: Hash[Integer, (Integer|Float)?]
     # F in the paper
-    @result: Hash[Integer?, Integer]
+    @result: Hash[Integer, Integer]
 
-    def compute: () -> Hash[Integer?, Integer]
+    def compute: () -> Hash[Integer, Integer]
 
     private
 
