@@ -314,7 +314,7 @@ module Lrama
         str << ss[0]
       end
 
-      # Reach to end of input but quote does not match
+      # Reach to end of input but comment does not match
       l = line - lines.first[1]
       raise "Parse error (comment mismatch): #{ss.string.split("\n")[l]} \"#{ss.string[ss.pos]}\" (#{line}: #{ss.pos})"
     end
