@@ -20,6 +20,7 @@ def parse
   @grammar = Lrama::Grammar.new
   @precedence_number = 0
   do_parse
+  @grammar.extract_references
   @grammar.prepare
   @grammar.compute_nullable
   @grammar.validate!
@@ -172,12 +173,12 @@ racc_reduce_table = [
   2, 51, :_reduce_none,
   1, 58, :_reduce_33,
   2, 58, :_reduce_34,
-  3, 58, :_reduce_none,
+  3, 58, :_reduce_35,
   1, 61, :_reduce_36,
   2, 61, :_reduce_37,
   3, 62, :_reduce_38,
   0, 64, :_reduce_none,
-  1, 64, :_reduce_none,
+  1, 64, :_reduce_40,
   0, 65, :_reduce_none,
   1, 65, :_reduce_none,
   1, 65, :_reduce_none,
@@ -197,7 +198,7 @@ racc_reduce_table = [
   2, 60, :_reduce_57,
   2, 60, :_reduce_58,
   1, 72, :_reduce_59,
-  2, 72, :_reduce_none,
+  2, 72, :_reduce_60,
   1, 73, :_reduce_none,
   1, 63, :_reduce_62,
   1, 63, :_reduce_63,
@@ -512,7 +513,7 @@ module_eval(<<'.,.,', 'parser.y', 28)
 
 module_eval(<<'.,.,', 'parser.y', 29)
   def _reduce_30(val, _values, result)
-     val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_left(sym, @precedence_number); @precedence_number += 1 } }
+     val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_left(sym, @precedence_number) }; @precedence_number += 1 }
     result
   end
 .,.,
@@ -523,30 +524,35 @@ module_eval(<<'.,.,', 'parser.y', 29)
 
 module_eval(<<'.,.,', 'parser.y', 33)
   def _reduce_33(val, _values, result)
-     result = val[0]
+     val[0].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: nil, replace: true) }
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 34)
   def _reduce_34(val, _values, result)
-     result = val
+     val[1].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[0]), replace: true) }
     result
   end
 .,.,
 
-# reduce 35 omitted
+module_eval(<<'.,.,', 'parser.y', 35)
+  def _reduce_35(val, _values, result)
+     val[2].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[1]), replace: true) }
+    result
+  end
+.,.,
 
 module_eval(<<'.,.,', 'parser.y', 37)
   def _reduce_36(val, _values, result)
-     result = val
+     result = [val[0]]
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 38)
   def _reduce_37(val, _values, result)
-     result = val
+     result = val[0].append(val[1])
     result
   end
 .,.,
@@ -560,7 +566,12 @@ module_eval(<<'.,.,', 'parser.y', 40)
 
 # reduce 39 omitted
 
-# reduce 40 omitted
+module_eval(<<'.,.,', 'parser.y', 43)
+  def _reduce_40(val, _values, result)
+     result = Integer(val[0])
+    result
+  end
+.,.,
 
 # reduce 41 omitted
 
@@ -655,7 +666,12 @@ module_eval(<<'.,.,', 'parser.y', 65)
   end
 .,.,
 
-# reduce 60 omitted
+module_eval(<<'.,.,', 'parser.y', 66)
+  def _reduce_60(val, _values, result)
+     result = val[0].append(val[1])
+    result
+  end
+.,.,
 
 # reduce 61 omitted
 

@@ -27,21 +27,21 @@ rule
 
   symbol_declaration: "%token" token_declarations
                     | "%type" symbol_declarations { val[1][:tokens].each {|id| @grammar.add_type(id: id, tag: val[1][:tag]) } }
-                    | "%left" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_left(sym, @precedence_number); @precedence_number += 1 } } }
+                    | "%left" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_left(sym, @precedence_number) }; @precedence_number += 1 } }
                     | "%right" token_declarations_for_precedence
                     | "%nonassoc" token_declarations_for_precedence
 
-  token_declarations: token_declaration_list { result = val[0] }
-                    | TAG token_declaration_list { result = val }
-                    | token_declarations TAG token_declaration_list
+  token_declarations: token_declaration_list { val[0].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: nil, replace: true) } }
+                    | TAG token_declaration_list { val[1].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[0]), replace: true) } }
+                    | token_declarations TAG token_declaration_list { val[2].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[1]), replace: true) } }
 
-  token_declaration_list: token_declaration { result = val }
-                        | token_declaration_list token_declaration { result = val }
+  token_declaration_list: token_declaration { result = [val[0]] }
+                        | token_declaration_list token_declaration { result = val[0].append(val[1]) }
 
   token_declaration: id int_opt alias { result = val }
 
   int_opt: # empty
-         | INTEGER
+         | INTEGER { result = Integer(val[0]) }
 
   alias: # empty
        | string_as_id
@@ -64,7 +64,7 @@ rule
                                    | token_declarations_for_precedence token_declaration_list_for_precedence { result = val[0].concat({tag: nil, tokens: val[1]}) }
 
   token_declaration_list_for_precedence: token_declaration_for_precedence { result = [val[0]] }
-                                       | token_declaration_list_for_precedence token_declaration_for_precedence
+                                       | token_declaration_list_for_precedence token_declaration_for_precedence { result = val[0].append(val[1]) }
 
   token_declaration_for_precedence: id
 
@@ -123,6 +123,7 @@ def parse
   @grammar = Lrama::Grammar.new
   @precedence_number = 0
   do_parse
+  @grammar.extract_references
   @grammar.prepare
   @grammar.compute_nullable
   @grammar.validate!

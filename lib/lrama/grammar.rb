@@ -306,6 +306,41 @@ module Lrama
       @nterms ||= @symbols.select(&:nterm?)
     end
 
+    def extract_references
+      @_rules.each do |lhs, rhs, _|
+        rhs.each_with_index do |token, index|
+          next if token.type != Lrama::Lexer::Token::User_code
+
+          scanner = StringScanner.new(token.s_value)
+          references = []
+
+          while !scanner.eos? do
+            start = scanner.pos
+            case
+            when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
+              tag = scanner[1] ? create_token(Token::Tag, scanner[1], line, str.length) : nil
+              references << [:dollar, "$", tag, start, scanner.pos - 1]
+            when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
+              tag = scanner[1] ? create_token(Token::Tag, scanner[1], line, str.length) : nil
+              references << [:dollar, Integer(scanner[2]), tag, start, scanner.pos - 1]
+            when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_.][-a-zA-Z0-9_.]*)/) # $foo, $expr, $<long>program
+              tag = scanner[1] ? create_token(Token::Tag, scanner[1], line, str.length) : nil
+              references << [:dollar, scanner[2], tag, start, scanner.pos - 1]
+            when scanner.scan(/@\$/) # @$
+              references << [:at, "$", nil, start, scanner.pos - 1]
+            when scanner.scan(/@(\d)+/) # @1
+              references << [:at, Integer(scanner[1]), nil, start, scanner.pos - 1]
+            else
+              scanner.getch
+            end
+          end
+
+          token.references = references
+          build_references(token)
+        end
+      end
+    end
+
     private
 
     def find_nterm_by_id!(id)

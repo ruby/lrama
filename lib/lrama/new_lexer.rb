@@ -16,6 +16,7 @@ module Lrama
     def next_token
       case @status
       when :initial
+        pp @line
         lex_token
       when :c_declaration
         lex_c_code
@@ -100,16 +101,6 @@ module Lrama
           @head = @scanner.pos + 1
         when @scanner.scan(/"/)
           code += %Q("#{@scanner.scan_until(/"/)[0..-2]}")
-        when @scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
-          references << [:dollar, "$", tag, str.length, str.length + @scanner[0].length - 1]
-        when @scanner.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
-          references << [:dollar, Integer(@scanner[2]), tag, str.length, str.length + @scanner[0].length - 1]
-        when @scanner.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_.][-a-zA-Z0-9_.]*)/) # $foo, $expr, $<long>program
-          references << [:dollar, @scanner[2], tag, str.length, str.length + @scanner[0].length - 1]
-        when @scanner.scan(/@\$/) # @$
-          references << [:at, "$", nil, str.length, str.length + @scanner[0].length - 1]
-        when @scanner.scan(/@(\d)+/) # @1
-          references << [:at, Integer(@scanner[1]), nil, str.length, str.length + @scanner[0].length - 1]
         else
           code += @scanner.getch
         end
