@@ -69,7 +69,7 @@ module Lrama
           return [:STRING, @scanner.scan_until(/"/)[0..-2]]
         when @scanner.scan(/\d+/)
           return [:INTEGER, @scanner.matched]
-        when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.()]*)/)
+        when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
           return [:IDENTIFIER, @scanner.matched]
         else
           raise

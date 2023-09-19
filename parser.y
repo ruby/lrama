@@ -1,9 +1,12 @@
 class Lrama::NewParser
 rule
-  input: prologue_declaration bison_declarations "%%" grammar epilogue_opt
+  input: prologue_declarations bison_declarations "%%" grammar epilogue_opt
 
-  prologue_declaration: /* empty */
-                      | "%{" {@lexer.status = :c_declaration; @lexer.end_symbol = '%}'; @grammar.prologue_first_lineno = @lexer.line} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "%}" { @grammar.prologue = val[2] }
+  prologue_declarations: # empty
+                       | prologue_declarations prologue_declaration
+
+  prologue_declaration: "%{" {@lexer.status = :c_declaration; @lexer.end_symbol = '%}'; @grammar.prologue_first_lineno = @lexer.line} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "%}" { @grammar.prologue = val[2] }
+                      | "%require" STRING
 
   bison_declarations: /* empty */ { result = "" }
                     | bison_declarations bison_declaration
@@ -14,7 +17,7 @@ rule
                    | "%require" STRING
                    | "%param" params
                    | "%lex-param" params
-                   | "%parse-param" params
+                   | "%parse-param" params { val[1].each {|token| token.references = []; @grammar.parse_param = @grammar.build_code(:parse_param, token).token_code.s_value} }
                    | "%initial-action" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}"
                    | ";"
 
@@ -26,9 +29,9 @@ rule
                  | "%printer"
 
   symbol_declaration: "%token" token_declarations
-                    | "%type" symbol_declarations { val[1][:tokens].each {|id| @grammar.add_type(id: id, tag: val[1][:tag]) } }
+                    | "%type" symbol_declarations { val[1].each {|hash| hash[:tokens].each {|id| @grammar.add_type(id: id, tag: hash[:tag]) } } }
                     | "%left" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_left(sym, @precedence_number) }; @precedence_number += 1 } }
-                    | "%right" token_declarations_for_precedence
+                    | "%right" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_right(sym, @precedence_number) }; @precedence_number += 1 } }
                     | "%nonassoc" token_declarations_for_precedence
 
   token_declarations: token_declaration_list { val[0].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: nil, replace: true) } }
@@ -47,17 +50,17 @@ rule
        | string_as_id
        | STRING
 
-  symbol_declarations: symbol_declaration_list { result = {tag: nil, tokens: val[0]} }
-                     | TAG symbol_declaration_list { result = {tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[0]), tokens: val[1]} }
-                     | symbol_declarations symbol_declaration_list
+  symbol_declarations: symbol_declaration_list { result = [{tag: nil, tokens: val[0]}] }
+                     | TAG symbol_declaration_list { result = [{tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[0]), tokens: val[1]}] }
+                     | symbol_declarations symbol_declaration_list { result = val[0].append({tag: nil, tokens: val[1]}) }
 
   symbol_declaration_list: symbol { result = [val[0]] }
-                         | symbol_declaration_list symbol
+                         | symbol_declaration_list symbol { result = val[0].append(val[1]) }
 
   symbol: id
 
-  params: params "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}"
-        | "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}"
+  params: params "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" { result = val[0].append(Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::User_code, s_value: val[3])) }
+        | "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" { result = [Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::User_code, s_value: val[2])] }
 
   token_declarations_for_precedence: token_declaration_list_for_precedence { result = [{tag: nil, tokens: val[0]}] }
                                    | TAG token_declaration_list_for_precedence { result = [{tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[0]), tokens: val[1]}] }

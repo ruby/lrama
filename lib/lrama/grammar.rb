@@ -318,13 +318,13 @@ module Lrama
             start = scanner.pos
             case
             when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
-              tag = scanner[1] ? create_token(Token::Tag, scanner[1], line, str.length) : nil
+              tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
               references << [:dollar, "$", tag, start, scanner.pos - 1]
             when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
-              tag = scanner[1] ? create_token(Token::Tag, scanner[1], line, str.length) : nil
+              tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
               references << [:dollar, Integer(scanner[2]), tag, start, scanner.pos - 1]
             when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_.][-a-zA-Z0-9_.]*)/) # $foo, $expr, $<long>program
-              tag = scanner[1] ? create_token(Token::Tag, scanner[1], line, str.length) : nil
+              tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
               references << [:dollar, scanner[2], tag, start, scanner.pos - 1]
             when scanner.scan(/@\$/) # @$
               references << [:at, "$", nil, start, scanner.pos - 1]
@@ -341,6 +341,13 @@ module Lrama
       end
     end
 
+    def create_token(type, s_value, line, column)
+      t = Token.new(type: type, s_value: s_value)
+      t.line = line
+      t.column = column
+
+      return t
+    end
     private
 
     def find_nterm_by_id!(id)
