@@ -309,7 +309,7 @@ module Lrama
     def extract_references
       @_rules.each do |lhs, rhs, _|
         rhs.each_with_index do |token, index|
-          next if token.type != Lrama::Lexer::Token::User_code
+          next if token.class == Lrama::Grammar::Symbol || token.type != Lrama::Lexer::Token::User_code
 
           scanner = StringScanner.new(token.s_value)
           references = []

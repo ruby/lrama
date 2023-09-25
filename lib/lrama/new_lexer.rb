@@ -100,7 +100,9 @@ module Lrama
           @line += 1
           @head = @scanner.pos + 1
         when @scanner.scan(/"/)
-          code += %Q("#{@scanner.scan_until(/"/)[0..-2]}")
+          matched = @scanner.scan_until(/"/)[0..-2]
+          code += %Q("#{matched}")
+          @line += matched.count("\n")
         else
           code += @scanner.getch
         end
