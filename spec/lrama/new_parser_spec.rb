@@ -27,11 +27,6 @@ RSpec.describe Lrama::NewParser do
       let(:grammar) { File.read('sample/ruby_parse.y') }
 
       it 'returns the same results as Lrama::Parser' do
-        class Lrama::Grammar::Rule
-          def ==(other)
-            self.id == other.id && self.lhs == other.lhs && self.rhs == other.rhs && self.code == other.code && self.nullable == other.nullable && self.precedence_sym == other.precedence_sym
-          end
-        end
         expected = Lrama::Parser.new(grammar).parse
 
         expect(subject.aux.prologue_first_lineno).to eq(expected.aux.prologue_first_lineno)
@@ -40,7 +35,7 @@ RSpec.describe Lrama::NewParser do
         expect(subject.union.lineno).to eq(expected.union.lineno)
         expect(subject.union).to eq(expected.union)
         expect(subject.types).to eq(expected.types)
-        subject.instance_variable_get(:@_rules).each_with_index {|rule, id| expect(rule[0..1]).to eq(expected.instance_variable_get(:@_rules)[id][0..1]); pp rule, expected.instance_variable_get(:@_rules)[id] if rule[2] != expected.instance_variable_get(:@_rules)[id][2] }
+        subject.instance_variable_get(:@_rules).each_with_index {|rule, id| expect(rule[0..1]).to eq(expected.instance_variable_get(:@_rules)[id][0..1]) }
         expect(subject.instance_variable_get(:@_rules).map { _1[0..1] }).to eq(expected.instance_variable_get(:@_rules).map { _1[0..1] })
         expect(subject.aux.epilogue_first_lineno).to eq(expected.aux.epilogue_first_lineno)
         expect(subject.aux.epilogue.strip).to eq(expected.aux.epilogue.strip)

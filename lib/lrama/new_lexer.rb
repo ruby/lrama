@@ -16,7 +16,6 @@ module Lrama
     def next_token
       case @status
       when :initial
-        pp @line
         lex_token
       when :c_declaration
         lex_c_code
@@ -50,6 +49,10 @@ module Lrama
         when @scanner.scan(/{/)
           return [@scanner.matched, @scanner.matched]
         when @scanner.scan(/}/)
+          return [@scanner.matched, @scanner.matched]
+        when @scanner.scan(/\[/)
+          return [@scanner.matched, @scanner.matched]
+        when @scanner.scan(/\]/)
           return [@scanner.matched, @scanner.matched]
         when @scanner.scan(/:/)
           return [@scanner.matched, @scanner.matched]

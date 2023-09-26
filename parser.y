@@ -78,17 +78,20 @@ rule
   rules_or_grammar_declaration: rules
                               | grammar_declaration ";"
 
-  rules: id_colon ":" rhs_list { val[2].each {|hash| @grammar.add_rule(lhs: val[0], rhs: hash[:rhs], lineno: hash[:lineno]) } }
+  rules: id_colon named_ref_opt ":" rhs_list { lhs = val[0]; lhs.alias = val[1]; val[3].each {|hash| @grammar.add_rule(lhs: lhs, rhs: hash[:rhs], lineno: hash[:lineno]) } }
 
   rhs_list: { @lineno.push(@lexer.line) } rhs { result = [{rhs: val[1], lineno: @lineno.pop}] }
           | rhs_list "|" { @lineno.push(@lexer.line) } rhs { result = val[0].append({rhs: val[3], lineno: @lineno.pop}) }
           | rhs_list ";"
 
   rhs: /* empty */ { result = [] }
-     | rhs symbol { result = val[0].append(val[1]) }
-     | rhs "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'; @lineno.push(@lexer.line)} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" { token = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::User_code, s_value: val[1..5].join); token.line = @lineno.pop; result = val[0].append(token) }
-     | "{" {@lineno.push(@lexer.line); @lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" { token = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::User_code, s_value: val[0..4].join); token.line = @lineno.pop; result = [token] }
+     | rhs symbol named_ref_opt { token = val[1]; val[1].alias = val[2]; result = val[0].append(token) }
+     | rhs "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'; @lineno.push(@lexer.line)} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" named_ref_opt { token = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::User_code, s_value: val[1..5].join); token.line = @lineno.pop; token.alias = val[6]; result = val[0].append(token) }
+     | "{" {@lineno.push(@lexer.line); @lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" named_ref_opt { token = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::User_code, s_value: val[0..4].join); token.line = @lineno.pop; token.alias = val[5]; result = [token] }
      | rhs "%prec" symbol { sym = @grammar.find_symbol_by_id!(val[2]); result = val[0].append(sym) }
+
+  named_ref_opt: # empty
+               | '[' IDENTIFIER ']' { result = val[1] }
 
   id_colon: id
 
