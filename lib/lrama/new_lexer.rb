@@ -27,7 +27,7 @@ module Lrama
     end
 
     def col
-      @scanner.pos - @head + 1
+      @scanner.pos - @head
     end
 
     def lex_token
