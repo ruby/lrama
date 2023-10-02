@@ -60,7 +60,7 @@ module Lrama
           return [@scanner.matched, @scanner.matched]
         when @scanner.scan(/;/)
           return [@scanner.matched, @scanner.matched]
-        when @scanner.scan(/%union|%token|%type|%left|%right|%nonassoc|%expect|%define|%require|%printer|%lex-param|%parse-param|%initial-action|%prec/)
+        when @scanner.scan(/%union|%token|%type|%left|%right|%nonassoc|%expect|%define|%require|%printer|%lex-param|%parse-param|%initial-action|%prec|%error-token/)
           return [@scanner.matched, @scanner.matched]
         when @scanner.scan(/<\w+>/)
           return [:TAG, @scanner.matched]
