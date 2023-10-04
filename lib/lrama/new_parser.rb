@@ -12,7 +12,6 @@ module_eval(<<'...end parser.y/module_eval...', 'parser.y', 121)
 
 def initialize(text)
   @text = text
-  @yydebug = true
   @lineno = []
   @column = []
 end
@@ -447,7 +446,7 @@ Racc_token_to_s_table = [
   "tag" ]
 Ractor.make_shareable(Racc_token_to_s_table) if defined?(Ractor)
 
-Racc_debug_parser = true
+Racc_debug_parser = false
 
 ##### State transition tables end #####
 

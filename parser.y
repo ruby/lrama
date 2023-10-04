@@ -121,7 +121,6 @@ end
 
 def initialize(text)
   @text = text
-  @yydebug = true
   @lineno = []
   @column = []
 end
