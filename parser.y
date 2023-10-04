@@ -25,13 +25,13 @@ rule
                      | symbol_declaration
                      | "%destructor" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" generic_symlist
                      | "%printer" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'; @lineno.push(@lexer.line); @column.push(@lexer.col)} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" generic_symlist { code = build_token(type: :User_code, s_value: "{#{val[3]}}", line: @lineno.pop, column: @column.pop); code.references = []; @grammar.add_printer(ident_or_tags: val[6], code: @grammar.build_code(:printer, code), lineno: code.line) }
-                     | "%error-token" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'; @lineno.push(@lexer.line); @column.push(@lexer.col)} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" generic_symlist { code = build_token(type: :User_code, s_value: "{#{val[3]}}", line: @lineno.pop, column: @column.pop); code.references = []; @grammar.add_error_token(ident_or_tags: val[6], code: @grammar.build_code(:printer, code), lineno: code.line) }
+                     | "%error-token" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'; @lineno.push(@lexer.line); @column.push(@lexer.col)} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}" generic_symlist { code = build_token(type: :User_code, s_value: "{#{val[3]}}", line: @lineno.pop, column: @column.pop); code.references = []; @grammar.add_error_token(ident_or_tags: val[6], code: @grammar.build_code(:error_token, code), lineno: code.line) }
 
   symbol_declaration: "%token" token_declarations
                     | "%type" symbol_declarations { val[1].each {|hash| hash[:tokens].each {|id| @grammar.add_type(id: id, tag: hash[:tag]) } } }
-                    | "%left" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_left(sym, @precedence_number) }; @precedence_number += 1 } }
-                    | "%right" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_right(sym, @precedence_number) }; @precedence_number += 1 } }
-                    | "%nonassoc" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_nonassoc(sym, @precedence_number) }; @precedence_number += 1 } }
+                    | "%left" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_left(sym, @precedence_number) } }; @precedence_number += 1 }
+                    | "%right" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_right(sym, @precedence_number) } }; @precedence_number += 1 }
+                    | "%nonassoc" token_declarations_for_precedence { val[1].each {|hash| hash[:tokens].each {|id| sym = @grammar.add_term(id: id); @grammar.add_nonassoc(sym, @precedence_number) } }; @precedence_number += 1 }
 
   token_declarations: token_declaration_list { val[0].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: nil, replace: true) } }
                     | TAG token_declaration_list { val[1].each {|token_declaration| @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[0]), replace: true) } }
@@ -51,7 +51,7 @@ rule
 
   symbol_declarations: symbol_declaration_list { result = [{tag: nil, tokens: val[0]}] }
                      | TAG symbol_declaration_list { result = [{tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[0]), tokens: val[1]}] }
-                     | symbol_declarations symbol_declaration_list { result = val[0].append({tag: nil, tokens: val[1]}) }
+                     | symbol_declarations TAG symbol_declaration_list { result = val[0].append({tag: Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[1]), tokens: val[2]}) }
 
   symbol_declaration_list: symbol { result = [val[0]] }
                          | symbol_declaration_list symbol { result = val[0].append(val[1]) }
