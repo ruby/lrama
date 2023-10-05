@@ -196,7 +196,7 @@ module Lrama
       first_column = column
       debug("Enter lex_user_code: #{line}")
       brace_count = 1
-      str = "{"
+      str = ""
       # Array of [type, $n, tag, first column, last column]
       # TODO: Is it better to keep string, like "$$", and use gsub?
       references = []
@@ -247,7 +247,6 @@ module Lrama
 
           debug("Return lex_user_code: #{line}")
           if brace_count == 0
-            str << ss[0]
             user_code = Token.new(type: Token::User_code, s_value: str.freeze)
             user_code.line = first_line
             user_code.column = first_column
