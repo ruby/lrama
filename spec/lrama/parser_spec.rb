@@ -41,7 +41,7 @@ RSpec.describe Lrama::Parser do
   describe '#parse' do
     it "basic" do
       y = File.read(fixture_path("common/basic.y"))
-      grammar = Lrama::Parser.new(y).parse
+      grammar = Lrama::Parser.new(y, nil).parse
 
       expect(grammar.union.code.s_value).to eq(<<-CODE.chomp)
 
@@ -408,7 +408,7 @@ RSpec.describe Lrama::Parser do
 
     it "nullable" do
       y = File.read(fixture_path("common/nullable.y"))
-      grammar = Lrama::Parser.new(y).parse
+      grammar = Lrama::Parser.new(y, nil).parse
 
       expect(grammar.nterms.sort_by(&:number)).to eq([
         Sym.new(id: T.new(type: T::Ident, s_value: "$accept"),       alias_name: nil, number:  6, tag: nil, term: false, token_id: 0, nullable: false),
@@ -562,7 +562,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
 %%
       INPUT
 
-      grammar = Lrama::Parser.new(y).parse
+      grammar = Lrama::Parser.new(y, nil).parse
 
       expect(grammar._rules).to eq([
         [
@@ -605,7 +605,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
 %%
 
       INPUT
-      grammar = Lrama::Parser.new(y).parse
+      grammar = Lrama::Parser.new(y, nil).parse
 
       expect(grammar.terms.sort_by(&:number)).to eq([
         Sym.new(id: T.new(type: T::Ident, s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
@@ -661,7 +661,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
 %%
 
       INPUT
-      grammar = Lrama::Parser.new(y).parse
+      grammar = Lrama::Parser.new(y, nil).parse
 
       expect(grammar.nterms.sort_by(&:number)).to eq([
         Sym.new(id: T.new(type: T::Ident, s_value: "$accept"), alias_name: nil, number: 11, tag: nil,                                 term: false, token_id: 0, nullable: false),
@@ -756,7 +756,7 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
 %%
 
         INPUT
-        parser = Lrama::Parser.new(y)
+        parser = Lrama::Parser.new(y, nil)
 
         expect { parser.parse }.to raise_error("Ident after %prec")
       end
@@ -773,7 +773,7 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
 %%
 
         INPUT
-        parser = Lrama::Parser.new(y)
+        parser = Lrama::Parser.new(y, nil)
 
         expect { parser.parse }.to raise_error("Char after %prec")
       end
@@ -790,7 +790,7 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
 %%
 
         INPUT
-        parser = Lrama::Parser.new(y)
+        parser = Lrama::Parser.new(y, nil)
 
         expect { parser.parse }.to raise_error("Multiple User_code after %prec")
       end
@@ -811,7 +811,7 @@ class : keyword_class
 
 %%
         INPUT
-        grammar = Lrama::Parser.new(y).parse
+        grammar = Lrama::Parser.new(y, nil).parse
         codes = grammar.rules.map(&:code).compact
 
         expect(codes.count).to eq(1)
@@ -838,7 +838,7 @@ class : keyword_class
 
 %%
         INPUT
-        grammar = Lrama::Parser.new(y).parse
+        grammar = Lrama::Parser.new(y, nil).parse
         codes = grammar.rules.map(&:code).compact
 
         expect(codes.count).to eq(1)
@@ -883,7 +883,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
 %%
 
         INPUT
-        grammar = Lrama::Parser.new(y).parse
+        grammar = Lrama::Parser.new(y, nil).parse
 
         expect(grammar.terms.sort_by(&:number)).to eq([
           Sym.new(id: T.new(type: T::Ident, s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false),
@@ -932,7 +932,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
 %%
 
         INPUT
-        grammar = Lrama::Parser.new(y).parse
+        grammar = Lrama::Parser.new(y, nil).parse
 
         expect(grammar.terms.sort_by(&:number)).to eq([
           Sym.new(id: T.new(type: T::Ident, s_value: "EOI"),           alias_name: "\"EOI\"",           number: 0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
@@ -978,7 +978,7 @@ lambda: tLAMBDA
         ;
 %%
           INPUT
-          grammar = Lrama::Parser.new(y).parse
+          grammar = Lrama::Parser.new(y, nil).parse
 
           expect(grammar.rules).to eq([
             Rule.new(
@@ -1086,7 +1086,7 @@ emp: /* none */
    ;
 %%
           INPUT
-          grammar = Lrama::Parser.new(y).parse
+          grammar = Lrama::Parser.new(y, nil).parse
 
           expect(grammar.rules).to eq([
             Rule.new(
@@ -1177,7 +1177,7 @@ expr[result]: NUM
                 { $$ = $1 - $2; }
 ;
             INPUT
-            grammar = Lrama::Parser.new(y).parse
+            grammar = Lrama::Parser.new(y, nil).parse
 
             expect(grammar.rules).to eq([
               Rule.new(
@@ -1311,7 +1311,7 @@ expr[result]: NUM
 ;
             INPUT
 
-            expect { Lrama::Parser.new(y).parse }.to raise_error("'results' is invalid name.")
+            expect { Lrama::Parser.new(y, nil).parse }.to raise_error("'results' is invalid name.")
           end
         end
       end
@@ -1348,7 +1348,7 @@ class : keyword_class tSTRING keyword_end ;
 
 %%
       INPUT
-      grammar = Lrama::Parser.new(y).parse
+      grammar = Lrama::Parser.new(y, nil).parse
       terms = grammar.terms.sort_by(&:number).map do |term|
         [term.id.s_value, term.token_id]
       end
@@ -1397,7 +1397,7 @@ class : keyword_class tSTRING keyword_end
 
 %%
         INPUT
-        grammar = Lrama::Parser.new(y).parse
+        grammar = Lrama::Parser.new(y, nil).parse
         codes = grammar.rules.map(&:code)
 
         expect(codes.count).to eq(3)
@@ -1444,7 +1444,7 @@ expr2 : expr '+' expr { $$ = $1 + $3; }
 %%
         INPUT
 
-        expect { Lrama::Parser.new(y).parse }.to raise_error(RuntimeError) do |e|
+        expect { Lrama::Parser.new(y, nil).parse }.to raise_error(RuntimeError) do |e|
           expect(e.message).to eq(<<~MSG.chomp)
             $$ of 'stmt' has no declared type
             $1 of 'stmt' has no declared type

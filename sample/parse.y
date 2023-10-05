@@ -4,9 +4,6 @@
 
 %{
 // Prologue
-
-#include "y.tab.h"
-
 static enum yytokentype yylex(YYSTYPE *lval, YYLTYPE *yylloc);
 static void yyerror(YYLTYPE *yylloc, const char *msg);
 
