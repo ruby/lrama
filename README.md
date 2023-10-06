@@ -68,6 +68,15 @@ This also requires Lrama to be able to run with only default gems and bundled ge
 1. Install Lrama
 2. Run `make YACC=lrama`
 
+## How to generate new_parser.rb
+
+```shell
+$ rake build:racc_parser
+```
+
+`new_parser.rb` is generated from `parser.y` by Racc.
+Run the rake command when you update `parser.y` then commit changes of both files.
+
 ## Release flow
 
 1. Update `Lrama::VERSION`
