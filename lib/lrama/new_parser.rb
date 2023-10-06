@@ -13,7 +13,6 @@ module_eval(<<'...end parser.y/module_eval...', 'parser.y', 121)
 def initialize(text)
   @text = text
   @lineno = []
-  @yydebug = true
   @column = []
 end
 
@@ -185,7 +184,7 @@ racc_reduce_table = [
   3, 48, :_reduce_none,
   2, 48, :_reduce_none,
   2, 48, :_reduce_none,
-  2, 48, :_reduce_none,
+  2, 48, :_reduce_15,
   2, 48, :_reduce_16,
   0, 53, :_reduce_17,
   0, 54, :_reduce_18,
@@ -501,7 +500,12 @@ module_eval(<<'.,.,', 'parser.y', 10)
 
 # reduce 14 omitted
 
-# reduce 15 omitted
+module_eval(<<'.,.,', 'parser.y', 18)
+  def _reduce_15(val, _values, result)
+     val[1].each {|token| token.references = []; @grammar.lex_param = @grammar.build_code(:lex_param, token).token_code.s_value}
+    result
+  end
+.,.,
 
 module_eval(<<'.,.,', 'parser.y', 19)
   def _reduce_16(val, _values, result)

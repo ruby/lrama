@@ -16,7 +16,7 @@ rule
                    | "%define" variable value
                    | "%require" STRING
                    | "%param" params
-                   | "%lex-param" params
+                   | "%lex-param" params { val[1].each {|token| token.references = []; @grammar.lex_param = @grammar.build_code(:lex_param, token).token_code.s_value} }
                    | "%parse-param" params { val[1].each {|token| token.references = []; @grammar.parse_param = @grammar.build_code(:parse_param, token).token_code.s_value} }
                    | "%initial-action" "{" {@lexer.status = :c_declaration; @lexer.end_symbol = '}'} C_DECLARATION {@lexer.status = :initial; @lexer.end_symbol = nil} "}"
                    | ";"
@@ -122,7 +122,6 @@ end
 def initialize(text)
   @text = text
   @lineno = []
-  @yydebug = true
   @column = []
 end
 
