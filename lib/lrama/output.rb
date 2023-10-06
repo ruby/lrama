@@ -190,7 +190,6 @@ module Lrama
       @context.states.rules.each do |rule|
         next unless rule.code
 
-        rule = rule
         code = rule.code
         spaces = " " * (code.column - 1)
 
