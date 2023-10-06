@@ -13,6 +13,7 @@ module_eval(<<'...end parser.y/module_eval...', 'parser.y', 121)
 def initialize(text)
   @text = text
   @lineno = []
+  @yydebug = true
   @column = []
 end
 
@@ -543,7 +544,7 @@ module_eval(<<'.,.,', 'parser.y', 23)
 
 module_eval(<<'.,.,', 'parser.y', 23)
   def _reduce_23(val, _values, result)
-     code = build_token(type: :User_code, s_value: "{#{val[3]}}", line: @lineno.pop, column: @column.pop); code.references = []; @grammar.set_union(@grammar.build_code(:union, code), code.line)
+     code = build_token(type: :User_code, s_value: val[3], line: @lineno.pop, column: @column.pop); code.references = []; @grammar.set_union(@grammar.build_code(:union, code), code.line)
     result
   end
 .,.,
@@ -582,7 +583,7 @@ module_eval(<<'.,.,', 'parser.y', 26)
 
 module_eval(<<'.,.,', 'parser.y', 26)
   def _reduce_30(val, _values, result)
-     code = build_token(type: :User_code, s_value: "{#{val[3]}}", line: @lineno.pop, column: @column.pop); code.references = []; @grammar.add_printer(ident_or_tags: val[6], code: @grammar.build_code(:printer, code), lineno: code.line)
+     code = build_token(type: :User_code, s_value: val[3], line: @lineno.pop, column: @column.pop); code.references = []; @grammar.add_printer(ident_or_tags: val[6], code: @grammar.build_code(:printer, code), lineno: code.line)
     result
   end
 .,.,
@@ -603,7 +604,7 @@ module_eval(<<'.,.,', 'parser.y', 27)
 
 module_eval(<<'.,.,', 'parser.y', 27)
   def _reduce_33(val, _values, result)
-     code = build_token(type: :User_code, s_value: "{#{val[3]}}", line: @lineno.pop, column: @column.pop); code.references = []; @grammar.add_error_token(ident_or_tags: val[6], code: @grammar.build_code(:error_token, code), lineno: code.line)
+     code = build_token(type: :User_code, s_value: val[3], line: @lineno.pop, column: @column.pop); code.references = []; @grammar.add_error_token(ident_or_tags: val[6], code: @grammar.build_code(:error_token, code), lineno: code.line)
     result
   end
 .,.,
