@@ -143,7 +143,7 @@ module Lrama
         str << <<-STR
     case #{sym.enum_name}: /* #{sym.comment}  */
 #line #{sym.printer.lineno} "#{@grammar_file_path}"
-         #{sym.printer.translated_code(sym.tag)}
+         {#{sym.printer.translated_code(sym.tag)}}
 #line [@oline@] [@ofile@]
         break;
 
@@ -160,7 +160,7 @@ module Lrama
       <<-STR
         #{comment}
 #line #{@grammar.initial_action.line} "#{@grammar_file_path}"
-        #{@grammar.initial_action.translated_code}
+        {#{@grammar.initial_action.translated_code}}
       STR
     end
 
@@ -173,7 +173,7 @@ module Lrama
         str << <<-STR
     case #{sym.enum_name}: /* #{sym.comment}  */
 #line #{sym.error_token.lineno} "#{@grammar_file_path}"
-         #{sym.error_token.translated_code(sym.tag)}
+         {#{sym.error_token.translated_code(sym.tag)}}
 #line [@oline@] [@ofile@]
         break;
 
@@ -197,7 +197,7 @@ module Lrama
         str << <<-STR
   case #{rule.id + 1}: /* #{rule.as_comment}  */
 #line #{code.line} "#{@grammar_file_path}"
-#{spaces}#{rule.translated_code}
+#{spaces}{#{rule.translated_code}}
 #line [@oline@] [@ofile@]
     break;
 
@@ -212,14 +212,14 @@ module Lrama
       str
     end
 
-    def omit_braces_and_blanks(param)
-      param[1..-2].strip
+    def omit_blanks(param)
+      param.strip
     end
 
     # b4_parse_param
     def parse_param
       if @grammar.parse_param
-        omit_braces_and_blanks(@grammar.parse_param)
+        omit_blanks(@grammar.parse_param)
       else
         ""
       end
@@ -227,7 +227,7 @@ module Lrama
 
     def lex_param
       if @grammar.lex_param
-        omit_braces_and_blanks(@grammar.lex_param)
+        omit_blanks(@grammar.lex_param)
       else
         ""
       end

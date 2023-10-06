@@ -110,26 +110,26 @@ RSpec.describe Lrama::Lexer do
         T.new(type: T::Ident, s_value: "verbose"),
 
         T.new(type: T::P_printer, s_value: "%printer"),
-        T.new(type: T::User_code, s_value: "{\n    print_int();\n}"),
+        T.new(type: T::User_code, s_value: "\n    print_int();\n"),
         T.new(type: T::Tag, s_value: "<int>"),
 
         T.new(type: T::P_printer, s_value: "%printer"),
-        T.new(type: T::User_code, s_value: "{\n    print_token();\n}"),
+        T.new(type: T::User_code, s_value: "\n    print_token();\n"),
         T.new(type: T::Ident, s_value: "tNUMBER"),
         T.new(type: T::Ident, s_value: "tSTRING"),
 
         T.new(type: T::P_lex_param, s_value: "%lex-param"),
-        T.new(type: T::User_code, s_value: "{struct lex_params *p}"),
+        T.new(type: T::User_code, s_value: "struct lex_params *p"),
 
         T.new(type: T::P_parse_param, s_value: "%parse-param"),
-        T.new(type: T::User_code, s_value: "{struct parse_params *p}"),
+        T.new(type: T::User_code, s_value: "struct parse_params *p"),
 
         T.new(type: T::P_initial_action, s_value: "%initial-action"),
-        T.new(type: T::User_code, s_value: "{\n    initial_action_func(@$);\n}"),
+        T.new(type: T::User_code, s_value: "\n    initial_action_func(@$);\n"),
         T.new(type: T::Semicolon, s_value: ";"),
 
         T.new(type: T::P_union, s_value: "%union"),
-        T.new(type: T::User_code, s_value: "{\n    int i;\n    long l;\n    char *str;\n}"),
+        T.new(type: T::User_code, s_value: "\n    int i;\n    long l;\n    char *str;\n"),
 
         T.new(type: T::P_token, s_value: "%token"),
         T.new(type: T::Ident, s_value: "EOI"),
@@ -218,25 +218,25 @@ RSpec.describe Lrama::Lexer do
         T.new(type: T::Ident, s_value: "keyword_end"),
         T.new(type: T::P_prec, s_value: "%prec"),
         T.new(type: T::Ident, s_value: "tPLUS"),
-        T.new(type: T::User_code, s_value: "{ code 1 }"),
+        T.new(type: T::User_code, s_value: " code 1 "),
 
         T.new(type: T::Bar, s_value: "|"),
         T.new(type: T::Ident, s_value: "keyword_class"),
-        T.new(type: T::User_code, s_value: "{ code 2 }"),
+        T.new(type: T::User_code, s_value: " code 2 "),
         T.new(type: T::Ident, s_value: "tSTRING"),
         T.new(type: T::Char, s_value: "'!'"),
         T.new(type: T::Ident, s_value: "keyword_end"),
-        T.new(type: T::User_code, s_value: "{ code 3 }"),
+        T.new(type: T::User_code, s_value: " code 3 "),
         T.new(type: T::P_prec, s_value: "%prec"),
         T.new(type: T::String, s_value: "\"=\""),
 
         T.new(type: T::Bar, s_value: "|"),
         T.new(type: T::Ident, s_value: "keyword_class"),
-        T.new(type: T::User_code, s_value: "{ code 4 }"),
+        T.new(type: T::User_code, s_value: " code 4 "),
         T.new(type: T::Ident, s_value: "tSTRING"),
         T.new(type: T::Char, s_value: "'?'"),
         T.new(type: T::Ident, s_value: "keyword_end"),
-        T.new(type: T::User_code, s_value: "{ code 5 }"),
+        T.new(type: T::User_code, s_value: " code 5 "),
         T.new(type: T::P_prec, s_value: "%prec"),
         T.new(type: T::Char, s_value: "'>'"),
         T.new(type: T::Semicolon, s_value: ";"),
@@ -342,29 +342,29 @@ lambda: tLAMBDA
 
       expect(user_codes.map(&:references)).to eq([
         [
-          [:dollar, 1, T.new(type: T::Tag, s_value: "<int>"), 2, 8],
-          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 15, 21]
+          [:dollar, 1, T.new(type: T::Tag, s_value: "<int>"), 1, 7],
+          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 14, 20]
         ],
         [
-          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 2, 8]
+          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 1, 7]
         ],
         [
-          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 2, 8]
+          [:dollar, "$", T.new(type: T::Tag, s_value: "<int>"), 1, 7]
         ],
         [],
         [
-          [:dollar, 2, nil, 2, 3],
-          [:dollar, 3, nil, 6, 7],
-          [:dollar, 5, nil, 10, 11],
-          [:dollar, 7, nil, 14, 15],
-          [:dollar, 10, nil, 18, 20],
-          [:dollar, "$", nil, 23, 24],
-          [:at, 2, nil, 43, 44],
-          [:at, 3, nil, 47, 48],
-          [:at, 5, nil, 51, 52],
-          [:at, 7, nil, 55, 56],
-          [:at, 10, nil, 59, 61],
-          [:at, "$", nil, 64, 65],
+          [:dollar, 2, nil, 1, 2],
+          [:dollar, 3, nil, 5, 6],
+          [:dollar, 5, nil, 9, 10],
+          [:dollar, 7, nil, 13, 14],
+          [:dollar, 10, nil, 17, 19],
+          [:dollar, "$", nil, 22, 23],
+          [:at, 2, nil, 42, 43],
+          [:at, 3, nil, 46, 47],
+          [:at, 5, nil, 50, 51],
+          [:at, 7, nil, 54, 55],
+          [:at, 10, nil, 58, 60],
+          [:at, "$", nil, 63, 64],
         ],
       ])
     end
@@ -394,7 +394,7 @@ expr[result]: NUM
       expect(lexer.grammar_rules_tokens).to eq([
         T.new(type: T::Ident_Colon, s_value: "line"),
         T.new(type: T::Ident, s_value: "expr"),
-        T.new(type: T::User_code, s_value: %Q({ printf("\t%.10g\n", $expr); })),
+        T.new(type: T::User_code, s_value: %Q( printf("\t%.10g\n", $expr); )),
         T.new(type: T::Semicolon, s_value: ";"),
 
         T.new(type: T::Ident_Colon, s_value: "expr"),
@@ -408,7 +408,7 @@ expr[result]: NUM
         T.new(type: T::Ident, s_value: "expr"),
         T.new(type: T::Named_Ref, s_value: "right"),
         T.new(type: T::Char, s_value: "'+'"),
-        T.new(type: T::User_code, s_value: "{ $result = $left + $right; }"),
+        T.new(type: T::User_code, s_value: " $result = $left + $right; "),
         T.new(type: T::Semicolon, s_value: ";"),
       ])
 
@@ -418,12 +418,12 @@ expr[result]: NUM
 
       expect(user_codes.map(&:references)).to eq([
         [
-          [:dollar, "expr", nil, 20, 24],
+          [:dollar, "expr", nil, 19, 23],
         ],
         [
-          [:dollar, "result", nil, 2, 8],
-          [:dollar, "left", nil, 12, 16],
-          [:dollar, "right", nil, 20, 25],
+          [:dollar, "result", nil, 1, 7],
+          [:dollar, "left", nil, 11, 15],
+          [:dollar, "right", nil, 19, 24],
         ]
       ])
     end
@@ -463,13 +463,13 @@ stmt: tBODY
         end
 
         expected = <<-CODE.chomp
-{
+
           int i = 1; /* @ */ // @
           int j = 1; /* $ */ // $
           int k = 1; /* @1 */ // @1
           int l = 1; /* $$ */ // $$
           int m = 1; /* $2 */ // $2
-        }
+        
         CODE
 
         expect(user_codes.map(&:s_value)).to eq([expected])

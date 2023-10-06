@@ -43,7 +43,7 @@ jobs:
       # Copy from https://github.com/ruby/ruby/blob/089227e94823542acfdafa68541d330eee42ffea/.github/workflows/check_misc.yml#L27
       - name: Check for trailing spaces
         run: |
-          git grep -I -n '[	 ]$' -- '*.rb' '*.[chy]' '*.rs' && exit 1 || :
+          git grep -I -n '[	 ]$' -- '*.rb' '*.[chy]' '*.rs' ':!spec/' && exit 1 || :
           git grep -n '^[	 ][	 ]*$' -- '*.md' && exit 1 || :
   steep-check:
     runs-on: ubuntu-20.04

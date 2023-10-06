@@ -43,30 +43,30 @@ RSpec.describe Lrama::Parser do
       y = File.read(fixture_path("common/basic.y"))
       grammar = Lrama::Parser.new(y).parse
 
-      expect(grammar.union.code.s_value).to eq(<<~CODE.chomp)
-        {
-            int i;
-            long l;
-            char *str;
-        }
+      expect(grammar.union.code.s_value).to eq(<<-CODE.chomp)
+
+    int i;
+    long l;
+    char *str;
+
       CODE
 
       expect(grammar.expect).to eq(0)
       expect(grammar.printers).to eq([
         Printer.new(
           ident_or_tags: [T.new(type: T::Tag, s_value: "<int>")],
-          code: Code.new(type: :printer, token_code: T.new(type: T::User_code, s_value: "{\n    print_int();\n}")),
+          code: Code.new(type: :printer, token_code: T.new(type: T::User_code, s_value: "\n    print_int();\n")),
           lineno: 15
         ),
         Printer.new(
           ident_or_tags: [T.new(type: T::Ident, s_value: "tNUMBER"), T.new(type: T::Ident, s_value: "tSTRING")],
-          code: Code.new(type: :printer, token_code: T.new(type: T::User_code, s_value: "{\n    print_token();\n}")),
+          code: Code.new(type: :printer, token_code: T.new(type: T::User_code, s_value: "\n    print_token();\n")),
           lineno: 18
         ),
       ])
-      expect(grammar.lex_param).to eq("{struct lex_params *p}")
-      expect(grammar.parse_param).to eq("{struct parse_params *p}")
-      expect(grammar.initial_action).to eq(Code.new(type: :initial_action, token_code: T.new(type: T::User_code, s_value: "{\n    initial_action_func(@$);\n}")))
+      expect(grammar.lex_param).to eq("struct lex_params *p")
+      expect(grammar.parse_param).to eq("struct parse_params *p")
+      expect(grammar.initial_action).to eq(Code.new(type: :initial_action, token_code: T.new(type: T::User_code, s_value: "\n    initial_action_func(@$);\n")))
       expect(grammar.symbols.sort_by(&:number)).to eq([
         Sym.new(id: T.new(type: T::Ident, s_value: "EOI"),            alias_name: "\"EOI\"",                  number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil,                                            printer: nil),
         Sym.new(id: T.new(type: T::Ident, s_value: "YYerror"),        alias_name: "error",                    number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil,                                            printer: nil),
@@ -133,7 +133,7 @@ RSpec.describe Lrama::Parser do
             T.new(type: T::Ident, s_value: "tSTRING"),
             T.new(type: T::Ident, s_value: "keyword_end"),
             grammar.find_symbol_by_s_value!("tPLUS"),
-            T.new(type: T::User_code, s_value: "{ code 1 }"),
+            T.new(type: T::User_code, s_value: " code 1 "),
           ],
           62,
         ],
@@ -141,11 +141,11 @@ RSpec.describe Lrama::Parser do
           T.new(type: T::Ident, s_value: "class"),
           [
             T.new(type: T::Ident, s_value: "keyword_class"),
-            T.new(type: T::User_code, s_value: "{ code 2 }"),
+            T.new(type: T::User_code, s_value: " code 2 "),
             T.new(type: T::Ident, s_value: "tSTRING"),
             T.new(type: T::Char, s_value: "'!'"),
             T.new(type: T::Ident, s_value: "keyword_end"),
-            T.new(type: T::User_code, s_value: "{ code 3 }"),
+            T.new(type: T::User_code, s_value: " code 3 "),
             grammar.find_symbol_by_s_value!("tEQ"),
           ],
           64,
@@ -154,11 +154,11 @@ RSpec.describe Lrama::Parser do
           T.new(type: T::Ident, s_value: "class"),
           [
             T.new(type: T::Ident, s_value: "keyword_class"),
-            T.new(type: T::User_code, s_value: "{ code 4 }"),
+            T.new(type: T::User_code, s_value: " code 4 "),
             T.new(type: T::Ident, s_value: "tSTRING"),
             T.new(type: T::Char, s_value: "'?'"),
             T.new(type: T::Ident, s_value: "keyword_end"),
-            T.new(type: T::User_code, s_value: "{ code 5 }"),
+            T.new(type: T::User_code, s_value: " code 5 "),
             grammar.find_symbol_by_s_value!("'>'"),
           ],
           65,
@@ -263,7 +263,7 @@ RSpec.describe Lrama::Parser do
             grammar.find_symbol_by_s_value!("tSTRING"),
             grammar.find_symbol_by_s_value!("keyword_end"),
           ],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 1 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 1 ")),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("tPLUS"),
           lineno: 62,
@@ -272,7 +272,7 @@ RSpec.describe Lrama::Parser do
           id: 5,
           lhs: grammar.find_symbol_by_s_value!("$@1"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 2 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 2 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 64,
@@ -281,7 +281,7 @@ RSpec.describe Lrama::Parser do
           id: 6,
           lhs: grammar.find_symbol_by_s_value!("$@2"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 3 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 3 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 64,
@@ -306,7 +306,7 @@ RSpec.describe Lrama::Parser do
           id: 8,
           lhs: grammar.find_symbol_by_s_value!("$@3"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 4 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 4 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 65,
@@ -315,7 +315,7 @@ RSpec.describe Lrama::Parser do
           id: 9,
           lhs: grammar.find_symbol_by_s_value!("$@4"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 5 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 5 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 65,
@@ -578,7 +578,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
             T.new(type: T::Ident, s_value: "keyword_class"),
             T.new(type: T::Ident, s_value: "tSTRING"),
             T.new(type: T::Ident, s_value: "keyword_end"),
-            T.new(type: T::User_code, s_value: "{ code 1 }"),
+            T.new(type: T::User_code, s_value: " code 1 "),
           ],
           31,
         ],
@@ -634,7 +634,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
             T.new(type: T::Ident, s_value: "keyword_class"),
             T.new(type: T::Ident, s_value: "tSTRING"),
             T.new(type: T::Ident, s_value: "keyword_end"),
-            T.new(type: T::User_code, s_value: "{ code 1 }"),
+            T.new(type: T::User_code, s_value: " code 1 "),
           ],
           31,
         ],
@@ -698,7 +698,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
           id: 2,
           lhs: grammar.find_symbol_by_s_value!("$@1"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 1 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 1 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 31,
@@ -707,7 +707,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
           id: 3,
           lhs: grammar.find_symbol_by_s_value!("$@2"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 2 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 2 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 31,
@@ -722,7 +722,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
             grammar.find_symbol_by_s_value!("$@2"),
             grammar.find_symbol_by_s_value!("keyword_end"),
           ],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 3 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 3 ")),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("keyword_end"),
           lineno: 31,
@@ -735,7 +735,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
             grammar.find_symbol_by_s_value!("tSTRING"),
             grammar.find_symbol_by_s_value!("keyword_end"),
           ],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ code 4 }")),
+          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 4 ")),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("keyword_end"),
           lineno: 32,
@@ -815,10 +815,10 @@ class : keyword_class
         codes = grammar.rules.map(&:code).compact
 
         expect(codes.count).to eq(1)
-        expect(codes[0].s_value).to eq(<<~STR.chomp)
-{
+        expect(codes[0].s_value).to eq(<<-STR.chomp)
+
             func("}");
-        }
+        
         STR
       end
     end
@@ -842,10 +842,10 @@ class : keyword_class
         codes = grammar.rules.map(&:code).compact
 
         expect(codes.count).to eq(1)
-        expect(codes[0].s_value).to eq(<<~STR.chomp)
-{
+        expect(codes[0].s_value).to eq(<<-STR.chomp)
+
             func('}');
-        }
+        
         STR
       end
     end
@@ -1008,7 +1008,7 @@ lambda: tLAMBDA
               id: 2,
               lhs: grammar.find_symbol_by_s_value!("@1"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<i>1 = 1; $<i>$ = 2; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>1 = 1; $<i>$ = 2; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 17,
@@ -1017,7 +1017,7 @@ lambda: tLAMBDA
               id: 3,
               lhs: grammar.find_symbol_by_s_value!("@2"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<i>$ = 3; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 3; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 18,
@@ -1026,7 +1026,7 @@ lambda: tLAMBDA
               id: 4,
               lhs: grammar.find_symbol_by_s_value!("$@3"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<i>$ = 4; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 4; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 19,
@@ -1035,7 +1035,7 @@ lambda: tLAMBDA
               id: 5,
               lhs: grammar.find_symbol_by_s_value!("$@4"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ 5; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " 5; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 21,
@@ -1052,7 +1052,7 @@ lambda: tLAMBDA
                 grammar.find_symbol_by_s_value!("$@4"),
                 grammar.find_symbol_by_s_value!("tBODY"),
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; ")),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("tBODY"),
               lineno: 16,
@@ -1117,7 +1117,7 @@ emp: /* none */
               lhs: grammar.find_symbol_by_s_value!("emp"),
               rhs: [
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $$; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 17,
@@ -1127,7 +1127,7 @@ emp: /* none */
               lhs: grammar.find_symbol_by_s_value!("emp"),
               rhs: [
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ @$; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " @$; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 19,
@@ -1137,7 +1137,7 @@ emp: /* none */
               lhs: grammar.find_symbol_by_s_value!("emp"),
               rhs: [
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ @0; }")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " @0; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 21,
@@ -1232,7 +1232,7 @@ expr[result]: NUM
                   grammar.find_symbol_by_s_value!("expr"),
                   grammar.find_symbol_by_s_value!("'\\n'"),
                 ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ printf(\"\\t%.10g\\n\", $expr); }")),
+                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " printf(\"\\t%.10g\\n\", $expr); ")),
                 nullable: false,
                 precedence_sym: grammar.find_symbol_by_s_value!("'\\n'"),
                 lineno: 19,
@@ -1256,7 +1256,7 @@ expr[result]: NUM
                   grammar.find_symbol_by_s_value!("expr"),
                   grammar.find_symbol_by_s_value!("'+'"),
                 ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $result = $left + $right; }")),
+                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $result = $left + $right; ")),
                 nullable: false,
                 precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
                 lineno: 24,
@@ -1269,7 +1269,7 @@ expr[result]: NUM
                   grammar.find_symbol_by_s_value!("expr"),
                   grammar.find_symbol_by_s_value!("'-'"),
                 ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: "{ $$ = $1 - $2; }")),
+                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$ = $1 - $2; ")),
                 nullable: false,
                 precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
                 lineno: 26,
