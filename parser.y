@@ -18,7 +18,7 @@ rule
                           }
                         "%}"
                           {
-                            @grammar.prologue = val[2].s_value
+                            @grammar.prologue = prologue(val[2])
                           }
                       | "%require" STRING
 
@@ -376,8 +376,9 @@ end
 
 ---- inner
 
-def initialize(text)
+def initialize(text, header_file)
   @text = text
+  @header_path = header_file ? header_file.sub("./", "") : nil
 end
 
 def parse
@@ -394,4 +395,12 @@ end
 
 def next_token
   @lexer.next_token
+end
+
+def prologue(s_value)
+  if @header_path
+    "\n#include \"#{@header_path}\"\n" + s_value
+  else
+    s_value
+  end
 end

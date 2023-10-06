@@ -670,8 +670,9 @@ module Lrama
 
 module_eval(<<'...end parser.y/module_eval...', 'parser.y', 378)
 
-def initialize(text)
+def initialize(text, header_file)
   @text = text
+  @header_path = header_file ? header_file.sub("./", "") : nil
 end
 
 def parse
@@ -688,6 +689,14 @@ end
 
 def next_token
   @lexer.next_token
+end
+
+def prologue(s_value)
+  if @header_path
+    "\n#include \"#{@header_path}\"\n" + s_value
+  else
+    s_value
+  end
 end
 ...end parser.y/module_eval...
 ##### State transition tables begin ###
@@ -1118,8 +1127,7 @@ module_eval(<<'.,.,', 'parser.y', 15)
 
 module_eval(<<'.,.,', 'parser.y', 20)
   def _reduce_6(val, _values, result)
-                                @grammar.prologue = val[2].s_value
-
+     @grammar.prologue = prologue(val[2])
     result
   end
 .,.,
