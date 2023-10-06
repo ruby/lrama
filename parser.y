@@ -398,7 +398,7 @@ def next_token
 end
 
 def prologue(s_value)
-  if @header_path
+  if @header_path && !s_value.match?(/^\s*#include\s+"#{@header_path}"/)
     "\n#include \"#{@header_path}\"\n" + s_value
   else
     s_value
