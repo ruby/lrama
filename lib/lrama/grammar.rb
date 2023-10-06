@@ -307,6 +307,47 @@ module Lrama
     end
 
     def extract_references
+      unless initial_action.nil?
+        scanner = StringScanner.new(initial_action.s_value)
+        references = []
+
+        while !scanner.eos? do
+          start = scanner.pos
+          case
+          # $ references
+          # It need to wrap an identifier with brackets to use ".-" for identifiers
+          when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
+            tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
+            references << [:dollar, "$", tag, start, scanner.pos - 1]
+          when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
+            tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
+            references << [:dollar, Integer(scanner[2]), tag, start, scanner.pos - 1]
+          when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_][a-zA-Z0-9_]*)/) # $foo, $expr, $<long>program (named reference without brackets)
+            tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
+            references << [:dollar, scanner[2], tag, start, scanner.pos - 1]
+          when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # $expr.right, $expr-right, $<long>program (named reference with brackets)
+            tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
+            references << [:dollar, scanner[2], tag, start, scanner.pos - 1]
+
+          # @ references
+          # It need to wrap an identifier with brackets to use ".-" for identifiers
+          when scanner.scan(/@\$/) # @$
+            references << [:at, "$", nil, start, scanner.pos - 1]
+          when scanner.scan(/@(\d+)/) # @1
+            references << [:at, Integer(scanner[1]), nil, start, scanner.pos - 1]
+          when scanner.scan(/@([a-zA-Z][a-zA-Z0-9_]*)/) # @foo, @expr (named reference without brackets)
+            references << [:at, scanner[1], nil, start, scanner.pos - 1]
+          when scanner.scan(/@\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # @expr.right, @expr-right  (named reference with brackets)
+            references << [:at, scanner[1], nil, start, scanner.pos - 1]
+          else
+            scanner.getch
+          end
+        end
+
+        initial_action.token_code.references = references
+        build_references(initial_action.token_code)
+      end
+
       @printers.each do |printer|
         scanner = StringScanner.new(printer.code.s_value)
         references = []

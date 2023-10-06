@@ -188,7 +188,7 @@ racc_reduce_table = [
   2, 48, :_reduce_16,
   0, 53, :_reduce_17,
   0, 54, :_reduce_18,
-  6, 48, :_reduce_none,
+  6, 48, :_reduce_19,
   1, 48, :_reduce_none,
   0, 57, :_reduce_21,
   0, 58, :_reduce_22,
@@ -516,7 +516,7 @@ module_eval(<<'.,.,', 'parser.y', 19)
 
 module_eval(<<'.,.,', 'parser.y', 20)
   def _reduce_17(val, _values, result)
-    @lexer.status = :c_declaration; @lexer.end_symbol = '}'
+    @lexer.status = :c_declaration; @lexer.end_symbol = '}'; @lineno.push(@lexer.line); @column.push(@lexer.col)
     result
   end
 .,.,
@@ -528,7 +528,12 @@ module_eval(<<'.,.,', 'parser.y', 20)
   end
 .,.,
 
-# reduce 19 omitted
+module_eval(<<'.,.,', 'parser.y', 20)
+  def _reduce_19(val, _values, result)
+     code = build_token(type: :User_code, s_value: val[3], line: @lineno.pop, column: @column.pop); code.references = []; @grammar.initial_action = @grammar.build_code(:initial_action, code)
+    result
+  end
+.,.,
 
 # reduce 20 omitted
 
