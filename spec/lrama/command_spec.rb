@@ -10,7 +10,7 @@ RSpec.describe Lrama::Command do
     describe "STDIN mode and a grammar file is specified" do
       it "ends successfully" do
         File.open(fixture_path("command/basic.y")) do |f|
-          allow(STDIN).to receive(:read).and_return(f)
+          allow(STDIN).to receive(:read).and_return(f.read)
           command = Lrama::Command.new
           expect(command.run(["-", "test.y"])).to be_nil
         end
