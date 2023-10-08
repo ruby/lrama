@@ -8,6 +8,6 @@ namespace "build" do
 
   desc "build parser for debugging"
   task :racc_verbose_parser do
-    `bundle exec racc parser.y -o lib/lrama/new_parser.rb -t -v`
+    `bundle exec racc parser.y -o lib/lrama/new_parser.rb -t --log-file=parser.output`
   end
 end
