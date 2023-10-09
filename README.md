@@ -77,7 +77,7 @@ Run the rake command when you update `parser.y` then commit changes of both file
 ### Build Ruby
 
 1. Install Lrama
-2. Run `make YACC=lrama`
+2. Run `make main`
 
 ## Release flow
 
