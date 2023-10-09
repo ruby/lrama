@@ -63,12 +63,9 @@ Lrama is executed with BASERUBY when building ruby from source code. Therefore L
 
 This also requires Lrama to be able to run with only default gems and bundled gems.
 
-## Build Ruby
+## Development
 
-1. Install Lrama
-2. Run `make YACC=lrama`
-
-## How to generate new_parser.rb
+### How to generate new_parser.rb
 
 ```shell
 $ rake build:racc_parser
@@ -76,6 +73,11 @@ $ rake build:racc_parser
 
 `new_parser.rb` is generated from `parser.y` by Racc.
 Run the rake command when you update `parser.y` then commit changes of both files.
+
+### Build Ruby
+
+1. Install Lrama
+2. Run `make YACC=lrama`
 
 ## Release flow
 
