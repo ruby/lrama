@@ -63,12 +63,9 @@ Lrama is executed with BASERUBY when building ruby from source code. Therefore L
 
 This also requires Lrama to be able to run with only default gems and bundled gems.
 
-## Build Ruby
+## Development
 
-1. Install Lrama
-2. Run `make YACC=lrama`
-
-## How to generate new_parser.rb
+### How to generate new_parser.rb
 
 ```shell
 $ rake build:racc_parser
@@ -76,6 +73,49 @@ $ rake build:racc_parser
 
 `new_parser.rb` is generated from `parser.y` by Racc.
 Run the rake command when you update `parser.y` then commit changes of both files.
+
+### Profiling Lrama
+
+#### 1. Create parse.tmp.y in ruby/ruby
+
+```shell
+$ ruby tool/id2token.rb parse.y > parse.tmp.y
+$ cp parse.tmp.y dir/lrama/tmp
+```
+
+#### 2. Enable Profiler
+
+```diff
+diff --git a/exe/lrama b/exe/lrama
+index ba5fb06..2497178 100755
+--- a/exe/lrama
++++ b/exe/lrama
+@@ -3,4 +3,6 @@
+ $LOAD_PATH << File.join(__dir__, "../lib")
+ require "lrama"
+
+-Lrama::Command.new.run(ARGV.dup)
++Lrama::Report::Profile.report_profile do
++  Lrama::Command.new.run(ARGV.dup)
++end
+```
+
+#### 3. Run Lrama
+
+```shell
+$ exe/lrama -d -o parse.tmp.c -h tmp/parse.tmp.y
+```
+
+#### 4. Generate Flamegraph
+
+```shell
+$ stackprof --d3-flamegraph tmp/stackprof-cpu-myapp.dump > tmp/flamegraph.html
+```
+
+### Build Ruby
+
+1. Install Lrama
+2. Run `make main`
 
 ## Release flow
 
