@@ -1,3 +1,5 @@
+require "strscan"
+
 require "lrama/grammar/auxiliary"
 require "lrama/grammar/code"
 require "lrama/grammar/error_token"
