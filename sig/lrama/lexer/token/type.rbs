@@ -1,0 +1,15 @@
+module Lrama
+  class Lexer
+    class Token
+      attr_accessor type: Type
+      attr_accessor s_value: String
+      attr_accessor alias: String
+      attr_accessor keyword_init: bool
+      class Type
+        attr_accessor id: Integer
+        attr_accessor name: String
+        attr_accessor keyword_init: bool
+      end
+    end
+  end
+end
