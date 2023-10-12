@@ -8,5 +8,6 @@ target :lib do
   check "lib/lrama/digraph.rb"
   check "lib/lrama/report/duration.rb"
   check "lib/lrama/report/profile.rb"
+  check "lib/lrama/token/type.rb"
   check "lib/lrama/warning.rb"
 end
