@@ -654,7 +654,9 @@ module Lrama
 
     # Fill #number and #token_id
     def fill_symbol_number
-      # TODO: why start from 256
+      # Character literal in grammar file has
+      # token id corresponding to ASCII code by default,
+      # so start token_id from 256.
       token_id = 256
 
       # YYEMPTY = -2
