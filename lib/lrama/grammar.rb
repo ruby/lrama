@@ -489,6 +489,7 @@ module Lrama
 
       return t
     end
+
     private
 
     def find_nterm_by_id!(id)
