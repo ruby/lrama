@@ -4,11 +4,13 @@ module Lrama
       attr_accessor type: Type
       attr_accessor s_value: String
       attr_accessor alias: String
-      attr_accessor keyword_init: bool
+
+      def initialize: (?type: Type, ?s_value: String, ?alias: String) -> void
       class Type
         attr_accessor id: Integer
         attr_accessor name: String
-        attr_accessor keyword_init: bool
+
+        def initialize: (?id: Integer, ?name: String) -> void
       end
     end
   end
