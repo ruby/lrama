@@ -74,6 +74,23 @@ $ rake build:racc_parser
 `new_parser.rb` is generated from `parser.y` by Racc.
 Run the rake command when you update `parser.y` then commit changes of both files.
 
+### Test
+
+Running tests:
+
+```shell
+$ bundle install
+$ bundle exec rspec
+```
+
+Running type check:
+
+```shell
+$ bundle install
+$ bundle exec rbs collection install
+$ bundle exec steep check
+```
+
 ### Profiling Lrama
 
 #### 1. Create parse.tmp.y in ruby/ruby
