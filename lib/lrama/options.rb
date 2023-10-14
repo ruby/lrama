@@ -1,8 +1,8 @@
 module Lrama
   # Command line options.
   class Options
-    attr_accessor :skeleton, :header, :header_file,
-                  :report_file, :outfile,
+    attr_accessor :skeleton, :header, :header_file, :auto_include,
+                  :include_header, :report_file, :outfile,
                   :error_recovery, :grammar_file,
                   :report_file, :trace_opts, :report_opts, :y
 
@@ -10,6 +10,8 @@ module Lrama
       @skeleton = "bison/yacc.c"
       @header = false
       @header_file = nil
+      @auto_include = false
+      @include_header = nil
       @report_file = nil
       @outfile = "y.tab.c"
       @error_recovery = false

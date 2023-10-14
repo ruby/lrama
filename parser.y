@@ -376,9 +376,9 @@ end
 
 ---- inner
 
-def initialize(text, header_file)
+def initialize(text, include_header)
   @text = text
-  @header_path = header_file ? header_file.sub("./", "") : nil
+  @include_header = include_header
 end
 
 def parse
@@ -398,8 +398,8 @@ def next_token
 end
 
 def prologue(s_value)
-  if @header_path && !s_value.match?(/^\s*#include\s+"#{@header_path}"/)
-    "\n#include \"#{@header_path}\"\n" + s_value
+  if @include_header && !s_value.match?(/^\s*#include\s+"#{@include_header}"/)
+    "\n#include \"#{@include_header}\"\n" + s_value
   else
     s_value
   end

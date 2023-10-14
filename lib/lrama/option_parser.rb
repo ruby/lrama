@@ -39,6 +39,10 @@ module Lrama
         end
       end
 
+      if @options.auto_include
+        @options.include_header = @options.header_file.sub("./", "")
+      end
+
       @options
     end
 
@@ -62,6 +66,7 @@ module Lrama
         o.separator 'Output:'
         o.on('-h', '--header=[FILE]', 'also produce a header file named FILE') {|v| @options.header = true; @options.header_file = v }
         o.on('-d', 'also produce a header file') { @options.header = true }
+        o.on('--auto-include', 'also include header files automatically') {|v| @options.auto_include = true }
         o.on('-r', '--report=THINGS', Array, 'also produce details on the automaton') {|v| @report = v }
         o.on('--report-file=FILE', 'also produce details on the automaton output to a file named FILE') {|v| @options.report_file = v }
         o.on('-o', '--output=FILE', 'leave output to FILE') {|v| @options.outfile = v }

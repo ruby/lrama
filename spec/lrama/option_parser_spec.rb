@@ -50,6 +50,7 @@ RSpec.describe Lrama::OptionParser do
         Output:
             -h, --header=[FILE]              also produce a header file named FILE
             -d                               also produce a header file
+                --auto-include               also include header files automatically
             -r, --report=THINGS              also produce details on the automaton
                 --report-file=FILE           also produce details on the automaton output to a file named FILE
             -o, --output=FILE                leave output to FILE
