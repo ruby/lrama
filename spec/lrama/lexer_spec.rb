@@ -4,7 +4,7 @@ RSpec.describe Lrama::Lexer do
   describe '#lex' do
     it "basic" do
       y = File.read(fixture_path("common/basic.y"))
-      lexer = Lrama::Lexer.new(y, nil)
+      lexer = Lrama::Lexer.new(y)
 
       expect(lexer.prologue.first[1]).to eq(7)
       expect(lexer.prologue.map(&:first).join).to eq(<<~TEXT)
@@ -269,7 +269,7 @@ RSpec.describe Lrama::Lexer do
 
     it "nullable" do
       y = File.read(fixture_path("common/nullable.y"))
-      lexer = Lrama::Lexer.new(y, nil)
+      lexer = Lrama::Lexer.new(y)
 
       expect(lexer.grammar_rules_tokens).to eq([
         T.new(type: T::Ident_Colon, s_value: "program"),
@@ -335,7 +335,7 @@ lambda: tLAMBDA
         ;
 %%
       INPUT
-      lexer = Lrama::Lexer.new(y, nil)
+      lexer = Lrama::Lexer.new(y)
       user_codes = lexer.grammar_rules_tokens.select do |t|
         t.type == T::User_code
       end
@@ -389,7 +389,7 @@ expr[result]: NUM
             ;
 %%
       INPUT
-      lexer = Lrama::Lexer.new(y, nil)
+      lexer = Lrama::Lexer.new(y)
 
       expect(lexer.grammar_rules_tokens).to eq([
         T.new(type: T::Ident_Colon, s_value: "line"),
@@ -457,7 +457,7 @@ stmt: tBODY
     ;
 %%
         INPUT
-        lexer = Lrama::Lexer.new(y, nil)
+        lexer = Lrama::Lexer.new(y)
         user_codes = lexer.grammar_rules_tokens.select do |t|
           t.type == T::User_code
         end
@@ -473,89 +473,6 @@ stmt: tBODY
         CODE
 
         expect(user_codes.map(&:s_value)).to eq([expected])
-      end
-    end
-
-    describe "include header" do
-      context "when header is specified" do
-        it "parses correctly" do
-          y = <<~INPUT
-%{
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <ctype.h>
-
-  static int yylex(YYSTYPE *val, YYLTYPE *loc);
-  static int yyerror(YYLTYPE *loc, const char *str);
-%}
-
-%union {
-  int i;
-}
-
-%%
-
-program         : expr
-                ;
-
-%%
-          INPUT
-
-          lexer = Lrama::Lexer.new(y, "./test.h")
-          expect(lexer.prologue).to eq(
-            [
-              ["#include \"test.h\"\n", 1], 
-              ["  #include <stdio.h>\n", 2], 
-              ["  #include <stdlib.h>\n", 3], 
-              ["  #include <ctype.h>\n", 4], 
-              ["\n", 5], 
-              ["  static int yylex(YYSTYPE *val, YYLTYPE *loc);\n", 6], 
-              ["  static int yyerror(YYLTYPE *loc, const char *str);\n", 7], 
-              ["", 8]
-            ]
-          )
-        end
-      end
-
-      context "when header is not specified" do
-        context "when header is specified" do
-          it "parses correctly" do
-            y = <<~INPUT
-%{
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <ctype.h>
-
-  static int yylex(YYSTYPE *val, YYLTYPE *loc);
-  static int yyerror(YYLTYPE *loc, const char *str);
-%}
-
-%union {
-  int i;
-}
-
-%%
-
-program         : expr
-                ;
-
-%%
-            INPUT
-            lexer = Lrama::Lexer.new(y, nil)
-            expect(lexer.prologue).to eq(
-              [
-                ["", 1], 
-                ["  #include <stdio.h>\n", 2], 
-                ["  #include <stdlib.h>\n", 3], 
-                ["  #include <ctype.h>\n", 4], 
-                ["\n", 5], 
-                ["  static int yylex(YYSTYPE *val, YYLTYPE *loc);\n", 6], 
-                ["  static int yyerror(YYLTYPE *loc, const char *str);\n", 7], 
-                ["", 8]
-              ]
-            )
-          end
-        end
       end
     end
   end

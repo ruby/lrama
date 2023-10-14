@@ -21,9 +21,8 @@ module Lrama
     attr_reader :prologue, :bison_declarations, :grammar_rules, :epilogue,
                 :bison_declarations_tokens, :grammar_rules_tokens
 
-    def initialize(text, header_file)
+    def initialize(text)
       @text = text
-      @header_path = header_file ? header_file.sub("./", "") : nil
       @state = Initial
       # Array of texts
       @prologue = []
@@ -61,11 +60,7 @@ module Lrama
           # Skip until "%{"
           if string == "%{\n"
             @state = Prologue
-            if @header_path
-              @prologue << ["#include \"#{@header_path}\"\n", lineno]
-            else
-              @prologue << ["", lineno]
-            end
+            @prologue << ["", lineno]
             next
           end
         when Prologue

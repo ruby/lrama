@@ -8,14 +8,13 @@ module Lrama
 
     T = Lrama::Lexer::Token
 
-    def initialize(text, header_file)
+    def initialize(text)
       @text = text
-      @header_file = header_file
     end
 
     def parse
       report_duration(:parse) do
-        lexer = Lexer.new(@text, @header_file)
+        lexer = Lexer.new(@text)
         grammar = Grammar.new
         process_prologue(grammar, lexer)
         parse_bison_declarations(TokenScanner.new(lexer.bison_declarations_tokens), grammar)

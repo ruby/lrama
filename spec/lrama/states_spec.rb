@@ -1277,7 +1277,7 @@ expr: expr '+' expr
 
 %%
         INPUT
-        grammar = Lrama::Parser.new(y, nil).parse
+        grammar = Lrama::Parser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
 
