@@ -38,13 +38,27 @@ jobs:
       - run: bundle exec rspec
   check-misc:
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        ruby: ['head']
     steps:
       - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - run: bundle install
+
       # Copy from https://github.com/ruby/ruby/blob/089227e94823542acfdafa68541d330eee42ffea/.github/workflows/check_misc.yml#L27
       - name: Check for trailing spaces
         run: |
           git grep -I -n '[	 ]$' -- '*.rb' '*.[chy]' '*.rs' ':!spec/' && exit 1 || :
           git grep -n '^[	 ][	 ]*$' -- '*.md' && exit 1 || :
+
+      - name: Check for parser.rb is up to date
+        run: |
+          bundle exec rake build:racc_parser
+          git diff --color --no-ext-diff --ignore-submodules --exit-code lib/lrama/new_parser.rb
   steep-check:
     runs-on: ubuntu-20.04
     strategy:
