@@ -1127,7 +1127,8 @@ module_eval(<<'.,.,', 'parser.y', 15)
 
 module_eval(<<'.,.,', 'parser.y', 20)
   def _reduce_6(val, _values, result)
-     @grammar.prologue = prologue(val[2])
+                                @grammar.prologue = prologue(val[2].s_value)
+
     result
   end
 .,.,

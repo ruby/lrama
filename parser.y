@@ -18,7 +18,7 @@ rule
                           }
                         "%}"
                           {
-                            @grammar.prologue = prologue(val[2])
+                            @grammar.prologue = prologue(val[2].s_value)
                           }
                       | "%require" STRING
 
