@@ -170,7 +170,7 @@ module Lrama
       return a
     end
 
-    # Mapping from rule number to lenght of RHS.
+    # Mapping from rule number to length of RHS.
     # Dummy rule is appended as the first element whose value is 0
     # because 0 means error in yydefact.
     def yyr2
