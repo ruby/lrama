@@ -22,9 +22,9 @@ module Lrama
 
       if @options.grammar_file == '-'
         @options.grammar_file = argv.shift or abort "File name for STDIN should be specified\n"
-      else
-        @options.y = File.open(@options.grammar_file, 'r')
       end
+
+      @options.y = File.open(@options.grammar_file, 'r')
 
       if !@report.empty? && @options.report_file.nil? && @options.grammar_file
         @options.report_file = File.dirname(@options.grammar_file) + "/" + File.basename(@options.grammar_file, ".*") + ".output"

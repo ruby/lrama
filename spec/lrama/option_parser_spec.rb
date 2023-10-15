@@ -84,9 +84,9 @@ RSpec.describe Lrama::OptionParser do
     context "file name is specified after '-'" do
       it "@grammar_file is file name" do
         option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["-", "test.y"])
+        option_parser.send(:parse, ["-", fixture_path("command/basic.y")])
         options = option_parser.instance_variable_get(:@options)
-        expect(options.grammar_file).to eq "test.y"
+        expect(options.grammar_file).to eq fixture_path("command/basic.y")
       end
     end
   end
@@ -95,7 +95,7 @@ RSpec.describe Lrama::OptionParser do
     context "output option is not passed" do
       it "@outfile is default value" do
         option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["-", "test.y"])
+        option_parser.send(:parse, ["-", fixture_path("command/basic.y")])
         options = option_parser.instance_variable_get(:@options)
         expect(options.outfile).to eq "y.tab.c"
       end
@@ -104,7 +104,7 @@ RSpec.describe Lrama::OptionParser do
     context "output option is passed" do
       it "@outfile is same with passed value" do
         option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["-o", "parse.c", "-", "test.y"])
+        option_parser.send(:parse, ["-o", "parse.c", "-", fixture_path("command/basic.y")])
         options = option_parser.instance_variable_get(:@options)
         expect(options.outfile).to eq "parse.c"
       end
@@ -116,7 +116,7 @@ RSpec.describe Lrama::OptionParser do
       context "outfile option is passed" do
         it "@header_file is set based on outfile" do
           option_parser = Lrama::OptionParser.new
-          option_parser.send(:parse, ["-h", "-o", "parse.c", "-", "test.y"])
+          option_parser.send(:parse, ["-h", "-o", "parse.c", "-", fixture_path("command/basic.y")])
           options = option_parser.instance_variable_get(:@options)
           expect(options.header_file).to eq "./parse.h"
         end
@@ -125,7 +125,7 @@ RSpec.describe Lrama::OptionParser do
       context "outfile option is not passed" do
         it "@header_file is set based on outfile default value" do
           option_parser = Lrama::OptionParser.new
-          option_parser.send(:parse, ["-h", "-", "test.y"])
+          option_parser.send(:parse, ["-h", "-", fixture_path("command/basic.y")])
           options = option_parser.instance_variable_get(:@options)
           expect(options.header_file).to eq "./y.tab.h"
         end
@@ -135,7 +135,7 @@ RSpec.describe Lrama::OptionParser do
     context "header file name is passed" do
       it "@header_file is same with passed value" do
         option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["-hparse.h", "-", "test.y"])
+        option_parser.send(:parse, ["-hparse.h", "-", fixture_path("command/basic.y")])
         options = option_parser.instance_variable_get(:@options)
         expect(options.header_file).to eq "parse.h"
       end
@@ -151,9 +151,9 @@ RSpec.describe Lrama::OptionParser do
         expect(options.report_file).to match(/command\/basic\.output/)
 
         option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["--report=all", "-", "test.y"])
+        option_parser.send(:parse, ["--report=all", "-", fixture_path("command/basic.y")])
         options = option_parser.instance_variable_get(:@options)
-        expect(options.report_file).to eq "./test.output"
+        expect(options.report_file).to eq fixture_path("command/basic.output")
       end
     end
 
@@ -165,7 +165,7 @@ RSpec.describe Lrama::OptionParser do
         expect(options.report_file).to eq "report.output"
 
         option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["--report-file=report.output", "-", "test.y"])
+        option_parser.send(:parse, ["--report-file=report.output", "-", fixture_path("command/basic.y")])
         options = option_parser.instance_variable_get(:@options)
         expect(options.report_file).to eq "report.output"
       end
