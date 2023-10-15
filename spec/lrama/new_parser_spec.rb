@@ -406,7 +406,7 @@ RSpec.describe Lrama::NewParser do
       ])
     end
 
-    xit "nullable" do
+    it "nullable" do
       y = File.read(fixture_path("common/nullable.y"))
       grammar = Lrama::NewParser.new(y).parse
 
