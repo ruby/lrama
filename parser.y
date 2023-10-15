@@ -26,7 +26,7 @@ rule
                     | bison_declarations bison_declaration
 
   bison_declaration: grammar_declaration
-                   | "%expect" INTEGER
+                   | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
                    | "%require" STRING
                    | "%param" params
@@ -203,6 +203,7 @@ rule
                          | symbol_declaration_list symbol { result = val[0].append(val[1]) }
 
   symbol: id
+        | string_as_id
 
   params: params "{"
             {
@@ -354,11 +355,9 @@ rule
                  | generic_symlist generic_symlist_item { result = val[0].append(val[1]) }
 
   generic_symlist_item: symbol
-                      | tag
+                      | TAG
 
-  tag: TAG { result = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: val[0]) }
-     | "<*>"
-     | "<>"
+  string_as_id: STRING { result = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Ident, s_value: val[0]) }
 end
 
 ---- inner
