@@ -20,6 +20,9 @@ RSpec.describe Lrama::OptionParser do
 
         Usage: lrama [options] FILE
 
+        STDIN mode:
+        lrama [options] - FILE               read grammar from STDIN
+
         Tuning the Parser:
             -S, --skeleton=FILE              specify the skeleton to use
             -t                               reserved, do nothing

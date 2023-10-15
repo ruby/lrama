@@ -52,6 +52,9 @@ module Lrama
           Usage: lrama [options] FILE
         BANNER
         o.separator ''
+        o.separator 'STDIN mode:'
+        o.separator 'lrama [options] - FILE               read grammar from STDIN'
+        o.separator ''
         o.separator 'Tuning the Parser:'
         o.on('-S', '--skeleton=FILE', 'specify the skeleton to use') {|v| @options.skeleton = v }
         o.on('-t', 'reserved, do nothing') { }
