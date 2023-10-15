@@ -214,7 +214,7 @@ module Lrama
       (rule_id + 1) * -1
     end
 
-    # Symbol number is assinged to term first then nterm.
+    # Symbol number is assigned to term first then nterm.
     # This method calculates sequence_number for nterm.
     def nterm_number_to_sequence_number(nterm_number)
       nterm_number - @states.terms.count
