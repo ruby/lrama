@@ -21,5 +21,25 @@ RSpec.describe Lrama::Command do
         end
       end
     end
+
+    context "when `--trace=time` option specified" do
+      it "called Report::Duration.enable" do
+        allow(Lrama::Report::Duration).to receive(:enable)
+        command = Lrama::Command.new
+        expect(command.run(o_option + [fixture_path("command/basic.y"), "--trace=time"])).to be_nil
+        expect(Lrama::Report::Duration).to have_received(:enable).once
+      end
+    end
+
+    context "when `--report-file` option specified" do
+      it "create report file" do
+        allow(File).to receive(:open).and_call_original
+        command = Lrama::Command.new
+        expect(command.run(o_option + [fixture_path("command/basic.y"), "--report-file=report.output"])).to be_nil
+        expect(File).to have_received(:open).with("report.output", "w+").once
+        expect(File.exist?("report.output")).to be_truthy
+        File.delete("report.output")
+      end
+    end
   end
 end
