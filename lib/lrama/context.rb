@@ -259,7 +259,7 @@ module Lrama
           actions[conflict.symbol.number] = ErrorActionNumber
         end
 
-        # If default_reduction_rule, replase default_reduction_rule in
+        # If default_reduction_rule, replace default_reduction_rule in
         # actions with zero.
         if state.default_reduction_rule
           actions.map! do |e|
@@ -272,7 +272,7 @@ module Lrama
         end
 
         # If no default_reduction_rule, default behavior is an
-        # error then replase ErrorActionNumber with zero.
+        # error then replace ErrorActionNumber with zero.
         if !state.default_reduction_rule
           actions.map! do |e|
             if e == ErrorActionNumber
