@@ -1,6 +1,26 @@
 require "open3"
 
 RSpec.describe Lrama::OptionParser do
+  describe "invalid argv" do
+    context "when grammar file isn't specified" do
+      it "returns stderr" do
+        result = Open3.popen3("ruby", exe_path("lrama")) do |stdin, stdout, stderr, wait_thr|
+          stderr.read
+        end
+        expect(result).to eq("File should be specified\n")
+      end
+    end
+
+    context "when STDIN mode, but a grammar file isn't specified" do
+      it "returns stderr" do
+        result = Open3.popen3("ruby", exe_path("lrama"), "-") do |stdin, stdout, stderr, wait_thr|
+          stderr.read
+        end
+        expect(result).to eq("File name for STDIN should be specified\n")
+      end
+    end
+  end
+
   describe "version option" do
     it "print Lrama version and exit" do
       result = Open3.popen3("ruby", exe_path("lrama"), "--version") do |stdin, stdout, stderr, wait_thr|
