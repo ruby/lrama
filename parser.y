@@ -272,11 +272,11 @@ rule
 
   rhs_list: rhs
               {
-                result = [{rhs: val[0], lineno: val[0].first&.line || @lexer.line}]
+                result = [{rhs: val[0], lineno: val[0].first&.line || @lexer.line - 1}]
               }
           | rhs_list "|" rhs
               {
-                result = val[0].append({rhs: val[2], lineno: val[2].first&.line || @lexer.line})
+                result = val[0].append({rhs: val[2], lineno: val[2].first&.line || @lexer.line - 1})
               }
           | rhs_list ";"
 

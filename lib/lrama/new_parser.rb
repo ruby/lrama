@@ -915,7 +915,7 @@ module_eval(<<'.,.,', 'parser.y', 265)
 
 module_eval(<<'.,.,', 'parser.y', 274)
   def _reduce_76(val, _values, result)
-                    result = [{rhs: val[0], lineno: val[0].first&.line || @lexer.line}]
+                    result = [{rhs: val[0], lineno: val[0].first&.line || @lexer.line - 1}]
 
     result
   end
@@ -923,7 +923,7 @@ module_eval(<<'.,.,', 'parser.y', 274)
 
 module_eval(<<'.,.,', 'parser.y', 278)
   def _reduce_77(val, _values, result)
-                    result = val[0].append({rhs: val[2], lineno: val[2].first&.line || @lexer.line})
+                    result = val[0].append({rhs: val[2], lineno: val[2].first&.line || @lexer.line - 1})
 
     result
   end
