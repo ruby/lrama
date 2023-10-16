@@ -550,7 +550,7 @@ RSpec.describe Lrama::NewParser do
       ])
     end
 
-    xit "; for rules is optional" do
+    it "; for rules is optional" do
       y = header + <<~INPUT
 %%
 

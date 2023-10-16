@@ -328,7 +328,7 @@ rule
   named_ref_opt: # empty
                | '[' IDENTIFIER ']' { result = val[1].s_value }
 
-  id_colon: id
+  id_colon: IDENT_COLON
 
   epilogue_opt: # empty
               | "%%"

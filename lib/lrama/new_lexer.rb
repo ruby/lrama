@@ -92,7 +92,14 @@ module Lrama
       when @scanner.scan(/\d+/)
         return [:INTEGER, Integer(@scanner.matched)]
       when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
-        return [:IDENTIFIER, build_token(type: Token::Ident, s_value: @scanner.matched)]
+        token = build_token(type: Token::Ident, s_value: @scanner.matched)
+        type =
+          if @scanner.check(/\s*(\[\s*[a-zA-Z_.][-a-zA-Z0-9_.]*\s*\])?\s*:/)
+            :IDENT_COLON
+          else
+            :IDENTIFIER
+          end
+        return [type, token]
       else
         raise
       end
