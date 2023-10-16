@@ -127,9 +127,12 @@ module Lrama
           code += @scanner.matched
           newline
         when @scanner.scan(/"/)
-          matched = @scanner.scan_until(/"/)[0..-2]
-          code += %Q("#{matched}")
+          matched = @scanner.scan_until(/"/)
+          code += %Q("#{matched})
           @line += matched.count("\n")
+        when @scanner.scan(/'/)
+          matched = @scanner.scan_until(/'/)
+          code += %Q('#{matched})
         else
           code += @scanner.getch
         end

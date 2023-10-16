@@ -797,7 +797,7 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
     end
 
     describe "\" in user code" do
-      xit do
+      it do
         y = header + <<~INPUT
 %%
 
@@ -818,13 +818,13 @@ class : keyword_class
         expect(codes[0].s_value).to eq(<<-STR.chomp)
 
             func("}");
-
+        
         STR
       end
     end
 
     describe "' in user code" do
-      xit do
+      it do
         y = header + <<~INPUT
 %%
 
@@ -845,7 +845,7 @@ class : keyword_class
         expect(codes[0].s_value).to eq(<<-STR.chomp)
 
             func('}');
-
+        
         STR
       end
     end
