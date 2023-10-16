@@ -5,7 +5,7 @@ RSpec.describe Lrama::Context do
   describe "basic" do
     it do
       y = File.read(fixture_path("context/basic.y"))
-      grammar = Lrama::Parser.new(y).parse
+      grammar = Lrama::NewParser.new(y).parse
       states = Lrama::States.new(grammar, warning)
       states.compute
       context = Lrama::Context.new(states)
@@ -181,7 +181,7 @@ arg: tNUMBER ;
 %%
         INPUT
 
-        grammar = Lrama::Parser.new(y).parse
+        grammar = Lrama::NewParser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
         context = Lrama::Context.new(states)
@@ -230,7 +230,7 @@ expr2: tNUMBER ;
 %%
         INPUT
 
-        grammar = Lrama::Parser.new(y).parse
+        grammar = Lrama::NewParser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
         context = Lrama::Context.new(states)
