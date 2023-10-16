@@ -8,7 +8,7 @@ require 'racc/parser.rb'
 module Lrama
   class NewParser < Racc::Parser
 
-module_eval(<<'...end parser.y/module_eval...', 'parser.y', 364)
+module_eval(<<'...end parser.y/module_eval...', 'parser.y', 378)
 
 def initialize(text)
   @text = text
@@ -230,8 +230,8 @@ racc_reduce_table = [
   1, 78, :_reduce_66,
   2, 78, :_reduce_67,
   1, 79, :_reduce_none,
-  1, 68, :_reduce_none,
-  1, 68, :_reduce_none,
+  1, 68, :_reduce_69,
+  1, 68, :_reduce_70,
   1, 41, :_reduce_none,
   2, 41, :_reduce_none,
   1, 80, :_reduce_none,
@@ -891,9 +891,19 @@ module_eval(<<'.,.,', 'parser.y', 250)
 
 # reduce 68 omitted
 
-# reduce 69 omitted
+module_eval(<<'.,.,', 'parser.y', 254)
+  def _reduce_69(val, _values, result)
+     raise "Ident after %prec" if @prec_seen
+    result
+  end
+.,.,
 
-# reduce 70 omitted
+module_eval(<<'.,.,', 'parser.y', 255)
+  def _reduce_70(val, _values, result)
+     raise "Char after %prec" if @prec_seen
+    result
+  end
+.,.,
 
 # reduce 71 omitted
 
@@ -933,14 +943,17 @@ module_eval(<<'.,.,', 'parser.y', 278)
 
 # reduce 78 omitted
 
-module_eval(<<'.,.,', 'parser.y', 282)
+module_eval(<<'.,.,', 'parser.y', 284)
   def _reduce_79(val, _values, result)
-     result = []
+               result = []
+           @prec_seen = false
+           @code_after_prec = false
+
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 285)
+module_eval(<<'.,.,', 'parser.y', 290)
   def _reduce_80(val, _values, result)
                token = val[1]
            val[1].alias = val[2]
@@ -950,16 +963,20 @@ module_eval(<<'.,.,', 'parser.y', 285)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 291)
+module_eval(<<'.,.,', 'parser.y', 296)
   def _reduce_81(val, _values, result)
-               @lexer.status = :c_declaration
+               if @prec_seen
+             raise "Multiple User_code after %prec" if @code_after_prec
+             @code_after_prec = true
+           end
+           @lexer.status = :c_declaration
            @lexer.end_symbol = '}'
 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 296)
+module_eval(<<'.,.,', 'parser.y', 305)
   def _reduce_82(val, _values, result)
                @lexer.status = :initial
            @lexer.end_symbol = nil
@@ -968,7 +985,7 @@ module_eval(<<'.,.,', 'parser.y', 296)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 301)
+module_eval(<<'.,.,', 'parser.y', 310)
   def _reduce_83(val, _values, result)
                token = val[3]
            token.alias = val[6]
@@ -978,16 +995,20 @@ module_eval(<<'.,.,', 'parser.y', 301)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 307)
+module_eval(<<'.,.,', 'parser.y', 316)
   def _reduce_84(val, _values, result)
-               @lexer.status = :c_declaration
+               if @prec_seen
+             raise "Multiple User_code after %prec" if @code_after_prec
+             @code_after_prec = true
+           end
+           @lexer.status = :c_declaration
            @lexer.end_symbol = '}'
 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 312)
+module_eval(<<'.,.,', 'parser.y', 325)
   def _reduce_85(val, _values, result)
                @lexer.status = :initial
            @lexer.end_symbol = nil
@@ -996,7 +1017,7 @@ module_eval(<<'.,.,', 'parser.y', 312)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 317)
+module_eval(<<'.,.,', 'parser.y', 330)
   def _reduce_86(val, _values, result)
                token = val[2]
            token.alias = val[5]
@@ -1006,10 +1027,11 @@ module_eval(<<'.,.,', 'parser.y', 317)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 323)
+module_eval(<<'.,.,', 'parser.y', 336)
   def _reduce_87(val, _values, result)
                sym = @grammar.find_symbol_by_id!(val[2])
            result = val[0].append(sym)
+           @prec_seen = true
 
     result
   end
@@ -1017,7 +1039,7 @@ module_eval(<<'.,.,', 'parser.y', 323)
 
 # reduce 88 omitted
 
-module_eval(<<'.,.,', 'parser.y', 328)
+module_eval(<<'.,.,', 'parser.y', 342)
   def _reduce_89(val, _values, result)
      result = val[1].s_value
     result
@@ -1028,7 +1050,7 @@ module_eval(<<'.,.,', 'parser.y', 328)
 
 # reduce 91 omitted
 
-module_eval(<<'.,.,', 'parser.y', 335)
+module_eval(<<'.,.,', 'parser.y', 349)
   def _reduce_92(val, _values, result)
                         @lexer.status = :c_declaration
                     @lexer.end_symbol = '\Z'
@@ -1038,7 +1060,7 @@ module_eval(<<'.,.,', 'parser.y', 335)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 341)
+module_eval(<<'.,.,', 'parser.y', 355)
   def _reduce_93(val, _values, result)
                         @lexer.status = :initial
                     @lexer.end_symbol = nil
@@ -1058,14 +1080,14 @@ module_eval(<<'.,.,', 'parser.y', 341)
 
 # reduce 98 omitted
 
-module_eval(<<'.,.,', 'parser.y', 353)
+module_eval(<<'.,.,', 'parser.y', 367)
   def _reduce_99(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 354)
+module_eval(<<'.,.,', 'parser.y', 368)
   def _reduce_100(val, _values, result)
      result = val[0].append(val[1])
     result
@@ -1076,7 +1098,7 @@ module_eval(<<'.,.,', 'parser.y', 354)
 
 # reduce 102 omitted
 
-module_eval(<<'.,.,', 'parser.y', 359)
+module_eval(<<'.,.,', 'parser.y', 373)
   def _reduce_103(val, _values, result)
      result = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Ident, s_value: val[0])
     result
