@@ -252,8 +252,8 @@ rule
 
   token_declaration_for_precedence: id
 
-  id: IDENTIFIER
-    | CHARACTER
+  id: IDENTIFIER { raise "Ident after %prec" if @prec_seen }
+    | CHARACTER { raise "Char after %prec" if @prec_seen }
 
   grammar: rules_or_grammar_declaration
          | grammar rules_or_grammar_declaration
@@ -280,7 +280,12 @@ rule
               }
           | rhs_list ";"
 
-  rhs: /* empty */ { result = [] }
+  rhs: /* empty */
+         {
+           result = []
+           @prec_seen = false
+           @code_after_prec = false
+         }
      | rhs symbol named_ref_opt
          {
            token = val[1]
@@ -289,6 +294,10 @@ rule
          }
      | rhs "{"
          {
+           if @prec_seen
+             raise "Multiple User_code after %prec" if @code_after_prec
+             @code_after_prec = true
+           end
            @lexer.status = :c_declaration
            @lexer.end_symbol = '}'
          }
@@ -305,6 +314,10 @@ rule
          }
      | "{"
          {
+           if @prec_seen
+             raise "Multiple User_code after %prec" if @code_after_prec
+             @code_after_prec = true
+           end
            @lexer.status = :c_declaration
            @lexer.end_symbol = '}'
          }
@@ -323,6 +336,7 @@ rule
          {
            sym = @grammar.find_symbol_by_id!(val[2])
            result = val[0].append(sym)
+           @prec_seen = true
          }
 
   named_ref_opt: # empty

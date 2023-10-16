@@ -592,7 +592,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
       ])
     end
 
-    xit "error token" do
+    it "error token" do
       y = header + <<~INPUT
 %%
 
@@ -648,7 +648,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
       ])
     end
 
-    xit "action in the middle of RHS" do
+    it "action in the middle of RHS" do
       y = header + <<~INPUT
 %%
 
@@ -744,7 +744,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
     end
 
     describe "invalid_prec" do
-      xit do
+      it do
         y = header + <<~INPUT
 %%
 
@@ -761,7 +761,7 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
         expect { parser.parse }.to raise_error("Ident after %prec")
       end
 
-      xit do
+      it do
         y = header + <<~INPUT
 %%
 
@@ -778,7 +778,7 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
         expect { parser.parse }.to raise_error("Char after %prec")
       end
 
-      xit do
+      it do
         y = header + <<~INPUT
 %%
 
