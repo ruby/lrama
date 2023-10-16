@@ -120,7 +120,7 @@ index ba5fb06..2497178 100755
 #### 3. Run Lrama
 
 ```shell
-$ exe/lrama -d -o parse.tmp.c -h tmp/parse.tmp.y
+$ exe/lrama -o parse.tmp.c --header=parse.tmp.h tmp/parse.tmp.y
 ```
 
 #### 4. Generate Flamegraph
