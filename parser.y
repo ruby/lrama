@@ -18,7 +18,7 @@ rule
                           }
                         "%}"
                           {
-                            @grammar.prologue = prologue(val[2].s_value)
+                            @grammar.prologue = val[2].s_value
                           }
                       | "%require" STRING
 
@@ -376,9 +376,8 @@ end
 
 ---- inner
 
-def initialize(text, include_header)
+def initialize(text)
   @text = text
-  @include_header = include_header
 end
 
 def parse
@@ -395,12 +394,4 @@ end
 
 def next_token
   @lexer.next_token
-end
-
-def prologue(s_value)
-  if @include_header && !s_value.match?(/^\s*#include\s+"#{@include_header}"/)
-    "\n#include \"#{@include_header}\"\n" + s_value
-  else
-    s_value
-  end
 end

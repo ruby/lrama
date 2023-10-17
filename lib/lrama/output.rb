@@ -7,7 +7,7 @@ module Lrama
     extend Forwardable
     include Report::Duration
 
-    attr_reader :grammar_file_path, :context, :grammar, :error_recovery
+    attr_reader :grammar_file_path, :context, :grammar, :error_recovery, :include_header
 
     def_delegators "@context", :yyfinal, :yylast, :yyntokens, :yynnts, :yynrules, :yynstates,
                                :yymaxutok, :yypact_ninf, :yytable_ninf
@@ -28,6 +28,7 @@ module Lrama
       @context = context
       @grammar = grammar
       @error_recovery = error_recovery
+      @include_header = header_file_path ? header_file_path.sub("./", "") : nil
     end
 
     if ERB.instance_method(:initialize).parameters.last.first == :key

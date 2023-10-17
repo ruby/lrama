@@ -36,13 +36,8 @@ $ lrama -d sample/parse.y
 ```
 
 ```shell
-# "y.tab.c" and "y.tab.h" are generated and added `#include "y.tab.h"`
-$ lrama -d sample/parse.y --auto-include
-```
-
-```shell
-# "calc", "calc.c", and "calc.h" are generated and added `#include "calc.h"`
-$ lrama -d sample/calc.y -o calc.c --auto-include && gcc -Wall calc.c -o calc && ./calc
+# "calc", "calc.c", and "calc.h" are generated
+$ lrama -d sample/calc.y -o calc.c && gcc -Wall calc.c -o calc && ./calc
 Enter the formula:
 1
 => 1

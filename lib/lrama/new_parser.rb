@@ -670,9 +670,8 @@ module Lrama
 
 module_eval(<<'...end parser.y/module_eval...', 'parser.y', 378)
 
-def initialize(text, include_header)
+def initialize(text)
   @text = text
-  @include_header = include_header
 end
 
 def parse
@@ -689,14 +688,6 @@ end
 
 def next_token
   @lexer.next_token
-end
-
-def prologue(s_value)
-  if @include_header && !s_value.match?(/^\s*#include\s+"#{@include_header}"/)
-    "\n#include \"#{@include_header}\"\n" + s_value
-  else
-    s_value
-  end
 end
 ...end parser.y/module_eval...
 ##### State transition tables begin ###
@@ -1127,7 +1118,7 @@ module_eval(<<'.,.,', 'parser.y', 15)
 
 module_eval(<<'.,.,', 'parser.y', 20)
   def _reduce_6(val, _values, result)
-                                @grammar.prologue = prologue(val[2].s_value)
+                                @grammar.prologue = val[2].s_value
 
     result
   end
