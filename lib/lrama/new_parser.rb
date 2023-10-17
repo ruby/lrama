@@ -682,6 +682,7 @@ def parse
   @grammar.extract_references
   @grammar.prepare
   @grammar.compute_nullable
+  @grammar.compute_first_set
   @grammar.validate!
   @grammar
 end
