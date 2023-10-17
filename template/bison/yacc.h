@@ -39,7 +39,6 @@
    private implementation details that can be changed or removed.  */
 
 <%# b4_shared_declarations -%>
-<%# b4_shared_declarations -%>
   <%-# b4_cpp_guard_open([b4_spec_mapped_header_file]) -%>
     <%- if output.spec_mapped_header_file -%>
 #ifndef <%= output.b4_cpp_guard__b4_spec_mapped_header_file %>
