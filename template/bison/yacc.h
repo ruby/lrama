@@ -49,7 +49,7 @@
 #ifndef YYDEBUG
 # define YYDEBUG 0
 #endif
-#if YYDEBUG
+#if YYDEBUG && !defined(yydebug)
 extern int yydebug;
 #endif
   <%-# b4_percent_code_get([[requires]]). %code is not supported -%>
