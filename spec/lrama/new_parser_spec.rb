@@ -851,7 +851,7 @@ class : keyword_class
     end
 
     describe "symbol number" do
-      xit "is not duplicated" do
+      it "is not duplicated" do
         y = <<~INPUT
 %{
 // Prologue
@@ -900,7 +900,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
         ])
       end
 
-      xit "tokens after precedence declarations have greater number than tokens defined by precedence declarations" do
+      it "tokens after precedence declarations have greater number than tokens defined by precedence declarations" do
         y = <<~INPUT
 %{
 // Prologue
@@ -950,7 +950,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
     describe "user codes" do
       describe "" do
-        xit "is not duplicated" do
+        it "is not duplicated" do
           y = <<~INPUT
 %{
 // Prologue
@@ -1060,7 +1060,7 @@ lambda: tLAMBDA
           ])
         end
 
-        xit "can parse action with %empty" do
+        it "can parse action with %empty" do
           y = <<~INPUT
 %{
 // Prologue
@@ -1146,7 +1146,7 @@ emp: /* none */
         end
 
         context "includes named references" do
-          xit "can parse" do
+          it "can parse" do
             y = <<~INPUT
 %{
 // Prologue
@@ -1279,7 +1279,7 @@ expr[result]: NUM
         end
 
         context "includes invalid named references" do
-          xit "raise an error" do
+          it "raise an error" do
             y = <<~INPUT
 %{
 // Prologue
@@ -1319,7 +1319,7 @@ expr[result]: NUM
   end
 
   describe "#fill_symbol_number" do
-    xit "fills token_id of Token::Char" do
+    it "fills token_id of Token::Char" do
       y = <<~INPUT
 %{
 // Prologue
@@ -1372,7 +1372,7 @@ class : keyword_class tSTRING keyword_end ;
 
   describe "#normalize_rules" do
     describe "referring_symbol" do
-      xit "uses a tag specified in code" do
+      it "uses a tag specified in code" do
         y = <<~INPUT
 %{
 // Prologue
@@ -1411,7 +1411,7 @@ class : keyword_class tSTRING keyword_end
 
   describe "Grammar#validate!" do
     describe "#validate_no_declared_type_reference!" do
-      xit "raises error when referred nterm, term and action have no tag so that type is not declared" do
+      it "raises error when referred nterm, term and action have no tag so that type is not declared" do
         y = <<~INPUT
 %{
 // Prologue
