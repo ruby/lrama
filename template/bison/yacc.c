@@ -101,8 +101,12 @@
 # endif
 
 <%# b4_header_include_if -%>
+<%- if output.include_header -%>
+#include "<%= output.include_header %>"
+<%- else -%>
 /* Use api.header.include to #include this header
    instead of duplicating it here.  */
+<%- end -%>
 <%# b4_shared_declarations -%>
   <%-# b4_cpp_guard_open([b4_spec_mapped_header_file]) -%>
     <%- if output.spec_mapped_header_file -%>
