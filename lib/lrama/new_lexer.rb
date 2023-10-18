@@ -85,7 +85,7 @@ module Lrama
         return [:TAG, build_token(type: Token::Tag, s_value: @scanner.matched)]
       when @scanner.scan(/'.'/)
         return [:CHARACTER, build_token(type: Token::Char, s_value: @scanner.matched)]
-      when @scanner.scan(/'\\\\'|'\\t'|'\\f'|'\\r'|'\\n'|'\\13'/)
+      when @scanner.scan(/'\\\\'|'\\b'|'\\t'|'\\f'|'\\r'|'\\n'|'\\v'|'\\13'/)
         return [:CHARACTER, build_token(type: Token::Char, s_value: @scanner.matched)]
       when @scanner.scan(/"/)
         return [:STRING, %Q("#{@scanner.scan_until(/"/)})]
