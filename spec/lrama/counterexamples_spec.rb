@@ -50,7 +50,7 @@ num  : digit
       end
 
       it "build counterexamples of S/R conflicts" do
-        grammar = Lrama::NewParser.new(y).parse
+        grammar = Lrama::Parser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
         counterexamples = Lrama::Counterexamples.new(states)
@@ -249,7 +249,7 @@ expr2 : digit '+' digit
       end
 
       it "build counterexamples of R/R conflicts" do
-        grammar = Lrama::NewParser.new(y).parse
+        grammar = Lrama::Parser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
         counterexamples = Lrama::Counterexamples.new(states)
@@ -326,7 +326,7 @@ expr : digit '+' digit
       end
 
       it "build counterexamples of S/R conflicts" do
-        grammar = Lrama::NewParser.new(y).parse
+        grammar = Lrama::Parser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
         counterexamples = Lrama::Counterexamples.new(states)
@@ -407,7 +407,7 @@ opt_nl : /* none */
       end
 
       it "build counterexamples of S/R and R/R conflicts" do
-        grammar = Lrama::NewParser.new(y).parse
+        grammar = Lrama::Parser.new(y).parse
         states = Lrama::States.new(grammar, warning)
         states.compute
         counterexamples = Lrama::Counterexamples.new(states)
