@@ -60,7 +60,8 @@ module Lrama
         o.on('-t', 'reserved, do nothing') { }
         o.separator ''
         o.separator 'Output:'
-        o.on('-h', '--header=[FILE]', 'also produce a header file named FILE') {|v| @options.header = true; @options.header_file = v }
+        o.on('-H', '--header=[FILE]', 'also produce a header file named FILE') {|v| @options.header = true; @options.header_file = v }
+        o.on('-h=[FILE]', 'also produce a header file named FILE (deprecated)') {|v| @options.header = true; @options.header_file = v }
         o.on('-d', 'also produce a header file') { @options.header = true }
         o.on('-r', '--report=THINGS', Array, 'also produce details on the automaton') {|v| @report = v }
         o.on('--report-file=FILE', 'also produce details on the automaton output to a file named FILE') {|v| @options.report_file = v }

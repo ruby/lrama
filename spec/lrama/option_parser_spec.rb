@@ -48,7 +48,8 @@ RSpec.describe Lrama::OptionParser do
             -t                               reserved, do nothing
 
         Output:
-            -h, --header=[FILE]              also produce a header file named FILE
+            -H, --header=[FILE]              also produce a header file named FILE
+            -h=[FILE]                        also produce a header file named FILE (deprecated)
             -d                               also produce a header file
             -r, --report=THINGS              also produce details on the automaton
                 --report-file=FILE           also produce details on the automaton output to a file named FILE
@@ -139,6 +140,15 @@ RSpec.describe Lrama::OptionParser do
       context "outfile option is passed" do
         it "@header_file is set based on outfile" do
           option_parser = Lrama::OptionParser.new
+          option_parser.send(:parse, ["-H", "-o", "parse.c", "-", "test.y"])
+          options = option_parser.instance_variable_get(:@options)
+          expect(options.header_file).to eq "./parse.h"
+        end
+      end
+
+      context "deprecated outfile option is passed" do
+        it "@header_file is set based on outfile" do
+          option_parser = Lrama::OptionParser.new
           option_parser.send(:parse, ["-h", "-o", "parse.c", "-", "test.y"])
           options = option_parser.instance_variable_get(:@options)
           expect(options.header_file).to eq "./parse.h"
@@ -148,7 +158,7 @@ RSpec.describe Lrama::OptionParser do
       context "outfile option is not passed" do
         it "@header_file is set based on outfile default value" do
           option_parser = Lrama::OptionParser.new
-          option_parser.send(:parse, ["-h", "-", "test.y"])
+          option_parser.send(:parse, ["-H", "-", "test.y"])
           options = option_parser.instance_variable_get(:@options)
           expect(options.header_file).to eq "./y.tab.h"
         end
@@ -158,7 +168,7 @@ RSpec.describe Lrama::OptionParser do
     context "header file name is passed" do
       it "@header_file is same with passed value" do
         option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["-hparse.h", "-", "test.y"])
+        option_parser.send(:parse, ["-Hparse.h", "-", "test.y"])
         options = option_parser.instance_variable_get(:@options)
         expect(options.header_file).to eq "parse.h"
       end
