@@ -193,8 +193,7 @@ rule
          | INTEGER
 
   alias: # empty
-       | string_as_id
-       | STRING
+       | STRING # TODO: change this to string_as_id
 
   symbol_declarations: symbol_declaration_list
                          {
