@@ -1,4 +1,4 @@
-class Lrama::NewParser
+class Lrama::Parser
 rule
   input: prologue_declarations bison_declarations "%%" grammar epilogue_opt
 

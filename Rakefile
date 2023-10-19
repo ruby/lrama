@@ -3,11 +3,11 @@ require "bundler/gem_tasks"
 namespace "build" do
   desc "build parser from parser.y by using Racc"
   task :racc_parser do
-    `bundle exec racc parser.y --embedded -o lib/lrama/new_parser.rb`
+    `bundle exec racc parser.y --embedded -o lib/lrama/parser.rb`
   end
 
   desc "build parser for debugging"
   task :racc_verbose_parser do
-    `bundle exec racc parser.y --embedded -o lib/lrama/new_parser.rb -t --log-file=parser.output`
+    `bundle exec racc parser.y --embedded -o lib/lrama/parser.rb -t --log-file=parser.output`
   end
 end

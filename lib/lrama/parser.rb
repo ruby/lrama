@@ -666,7 +666,7 @@ end
 end
 ###### racc/parser.rb end
 module Lrama
-  class NewParser < Racc::Parser
+  class Parser < Racc::Parser
 
 module_eval(<<'...end parser.y/module_eval...', 'parser.y', 388)
 
@@ -1787,5 +1787,5 @@ def _reduce_none(val, _values, result)
   val[0]
 end
 
-  end   # class NewParser
+  end   # class Parser
 end   # module Lrama

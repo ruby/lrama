@@ -6,7 +6,7 @@ SimpleCov.start do
   # Created Groups based on the folder structures
   add_group "Grammar", "lib/lrama/grammar"
   add_group "Lexer", "lib/lrama/lexer"
-  # add_group "Parser", "lib/lrama/parser"
+  add_group "Parser", "lib/lrama/parser"
   add_group "Report", "lib/lrama/report"
   add_group "State", "lib/lrama/state/"
   add_group "States", "lib/lrama/states/"
