@@ -144,6 +144,16 @@ rule
                           }
                           @precedence_number += 1
                         }
+                    | "%precedence" token_declarations_for_precedence
+                        {
+                          val[1].each {|hash|
+                            hash[:tokens].each {|id|
+                              sym = @grammar.add_term(id: id)
+                              @grammar.add_precedence(sym, @precedence_number)
+                            }
+                          }
+                          @precedence_number += 1
+                        }
                     | "%nonassoc" token_declarations_for_precedence
                         {
                           val[1].each {|hash|

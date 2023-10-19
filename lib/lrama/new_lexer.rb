@@ -23,6 +23,7 @@ module Lrama
       %lex-param
       %parse-param
       %initial-action
+      %precedence
       %prec
       %error-token
     )
