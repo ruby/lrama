@@ -6,17 +6,22 @@ RSpec.describe Lrama::Output do
       out: out,
       output_file_path: "y.tab.c",
       template_name: "bison/yacc.c",
-      grammar_file_path: "parse.tmp.y",
+      grammar_file_path: grammar_file_path,
       header_out: header_out,
-      header_file_path: "y.tab.h",
+      header_file_path: header_file_path,
       context: context,
       grammar: grammar,
     )
   }
   let(:out) { StringIO.new }
   let(:header_out) { StringIO.new }
-  let(:context) { double("context") }
-  let(:grammar) { double("grammar") }
+  let(:warning) { Lrama::Warning.new(StringIO.new) }
+  let(:text) { File.read(grammar_file_path) }
+  let(:grammar) { Lrama::Parser.new(text).parse }
+  let(:states) { s = Lrama::States.new(grammar, warning); s.compute; s }
+  let(:context) { Lrama::Context.new(states) }
+  let(:grammar_file_path) { fixture_path("common/basic.y") }
+  let(:header_file_path) { "y.tab.h" }
 
   describe "#parse_param" do
     it "returns declaration of parse param without blanks" do
@@ -143,6 +148,53 @@ RSpec.describe Lrama::Output do
 
       allow(grammar).to receive(:lex_param).and_return(" int lex_param  ")
       expect(output.lex_param_name).to eq("lex_param")
+    end
+  end
+
+  describe "#render" do
+    context "header_file_path is specified" do
+      before do
+        output.render
+        out.rewind
+        header_out.rewind
+      end
+
+      it "renders C file and header file" do
+        expect(out.size).not_to eq 0
+        expect(header_out.size).not_to eq 0
+      end
+
+      it "doesn't include [@oline@] and [@ofile@] in files" do
+        o = out.read
+        h = header_out.read
+
+        expect(o).not_to match /\[@oline@\]/
+        expect(o).not_to match /\[@ofile@\]/
+        expect(h).not_to match /\[@oline@\]/
+        expect(h).not_to match /\[@ofile@\]/
+      end
+    end
+
+    context "header_file_path is not specified" do
+      let(:header_file_path) { nil }
+
+      before do
+        output.render
+        out.rewind
+        header_out.rewind
+      end
+
+      it "renders only C file" do
+        expect(out.size).not_to eq 0
+        expect(header_out.size).to eq 0
+      end
+
+      it "doesn't include [@oline@] and [@ofile@] in a file" do
+        o = out.read
+
+        expect(o).not_to match /\[@oline@\]/
+        expect(o).not_to match /\[@ofile@\]/
+      end
     end
   end
 end

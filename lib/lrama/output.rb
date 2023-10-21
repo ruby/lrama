@@ -41,11 +41,8 @@ module Lrama
       end
     end
 
-    def eval_template(file, path)
-      erb = self.class.erb(File.read(file))
-      erb.filename = file
-      tmp = erb.result_with_hash(context: @context, output: self)
-      replace_special_variables(tmp, path)
+    def render_partial(file)
+      render_template(partial_file(file))
     end
 
     def render
@@ -354,12 +351,27 @@ module Lrama
 
     private
 
+    def eval_template(file, path)
+      tmp = render_template(file)
+      replace_special_variables(tmp, path)
+    end
+
+    def render_template(file)
+      erb = self.class.erb(File.read(file))
+      erb.filename = file
+      erb.result_with_hash(context: @context, output: self)
+    end
+
     def template_file
       File.join(template_dir, @template_name)
     end
 
     def header_template_file
       File.join(template_dir, "bison/yacc.h")
+    end
+
+    def partial_file(file)
+      File.join(template_dir, file)
     end
 
     def template_dir
