@@ -694,6 +694,11 @@ end
 def next_token
   @lexer.next_token
 end
+
+def on_error(error_token_id, error_value, value_stack)
+  raise ParseError, sprintf("\n%d:%d: parse error on value %s (%s)",
+                            @lexer.line, @lexer.column, error_value.inspect, token_to_str(error_token_id) || '?')
+end
 ...end parser.y/module_eval...
 ##### State transition tables begin ###
 
