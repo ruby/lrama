@@ -15,7 +15,7 @@ RSpec.describe Lrama::Output do
   }
   let(:out) { StringIO.new }
   let(:header_out) { StringIO.new }
-  let(:warning) { Lrama::Warning.new(StringIO.new) }
+  let(:warning) { Lrama::Warning.new(StringIO.new) } # suppress warnings
   let(:text) { File.read(grammar_file_path) }
   let(:grammar) { Lrama::Parser.new(text).parse }
   let(:states) { s = Lrama::States.new(grammar, warning); s.compute; s }
