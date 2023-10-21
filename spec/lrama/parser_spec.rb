@@ -1316,6 +1316,25 @@ expr[result]: NUM
         end
       end
     end
+
+    describe "error messages" do
+      it "contains line number and column" do
+        y = <<~INPUT
+%{
+// Prologue
+%}
+
+%expect invalid
+
+%%
+
+program: /* empty */
+       ;
+        INPUT
+
+        expect { Lrama::Parser.new(y).parse }.to raise_error(/5:14: parse error/)
+      end
+    end
   end
 
   describe "#fill_symbol_number" do
