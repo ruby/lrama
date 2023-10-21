@@ -385,21 +385,25 @@ end
 
 ---- inner
 
+include Lrama::Report::Duration
+
 def initialize(text)
   @text = text
 end
 
 def parse
-  @lexer = Lrama::NewLexer.new(@text)
-  @grammar = Lrama::Grammar.new
-  @precedence_number = 0
-  do_parse
-  @grammar.extract_references
-  @grammar.prepare
-  @grammar.compute_nullable
-  @grammar.compute_first_set
-  @grammar.validate!
-  @grammar
+  report_duration(:parse) do
+    @lexer = Lrama::NewLexer.new(@text)
+    @grammar = Lrama::Grammar.new
+    @precedence_number = 0
+    do_parse
+    @grammar.extract_references
+    @grammar.prepare
+    @grammar.compute_nullable
+    @grammar.compute_first_set
+    @grammar.validate!
+    @grammar
+  end
 end
 
 def next_token
