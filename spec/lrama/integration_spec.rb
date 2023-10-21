@@ -320,6 +320,88 @@ int main() {
     end
   end
 
+  describe "%printer" do
+    it "prints messages" do
+      # (1+) #=> 101
+      # '100' is complemented
+      input = [
+        %w[NUM val1 1],
+        %w['+'],
+        %w[NUM val1 2],
+        %w['*'],
+        %w[NUM val1 3]
+      ]
+
+      expected = <<~STR.chomp
+        val1: 1
+        val1: 1
+        val1: 1
+        expr: 1
+        val1: 2
+        val1: 2
+        val1: 2
+        expr: 2
+        val1: 3
+        val1: 3
+        val1: 3
+        expr: 3
+        expr: 2
+        expr: 3
+        expr: 6
+        expr: 1
+        expr: 6
+        val2: 7
+        val2: 7
+        expr: 7
+        expr: 7
+        => 7
+      STR
+
+      test_rules(<<~Rules, input, expected, debug: true)
+  %union {
+      int val1;
+      int val2;
+      int val3;
+  }
+  %token <val1> NUM
+  %type <val2> add
+  %type <val3> expr
+  %left '+' '-'
+  %left '*' '/'
+
+  %printer {
+      printf("val1: %d\\n", $$);
+  } <val1> // printer for TAG
+
+  %printer {
+      printf("val2: %d\\n", $$);
+  } <val2>
+
+  %printer {
+      printf("expr: %d\\n", $$);
+  } expr // printer for symbol
+
+  %%
+
+  program : { (void)yynerrs; }
+       | expr { printf("=> %d", $1); }
+       ;
+
+  add  : expr '+' expr { $$ = $1 + $3; }
+
+  expr : NUM
+       | add
+       | expr '-' expr { $$ = $1 - $3; }
+       | expr '*' expr { $$ = $1 * $3; }
+       | expr '/' expr { $$ = $1 / $3; }
+       | '(' expr ')'  { $$ = $2; }
+       ;
+
+  %%
+      Rules
+    end
+  end
+
   # TODO: Add test case for "(1+2"
   describe "error_recovery" do
     it "returns 6 for '(1+)'" do
