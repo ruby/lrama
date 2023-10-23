@@ -482,14 +482,6 @@ module Lrama
       end
     end
 
-    def create_token(type, s_value, line, column)
-      t = Token.new(type: type, s_value: s_value)
-      t.line = line
-      t.column = column
-
-      return t
-    end
-
     private
 
     def find_nterm_by_id!(id)
