@@ -17,7 +17,7 @@ RSpec.describe Lrama::Output do
   let(:header_out) { StringIO.new }
   let(:warning) { Lrama::Warning.new(StringIO.new) } # suppress warnings
   let(:text) { File.read(grammar_file_path) }
-  let(:grammar) { Lrama::Parser.new(text).parse }
+  let(:grammar) { Lrama::Parser.new(text, grammar_file_path).parse }
   let(:states) { s = Lrama::States.new(grammar, warning); s.compute; s }
   let(:context) { Lrama::Context.new(states) }
   let(:grammar_file_path) { fixture_path("common/basic.y") }
