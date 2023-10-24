@@ -26,7 +26,7 @@ RSpec.describe Lrama::Grammar::Code do
   end
 
   describe "#translated_printer_code" do
-    let(:printer_token) { token_class.new(type: token_class::P_printer, s_value: '<val>') }
+    let(:printer_token) { token_class.new(type: token_class::User_code, s_value: '<val>') }
 
     context "when the ref.value is '$' and ref.type is :dollar" do
       let(:reference) { Lrama::Grammar::Reference.new(value: '$', type: :dollar, first_column: 0, last_column: 4) }
