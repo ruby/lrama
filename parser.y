@@ -298,7 +298,7 @@ rule
      | rhs symbol named_ref_opt
          {
            token = val[1]
-           val[1].alias = val[2]
+           token.alias = val[2]
            result = val[0].append(token)
          }
      | rhs "{"
