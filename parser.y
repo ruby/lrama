@@ -387,8 +387,9 @@ end
 
 include Lrama::Report::Duration
 
-def initialize(text)
+def initialize(text, path)
   @text = text
+  @path = path
 end
 
 def parse
@@ -411,6 +412,10 @@ def next_token
 end
 
 def on_error(error_token_id, error_value, value_stack)
-  raise ParseError, sprintf("\n%d:%d: parse error on value %s (%s)",
-                            @lexer.line, @lexer.column, error_value.inspect, token_to_str(error_token_id) || '?')
+  source = @text.split("\n")[error_value.line - 1]
+  raise ParseError, <<~ERROR
+    #{@path}:#{@lexer.line}:#{@lexer.column}: parse error on value #{error_value.inspect} (#{token_to_str(error_token_id) || '?'})
+    #{source}
+    #{' ' * @lexer.column}^
+  ERROR
 end
