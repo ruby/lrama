@@ -1,0 +1,24 @@
+module Lrama
+  class Grammar
+    class ParserState
+      attr_reader state_id: Lexer::Token::Ident
+      attr_reader state_list: Array[Lexer::Token::Ident]
+
+      def initialize: (state_id: Lexer::Token::Ident, state_list: Array[Lexer::Token::Ident]) -> void
+
+      def enum_definition: () -> String
+      def state_name_macro: () -> String
+      def current_state_name_macro: () -> String
+      def states_functions: () -> String
+      def states_stack_size_name: () -> String
+      def states_stacks: () -> String
+      def state_name: () -> String
+      def enum_name: () -> String
+      def enum_type: () -> String
+      def enum_body: () -> String
+      def int_to_name: () -> Array[String]
+      def enum_name_table_name: () -> String
+      def stack_prefix: () -> String
+    end
+  end
+end

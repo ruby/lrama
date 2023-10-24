@@ -2,6 +2,7 @@ require "lrama/grammar/auxiliary"
 require "lrama/grammar/code"
 require "lrama/grammar/counter"
 require "lrama/grammar/error_token"
+require "lrama/grammar/parser_state"
 require "lrama/grammar/percent_code"
 require "lrama/grammar/precedence"
 require "lrama/grammar/printer"
@@ -20,7 +21,7 @@ require "lrama/lexer"
 module Lrama
   # Grammar is the result of parsing an input grammar file
   class Grammar
-    attr_reader :percent_codes, :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
+    attr_reader :percent_codes, :parser_states, :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
                   :printers, :error_tokens,
                   :lex_param, :parse_param, :initial_action,
@@ -35,6 +36,7 @@ module Lrama
       @percent_codes = []
       @printers = []
       @error_tokens = []
+      @parser_states = []
       @symbols = []
       @types = []
       @rule_builders = []
@@ -61,6 +63,10 @@ module Lrama
 
     def add_error_token(ident_or_tags:, token_code:, lineno:)
       @error_tokens << ErrorToken.new(ident_or_tags: ident_or_tags, token_code: token_code, lineno: lineno)
+    end
+
+    def add_parser_state(state_id, state_list)
+      @parser_states << ParserState.new(state_id: state_id, state_list: state_list)
     end
 
     def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
@@ -195,7 +201,7 @@ module Lrama
     end
 
     def find_symbol_by_id!(id)
-      find_symbol_by_id(id) || (raise "Symbol not found: #{id}")
+      find_symbol_by_id(id) || (raise "Symbol not found: #{id.s_value}")
     end
 
     def find_symbol_by_number!(number)

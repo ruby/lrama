@@ -12,6 +12,7 @@ target :lib do
   check "lib/lrama/grammar/parameterizing_rule_resolver.rb"
   check "lib/lrama/grammar/parameterizing_rule_rhs_builder.rb"
   check "lib/lrama/grammar/parameterizing_rules"
+  check "lib/lrama/grammar/parser_state.rb"
   check "lib/lrama/grammar/percent_code.rb"
   check "lib/lrama/grammar/precedence.rb"
   check "lib/lrama/grammar/printer.rb"

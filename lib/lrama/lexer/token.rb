@@ -1,6 +1,9 @@
 require 'lrama/lexer/token/char'
 require 'lrama/lexer/token/ident'
 require 'lrama/lexer/token/instantiate_rule'
+require 'lrama/lexer/token/parser_state_pop'
+require 'lrama/lexer/token/parser_state_push'
+require 'lrama/lexer/token/parser_state_set'
 require 'lrama/lexer/token/tag'
 require 'lrama/lexer/token/user_code'
 

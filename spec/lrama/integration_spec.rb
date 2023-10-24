@@ -9,7 +9,7 @@ RSpec.describe "integration" do
       raise "#{command} failed." unless $?.success?
     end
 
-    def test_parser(parser_name, input, expected, lrama_command_args: [], debug: false)
+    def test_parser(parser_name, input, expected, lrama_command_args: [], gcc_options: "", debug: false)
       tmpdir = Dir.tmpdir
       grammar_file_path = fixture_path("integration/#{parser_name}.y")
       lexer_file_path = fixture_path("integration/#{parser_name}.l")
@@ -28,7 +28,7 @@ RSpec.describe "integration" do
 
       Lrama::Command.new.run(%W[-H#{parser_h_path} -o#{parser_c_path}] + lrama_command_args + %W[#{grammar_file_path}])
       exec_command("#{flex} --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
-      exec_command("gcc -Wall -ggdb3 -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
+      exec_command("gcc -Wall -ggdb3 #{gcc_options} -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
 
       out = err = status = nil
 
@@ -150,6 +150,130 @@ RSpec.describe "integration" do
       # (1+) #=> 101
       # '100' is complemented
       test_parser("error_recovery", "(1+)", "=> 101", lrama_command_args: %W[-e])
+    end
+  end
+
+  describe "parser state" do
+    it "prints current 'in_rescue' state" do
+      input = <<~INPUT
+        def m1
+          class A
+            class B
+              def m2
+              end
+            end
+          end
+        end
+      INPUT
+
+      expected = <<~OUTPUT
+        0 => in_def: not_in_def, in_class: not_in_class.
+        0 => before_rescue
+        1. fname => m1. in_def: in_def, in_class: not_in_class.
+        1. cname => A. in_def: not_in_def, in_class: in_class.
+        1. cname => B. in_def: not_in_def, in_class: in_class.
+        1. fname => m2. in_def: in_def, in_class: not_in_class.
+        2. fname => m2. in_def: not_in_def, in_class: in_class.
+        2. cname => B. in_def: not_in_def, in_class: in_class.
+        2. cname => A. in_def: in_def, in_class: not_in_class.
+        2. fname => m1. in_def: not_in_def, in_class: not_in_class.
+        2 => before_rescue
+        3 => before_rescue
+        4 => before_rescue
+        5 => before_rescue
+        1 => before_rescue
+      OUTPUT
+
+      test_parser("parser_state", input, expected)
+      test_parser("parser_state", input, expected, gcc_options: "-DYYINITDEPTH")
+
+
+      # See: https://github.com/ruby/ruby/commit/eaa0fbf9b956fa25e73c3d55e2eba8887324e233
+      input = <<~INPUT
+        begin
+          1
+        rescue
+          2
+        else
+          3
+        ensure
+          4
+        end
+      INPUT
+
+      expected = <<~OUTPUT
+        0 => in_def: not_in_def, in_class: not_in_class.
+        0 => before_rescue
+        NUM => 1
+        2 => before_rescue
+        6 => after_rescue
+        NUM => 2
+        7 => before_rescue
+        3 => before_rescue
+        NUM => 3
+        4 => after_else
+        NUM => 4
+        5 => after_ensure
+        2 => after_ensure
+        3 => after_ensure
+        4 => after_ensure
+        5 => after_ensure
+        1 => after_ensure
+      OUTPUT
+
+      test_parser("parser_state", input, expected)
+
+
+      input = <<~INPUT
+        begin
+          1
+        rescue
+          begin
+            2
+          rescue
+            3
+          else
+            4
+          ensure
+            5
+          end
+        else
+          6
+        ensure
+          7
+        end
+      INPUT
+
+      expected = <<~OUTPUT
+        0 => in_def: not_in_def, in_class: not_in_class.
+        0 => before_rescue
+        NUM => 1
+        2 => before_rescue
+        6 => after_rescue
+        NUM => 2
+        2 => after_rescue
+        6 => after_rescue
+        NUM => 3
+        7 => after_rescue
+        3 => after_rescue
+        NUM => 4
+        4 => after_else
+        NUM => 5
+        5 => after_ensure
+        7 => before_rescue
+        3 => before_rescue
+        NUM => 6
+        4 => after_else
+        NUM => 7
+        5 => after_ensure
+        2 => after_ensure
+        3 => after_ensure
+        4 => after_ensure
+        5 => after_ensure
+        1 => after_ensure
+      OUTPUT
+
+      test_parser("parser_state", input, expected)
     end
   end
 

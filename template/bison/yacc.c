@@ -460,6 +460,9 @@ union yyalloc
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   <%= output.yymaxutok %>
 
+<%- output.parser_states_enums.each do |enum| -%>
+<%= enum %>
+<%- end -%>
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
    as returned by yylex, with out-of-bounds checking.  */
@@ -1149,7 +1152,50 @@ yydestruct (const char *yymsg,
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 }
 
+/*------------------------.
+| State stack functions.  |
+`------------------------*/
 
+<%- if output.has_parser_states? -%>
+#if !defined YYSTACK_RELOCATE
+#define YYSTATE_STACK_INCREASE(stack_array, stack_bottom, stack_top, new_stack_size, name) \
+  do \
+    { \
+      YYNOMEM; \
+    } \
+  while (0)
+#else
+#define YYSTATE_STACK_INCREASE(stack_array, stack_bottom, stack_top, stack_size, name) \
+  do \
+    { \
+      { \
+        YYPTRDIFF_T current_stack_size = stack_top - stack_bottom + 1; \
+        if (YYMAXDEPTH <= stack_size) \
+          YYNOMEM; \
+        stack_size *= 2; \
+        if (YYMAXDEPTH < stack_size) \
+          stack_size = YYMAXDEPTH; \
+        { \
+          int *prev_bottom = stack_bottom; \
+          int *new_stack = (int *) YYMALLOC (sizeof (int *) * stack_size); \
+          if (!new_stack) \
+            YYNOMEM; \
+          YYCOPY (new_stack, stack_bottom, current_stack_size); \
+          stack_bottom = new_stack; \
+          stack_top = stack_bottom + current_stack_size - 1; \
+          if (prev_bottom != stack_array) \
+            YYSTACK_FREE (prev_bottom); \
+          YYDPRINTF ((stderr, "State stack size increased to %ld (%s)\n", YY_CAST (long, current_stack_size), name)); \
+        } \
+      } \
+    } \
+  while (0)
+#endif
+<%- end -%>
+
+<%- output.parser_states_functions.each do |func| -%>
+<%= func %>
+<%- end -%>
 
 <%- if output.error_recovery -%>
 #ifndef YYMAXREPAIR
@@ -1510,6 +1556,10 @@ YYLTYPE yylloc = yyloc_default;
     YYLTYPE yylsa[YYINITDEPTH];
     YYLTYPE *yyls = yylsa;
     YYLTYPE *yylsp = yyls;
+
+  <%- output.parser_states_stacks.each do |states_stacks| -%>
+    <%= states_stacks %>
+  <%- end -%>
 
   int yyn;
   /* The return value of yyparse.  */
@@ -2038,6 +2088,9 @@ yyreturnlab:
 #ifndef yyoverflow
   if (yyss != yyssa)
     YYSTACK_FREE (yyss);
+<%- output.parser_states_clean_up_stack.each do |clean_up| -%>
+<%= clean_up %>
+<%- end -%>
 #endif
   if (yymsg != yymsgbuf)
     YYSTACK_FREE (yymsg);
