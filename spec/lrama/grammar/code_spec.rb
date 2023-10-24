@@ -24,4 +24,63 @@ RSpec.describe Lrama::Grammar::Code do
       end
     end
   end
+
+  describe "#translated_printer_code" do
+    let(:printer_token) { token_class.new(type: token_class::User_code, s_value: '<val>') }
+
+    context "when the ref.value is '$' and ref.type is :dollar" do
+      let(:reference) { Lrama::Grammar::Reference.new(value: '$', type: :dollar, first_column: 0, last_column: 4) }
+
+      it "returns '((*yyvaluep).val)'" do
+        code = described_class.new(type: :user_code, token_code: printer_token)
+        references = double("references")
+        allow(code).to receive(:references).and_return([reference])
+        expect(code.translated_printer_code(printer_token)).to eq("((*yyvaluep).val)")
+      end
+    end
+
+    context "when the ref.value is '$' and ref.type is :at" do
+      let(:reference) { Lrama::Grammar::Reference.new(value: '$', type: :at, first_column: 0, last_column: 4) }
+
+      it "returns '(*yylocationp)'" do
+        code = described_class.new(type: :user_code, token_code: printer_token)
+        references = double("references")
+        allow(code).to receive(:references).and_return([reference])
+        expect(code.translated_printer_code(printer_token)).to eq("(*yylocationp)")
+      end
+    end
+
+    context "when the ref.value is 'n' and ref.type is :dollar" do
+      let(:reference) { Lrama::Grammar::Reference.new(value: 'n', type: :dollar, first_column: 0, last_column: 4) }
+
+      it "raises error" do
+        code = described_class.new(type: :user_code, token_code: printer_token)
+        references = double("references")
+        allow(code).to receive(:references).and_return([reference])
+        expect { code.translated_printer_code(printer_token) }.to raise_error("$n can not be used in %printer.")
+      end
+    end
+
+    context "when the ref.value is 'n' and ref.type is :at" do
+      let(:reference) { Lrama::Grammar::Reference.new(value: 'n', type: :at, first_column: 0, last_column: 4) }
+
+      it "raises error" do
+        code = described_class.new(type: :user_code, token_code: printer_token)
+        references = double("references")
+        allow(code).to receive(:references).and_return([reference])
+        expect { code.translated_printer_code(printer_token) }.to raise_error("@n can not be used in %printer.")
+      end
+    end
+
+    context "when unexpected ref.value and ref.type" do
+      let(:reference) { Lrama::Grammar::Reference.new(value: 'invalid', type: :invalid, first_column: 0, last_column: 4) }
+
+      it "raises error" do
+        code = described_class.new(type: :user_code, token_code: printer_token)
+        references = double("references")
+        allow(code).to receive(:references).and_return([reference])
+        expect { code.translated_printer_code(printer_token) }.to raise_error("Unexpected. #{code}, #{reference}")
+      end
+    end
+  end
 end
