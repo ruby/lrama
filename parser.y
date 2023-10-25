@@ -1,4 +1,5 @@
 class Lrama::Parser
+  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
 rule
   input: prologue_declarations bison_declarations "%%" grammar epilogue_opt
 
