@@ -49,7 +49,6 @@ RSpec.describe Lrama::OptionParser do
 
         Output:
             -H, --header=[FILE]              also produce a header file named FILE
-            -h=[FILE]                        also produce a header file named FILE (deprecated)
             -d                               also produce a header file
             -r, --report=THINGS              also produce details on the automaton
                 --report-file=FILE           also produce details on the automaton output to a file named FILE
@@ -62,7 +61,7 @@ RSpec.describe Lrama::OptionParser do
 
         Other options:
             -V, --version                    output version information and exit
-                --help                       display this help and exit
+            -h, --help                       display this help and exit
 
       HELP
     end
