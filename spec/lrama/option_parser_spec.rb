@@ -145,15 +145,6 @@ RSpec.describe Lrama::OptionParser do
         end
       end
 
-      context "deprecated outfile option is passed" do
-        it "@header_file is set based on outfile" do
-          option_parser = Lrama::OptionParser.new
-          option_parser.send(:parse, ["-h", "-o", "parse.c", "-", "test.y"])
-          options = option_parser.instance_variable_get(:@options)
-          expect(options.header_file).to eq "./parse.h"
-        end
-      end
-
       context "outfile option is not passed" do
         it "@header_file is set based on outfile default value" do
           option_parser = Lrama::OptionParser.new
