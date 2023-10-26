@@ -32,38 +32,40 @@ RSpec.describe Lrama::OptionParser do
 
   describe "help option" do
     it "print help and exit" do
-      result = Open3.popen3("ruby", exe_path("lrama"), "--help") do |stdin, stdout, stderr, wait_thr|
-        stdout.read
+      ["--help", "-h"].each do |help|
+        result = Open3.popen3("ruby", exe_path("lrama"), help) do |stdin, stdout, stderr, wait_thr|
+          stdout.read
+        end
+        expect(result).to eq(<<~HELP)
+          Lrama is LALR (1) parser generator written by Ruby.
+
+          Usage: lrama [options] FILE
+
+          STDIN mode:
+          lrama [options] - FILE               read grammar from STDIN
+
+          Tuning the Parser:
+              -S, --skeleton=FILE              specify the skeleton to use
+              -t                               reserved, do nothing
+
+          Output:
+              -H, --header=[FILE]              also produce a header file named FILE
+              -d                               also produce a header file
+              -r, --report=THINGS              also produce details on the automaton
+                  --report-file=FILE           also produce details on the automaton output to a file named FILE
+              -o, --output=FILE                leave output to FILE
+                  --trace=THINGS               also output trace logs at runtime
+              -v                               reserved, do nothing
+
+          Error Recovery:
+              -e                               enable error recovery
+
+          Other options:
+              -V, --version                    output version information and exit
+              -h, --help                       display this help and exit
+
+        HELP
       end
-      expect(result).to eq(<<~HELP)
-        Lrama is LALR (1) parser generator written by Ruby.
-
-        Usage: lrama [options] FILE
-
-        STDIN mode:
-        lrama [options] - FILE               read grammar from STDIN
-
-        Tuning the Parser:
-            -S, --skeleton=FILE              specify the skeleton to use
-            -t                               reserved, do nothing
-
-        Output:
-            -H, --header=[FILE]              also produce a header file named FILE
-            -d                               also produce a header file
-            -r, --report=THINGS              also produce details on the automaton
-                --report-file=FILE           also produce details on the automaton output to a file named FILE
-            -o, --output=FILE                leave output to FILE
-                --trace=THINGS               also output trace logs at runtime
-            -v                               reserved, do nothing
-
-        Error Recovery:
-            -e                               enable error recovery
-
-        Other options:
-            -V, --version                    output version information and exit
-            -h, --help                       display this help and exit
-
-      HELP
     end
   end
 
