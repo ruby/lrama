@@ -1,0 +1,47 @@
+module Lrama
+  class Lexer
+    class Token
+
+      attr_accessor line: Integer
+      attr_accessor column: Integer
+      attr_accessor referred: bool
+      attr_accessor references: Array[[Symbol, (String|Integer), Token?, Integer, Integer]]
+
+      def to_s: () -> String
+      def referred_by?: (String string) -> bool
+      def ==: (Token other) -> bool
+      def numberize_references: (Token lhs, Array[Token] rhs) -> Array[[Symbol, (String|Integer), Token?, Integer, Integer]]
+
+      self.@i: Integer
+      self.@types: Array[Type]
+      def self.define_type: (Symbol name) -> void
+
+      # Token types
+      P_expect: Type
+      P_define: Type
+      P_printer: Type
+      P_error_token: Type
+      P_lex_param: Type
+      P_parse_param: Type
+      P_initial_action: Type
+      P_union: Type
+      P_token: Type
+      P_type: Type
+      P_nonassoc: Type
+      P_left: Type
+      P_right: Type
+      P_precedence: Type
+      P_prec: Type
+      User_code: Type
+      Tag: Type
+      Number: Type
+      Ident_Colon: Type
+      Ident: Type
+      Named_Ref: Type
+      Semicolon: Type
+      Bar: Type
+      String: Type
+      Char: Type
+    end
+  end
+end
