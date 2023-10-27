@@ -9,7 +9,7 @@ module Lrama
 
       def to_s: () -> String
       def referred_by?: (String string) -> bool
-      def ==: (untyped other) -> bool
+      def ==: (Token other) -> bool
       def numberize_references: (Token lhs, Array[Token] rhs) -> Array[[Symbol, (String|Integer), Token?, Integer, Integer]]
 
       self.@i: Integer
