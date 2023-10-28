@@ -1,7 +1,7 @@
 RSpec.describe Lrama::Grammar::Code do
   let(:token_class) { Lrama::Lexer::Token }
   let(:user_code_token) { token_class.new(type: token_class::User_code, s_value: "{ code 1 }") }
-  let(:initial_act_token) { token_class.new(type: token_class::P_initial_action, s_value: "%initial-action") }
+  let(:initial_act_token) { token_class.new(type: token_class::User_code, s_value: "%initial-action") }
 
   describe "#translated_code" do
     context "when the code type is :user_code" do
