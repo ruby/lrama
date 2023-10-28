@@ -951,9 +951,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
     end
 
     describe "user codes" do
-      describe "" do
-        it "is not duplicated" do
-          y = <<~INPUT
+      it "is not duplicated" do
+        y = <<~INPUT
 %{
 // Prologue
 %}
@@ -979,91 +978,91 @@ lambda: tLAMBDA
           { $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; }
         ;
 %%
-          INPUT
-          grammar = Lrama::Parser.new(y, "parse.y").parse
+        INPUT
+        grammar = Lrama::Parser.new(y, "parse.y").parse
 
-          expect(grammar.rules).to eq([
-            Rule.new(
-              id: 0,
-              lhs: grammar.find_symbol_by_s_value!("$accept"),
-              rhs: [
-                grammar.find_symbol_by_s_value!("program"),
-                grammar.find_symbol_by_s_value!("EOI"),
-              ],
-              code: nil,
-              nullable: false,
-              precedence_sym: grammar.find_symbol_by_s_value!("EOI"),
-              lineno: 14,
-            ),
-            Rule.new(
-              id: 1,
-              lhs: grammar.find_symbol_by_s_value!("program"),
-              rhs: [
-                grammar.find_symbol_by_s_value!("lambda"),
-              ],
-              code: nil,
-              nullable: false,
-              precedence_sym: nil,
-              lineno: 14,
-            ),
-            Rule.new(
-              id: 2,
-              lhs: grammar.find_symbol_by_s_value!("@1"),
-              rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>1 = 1; $<i>$ = 2; ")),
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 17,
-            ),
-            Rule.new(
-              id: 3,
-              lhs: grammar.find_symbol_by_s_value!("@2"),
-              rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 3; ")),
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 18,
-            ),
-            Rule.new(
-              id: 4,
-              lhs: grammar.find_symbol_by_s_value!("$@3"),
-              rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 4; ")),
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 19,
-            ),
-            Rule.new(
-              id: 5,
-              lhs: grammar.find_symbol_by_s_value!("$@4"),
-              rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " 5; ")),
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 21,
-            ),
-            Rule.new(
-              id: 6,
-              lhs: grammar.find_symbol_by_s_value!("lambda"),
-              rhs: [
-                grammar.find_symbol_by_s_value!("tLAMBDA"),
-                grammar.find_symbol_by_s_value!("@1"),
-                grammar.find_symbol_by_s_value!("@2"),
-                grammar.find_symbol_by_s_value!("$@3"),
-                grammar.find_symbol_by_s_value!("tARGS"),
-                grammar.find_symbol_by_s_value!("$@4"),
-                grammar.find_symbol_by_s_value!("tBODY"),
-              ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; ")),
-              nullable: false,
-              precedence_sym: grammar.find_symbol_by_s_value!("tBODY"),
-              lineno: 16,
-            ),
-          ])
-        end
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("EOI"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("EOI"),
+            lineno: 14,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("lambda"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: nil,
+            lineno: 14,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("@1"),
+            rhs: [],
+            code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>1 = 1; $<i>$ = 2; ")),
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 17,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("@2"),
+            rhs: [],
+            code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 3; ")),
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 18,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("$@3"),
+            rhs: [],
+            code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 4; ")),
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 19,
+          ),
+          Rule.new(
+            id: 5,
+            lhs: grammar.find_symbol_by_s_value!("$@4"),
+            rhs: [],
+            code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " 5; ")),
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 6,
+            lhs: grammar.find_symbol_by_s_value!("lambda"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("tLAMBDA"),
+              grammar.find_symbol_by_s_value!("@1"),
+              grammar.find_symbol_by_s_value!("@2"),
+              grammar.find_symbol_by_s_value!("$@3"),
+              grammar.find_symbol_by_s_value!("tARGS"),
+              grammar.find_symbol_by_s_value!("$@4"),
+              grammar.find_symbol_by_s_value!("tBODY"),
+            ],
+            code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; ")),
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("tBODY"),
+            lineno: 16,
+          ),
+        ])
+      end
 
-        it "can parse action with %empty" do
-          y = <<~INPUT
+      it "can parse action with %empty" do
+        y = <<~INPUT
 %{
 // Prologue
 %}
@@ -1087,69 +1086,69 @@ emp: /* none */
       { @0; }
    ;
 %%
-          INPUT
-          grammar = Lrama::Parser.new(y, "parse.y").parse
+        INPUT
+        grammar = Lrama::Parser.new(y, "parse.y").parse
 
-          expect(grammar.rules).to eq([
-            Rule.new(
-              id: 0,
-              lhs: grammar.find_symbol_by_s_value!("$accept"),
-              rhs: [
-                grammar.find_symbol_by_s_value!("program"),
-                grammar.find_symbol_by_s_value!("EOI"),
-              ],
-              code: nil,
-              nullable: false,
-              precedence_sym: grammar.find_symbol_by_s_value!("EOI"),
-              lineno: 14,
-            ),
-            Rule.new(
-              id: 1,
-              lhs: grammar.find_symbol_by_s_value!("program"),
-              rhs: [
-                grammar.find_symbol_by_s_value!("emp"),
-              ],
-              code: nil,
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 14,
-            ),
-            Rule.new(
-              id: 2,
-              lhs: grammar.find_symbol_by_s_value!("emp"),
-              rhs: [
-              ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$; ")),
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 17,
-            ),
-            Rule.new(
-              id: 3,
-              lhs: grammar.find_symbol_by_s_value!("emp"),
-              rhs: [
-              ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " @$; ")),
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 19,
-            ),
-            Rule.new(
-              id: 4,
-              lhs: grammar.find_symbol_by_s_value!("emp"),
-              rhs: [
-              ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " @0; ")),
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 21,
-            ),
-          ])
-        end
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("EOI"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("EOI"),
+            lineno: 14,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("emp"),
+            ],
+            code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 14,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("emp"),
+            rhs: [
+            ],
+            code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$; ")),
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 17,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("emp"),
+            rhs: [
+            ],
+            code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " @$; ")),
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 19,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("emp"),
+            rhs: [
+            ],
+            code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " @0; ")),
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 21,
+          ),
+        ])
+      end
 
-        context "includes named references" do
-          it "can parse" do
-            y = <<~INPUT
+      context "includes named references" do
+        it "can parse" do
+          y = <<~INPUT
 %{
 // Prologue
 %}
@@ -1178,111 +1177,111 @@ expr[result]: NUM
             | expr expr '-'
                 { $$ = $1 - $2; }
 ;
-            INPUT
-            grammar = Lrama::Parser.new(y, "parse.y").parse
+          INPUT
+          grammar = Lrama::Parser.new(y, "parse.y").parse
 
-            expect(grammar.rules).to eq([
-              Rule.new(
-                id: 0,
-                lhs: grammar.find_symbol_by_s_value!("$accept"),
-                rhs: [
-                  grammar.find_symbol_by_s_value!("input"),
-                  grammar.find_symbol_by_s_value!("YYEOF"),
-                ],
-                code: nil,
-                nullable: false,
-                precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-                lineno: 14,
-              ),
-              Rule.new(
-                id: 1,
-                lhs: grammar.find_symbol_by_s_value!("input"),
-                rhs: [
-                ],
-                code: nil,
-                nullable: true,
-                precedence_sym: nil,
-                lineno: 14,
-              ),
-              Rule.new(
-                id: 2,
-                lhs: grammar.find_symbol_by_s_value!("input"),
-                rhs: [
-                  grammar.find_symbol_by_s_value!("input"),
-                  grammar.find_symbol_by_s_value!("line"),
-                ],
-                code: nil,
-                nullable: false,
-                precedence_sym: nil,
-                lineno: 15,
-              ),
-              Rule.new(
-                id: 3,
-                lhs: grammar.find_symbol_by_s_value!("line"),
-                rhs: [
-                  grammar.find_symbol_by_s_value!("'\\n'"),
-                ],
-                code: nil,
-                nullable: false,
-                precedence_sym: grammar.find_symbol_by_s_value!("'\\n'"),
-                lineno: 18,
-              ),
-              Rule.new(
-                id: 4,
-                lhs: grammar.find_symbol_by_s_value!("line"),
-                rhs: [
-                  grammar.find_symbol_by_s_value!("expr"),
-                  grammar.find_symbol_by_s_value!("'\\n'"),
-                ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " printf(\"\\t%.10g\\n\", $expr); ")),
-                nullable: false,
-                precedence_sym: grammar.find_symbol_by_s_value!("'\\n'"),
-                lineno: 19,
-              ),
-              Rule.new(
-                id: 5,
-                lhs: grammar.find_symbol_by_s_value!("expr"),
-                rhs: [
-                  grammar.find_symbol_by_s_value!("NUM"),
-                ],
-                code: nil,
-                nullable: false,
-                precedence_sym: grammar.find_symbol_by_s_value!("NUM"),
-                lineno: 23,
-              ),
-              Rule.new(
-                id: 6,
-                lhs: grammar.find_symbol_by_s_value!("expr"),
-                rhs: [
-                  grammar.find_symbol_by_s_value!("expr"),
-                  grammar.find_symbol_by_s_value!("expr"),
-                  grammar.find_symbol_by_s_value!("'+'"),
-                ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $result = $left + $right; ")),
-                nullable: false,
-                precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
-                lineno: 24,
-              ),
-              Rule.new(
-                id: 7,
-                lhs: grammar.find_symbol_by_s_value!("expr"),
-                rhs: [
-                  grammar.find_symbol_by_s_value!("expr"),
-                  grammar.find_symbol_by_s_value!("expr"),
-                  grammar.find_symbol_by_s_value!("'-'"),
-                ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$ = $1 - $2; ")),
-                nullable: false,
-                precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
-                lineno: 26,
-              ),
-            ])
-          end
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("input"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 14,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("input"),
+              rhs: [
+              ],
+              code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 14,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("input"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("input"),
+                grammar.find_symbol_by_s_value!("line"),
+              ],
+              code: nil,
+              nullable: false,
+              precedence_sym: nil,
+              lineno: 15,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("line"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("'\\n'"),
+              ],
+              code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'\\n'"),
+              lineno: 18,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("line"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expr"),
+                grammar.find_symbol_by_s_value!("'\\n'"),
+              ],
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " printf(\"\\t%.10g\\n\", $expr); ")),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'\\n'"),
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("expr"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("NUM"),
+              ],
+              code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("NUM"),
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("expr"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expr"),
+                grammar.find_symbol_by_s_value!("expr"),
+                grammar.find_symbol_by_s_value!("'+'"),
+              ],
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $result = $left + $right; ")),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
+              lineno: 24,
+            ),
+            Rule.new(
+              id: 7,
+              lhs: grammar.find_symbol_by_s_value!("expr"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expr"),
+                grammar.find_symbol_by_s_value!("expr"),
+                grammar.find_symbol_by_s_value!("'-'"),
+              ],
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$ = $1 - $2; ")),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
+              lineno: 26,
+            ),
+          ])
         end
+      end
 
-        context "includes invalid named references" do
-          it "raise an error" do
-            y = <<~INPUT
+      context "includes invalid named references" do
+        it "raise an error" do
+          y = <<~INPUT
 %{
 // Prologue
 %}
@@ -1313,8 +1312,7 @@ expr[result]: NUM
 ;
             INPUT
 
-            expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error("'results' is invalid name.")
-          end
+          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error("'results' is invalid name.")
         end
       end
     end
