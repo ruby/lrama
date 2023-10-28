@@ -672,9 +672,10 @@ module_eval(<<'...end parser.y/module_eval...', 'parser.y', 388)
 
 include Lrama::Report::Duration
 
-def initialize(text, path)
+def initialize(text, path, debug = false)
   @text = text
   @path = path
+  @yydebug = debug
 end
 
 def parse
@@ -1102,7 +1103,7 @@ Racc_token_to_s_table = [
   "generic_symlist_item" ]
 Ractor.make_shareable(Racc_token_to_s_table) if defined?(Ractor)
 
-Racc_debug_parser = false
+Racc_debug_parser = true
 
 ##### State transition tables end #####
 

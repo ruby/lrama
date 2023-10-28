@@ -388,9 +388,10 @@ end
 
 include Lrama::Report::Duration
 
-def initialize(text, path)
+def initialize(text, path, debug = false)
   @text = text
   @path = path
+  @yydebug = debug
 end
 
 def parse

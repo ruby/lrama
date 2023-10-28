@@ -57,7 +57,7 @@ jobs:
 
       - name: Check for parser.rb is up to date
         run: |
-          bundle exec rake build:racc_parser
+          bundle exec rake build:parser
           git diff --color --no-ext-diff --ignore-submodules --exit-code lib/lrama/parser.rb
   steep-check:
     runs-on: ubuntu-20.04
