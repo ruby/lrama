@@ -405,6 +405,8 @@ def parse
     @lexer = Lrama::Lexer.new(@text)
     @grammar = Lrama::Grammar.new
     @precedence_number = 0
+    @prec_seen = false
+    @code_after_prec = false
     do_parse
     @grammar.extract_references
     @grammar.prepare
