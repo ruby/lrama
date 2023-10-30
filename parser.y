@@ -292,15 +292,13 @@ rule
 
   rhs: /* empty */
          {
+           reset_precs
            result = []
-           @prec_seen = false
-           @code_after_prec = false
          }
      | "%empty"
          {
+           reset_precs
            result = []
-           @prec_seen = false
-           @code_after_prec = false
          }
      | rhs symbol named_ref_opt
          {
@@ -405,6 +403,7 @@ def parse
     @lexer = Lrama::Lexer.new(@text)
     @grammar = Lrama::Grammar.new
     @precedence_number = 0
+    reset_precs
     do_parse
     @grammar.extract_references
     @grammar.prepare
@@ -426,4 +425,11 @@ def on_error(error_token_id, error_value, value_stack)
     #{source}
     #{' ' * @lexer.column}^
   ERROR
+end
+
+private
+
+def reset_precs
+  @prec_seen = false
+  @code_after_prec = false
 end
