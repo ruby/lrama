@@ -268,6 +268,7 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq([';', ';'])
         expect(lexer.next_token).to eq([:IDENT_COLON, Token.new(type: Token::Ident, s_value: 'opt_colon')])
         expect(lexer.next_token).to eq([':', ':'])
+        expect(lexer.next_token).to eq(['%empty', '%empty'])
         expect(lexer.next_token).to eq(['|', '|'])
         expect(lexer.next_token).to eq([:CHARACTER, Token.new(type: Token::Char, s_value: "'.'")])
         expect(lexer.next_token).to eq([';', ';'])

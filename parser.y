@@ -296,6 +296,12 @@ rule
            @prec_seen = false
            @code_after_prec = false
          }
+     | "%empty"
+         {
+           result = []
+           @prec_seen = false
+           @code_after_prec = false
+         }
      | rhs symbol named_ref_opt
          {
            token = val[1]

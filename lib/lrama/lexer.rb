@@ -24,6 +24,7 @@ module Lrama
       %precedence
       %prec
       %error-token
+      %empty
     )
 
     def initialize(text)
@@ -63,8 +64,6 @@ module Lrama
         when @scanner.scan(/\/\//)
           @scanner.scan_until(/\n/)
           newline
-        when @scanner.scan(/%empty/)
-          # noop
         else
           break
         end
