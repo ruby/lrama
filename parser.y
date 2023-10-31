@@ -41,11 +41,7 @@ rule
                            @grammar.parse_param = @grammar.build_code(:parse_param, token).token_code.s_value
                          }
                        }
-                   | "%initial-action" "{"
-                       {
-                         @lexer.status = :c_declaration
-                         @lexer.end_symbol = '}'
-                       }
+                   | "%initial-action" "{" { begin_curly_brace }
                      C_DECLARATION { begin_c_declaration }
                      "}"
                        {
@@ -53,39 +49,27 @@ rule
                        }
                    | ";"
 
-  grammar_declaration: "%union" "{"
-                         {
-                           @lexer.status = :c_declaration
-                           @lexer.end_symbol = '}'
-                         }
+  grammar_declaration: "%union" "{" { begin_curly_brace }
                        C_DECLARATION { begin_c_declaration }
                        "}"
                          {
                            @grammar.set_union(@grammar.build_code(:union, val[3]), val[3].line)
                          }
                      | symbol_declaration
-                     | "%destructor" "{"
-                         {
-                           @lexer.status = :c_declaration
-                           @lexer.end_symbol = '}'
-                         }
+                     | "%destructor" "{" { begin_curly_brace }
                        C_DECLARATION { begin_c_declaration }
                        "}" generic_symlist
-                     | "%printer" "{"
+                     | "%printer" "{" { begin_curly_brace }
+                       C_DECLARATION
                          {
-                           @lexer.status = :c_declaration
-                           @lexer.end_symbol = '}'
+                           @lexer.status = :initial
+                           @lexer.end_symbol = nil
                          }
-                       C_DECLARATION { begin_c_declaration }
                        "}" generic_symlist
                          {
                            @grammar.add_printer(ident_or_tags: val[6], code: @grammar.build_code(:printer, val[3]), lineno: val[3].line)
                          }
-                     | "%error-token" "{"
-                         {
-                           @lexer.status = :c_declaration
-                           @lexer.end_symbol = '}'
-                         }
+                     | "%error-token" "{" { begin_curly_brace }
                        C_DECLARATION { begin_c_declaration }
                        "}" generic_symlist
                          {
@@ -191,21 +175,13 @@ rule
   symbol: id
         | string_as_id
 
-  params: params "{"
-            {
-              @lexer.status = :c_declaration
-              @lexer.end_symbol = '}'
-            }
+  params: params "{" { begin_curly_brace }
           C_DECLARATION { begin_c_declaration }
           "}"
             {
               result = val[0].append(val[3])
             }
-        | "{"
-            {
-              @lexer.status = :c_declaration
-              @lexer.end_symbol = '}'
-            }
+        | "{" { begin_curly_brace }
           C_DECLARATION { begin_c_declaration }
           "}"
             {
@@ -280,8 +256,7 @@ rule
              raise "Multiple User_code after %prec" if @code_after_prec
              @code_after_prec = true
            end
-           @lexer.status = :c_declaration
-           @lexer.end_symbol = '}'
+           begin_curly_brace
          }
        C_DECLARATION { begin_c_declaration }
        "}" named_ref_opt
@@ -296,8 +271,7 @@ rule
              raise "Multiple User_code after %prec" if @code_after_prec
              @code_after_prec = true
            end
-           @lexer.status = :c_declaration
-           @lexer.end_symbol = '}'
+           begin_curly_brace
          }
        C_DECLARATION { begin_c_declaration }
        "}" named_ref_opt
@@ -391,6 +365,11 @@ private
 def reset_precs
   @prec_seen = false
   @code_after_prec = false
+end
+
+def begin_curly_brace
+  @lexer.status = :c_declaration
+  @lexer.end_symbol = '}'
 end
 
 def begin_c_declaration
