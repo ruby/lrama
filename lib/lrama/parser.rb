@@ -719,7 +719,7 @@ def begin_curly_brace
   @lexer.end_symbol = '}'
 end
 
-def begin_c_declaration
+def end_c_declaration
   @lexer.status = :initial
   @lexer.end_symbol = nil
 end
@@ -1150,7 +1150,7 @@ module_eval(<<'.,.,', 'parser.y', 10)
 
 module_eval(<<'.,.,', 'parser.y', 14)
   def _reduce_5(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1220,7 +1220,7 @@ module_eval(<<'.,.,', 'parser.y', 43)
 
 module_eval(<<'.,.,', 'parser.y', 44)
   def _reduce_18(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1244,7 +1244,7 @@ module_eval(<<'.,.,', 'parser.y', 51)
 
 module_eval(<<'.,.,', 'parser.y', 52)
   def _reduce_22(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1268,7 +1268,7 @@ module_eval(<<'.,.,', 'parser.y', 58)
 
 module_eval(<<'.,.,', 'parser.y', 59)
   def _reduce_26(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1308,7 +1308,7 @@ module_eval(<<'.,.,', 'parser.y', 71)
 
 module_eval(<<'.,.,', 'parser.y', 72)
   def _reduce_32(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1501,7 +1501,7 @@ module_eval(<<'.,.,', 'parser.y', 177)
 
 module_eval(<<'.,.,', 'parser.y', 178)
   def _reduce_58(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1523,7 +1523,7 @@ module_eval(<<'.,.,', 'parser.y', 183)
 
 module_eval(<<'.,.,', 'parser.y', 184)
   def _reduce_61(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1670,7 +1670,7 @@ module_eval(<<'.,.,', 'parser.y', 254)
 
 module_eval(<<'.,.,', 'parser.y', 260)
   def _reduce_83(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1699,7 +1699,7 @@ module_eval(<<'.,.,', 'parser.y', 269)
 
 module_eval(<<'.,.,', 'parser.y', 275)
   def _reduce_86(val, _values, result)
-     begin_c_declaration
+     end_c_declaration
     result
   end
 .,.,
@@ -1749,7 +1749,7 @@ module_eval(<<'.,.,', 'parser.y', 297)
 
 module_eval(<<'.,.,', 'parser.y', 303)
   def _reduce_94(val, _values, result)
-                        begin_c_declaration
+                        end_c_declaration
                     @grammar.epilogue = val[2].s_value
 
     result

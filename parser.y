@@ -12,7 +12,7 @@ rule
                             @lexer.end_symbol = '%}'
                             @grammar.prologue_first_lineno = @lexer.line
                           }
-                        C_DECLARATION { begin_c_declaration }
+                        C_DECLARATION { end_c_declaration }
                         "%}"
                           {
                             @grammar.prologue = val[2].s_value
@@ -42,7 +42,7 @@ rule
                          }
                        }
                    | "%initial-action" "{" { begin_curly_brace }
-                     C_DECLARATION { begin_c_declaration }
+                     C_DECLARATION { end_c_declaration }
                      "}"
                        {
                          @grammar.initial_action = @grammar.build_code(:initial_action, val[3])
@@ -50,14 +50,14 @@ rule
                    | ";"
 
   grammar_declaration: "%union" "{" { begin_curly_brace }
-                       C_DECLARATION { begin_c_declaration }
+                       C_DECLARATION { end_c_declaration }
                        "}"
                          {
                            @grammar.set_union(@grammar.build_code(:union, val[3]), val[3].line)
                          }
                      | symbol_declaration
                      | "%destructor" "{" { begin_curly_brace }
-                       C_DECLARATION { begin_c_declaration }
+                       C_DECLARATION { end_c_declaration }
                        "}" generic_symlist
                      | "%printer" "{" { begin_curly_brace }
                        C_DECLARATION
@@ -70,7 +70,7 @@ rule
                            @grammar.add_printer(ident_or_tags: val[6], code: @grammar.build_code(:printer, val[3]), lineno: val[3].line)
                          }
                      | "%error-token" "{" { begin_curly_brace }
-                       C_DECLARATION { begin_c_declaration }
+                       C_DECLARATION { end_c_declaration }
                        "}" generic_symlist
                          {
                            @grammar.add_error_token(ident_or_tags: val[6], code: @grammar.build_code(:error_token, val[3]), lineno: val[3].line)
@@ -176,13 +176,13 @@ rule
         | string_as_id
 
   params: params "{" { begin_curly_brace }
-          C_DECLARATION { begin_c_declaration }
+          C_DECLARATION { end_c_declaration }
           "}"
             {
               result = val[0].append(val[3])
             }
         | "{" { begin_curly_brace }
-          C_DECLARATION { begin_c_declaration }
+          C_DECLARATION { end_c_declaration }
           "}"
             {
               result = [val[2]]
@@ -258,7 +258,7 @@ rule
            end
            begin_curly_brace
          }
-       C_DECLARATION { begin_c_declaration }
+       C_DECLARATION { end_c_declaration }
        "}" named_ref_opt
          {
            token = val[3]
@@ -273,7 +273,7 @@ rule
            end
            begin_curly_brace
          }
-       C_DECLARATION { begin_c_declaration }
+       C_DECLARATION { end_c_declaration }
        "}" named_ref_opt
          {
            token = val[2]
@@ -301,7 +301,7 @@ rule
                   }
                 C_DECLARATION
                   {
-                    begin_c_declaration
+                    end_c_declaration
                     @grammar.epilogue = val[2].s_value
                   }
 
@@ -372,7 +372,7 @@ def begin_curly_brace
   @lexer.end_symbol = '}'
 end
 
-def begin_c_declaration
+def end_c_declaration
   @lexer.status = :initial
   @lexer.end_symbol = nil
 end
