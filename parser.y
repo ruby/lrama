@@ -86,8 +86,7 @@ rule
                          }
                        C_DECLARATION
                          {
-                           @lexer.status = :initial
-                           @lexer.end_symbol = nil
+                           end_c_declaration
                          }
                        "}" generic_symlist
                          {
