@@ -8,8 +8,7 @@ rule
 
   prologue_declaration: "%{"
                           {
-                            @lexer.status = :c_declaration
-                            @lexer.end_symbol = '%}'
+                            begin_c_declaration("%}")
                             @grammar.prologue_first_lineno = @lexer.line
                           }
                         C_DECLARATION
@@ -46,7 +45,7 @@ rule
                        }
                    | "%initial-action" "{"
                        {
-                         begin_c_declaration
+                         begin_c_declaration("}")
                        }
                      C_DECLARATION
                        {
@@ -60,7 +59,7 @@ rule
 
   grammar_declaration: "%union" "{"
                          {
-                           begin_c_declaration
+                           begin_c_declaration("}")
                          }
                        C_DECLARATION
                          {
@@ -73,7 +72,7 @@ rule
                      | symbol_declaration
                      | "%destructor" "{"
                          {
-                           begin_c_declaration
+                           begin_c_declaration("}")
                          }
                        C_DECLARATION
                          {
@@ -82,7 +81,7 @@ rule
                        "}" generic_symlist
                      | "%printer" "{"
                          {
-                           begin_c_declaration
+                           begin_c_declaration("}")
                          }
                        C_DECLARATION
                          {
@@ -94,7 +93,7 @@ rule
                          }
                      | "%error-token" "{"
                          {
-                           begin_c_declaration
+                           begin_c_declaration("}")
                          }
                        C_DECLARATION
                          {
@@ -206,7 +205,7 @@ rule
 
   params: params "{"
             {
-              begin_c_declaration
+              begin_c_declaration("}")
             }
           C_DECLARATION
             {
@@ -218,7 +217,7 @@ rule
             }
         | "{"
             {
-              begin_c_declaration
+              begin_c_declaration("}")
             }
           C_DECLARATION
             {
@@ -297,7 +296,7 @@ rule
              raise "Multiple User_code after %prec" if @code_after_prec
              @code_after_prec = true
            end
-           begin_c_declaration
+           begin_c_declaration("}")
          }
        C_DECLARATION
          {
@@ -315,7 +314,7 @@ rule
              raise "Multiple User_code after %prec" if @code_after_prec
              @code_after_prec = true
            end
-           begin_c_declaration
+           begin_c_declaration("}")
          }
        C_DECLARATION
          {
@@ -342,8 +341,7 @@ rule
   epilogue_opt: # empty
               | "%%"
                   {
-                    @lexer.status = :c_declaration
-                    @lexer.end_symbol = '\Z'
+                    begin_c_declaration('\Z')
                     @grammar.epilogue_first_lineno = @lexer.line + 1
                   }
                 C_DECLARATION
@@ -414,9 +412,9 @@ def reset_precs
   @code_after_prec = false
 end
 
-def begin_c_declaration
+def begin_c_declaration(end_symbol)
   @lexer.status = :c_declaration
-  @lexer.end_symbol = '}'
+  @lexer.end_symbol = end_symbol
 end
 
 def end_c_declaration
