@@ -54,30 +54,9 @@ module Lrama
       end
 
       # Token types
-      define_type(:P_expect)         # %expect
-      define_type(:P_define)         # %define
-      define_type(:P_printer)        # %printer
-      define_type(:P_error_token)    # %error-token
-      define_type(:P_lex_param)      # %lex-param
-      define_type(:P_parse_param)    # %parse-param
-      define_type(:P_initial_action) # %initial-action
-      define_type(:P_union)          # %union
-      define_type(:P_token)          # %token
-      define_type(:P_type)           # %type
-      define_type(:P_nonassoc)       # %nonassoc
-      define_type(:P_left)           # %left
-      define_type(:P_right)          # %right
-      define_type(:P_precedence)     # %precedence
-      define_type(:P_prec)           # %prec
       define_type(:User_code)        # { ... }
       define_type(:Tag)              # <int>
-      define_type(:Number)           # 0
-      define_type(:Ident_Colon)      # k_if:, k_if  : (spaces can be there)
       define_type(:Ident)            # api.pure, tNUMBER
-      define_type(:Named_Ref)        # [foo]
-      define_type(:Semicolon)        # ;
-      define_type(:Bar)              # |
-      define_type(:String)           # "str"
       define_type(:Char)             # '+'
     end
   end
