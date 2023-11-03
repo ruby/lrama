@@ -675,7 +675,6 @@ def parse
     @precedence_number = 0
     reset_precs
     do_parse
-    @grammar.extract_references
     @grammar.prepare
     @grammar.compute_nullable
     @grammar.compute_first_set
