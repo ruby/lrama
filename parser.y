@@ -1,5 +1,5 @@
 class Lrama::Parser
-  expect 9
+  expect 7
 
   token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
 
@@ -311,24 +311,6 @@ rule
            token = val[3]
            token.alias = val[6]
            result = val[0].append(token)
-         }
-     | "{"
-         {
-           if @prec_seen
-             raise "Multiple User_code after %prec" if @code_after_prec
-             @code_after_prec = true
-           end
-           begin_c_declaration("}")
-         }
-       C_DECLARATION
-         {
-           end_c_declaration
-         }
-       "}" named_ref_opt
-         {
-           token = val[2]
-           token.alias = val[5]
-           result = [token]
          }
      | rhs "%prec" symbol
          {
