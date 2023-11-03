@@ -151,6 +151,7 @@ module Lrama
     end
 
     def prepare
+      extract_references
       normalize_rules
       collect_symbols
       replace_token_with_symbol
