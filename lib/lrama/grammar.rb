@@ -122,14 +122,6 @@ module Lrama
       @_rules << [lhs, rhs, lineno]
     end
 
-    def build_references(token_code)
-      token_code.references.map! do |type, value, tag, first_column, last_column|
-        Reference.new(type: type, value: value, ex_tag: tag, first_column: first_column, last_column: last_column)
-      end
-
-      token_code
-    end
-
     def build_code(type, token_code)
       Code.new(type: type, token_code: token_code)
     end
@@ -314,27 +306,27 @@ module Lrama
       # It need to wrap an identifier with brackets to use ".-" for identifiers
       when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
         tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
-        return [:dollar, "$", tag, start, scanner.pos - 1]
+        return Reference.new(type: :dollar, value: "$", ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
         tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
-        return [:dollar, Integer(scanner[2]), tag, start, scanner.pos - 1]
+        return Reference.new(type: :dollar, value: Integer(scanner[2]), ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_][a-zA-Z0-9_]*)/) # $foo, $expr, $<long>program (named reference without brackets)
         tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
-        return [:dollar, scanner[2], tag, start, scanner.pos - 1]
+        return Reference.new(type: :dollar, value: scanner[2], ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # $expr.right, $expr-right, $<long>program (named reference with brackets)
         tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
-        return [:dollar, scanner[2], tag, start, scanner.pos - 1]
+        return Reference.new(type: :dollar, value: scanner[2], ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
 
       # @ references
       # It need to wrap an identifier with brackets to use ".-" for identifiers
       when scanner.scan(/@\$/) # @$
-        return [:at, "$", nil, start, scanner.pos - 1]
+        return Reference.new(type: :at, value: "$", first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/@(\d+)/) # @1
-        return [:at, Integer(scanner[1]), nil, start, scanner.pos - 1]
+        return Reference.new(type: :at, value: Integer(scanner[1]), first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/@([a-zA-Z][a-zA-Z0-9_]*)/) # @foo, @expr (named reference without brackets)
-        return [:at, scanner[1], nil, start, scanner.pos - 1]
+        return Reference.new(type: :at, value: scanner[1], first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/@\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # @expr.right, @expr-right  (named reference with brackets)
-        return [:at, scanner[1], nil, start, scanner.pos - 1]
+        return Reference.new(type: :at, value: scanner[1], first_column: start, last_column: scanner.pos - 1)
       end
     end
 
@@ -352,7 +344,6 @@ module Lrama
         end
 
         initial_action.token_code.references = references
-        build_references(initial_action.token_code)
       end
 
       @printers.each do |printer|
@@ -368,7 +359,6 @@ module Lrama
         end
 
         printer.code.token_code.references = references
-        build_references(printer.code.token_code)
       end
 
       @error_tokens.each do |error_token|
@@ -384,7 +374,6 @@ module Lrama
         end
 
         error_token.code.token_code.references = references
-        build_references(error_token.code.token_code)
       end
 
       @_rules.each do |lhs, rhs, _|
@@ -406,8 +395,7 @@ module Lrama
           end
 
           token.references = references
-          token.numberize_references(lhs, rhs)
-          build_references(token)
+          numberize_references(lhs, rhs, token.references)
         end
       end
     end
@@ -448,6 +436,31 @@ module Lrama
       term = add_nterm(id: Token.new(type: Token::Ident, s_value: "$accept"))
       term.accept_symbol = true
       @accept_symbol = term
+    end
+
+    def numberize_references(lhs, rhs, references)
+      references.map! {|ref|
+        ref_name = ref.value
+        if ref_name.is_a?(::String) && ref_name != '$'
+          value =
+            if lhs.referred_by?(ref_name)
+              '$'
+            else
+              index = rhs.find_index {|token| token.referred_by?(ref_name) }
+
+              if index
+                index + 1
+              else
+                raise "'#{ref_name}' is invalid name."
+              end
+            end
+
+          ref.value = value
+          ref
+        else
+          ref
+        end
+      }
     end
 
     # 1. Add $accept rule to the top of rules

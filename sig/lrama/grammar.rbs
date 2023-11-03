@@ -1,0 +1,5 @@
+module Lrama
+  class Grammar
+    def numberize_references: (Lexer::Token lhs, Array[Lexer::Token] rhs, Array[Reference]) -> void
+  end
+end
