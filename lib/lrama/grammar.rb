@@ -339,6 +339,8 @@ module Lrama
       end
     end
 
+    private
+
     def extract_references
       unless initial_action.nil?
         scanner = StringScanner.new(initial_action.s_value)
@@ -412,8 +414,6 @@ module Lrama
         end
       end
     end
-
-    private
 
     def find_nterm_by_id!(id)
       nterms.find do |nterm|
