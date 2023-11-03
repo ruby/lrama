@@ -1333,9 +1333,8 @@ expr[result]: NUM
 program: /* empty */
        ;
         INPUT
-
         expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(<<~ERROR)
-          error_messages/parse.y:5:14: parse error on value #<struct Lrama::Lexer::Token type=#<struct Lrama::Lexer::Token::Type id=19, name="Ident">, s_value="invalid", alias=nil> (IDENTIFIER)
+          error_messages/parse.y:5:14: parse error on value #<struct Lrama::Lexer::Token type=#<struct Lrama::Lexer::Token::Type id=2, name="Ident">, s_value="invalid", alias=nil> (IDENTIFIER)
           %expect invalid
                         ^
         ERROR
