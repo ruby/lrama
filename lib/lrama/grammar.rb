@@ -131,7 +131,6 @@ module Lrama
     end
 
     def build_code(type, token_code)
-      build_references(token_code)
       Code.new(type: type, token_code: token_code)
     end
 
