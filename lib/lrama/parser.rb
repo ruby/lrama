@@ -704,7 +704,7 @@ def reset_precs
   @code_after_prec = false
 end
 
-def begin_curly_brace
+def begin_c_declaration
   @lexer.status = :c_declaration
   @lexer.end_symbol = '}'
 end
@@ -1204,7 +1204,7 @@ module_eval(<<'.,.,', 'parser.y', 41)
 
 module_eval(<<'.,.,', 'parser.y', 48)
   def _reduce_17(val, _values, result)
-                             begin_curly_brace
+                             begin_c_declaration
 
     result
   end
@@ -1230,7 +1230,7 @@ module_eval(<<'.,.,', 'parser.y', 56)
 
 module_eval(<<'.,.,', 'parser.y', 62)
   def _reduce_21(val, _values, result)
-                               begin_curly_brace
+                               begin_c_declaration
 
     result
   end
@@ -1256,7 +1256,7 @@ module_eval(<<'.,.,', 'parser.y', 70)
 
 module_eval(<<'.,.,', 'parser.y', 75)
   def _reduce_25(val, _values, result)
-                               begin_curly_brace
+                               begin_c_declaration
 
     result
   end
@@ -1274,7 +1274,7 @@ module_eval(<<'.,.,', 'parser.y', 79)
 
 module_eval(<<'.,.,', 'parser.y', 84)
   def _reduce_28(val, _values, result)
-                               begin_curly_brace
+                               begin_c_declaration
 
     result
   end
@@ -1298,7 +1298,7 @@ module_eval(<<'.,.,', 'parser.y', 92)
 
 module_eval(<<'.,.,', 'parser.y', 96)
   def _reduce_31(val, _values, result)
-                               begin_curly_brace
+                               begin_c_declaration
 
     result
   end
@@ -1493,7 +1493,7 @@ module_eval(<<'.,.,', 'parser.y', 201)
 
 module_eval(<<'.,.,', 'parser.y', 208)
   def _reduce_57(val, _values, result)
-                  begin_curly_brace
+                  begin_c_declaration
 
     result
   end
@@ -1517,7 +1517,7 @@ module_eval(<<'.,.,', 'parser.y', 216)
 
 module_eval(<<'.,.,', 'parser.y', 220)
   def _reduce_60(val, _values, result)
-                  begin_curly_brace
+                  begin_c_declaration
 
     result
   end
@@ -1665,7 +1665,7 @@ module_eval(<<'.,.,', 'parser.y', 295)
              raise "Multiple User_code after %prec" if @code_after_prec
              @code_after_prec = true
            end
-           begin_curly_brace
+           begin_c_declaration
 
     result
   end
@@ -1695,7 +1695,7 @@ module_eval(<<'.,.,', 'parser.y', 313)
              raise "Multiple User_code after %prec" if @code_after_prec
              @code_after_prec = true
            end
-           begin_curly_brace
+           begin_c_declaration
 
     result
   end

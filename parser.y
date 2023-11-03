@@ -46,7 +46,7 @@ rule
                        }
                    | "%initial-action" "{"
                        {
-                         begin_curly_brace
+                         begin_c_declaration
                        }
                      C_DECLARATION
                        {
@@ -60,7 +60,7 @@ rule
 
   grammar_declaration: "%union" "{"
                          {
-                           begin_curly_brace
+                           begin_c_declaration
                          }
                        C_DECLARATION
                          {
@@ -73,7 +73,7 @@ rule
                      | symbol_declaration
                      | "%destructor" "{"
                          {
-                           begin_curly_brace
+                           begin_c_declaration
                          }
                        C_DECLARATION
                          {
@@ -82,7 +82,7 @@ rule
                        "}" generic_symlist
                      | "%printer" "{"
                          {
-                           begin_curly_brace
+                           begin_c_declaration
                          }
                        C_DECLARATION
                          {
@@ -94,7 +94,7 @@ rule
                          }
                      | "%error-token" "{"
                          {
-                           begin_curly_brace
+                           begin_c_declaration
                          }
                        C_DECLARATION
                          {
@@ -206,7 +206,7 @@ rule
 
   params: params "{"
             {
-              begin_curly_brace
+              begin_c_declaration
             }
           C_DECLARATION
             {
@@ -218,7 +218,7 @@ rule
             }
         | "{"
             {
-              begin_curly_brace
+              begin_c_declaration
             }
           C_DECLARATION
             {
@@ -297,7 +297,7 @@ rule
              raise "Multiple User_code after %prec" if @code_after_prec
              @code_after_prec = true
            end
-           begin_curly_brace
+           begin_c_declaration
          }
        C_DECLARATION
          {
@@ -315,7 +315,7 @@ rule
              raise "Multiple User_code after %prec" if @code_after_prec
              @code_after_prec = true
            end
-           begin_curly_brace
+           begin_c_declaration
          }
        C_DECLARATION
          {
@@ -414,7 +414,7 @@ def reset_precs
   @code_after_prec = false
 end
 
-def begin_curly_brace
+def begin_c_declaration
   @lexer.status = :c_declaration
   @lexer.end_symbol = '}'
 end
