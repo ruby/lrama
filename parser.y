@@ -294,6 +294,11 @@ rule
            token.alias = val[2]
            result = val[0].append(token)
          }
+     | rhs "?"
+          {
+            token = Token.new(type: Token::Option, s_value: val[1])
+            result = val[0].append(token)
+          }
      | rhs "{"
          {
            if @prec_seen

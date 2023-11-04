@@ -563,7 +563,17 @@ module Lrama
         end
 
         c = code ? Code.new(type: :user_code, token_code: code) : nil
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
+        # Expand Parameterizing rules
+        if rhs2.any? {|r| r.type == Token::Option }
+          option_token = Token.new(type: Token::Ident, s_value: "option_#{rhs2[0].s_value}")
+          token = Token.new(type: Token::Ident, s_value: rhs2[0].s_value)
+          add_term(id: option_token)
+          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], code: c, precedence_sym: precedence_sym, lineno: lineno)
+          @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], code: c, precedence_sym: precedence_sym, lineno: lineno)
+          @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], code: c, precedence_sym: precedence_sym, lineno: lineno)
+        else
+          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
+        end
 
         add_nterm(id: lhs)
         a.each do |new_token, _|
