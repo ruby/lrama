@@ -67,8 +67,6 @@
 /* Pull parsers.  */
 #define YYPULL 1
 
-typedef struct YYLTYPE YYLTYPE;
-typedef union YYSTYPE YYSTYPE;
 
 <%# b4_user_pre_prologue -%>
 /* First part of user prologue.  */

@@ -25,6 +25,7 @@ module Lrama
       %prec
       %error-token
       %empty
+      %code
     )
 
     def initialize(text)

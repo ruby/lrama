@@ -3,6 +3,7 @@ require "strscan"
 require "lrama/grammar/auxiliary"
 require "lrama/grammar/code"
 require "lrama/grammar/error_token"
+require "lrama/grammar/percent_code"
 require "lrama/grammar/precedence"
 require "lrama/grammar/printer"
 require "lrama/grammar/reference"
@@ -15,7 +16,7 @@ require "lrama/type"
 module Lrama
   # Grammar is the result of parsing an input grammar file
   class Grammar
-    attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
+    attr_reader :percent_codes, :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
     attr_accessor :union, :expect,
                   :printers, :error_tokens,
                   :lex_param, :parse_param, :initial_action,
@@ -24,6 +25,8 @@ module Lrama
                   :sym_to_rules
 
     def initialize
+      # Code defined by "%code"
+      @percent_codes = []
       @printers = []
       @error_tokens = []
       @symbols = []
@@ -39,6 +42,10 @@ module Lrama
       @aux = Auxiliary.new
 
       append_special_symbols
+    end
+
+    def add_percent_code(id:, code:)
+      @percent_codes << PercentCode.new(id, code)
     end
 
     def add_printer(ident_or_tags:, code:, lineno:)

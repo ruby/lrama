@@ -4,10 +4,14 @@
 
 %{
 // Prologue
+%}
+
+%code provides {
+
 static enum yytokentype yylex(YYSTYPE *lval, YYLTYPE *yylloc);
 static void yyerror(YYLTYPE *yylloc, const char *msg);
 
-%}
+}
 
 %expect 0
 %define api.pure

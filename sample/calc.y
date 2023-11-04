@@ -15,10 +15,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+%}
 
+%code provides {
 static int yylex(YYSTYPE *val, YYLTYPE *loc);
 static int yyerror(YYLTYPE *loc, const char *str);
-%}
+}
 
 %union {
     int val;

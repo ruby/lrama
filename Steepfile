@@ -6,6 +6,7 @@ target :lib do
 
   check "lib/lrama/bitmap.rb"
   check "lib/lrama/digraph.rb"
+  check "lib/lrama/grammar/percent_code.rb"
   # TODO: Include this file once Lrama::Grammar::Symbol type is defined
   # check "lib/lrama/grammar/reference.rb"
   check "lib/lrama/lexer/token.rb"
