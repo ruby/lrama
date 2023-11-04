@@ -31,6 +31,25 @@ RSpec.describe Lrama::Command do
       end
     end
 
+    context "when `--trace=rules` option specified" do
+      it "print grammar rules" do
+        command = Lrama::Command.new
+        expect { command.run(o_option + [fixture_path("command/basic.y"), "--trace=rules"]) }.to output(<<~OUTPUT).to_stdout
+          Grammar rules:
+          $accept -> list, YYEOF
+          list -> ε
+          list -> list, LF
+          list -> list, expr, LF
+          expr -> NUM
+          expr -> expr, '+', expr
+          expr -> expr, '-', expr
+          expr -> expr, '*', expr
+          expr -> expr, '/', expr
+          expr -> '(', expr, ')'
+        OUTPUT
+      end
+    end
+
     context "when `--report-file` option specified" do
       it "create report file" do
         allow(File).to receive(:open).and_call_original

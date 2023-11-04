@@ -109,7 +109,7 @@ module Lrama
     def validate_trace(trace)
       list = %w[
         none locations scan parse automaton bitsets
-        closure grammar resource sets muscles tools
+        closure grammar rules resource sets muscles tools
         m4-early m4 skeleton time ielr cex all
       ]
       h = {}

@@ -20,6 +20,11 @@ module Lrama
         end
       end
 
+      if options.trace_opts && options.trace_opts[:rules]
+        puts "Grammar rules:"
+        puts grammar.rules
+      end
+
       File.open(options.outfile, "w+") do |f|
         Lrama::Output.new(
           out: f,
