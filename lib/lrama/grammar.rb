@@ -13,8 +13,6 @@ require "lrama/lexer"
 require "lrama/type"
 
 module Lrama
-  Token = Lrama::Lexer::Token
-
   # Grammar is the result of parsing an input grammar file
   class Grammar
     attr_reader :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
@@ -306,16 +304,16 @@ module Lrama
       # $ references
       # It need to wrap an identifier with brackets to use ".-" for identifiers
       when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
-        tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
+        tag = scanner[1] ? Lrama::Lexer::Token::Tag.new(s_value: scanner[1]) : nil
         return Reference.new(type: :dollar, value: "$", ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
-        tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
+        tag = scanner[1] ? Lrama::Lexer::Token::Tag.new(s_value: scanner[1]) : nil
         return Reference.new(type: :dollar, value: Integer(scanner[2]), ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_][a-zA-Z0-9_]*)/) # $foo, $expr, $<long>program (named reference without brackets)
-        tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
+        tag = scanner[1] ? Lrama::Lexer::Token::Tag.new(s_value: scanner[1]) : nil
         return Reference.new(type: :dollar, value: scanner[2], ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
       when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # $expr.right, $expr-right, $<long>program (named reference with brackets)
-        tag = scanner[1] ? Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Tag, s_value: scanner[1]) : nil
+        tag = scanner[1] ? Lrama::Lexer::Token::Tag.new(s_value: scanner[1]) : nil
         return Reference.new(type: :dollar, value: scanner[2], ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
 
       # @ references
@@ -381,7 +379,7 @@ module Lrama
 
       @_rules.each do |lhs, rhs, _|
         rhs.each_with_index do |token, index|
-          next if token.class == Lrama::Grammar::Symbol || token.type != Lrama::Lexer::Token::User_code
+          next unless token.class == Lrama::Lexer::Token::UserCode
 
           scanner = StringScanner.new(token.s_value)
           references = []
@@ -416,25 +414,25 @@ module Lrama
       # @empty_symbol = term
 
       # YYEOF
-      term = add_term(id: Token.new(type: Token::Ident, s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0)
+      term = add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0)
       term.number = 0
       term.eof_symbol = true
       @eof_symbol = term
 
       # YYerror
-      term = add_term(id: Token.new(type: Token::Ident, s_value: "YYerror"), alias_name: "error")
+      term = add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "YYerror"), alias_name: "error")
       term.number = 1
       term.error_symbol = true
       @error_symbol = term
 
       # YYUNDEF
-      term = add_term(id: Token.new(type: Token::Ident, s_value: "YYUNDEF"), alias_name: "\"invalid token\"")
+      term = add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "YYUNDEF"), alias_name: "\"invalid token\"")
       term.number = 2
       term.undef_symbol = true
       @undef_symbol = term
 
       # $accept
-      term = add_nterm(id: Token.new(type: Token::Ident, s_value: "$accept"))
+      term = add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "$accept"))
       term.accept_symbol = true
       @accept_symbol = term
     end
@@ -506,7 +504,7 @@ module Lrama
           case
           when r.is_a?(Symbol) # precedence_sym
             precedence_sym = r
-          when (r.type == Token::User_code) && precedence_sym.nil? && code.nil? && rhs1.empty?
+          when r.is_a?(Lrama::Lexer::Token::UserCode) && precedence_sym.nil? && code.nil? && rhs1.empty?
             code = r
           else
             rhs1 << r
@@ -516,7 +514,7 @@ module Lrama
 
         # Bison n'th component is 1-origin
         (rhs1 + [code]).compact.each.with_index(1) do |token, i|
-          if token.type == Token::User_code
+          if token.is_a?(Lrama::Lexer::Token::UserCode)
             token.references.each do |ref|
               # Need to keep position_in_rhs for actions in the middle of RHS
               ref.position_in_rhs = i - 1
@@ -545,9 +543,9 @@ module Lrama
         end
 
         rhs2 = rhs1.map do |token|
-          if token.type == Token::User_code
+          if token.is_a?(Lrama::Lexer::Token::UserCode)
             prefix = token.referred ? "@" : "$@"
-            new_token = Token.new(type: Token::Ident, s_value: prefix + extracted_action_number.to_s)
+            new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + extracted_action_number.to_s)
             extracted_action_number += 1
             a << [new_token, token]
             new_token
@@ -564,7 +562,7 @@ module Lrama
 
         c = code ? Code.new(type: :user_code, token_code: code) : nil
         # Expand Parameterizing rules
-        if rhs2.any? {|r| r.type == Token::Parameterizing }
+        if rhs2.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
           expand_parameterizing_rules(lhs, rhs2, c, precedence_sym, lineno)
         else
           @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
@@ -577,21 +575,21 @@ module Lrama
     end
 
     def expand_parameterizing_rules(lhs, rhs, code, precedence_sym, lineno)
-      token = Token.new(type: Token::Ident, s_value: rhs[0].s_value)
-      if rhs.any? {|r| r.type == Token::Parameterizing && r.s_value == "?" }
-        option_token = Token.new(type: Token::Ident, s_value: "option_#{rhs[0].s_value}")
+      token = Lrama::Lexer::Token::Ident.new(s_value: rhs[0].s_value)
+      if rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.s_value == "?" }
+        option_token = Lrama::Lexer::Token::Ident.new(s_value: "option_#{rhs[0].s_value}")
         add_term(id: option_token)
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], code: code, precedence_sym: precedence_sym, lineno: lineno)
-      elsif rhs.any? {|r| r.type == Token::Parameterizing && r.s_value == "+" }
-        nonempty_list_token = Token.new(type: Token::Ident, s_value: "nonempty_list_#{rhs[0].s_value}")
+      elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.s_value == "+" }
+        nonempty_list_token = Lrama::Lexer::Token::Ident.new(s_value: "nonempty_list_#{rhs[0].s_value}")
         add_term(id: nonempty_list_token)
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], code: code, precedence_sym: precedence_sym, lineno: lineno)
-      elsif rhs.any? {|r| r.type == Token::Parameterizing && r.s_value == "*" }
-        list_token = Token.new(type: Token::Ident, s_value: "list_#{rhs[0].s_value}")
+      elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.s_value == "*" }
+        list_token = Lrama::Lexer::Token::Ident.new(s_value: "list_#{rhs[0].s_value}")
         add_term(id: list_token)
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [list_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], code: code, precedence_sym: precedence_sym, lineno: lineno)
@@ -603,10 +601,10 @@ module Lrama
     def collect_symbols
       @rules.flat_map(&:rhs).each do |s|
         case s
-        when Token
-          if s.type == Token::Char
-            add_term(id: s)
-          end
+        when Lrama::Lexer::Token::Char
+          add_term(id: s)
+        when Lrama::Lexer::Token
+          # skip
         when Symbol
           # skip
         else
@@ -647,7 +645,7 @@ module Lrama
 
         # If id is Token::Char, it uses ASCII code
         if sym.term? && sym.token_id.nil?
-          if sym.id.type == Token::Char
+          if sym.id.is_a?(Lrama::Lexer::Token::Char)
             # Ignore ' on the both sides
             case sym.id.s_value[1..-2]
             when "\\b"
@@ -700,7 +698,7 @@ module Lrama
           rule.code.references.each do |ref|
             next if ref.type == :at
 
-            if ref.referring_symbol.type != Token::User_code
+            if !ref.referring_symbol.is_a?(Lrama::Lexer::Token::UserCode)
               ref.referring_symbol = token_to_symbol(ref.referring_symbol)
             end
           end
@@ -710,7 +708,7 @@ module Lrama
 
     def token_to_symbol(token)
       case token
-      when Token
+      when Lrama::Lexer::Token
         find_symbol_by_id!(token)
       when Symbol
         token
@@ -756,10 +754,10 @@ module Lrama
       @symbols.each do |sym|
         @printers.each do |printer|
           printer.ident_or_tags.each do |ident_or_tag|
-            case ident_or_tag.type
-            when Token::Ident
+            case ident_or_tag
+            when Lrama::Lexer::Token::Ident
               sym.printer = printer if sym.id == ident_or_tag
-            when Token::Tag
+            when Lrama::Lexer::Token::Tag
               sym.printer = printer if sym.tag == ident_or_tag
             else
               raise "Unknown token type. #{printer}"
@@ -773,10 +771,10 @@ module Lrama
       @symbols.each do |sym|
         @error_tokens.each do |error_token|
           error_token.ident_or_tags.each do |ident_or_tag|
-            case ident_or_tag.type
-            when Token::Ident
+            case ident_or_tag
+            when Lrama::Lexer::Token::Ident
               sym.error_token = error_token if sym.id == ident_or_tag
-            when Token::Tag
+            when Lrama::Lexer::Token::Tag
               sym.error_token = error_token if sym.tag == ident_or_tag
             else
               raise "Unknown token type. #{error_token}"

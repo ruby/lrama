@@ -296,17 +296,17 @@ rule
          }
      | rhs "?"
           {
-            token = Token.new(type: Token::Parameterizing, s_value: val[1])
+            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
             result = val[0].append(token)
           }
      | rhs "+"
           {
-            token = Token.new(type: Token::Parameterizing, s_value: val[1])
+            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
             result = val[0].append(token)
           }
      | rhs "*"
           {
-             token = Token.new(type: Token::Parameterizing, s_value: val[1])
+             token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
              result = val[0].append(token)
           }
      | rhs "{"
@@ -364,7 +364,7 @@ rule
   generic_symlist_item: symbol
                       | TAG
 
-  string_as_id: STRING { result = Lrama::Lexer::Token.new(type: Lrama::Lexer::Token::Ident, s_value: val[0]) }
+  string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
 end
 
 ---- inner

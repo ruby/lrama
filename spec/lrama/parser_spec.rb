@@ -55,155 +55,155 @@ RSpec.describe Lrama::Parser do
       expect(grammar.expect).to eq(0)
       expect(grammar.printers).to eq([
         Printer.new(
-          ident_or_tags: [T.new(type: T::Tag, s_value: "<int>")],
-          code: Code.new(type: :printer, token_code: T.new(type: T::User_code, s_value: "\n    print_int();\n")),
+          ident_or_tags: [T::Tag.new(s_value: "<int>")],
+          code: Code.new(type: :printer, token_code: T::UserCode.new(s_value: "\n    print_int();\n")),
           lineno: 15
         ),
         Printer.new(
-          ident_or_tags: [T.new(type: T::Ident, s_value: "tNUMBER"), T.new(type: T::Ident, s_value: "tSTRING")],
-          code: Code.new(type: :printer, token_code: T.new(type: T::User_code, s_value: "\n    print_token();\n")),
+          ident_or_tags: [T::Ident.new(s_value: "tNUMBER"), T::Ident.new(s_value: "tSTRING")],
+          code: Code.new(type: :printer, token_code: T::UserCode.new(s_value: "\n    print_token();\n")),
           lineno: 18
         ),
       ])
       expect(grammar.lex_param).to eq("struct lex_params *p")
       expect(grammar.parse_param).to eq("struct parse_params *p")
-      expect(grammar.initial_action).to eq(Code.new(type: :initial_action, token_code: T.new(type: T::User_code, s_value: "\n    initial_action_func(@$);\n")))
+      expect(grammar.initial_action).to eq(Code.new(type: :initial_action, token_code: T::UserCode.new(s_value: "\n    initial_action_func(@$);\n")))
       expect(grammar.symbols.sort_by(&:number)).to eq([
-        Sym.new(id: T.new(type: T::Ident, s_value: "EOI"),            alias_name: "\"EOI\"",                  number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "YYerror"),        alias_name: "error",                    number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "YYUNDEF"),        alias_name: "\"invalid token\"",        number:  2, tag: nil,                                   term: true, token_id: 257, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Char, s_value:  "'\\\\'"),         alias_name: "\"backslash\"",            number:  3, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id:  92, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Char, s_value:  "'\\13'"),         alias_name: "\"escaped vertical tab\"", number:  4, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id:  11, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "keyword_class"),  alias_name: nil,                        number:  5, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 258, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "keyword_class2"), alias_name: nil,                        number:  6, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 259, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tNUMBER"),        alias_name: nil,                        number:  7, tag: T.new(type: T::Tag, s_value: "<l>"),   term: true, token_id: 260, nullable: false, precedence: nil,                                            printer: grammar.printers[1]),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tSTRING"),        alias_name: nil,                        number:  8, tag: T.new(type: T::Tag, s_value: "<str>"), term: true, token_id: 261, nullable: false, precedence: nil,                                            printer: grammar.printers[1]),
-        Sym.new(id: T.new(type: T::Ident, s_value: "keyword_end"),    alias_name: "\"end\"",                  number:  9, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 262, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tPLUS"),          alias_name: "\"+\"",                    number: 10, tag: nil,                                   term: true, token_id: 263, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tMINUS"),         alias_name: "\"-\"",                    number: 11, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tEQ"),            alias_name: "\"=\"",                    number: 12, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2), printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tEQEQ"),          alias_name: "\"==\"",                   number: 13, tag: nil,                                   term: true, token_id: 266, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0), printer: nil),
-        Sym.new(id: T.new(type: T::Char, s_value:  "'>'"),            alias_name: nil,                        number: 14, tag: nil,                                   term: true, token_id:  62, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
-        Sym.new(id: T.new(type: T::Char, s_value:  "'+'"),            alias_name: nil,                        number: 15, tag: nil,                                   term: true, token_id:  43, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Char, s_value:  "'-'"),            alias_name: nil,                        number: 16, tag: nil,                                   term: true, token_id:  45, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Char, s_value:  "'!'"),            alias_name: nil,                        number: 17, tag: nil,                                   term: true, token_id:  33, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: T.new(type: T::Char, s_value:  "'?'"),            alias_name: nil,                        number: 18, tag: nil,                                   term: true, token_id:  63, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "EOI"),            alias_name: "\"EOI\"",                  number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "YYerror"),        alias_name: "error",                    number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "YYUNDEF"),        alias_name: "\"invalid token\"",        number:  2, tag: nil,                                   term: true, token_id: 257, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Char.new(s_value:  "'\\\\'"),         alias_name: "\"backslash\"",            number:  3, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id:  92, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Char.new(s_value:  "'\\13'"),         alias_name: "\"escaped vertical tab\"", number:  4, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id:  11, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "keyword_class"),  alias_name: nil,                        number:  5, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 258, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "keyword_class2"), alias_name: nil,                        number:  6, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 259, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "tNUMBER"),        alias_name: nil,                        number:  7, tag: T::Tag.new(s_value: "<l>"),   term: true, token_id: 260, nullable: false, precedence: nil,                                            printer: grammar.printers[1]),
+        Sym.new(id: T::Ident.new(s_value: "tSTRING"),        alias_name: nil,                        number:  8, tag: T::Tag.new(s_value: "<str>"), term: true, token_id: 261, nullable: false, precedence: nil,                                            printer: grammar.printers[1]),
+        Sym.new(id: T::Ident.new(s_value: "keyword_end"),    alias_name: "\"end\"",                  number:  9, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 262, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "tPLUS"),          alias_name: "\"+\"",                    number: 10, tag: nil,                                   term: true, token_id: 263, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "tMINUS"),         alias_name: "\"-\"",                    number: 11, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "tEQ"),            alias_name: "\"=\"",                    number: 12, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2), printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "tEQEQ"),          alias_name: "\"==\"",                   number: 13, tag: nil,                                   term: true, token_id: 266, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0), printer: nil),
+        Sym.new(id: T::Char.new(s_value:  "'>'"),            alias_name: nil,                        number: 14, tag: nil,                                   term: true, token_id:  62, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
+        Sym.new(id: T::Char.new(s_value:  "'+'"),            alias_name: nil,                        number: 15, tag: nil,                                   term: true, token_id:  43, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Char.new(s_value:  "'-'"),            alias_name: nil,                        number: 16, tag: nil,                                   term: true, token_id:  45, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Char.new(s_value:  "'!'"),            alias_name: nil,                        number: 17, tag: nil,                                   term: true, token_id:  33, nullable: false, precedence: nil,                                            printer: nil),
+        Sym.new(id: T::Char.new(s_value:  "'?'"),            alias_name: nil,                        number: 18, tag: nil,                                   term: true, token_id:  63, nullable: false, precedence: nil,                                            printer: nil),
 
-        Sym.new(id: T.new(type: T::Ident, s_value: "$accept"),   alias_name: nil, number: 19, tag: nil,                                 term: false, token_id:  0, nullable: false, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "program"),   alias_name: nil, number: 20, tag: nil,                                 term: false, token_id:  1, nullable: false, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "class"),     alias_name: nil, number: 21, tag: T.new(type: T::Tag, s_value: "<i>"), term: false, token_id:  2, nullable: false, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "$@1"),       alias_name: nil, number: 22, tag: nil,                                 term: false, token_id:  3, nullable:  true, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "$@2"),       alias_name: nil, number: 23, tag: nil,                                 term: false, token_id:  4, nullable:  true, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "$@3"),       alias_name: nil, number: 24, tag: nil,                                 term: false, token_id:  5, nullable:  true, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "$@4"),       alias_name: nil, number: 25, tag: nil,                                 term: false, token_id:  6, nullable:  true, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "strings_1"), alias_name: nil, number: 26, tag: nil,                                 term: false, token_id:  7, nullable: false, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "strings_2"), alias_name: nil, number: 27, tag: nil,                                 term: false, token_id:  8, nullable: false, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "string_1"),  alias_name: nil, number: 28, tag: nil,                                 term: false, token_id:  9, nullable: false, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "string_2"),  alias_name: nil, number: 29, tag: nil,                                 term: false, token_id: 10, nullable: false, precedence: nil, printer: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "string"),    alias_name: nil, number: 30, tag: nil,                                 term: false, token_id: 11, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "$accept"),   alias_name: nil, number: 19, tag: nil,                                 term: false, token_id:  0, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "program"),   alias_name: nil, number: 20, tag: nil,                                 term: false, token_id:  1, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "class"),     alias_name: nil, number: 21, tag: T::Tag.new(s_value: "<i>"), term: false, token_id:  2, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "$@1"),       alias_name: nil, number: 22, tag: nil,                                 term: false, token_id:  3, nullable:  true, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "$@2"),       alias_name: nil, number: 23, tag: nil,                                 term: false, token_id:  4, nullable:  true, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "$@3"),       alias_name: nil, number: 24, tag: nil,                                 term: false, token_id:  5, nullable:  true, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "$@4"),       alias_name: nil, number: 25, tag: nil,                                 term: false, token_id:  6, nullable:  true, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "strings_1"), alias_name: nil, number: 26, tag: nil,                                 term: false, token_id:  7, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "strings_2"), alias_name: nil, number: 27, tag: nil,                                 term: false, token_id:  8, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "string_1"),  alias_name: nil, number: 28, tag: nil,                                 term: false, token_id:  9, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "string_2"),  alias_name: nil, number: 29, tag: nil,                                 term: false, token_id: 10, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "string"),    alias_name: nil, number: 30, tag: nil,                                 term: false, token_id: 11, nullable: false, precedence: nil, printer: nil),
       ])
-      expect(grammar.types).to eq([Type.new(id: T.new(type: T::Ident, s_value: "class"), tag: T.new(type: T::Tag, s_value: "<i>"))])
+      expect(grammar.types).to eq([Type.new(id: T::Ident.new(s_value: "class"), tag: T::Tag.new(s_value: "<i>"))])
       expect(grammar._rules).to eq([
         [
-          T.new(type: T::Ident, s_value: "program"),
+          T::Ident.new(s_value: "program"),
           [
-            T.new(type: T::Ident, s_value: "class"),
+            T::Ident.new(s_value: "class"),
           ],
           57,
         ],
         [
-          T.new(type: T::Ident, s_value: "program"),
+          T::Ident.new(s_value: "program"),
           [
-            T.new(type: T::Char, s_value: "'+'"),
-            T.new(type: T::Ident, s_value: "strings_1"),
+            T::Char.new(s_value: "'+'"),
+            T::Ident.new(s_value: "strings_1"),
           ],
           58,
         ],
         [
-          T.new(type: T::Ident, s_value: "program"),
+          T::Ident.new(s_value: "program"),
           [
-            T.new(type: T::Char, s_value: "'-'"),
-            T.new(type: T::Ident, s_value: "strings_2"),
+            T::Char.new(s_value: "'-'"),
+            T::Ident.new(s_value: "strings_2"),
           ],
           59,
         ],
         [
-          T.new(type: T::Ident, s_value: "class"),
+          T::Ident.new(s_value: "class"),
           [
-            T.new(type: T::Ident, s_value: "keyword_class"),
-            T.new(type: T::Ident, s_value: "tSTRING"),
-            T.new(type: T::Ident, s_value: "keyword_end"),
+            T::Ident.new(s_value: "keyword_class"),
+            T::Ident.new(s_value: "tSTRING"),
+            T::Ident.new(s_value: "keyword_end"),
             grammar.find_symbol_by_s_value!("tPLUS"),
-            T.new(type: T::User_code, s_value: " code 1 "),
+            T::UserCode.new(s_value: " code 1 "),
           ],
           62,
         ],
         [
-          T.new(type: T::Ident, s_value: "class"),
+          T::Ident.new(s_value: "class"),
           [
-            T.new(type: T::Ident, s_value: "keyword_class"),
-            T.new(type: T::User_code, s_value: " code 2 "),
-            T.new(type: T::Ident, s_value: "tSTRING"),
-            T.new(type: T::Char, s_value: "'!'"),
-            T.new(type: T::Ident, s_value: "keyword_end"),
-            T.new(type: T::User_code, s_value: " code 3 "),
+            T::Ident.new(s_value: "keyword_class"),
+            T::UserCode.new(s_value: " code 2 "),
+            T::Ident.new(s_value: "tSTRING"),
+            T::Char.new(s_value: "'!'"),
+            T::Ident.new(s_value: "keyword_end"),
+            T::UserCode.new(s_value: " code 3 "),
             grammar.find_symbol_by_s_value!("tEQ"),
           ],
           64,
         ],
         [
-          T.new(type: T::Ident, s_value: "class"),
+          T::Ident.new(s_value: "class"),
           [
-            T.new(type: T::Ident, s_value: "keyword_class"),
-            T.new(type: T::User_code, s_value: " code 4 "),
-            T.new(type: T::Ident, s_value: "tSTRING"),
-            T.new(type: T::Char, s_value: "'?'"),
-            T.new(type: T::Ident, s_value: "keyword_end"),
-            T.new(type: T::User_code, s_value: " code 5 "),
+            T::Ident.new(s_value: "keyword_class"),
+            T::UserCode.new(s_value: " code 4 "),
+            T::Ident.new(s_value: "tSTRING"),
+            T::Char.new(s_value: "'?'"),
+            T::Ident.new(s_value: "keyword_end"),
+            T::UserCode.new(s_value: " code 5 "),
             grammar.find_symbol_by_s_value!("'>'"),
           ],
           65,
         ],
         [
-          T.new(type: T::Ident, s_value: "strings_1"),
+          T::Ident.new(s_value: "strings_1"),
           [
-            T.new(type: T::Ident, s_value: "string_1"),
+            T::Ident.new(s_value: "string_1"),
           ],
           68,
         ],
         [
-          T.new(type: T::Ident, s_value: "strings_2"),
+          T::Ident.new(s_value: "strings_2"),
           [
-            T.new(type: T::Ident, s_value: "string_1"),
+            T::Ident.new(s_value: "string_1"),
           ],
           71,
         ],
         [
-          T.new(type: T::Ident, s_value: "strings_2"),
+          T::Ident.new(s_value: "strings_2"),
           [
-            T.new(type: T::Ident, s_value: "string_2"),
+            T::Ident.new(s_value: "string_2"),
           ],
           72,
         ],
         [
-          T.new(type: T::Ident, s_value: "string_1"),
+          T::Ident.new(s_value: "string_1"),
           [
-            T.new(type: T::Ident, s_value: "string"),
+            T::Ident.new(s_value: "string"),
           ],
           75,
         ],
         [
-          T.new(type: T::Ident, s_value: "string_2"),
+          T::Ident.new(s_value: "string_2"),
           [
-            T.new(type: T::Ident, s_value: "string"),
-            T.new(type: T::Char, s_value: "'+'"),
+            T::Ident.new(s_value: "string"),
+            T::Char.new(s_value: "'+'"),
           ],
           78,
         ],
         [
-          T.new(type: T::Ident, s_value: "string"),
+          T::Ident.new(s_value: "string"),
           [
-            T.new(type: T::Ident, s_value: "tSTRING")
+            T::Ident.new(s_value: "tSTRING")
           ],
           81,
         ],
@@ -264,7 +264,7 @@ RSpec.describe Lrama::Parser do
             grammar.find_symbol_by_s_value!("tSTRING"),
             grammar.find_symbol_by_s_value!("keyword_end"),
           ],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 1 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 1 ")),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("tPLUS"),
           lineno: 62,
@@ -273,7 +273,7 @@ RSpec.describe Lrama::Parser do
           id: 5,
           lhs: grammar.find_symbol_by_s_value!("$@1"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 2 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 2 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 64,
@@ -282,7 +282,7 @@ RSpec.describe Lrama::Parser do
           id: 6,
           lhs: grammar.find_symbol_by_s_value!("$@2"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 3 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 3 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 64,
@@ -307,7 +307,7 @@ RSpec.describe Lrama::Parser do
           id: 8,
           lhs: grammar.find_symbol_by_s_value!("$@3"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 4 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 4 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 65,
@@ -316,7 +316,7 @@ RSpec.describe Lrama::Parser do
           id: 9,
           lhs: grammar.find_symbol_by_s_value!("$@4"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 5 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 5 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 65,
@@ -413,13 +413,13 @@ RSpec.describe Lrama::Parser do
       grammar = Lrama::Parser.new(y, path).parse
 
       expect(grammar.nterms.sort_by(&:number)).to eq([
-        Sym.new(id: T.new(type: T::Ident, s_value: "$accept"),       alias_name: nil, number:  6, tag: nil, term: false, token_id: 0, nullable: false),
-        Sym.new(id: T.new(type: T::Ident, s_value: "program"),       alias_name: nil, number:  7, tag: nil, term: false, token_id: 1, nullable: true),
-        Sym.new(id: T.new(type: T::Ident, s_value: "stmt"),          alias_name: nil, number:  8, tag: nil, term: false, token_id: 2, nullable: true),
-        Sym.new(id: T.new(type: T::Ident, s_value: "expr"),          alias_name: nil, number:  9, tag: nil, term: false, token_id: 3, nullable: false),
-        Sym.new(id: T.new(type: T::Ident, s_value: "opt_expr"),      alias_name: nil, number: 10, tag: nil, term: false, token_id: 4, nullable: true),
-        Sym.new(id: T.new(type: T::Ident, s_value: "opt_semicolon"), alias_name: nil, number: 11, tag: nil, term: false, token_id: 5, nullable: true),
-        Sym.new(id: T.new(type: T::Ident, s_value: "opt_colon"),     alias_name: nil, number: 12, tag: nil, term: false, token_id: 6, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "$accept"),       alias_name: nil, number:  6, tag: nil, term: false, token_id: 0, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "program"),       alias_name: nil, number:  7, tag: nil, term: false, token_id: 1, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "stmt"),          alias_name: nil, number:  8, tag: nil, term: false, token_id: 2, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "expr"),          alias_name: nil, number:  9, tag: nil, term: false, token_id: 3, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "opt_expr"),      alias_name: nil, number: 10, tag: nil, term: false, token_id: 4, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "opt_semicolon"), alias_name: nil, number: 11, tag: nil, term: false, token_id: 5, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "opt_colon"),     alias_name: nil, number: 12, tag: nil, term: false, token_id: 6, nullable: true),
       ])
       expect(grammar.rules).to eq([
         Rule.new(
@@ -559,8 +559,8 @@ RSpec.describe Lrama::Parser do
         grammar = Lrama::Parser.new(y, path).parse
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
-          Sym.new(id: T.new(type: T::Ident, s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
         ])
 
         expect(grammar.rules).to eq([
@@ -616,8 +616,8 @@ RSpec.describe Lrama::Parser do
         grammar = Lrama::Parser.new(y, path).parse
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
-          Sym.new(id: T.new(type: T::Ident, s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
         ])
 
         expect(grammar.rules).to eq([
@@ -676,8 +676,8 @@ RSpec.describe Lrama::Parser do
         grammar = Lrama::Parser.new(y, path).parse
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
-          Sym.new(id: T.new(type: T::Ident, s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
         ])
 
         expect(grammar.rules).to eq([
@@ -745,26 +745,26 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
       expect(grammar._rules).to eq([
         [
-          T.new(type: T::Ident, s_value: "program"),
+          T::Ident.new(s_value: "program"),
           [
-            T.new(type: T::Ident, s_value: "class")
+            T::Ident.new(s_value: "class")
           ],
           29,
         ],
         [
-          T.new(type: T::Ident, s_value: "class"),
+          T::Ident.new(s_value: "class"),
           [
-            T.new(type: T::Ident, s_value: "keyword_class"),
-            T.new(type: T::Ident, s_value: "tSTRING"),
-            T.new(type: T::Ident, s_value: "keyword_end"),
-            T.new(type: T::User_code, s_value: " code 1 "),
+            T::Ident.new(s_value: "keyword_class"),
+            T::Ident.new(s_value: "tSTRING"),
+            T::Ident.new(s_value: "keyword_end"),
+            T::UserCode.new(s_value: " code 1 "),
           ],
           31,
         ],
         [
-          T.new(type: T::Ident, s_value: "class"),
+          T::Ident.new(s_value: "class"),
           [
-            T.new(type: T::Ident, s_value: "error")
+            T::Ident.new(s_value: "error")
           ],
           32,
         ],
@@ -787,40 +787,40 @@ class : keyword_class tSTRING keyword_end { code 1 }
       grammar = Lrama::Parser.new(y, "parse.y").parse
 
       expect(grammar.terms.sort_by(&:number)).to eq([
-        Sym.new(id: T.new(type: T::Ident, s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "YYerror"),       alias_name: "error",             number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number:  2, tag: nil,                                   term: true, token_id: 257, nullable: false, precedence: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "keyword_class"), alias_name: nil,                 number:  3, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 258, nullable: false, precedence: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tNUMBER"),       alias_name: nil,                 number:  4, tag: T.new(type: T::Tag, s_value: "<l>"),   term: true, token_id: 259, nullable: false, precedence: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tSTRING"),       alias_name: nil,                 number:  5, tag: T.new(type: T::Tag, s_value: "<str>"), term: true, token_id: 260, nullable: false, precedence: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "keyword_end"),   alias_name: "\"end\"",           number:  6, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 261, nullable: false, precedence: nil),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tPLUS"),         alias_name: "\"+\"",             number:  7, tag: nil,                                   term: true, token_id: 262, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1)),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tMINUS"),        alias_name: "\"-\"",             number:  8, tag: nil,                                   term: true, token_id: 263, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1)),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tEQ"),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2)),
-        Sym.new(id: T.new(type: T::Ident, s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0)),
+        Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
+        Sym.new(id: T::Ident.new(s_value: "YYerror"),       alias_name: "error",             number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil),
+        Sym.new(id: T::Ident.new(s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number:  2, tag: nil,                                   term: true, token_id: 257, nullable: false, precedence: nil),
+        Sym.new(id: T::Ident.new(s_value: "keyword_class"), alias_name: nil,                 number:  3, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 258, nullable: false, precedence: nil),
+        Sym.new(id: T::Ident.new(s_value: "tNUMBER"),       alias_name: nil,                 number:  4, tag: T::Tag.new(s_value: "<l>"),   term: true, token_id: 259, nullable: false, precedence: nil),
+        Sym.new(id: T::Ident.new(s_value: "tSTRING"),       alias_name: nil,                 number:  5, tag: T::Tag.new(s_value: "<str>"), term: true, token_id: 260, nullable: false, precedence: nil),
+        Sym.new(id: T::Ident.new(s_value: "keyword_end"),   alias_name: "\"end\"",           number:  6, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 261, nullable: false, precedence: nil),
+        Sym.new(id: T::Ident.new(s_value: "tPLUS"),         alias_name: "\"+\"",             number:  7, tag: nil,                                   term: true, token_id: 262, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1)),
+        Sym.new(id: T::Ident.new(s_value: "tMINUS"),        alias_name: "\"-\"",             number:  8, tag: nil,                                   term: true, token_id: 263, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1)),
+        Sym.new(id: T::Ident.new(s_value: "tEQ"),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2)),
+        Sym.new(id: T::Ident.new(s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0)),
       ])
       expect(grammar._rules).to eq([
         [
-          T.new(type: T::Ident, s_value: "program"),
+          T::Ident.new(s_value: "program"),
           [
-            T.new(type: T::Ident, s_value: "class")
+            T::Ident.new(s_value: "class")
           ],
           29,
         ],
         [
-          T.new(type: T::Ident, s_value: "class"),
+          T::Ident.new(s_value: "class"),
           [
-            T.new(type: T::Ident, s_value: "keyword_class"),
-            T.new(type: T::Ident, s_value: "tSTRING"),
-            T.new(type: T::Ident, s_value: "keyword_end"),
-            T.new(type: T::User_code, s_value: " code 1 "),
+            T::Ident.new(s_value: "keyword_class"),
+            T::Ident.new(s_value: "tSTRING"),
+            T::Ident.new(s_value: "keyword_end"),
+            T::UserCode.new(s_value: " code 1 "),
           ],
           31,
         ],
         [
-          T.new(type: T::Ident, s_value: "class"),
+          T::Ident.new(s_value: "class"),
           [
-            T.new(type: T::Ident, s_value: "error")
+            T::Ident.new(s_value: "error")
           ],
           32,
         ],
@@ -843,11 +843,11 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
       grammar = Lrama::Parser.new(y, "parse.y").parse
 
       expect(grammar.nterms.sort_by(&:number)).to eq([
-        Sym.new(id: T.new(type: T::Ident, s_value: "$accept"), alias_name: nil, number: 11, tag: nil,                                 term: false, token_id: 0, nullable: false),
-        Sym.new(id: T.new(type: T::Ident, s_value: "program"), alias_name: nil, number: 12, tag: nil,                                 term: false, token_id: 1, nullable: false),
-        Sym.new(id: T.new(type: T::Ident, s_value: "class"),   alias_name: nil, number: 13, tag: T.new(type: T::Tag, s_value: "<i>"), term: false, token_id: 2, nullable: false),
-        Sym.new(id: T.new(type: T::Ident, s_value: "$@1"),     alias_name: nil, number: 14, tag: nil,                                 term: false, token_id: 3, nullable: true),
-        Sym.new(id: T.new(type: T::Ident, s_value: "$@2"),     alias_name: nil, number: 15, tag: nil,                                 term: false, token_id: 4, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 11, tag: nil,                                 term: false, token_id: 0, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 12, tag: nil,                                 term: false, token_id: 1, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "class"),   alias_name: nil, number: 13, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 2, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "$@1"),     alias_name: nil, number: 14, tag: nil,                                 term: false, token_id: 3, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "$@2"),     alias_name: nil, number: 15, tag: nil,                                 term: false, token_id: 4, nullable: true),
       ])
       expect(grammar.rules).to eq([
         Rule.new(
@@ -877,7 +877,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
           id: 2,
           lhs: grammar.find_symbol_by_s_value!("$@1"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 1 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 1 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 31,
@@ -886,7 +886,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
           id: 3,
           lhs: grammar.find_symbol_by_s_value!("$@2"),
           rhs: [],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 2 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 2 ")),
           nullable: true,
           precedence_sym: nil,
           lineno: 31,
@@ -901,7 +901,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
             grammar.find_symbol_by_s_value!("$@2"),
             grammar.find_symbol_by_s_value!("keyword_end"),
           ],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 3 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 3 ")),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("keyword_end"),
           lineno: 31,
@@ -914,7 +914,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
             grammar.find_symbol_by_s_value!("tSTRING"),
             grammar.find_symbol_by_s_value!("keyword_end"),
           ],
-          code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " code 4 ")),
+          code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " code 4 ")),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("keyword_end"),
           lineno: 32,
@@ -1065,17 +1065,17 @@ class : keyword_class tSTRING keyword_end { code 1 }
         grammar = Lrama::Parser.new(y, "parse.y").parse
 
         expect(grammar.terms.sort_by(&:number)).to eq([
-          Sym.new(id: T.new(type: T::Ident, s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "YYerror"),       alias_name: "error",             number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number:  2, tag: nil,                                   term: true, token_id: 257, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "keyword_class"), alias_name: nil,                 number:  3, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 258, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tNUMBER"),       alias_name: nil,                 number:  4, tag: T.new(type: T::Tag, s_value: "<l>"),   term: true, token_id:   6, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tSTRING"),       alias_name: nil,                 number:  5, tag: T.new(type: T::Tag, s_value: "<str>"), term: true, token_id: 259, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "keyword_end"),   alias_name: "\"end\"",           number:  6, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 260, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tPLUS"),         alias_name: "\"+\"",             number:  7, tag: nil,                                   term: true, token_id: 261, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tMINUS"),        alias_name: "\"-\"",             number:  8, tag: nil,                                   term: true, token_id: 262, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tEQ"),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 263, nullable: false),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 264, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "YYerror"),       alias_name: "error",             number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number:  2, tag: nil,                                   term: true, token_id: 257, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "keyword_class"), alias_name: nil,                 number:  3, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 258, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "tNUMBER"),       alias_name: nil,                 number:  4, tag: T::Tag.new(s_value: "<l>"),   term: true, token_id:   6, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "tSTRING"),       alias_name: nil,                 number:  5, tag: T::Tag.new(s_value: "<str>"), term: true, token_id: 259, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "keyword_end"),   alias_name: "\"end\"",           number:  6, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 260, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "tPLUS"),         alias_name: "\"+\"",             number:  7, tag: nil,                                   term: true, token_id: 261, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "tMINUS"),        alias_name: "\"-\"",             number:  8, tag: nil,                                   term: true, token_id: 262, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "tEQ"),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 263, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 264, nullable: false),
         ])
       end
 
@@ -1114,15 +1114,15 @@ class : keyword_class tSTRING keyword_end { code 1 }
         grammar = Lrama::Parser.new(y, "parse.y").parse
 
         expect(grammar.terms.sort_by(&:number)).to eq([
-          Sym.new(id: T.new(type: T::Ident, s_value: "EOI"),           alias_name: "\"EOI\"",           number: 0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
-          Sym.new(id: T.new(type: T::Ident, s_value: "YYerror"),       alias_name: "error",             number: 1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil),
-          Sym.new(id: T.new(type: T::Ident, s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number: 2, tag: nil,                                   term: true, token_id: 257, nullable: false, precedence: nil),
-          Sym.new(id: T.new(type: T::Ident, s_value: "keyword_class"), alias_name: nil,                 number: 3, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 258, nullable: false, precedence: nil),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tSTRING"),       alias_name: nil,                 number: 4, tag: T.new(type: T::Tag, s_value: "<str>"), term: true, token_id: 259, nullable: false, precedence: nil),
-          Sym.new(id: T.new(type: T::Ident, s_value: "keyword_end"),   alias_name: "\"end\"",           number: 5, tag: T.new(type: T::Tag, s_value: "<i>"),   term: true, token_id: 260, nullable: false, precedence: nil),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tEQ"),           alias_name: "\"=\"",             number: 6, tag: nil,                                   term: true, token_id: 261, nullable: false, precedence: nil),
-          Sym.new(id: T.new(type: T::Char, s_value:  "'&'"),           alias_name: nil,                 number: 7, tag: nil,                                   term: true, token_id:  38, nullable: false, precedence: Precedence.new(type: :left, precedence: 0)),
-          Sym.new(id: T.new(type: T::Ident, s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 8, tag: nil,                                   term: true, token_id: 262, nullable: false, precedence: nil),
+          Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number: 0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
+          Sym.new(id: T::Ident.new(s_value: "YYerror"),       alias_name: "error",             number: 1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil),
+          Sym.new(id: T::Ident.new(s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number: 2, tag: nil,                                   term: true, token_id: 257, nullable: false, precedence: nil),
+          Sym.new(id: T::Ident.new(s_value: "keyword_class"), alias_name: nil,                 number: 3, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 258, nullable: false, precedence: nil),
+          Sym.new(id: T::Ident.new(s_value: "tSTRING"),       alias_name: nil,                 number: 4, tag: T::Tag.new(s_value: "<str>"), term: true, token_id: 259, nullable: false, precedence: nil),
+          Sym.new(id: T::Ident.new(s_value: "keyword_end"),   alias_name: "\"end\"",           number: 5, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 260, nullable: false, precedence: nil),
+          Sym.new(id: T::Ident.new(s_value: "tEQ"),           alias_name: "\"=\"",             number: 6, tag: nil,                                   term: true, token_id: 261, nullable: false, precedence: nil),
+          Sym.new(id: T::Char.new(s_value:  "'&'"),           alias_name: nil,                 number: 7, tag: nil,                                   term: true, token_id:  38, nullable: false, precedence: Precedence.new(type: :left, precedence: 0)),
+          Sym.new(id: T::Ident.new(s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 8, tag: nil,                                   term: true, token_id: 262, nullable: false, precedence: nil),
         ])
       end
     end
@@ -1187,7 +1187,7 @@ lambda: tLAMBDA
               id: 2,
               lhs: grammar.find_symbol_by_s_value!("@1"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>1 = 1; $<i>$ = 2; ")),
+              code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " $<i>1 = 1; $<i>$ = 2; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 17,
@@ -1196,7 +1196,7 @@ lambda: tLAMBDA
               id: 3,
               lhs: grammar.find_symbol_by_s_value!("@2"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 3; ")),
+              code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " $<i>$ = 3; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 18,
@@ -1205,7 +1205,7 @@ lambda: tLAMBDA
               id: 4,
               lhs: grammar.find_symbol_by_s_value!("$@3"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 4; ")),
+              code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " $<i>$ = 4; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 19,
@@ -1214,7 +1214,7 @@ lambda: tLAMBDA
               id: 5,
               lhs: grammar.find_symbol_by_s_value!("$@4"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " 5; ")),
+              code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " 5; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 21,
@@ -1231,7 +1231,7 @@ lambda: tLAMBDA
                 grammar.find_symbol_by_s_value!("$@4"),
                 grammar.find_symbol_by_s_value!("tBODY"),
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; ")),
+              code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; ")),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("tBODY"),
               lineno: 16,
@@ -1296,7 +1296,7 @@ emp: /* none */
               lhs: grammar.find_symbol_by_s_value!("emp"),
               rhs: [
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$; ")),
+              code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " $$; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 17,
@@ -1306,7 +1306,7 @@ emp: /* none */
               lhs: grammar.find_symbol_by_s_value!("emp"),
               rhs: [
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " @$; ")),
+              code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " @$; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 19,
@@ -1316,7 +1316,7 @@ emp: /* none */
               lhs: grammar.find_symbol_by_s_value!("emp"),
               rhs: [
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " @0; ")),
+              code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " @0; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 21,
@@ -1411,7 +1411,7 @@ expr[result]: NUM
                   grammar.find_symbol_by_s_value!("expr"),
                   grammar.find_symbol_by_s_value!("'\\n'"),
                 ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " printf(\"\\t%.10g\\n\", $expr); ")),
+                code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " printf(\"\\t%.10g\\n\", $expr); ")),
                 nullable: false,
                 precedence_sym: grammar.find_symbol_by_s_value!("'\\n'"),
                 lineno: 19,
@@ -1435,7 +1435,7 @@ expr[result]: NUM
                   grammar.find_symbol_by_s_value!("expr"),
                   grammar.find_symbol_by_s_value!("'+'"),
                 ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $result = $left + $right; ")),
+                code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " $result = $left + $right; ")),
                 nullable: false,
                 precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
                 lineno: 24,
@@ -1448,7 +1448,7 @@ expr[result]: NUM
                   grammar.find_symbol_by_s_value!("expr"),
                   grammar.find_symbol_by_s_value!("'-'"),
                 ],
-                code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$ = $1 - $2; ")),
+                code: Code.new(type: :user_code, token_code: T::UserCode.new(s_value: " $$ = $1 - $2; ")),
                 nullable: false,
                 precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
                 lineno: 26,
@@ -1511,7 +1511,7 @@ program: /* empty */
        ;
         INPUT
         expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(<<~ERROR)
-          error_messages/parse.y:5:14: parse error on value #<struct Lrama::Lexer::Token type=#<struct Lrama::Lexer::Token::Type id=2, name="Ident">, s_value="invalid", alias=nil> (IDENTIFIER)
+          error_messages/parse.y:5:14: parse error on value #<struct Lrama::Lexer::Token::Ident s_value="invalid", alias=nil> (IDENTIFIER)
           %expect invalid
                         ^
         ERROR

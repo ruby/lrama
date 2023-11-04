@@ -1,12 +1,8 @@
-require 'lrama/lexer/token/type'
-
 module Lrama
   class Lexer
-    class Token
+    class Token < Struct.new(:s_value, :alias, keyword_init: true)
 
       attr_accessor :line, :column, :referred
-      # For User_code
-      attr_accessor :references
 
       def to_s
         "#{super} line: #{line}, column: #{column}"
@@ -17,25 +13,14 @@ module Lrama
       end
 
       def ==(other)
-        self.class == other.class && self.type == other.type && self.s_value == other.s_value
+        self.class == other.class && self.s_value == other.s_value
       end
-
-      @i = 0
-      @types = []
-
-      def self.define_type(name)
-        type = Type.new(id: @i, name: name.to_s)
-        const_set(name, type)
-        @types << type
-        @i += 1
-      end
-
-      # Token types
-      define_type(:User_code)        # { ... }
-      define_type(:Tag)              # <int>
-      define_type(:Ident)            # api.pure, tNUMBER
-      define_type(:Char)             # '+'
-      define_type(:Parameterizing)   # actual?, actual+, actual*
     end
   end
 end
+
+require 'lrama/lexer/token/char'
+require 'lrama/lexer/token/ident'
+require 'lrama/lexer/token/parameterizing'
+require 'lrama/lexer/token/tag'
+require 'lrama/lexer/token/user_code'

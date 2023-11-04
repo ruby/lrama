@@ -82,17 +82,17 @@ module Lrama
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/<\w+>/)
-        return [:TAG, build_token(type: Token::Tag, s_value: @scanner.matched)]
+        return [:TAG, setup_token(Lrama::Lexer::Token::Tag.new(s_value: @scanner.matched))]
       when @scanner.scan(/'.'/)
-        return [:CHARACTER, build_token(type: Token::Char, s_value: @scanner.matched)]
+        return [:CHARACTER, setup_token(Lrama::Lexer::Token::Char.new(s_value: @scanner.matched))]
       when @scanner.scan(/'\\\\'|'\\b'|'\\t'|'\\f'|'\\r'|'\\n'|'\\v'|'\\13'/)
-        return [:CHARACTER, build_token(type: Token::Char, s_value: @scanner.matched)]
+        return [:CHARACTER, setup_token(Lrama::Lexer::Token::Char.new(s_value: @scanner.matched))]
       when @scanner.scan(/"/)
         return [:STRING, %Q("#{@scanner.scan_until(/"/)})]
       when @scanner.scan(/\d+/)
         return [:INTEGER, Integer(@scanner.matched)]
       when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
-        token = build_token(type: Token::Ident, s_value: @scanner.matched)
+        token = setup_token(Lrama::Lexer::Token::Ident.new(s_value: @scanner.matched))
         type =
           if @scanner.check(/\s*(\[\s*[a-zA-Z_.][-a-zA-Z0-9_.]*\s*\])?\s*:/)
             :IDENT_COLON
@@ -116,13 +116,13 @@ module Lrama
         when @scanner.scan(/}/)
           if nested == 0 && @end_symbol == '}'
             @scanner.unscan
-            return [:C_DECLARATION, build_token(type: Token::User_code, s_value: code, references: [])]
+            return [:C_DECLARATION, setup_token(Lrama::Lexer::Token::UserCode.new(s_value: code))]
           else
             code += @scanner.matched
             nested -= 1
           end
         when @scanner.check(/#{@end_symbol}/)
-          return [:C_DECLARATION, build_token(type: Token::User_code, s_value: code, references: [])]
+          return [:C_DECLARATION, setup_token(Lrama::Lexer::Token::UserCode.new(s_value: code))]
         when @scanner.scan(/\n/)
           code += @scanner.matched
           newline
@@ -156,13 +156,9 @@ module Lrama
       end
     end
 
-    def build_token(type:, s_value:, **options)
-      token = Token.new(type: type, s_value: s_value)
+    def setup_token(token)
       token.line = @head_line
       token.column = @head_column
-      options.each do |attr, value|
-        token.public_send("#{attr}=", value)
-      end
 
       token
     end
