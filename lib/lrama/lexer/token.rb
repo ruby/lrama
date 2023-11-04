@@ -36,6 +36,7 @@ module Lrama
       define_type(:Ident)            # api.pure, tNUMBER
       define_type(:Char)             # '+'
       define_type(:Option)           # actual?
+      define_type(:Nonempty_list)    # actual+
     end
   end
 end

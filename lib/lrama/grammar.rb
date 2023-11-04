@@ -571,15 +571,22 @@ module Lrama
           @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], code: c, precedence_sym: precedence_sym, lineno: lineno)
           @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], code: c, precedence_sym: precedence_sym, lineno: lineno)
           @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], code: c, precedence_sym: precedence_sym, lineno: lineno)
+        elsif rhs2.any? {|r| r.type == Token::Nonempty_list }
+          nonempty_list_token = Token.new(type: Token::Ident, s_value: "nonempty_list_#{rhs2[0].s_value}")
+          token = Token.new(type: Token::Ident, s_value: rhs2[0].s_value)
+          add_term(id: nonempty_list_token)
+          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], code: c, precedence_sym: precedence_sym, lineno: lineno)
+          @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], code: c, precedence_sym: precedence_sym, lineno: lineno)
+          @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], code: c, precedence_sym: precedence_sym, lineno: lineno)
         else
           @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
         end
-
         add_nterm(id: lhs)
         a.each do |new_token, _|
           add_nterm(id: new_token)
         end
       end
+      pp @rules
     end
 
     # Collect symbols from rules
