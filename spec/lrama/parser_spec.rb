@@ -552,7 +552,7 @@ RSpec.describe Lrama::Parser do
       ])
     end
 
-    context 'when parametrizing rules' do
+    context 'when parameterizing rules' do
       it "option" do
         path = "parameterizing_rules/option.y"
         y = File.read(fixture_path(path))
