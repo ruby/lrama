@@ -1,6 +1,6 @@
 module Lrama
   class Lexer
-    class Token < Struct.new(:s_value, :alias, keyword_init: true)
+    class Token < Struct.new(:s_value, :alias_name, keyword_init: true)
 
       attr_accessor :line, :column, :referred
 
@@ -9,7 +9,7 @@ module Lrama
       end
 
       def referred_by?(string)
-        [self.s_value, self.alias].include?(string)
+        [self.s_value, self.alias_name].include?(string)
       end
 
       def ==(other)

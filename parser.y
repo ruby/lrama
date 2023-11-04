@@ -262,7 +262,7 @@ rule
   rules: id_colon named_ref_opt ":" rhs_list
            {
              lhs = val[0]
-             lhs.alias = val[1]
+             lhs.alias_name = val[1]
              val[3].each {|hash|
                @grammar.add_rule(lhs: lhs, rhs: hash[:rhs], lineno: hash[:lineno])
              }
@@ -291,7 +291,7 @@ rule
      | rhs symbol named_ref_opt
          {
            token = val[1]
-           token.alias = val[2]
+           token.alias_name = val[2]
            result = val[0].append(token)
          }
      | rhs "?"
@@ -324,7 +324,7 @@ rule
        "}" named_ref_opt
          {
            token = val[3]
-           token.alias = val[6]
+           token.alias_name = val[6]
            result = val[0].append(token)
          }
      | rhs "%prec" symbol

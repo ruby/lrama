@@ -1606,7 +1606,7 @@ module_eval(<<'.,.,', 'parser.y', 253)
 module_eval(<<'.,.,', 'parser.y', 263)
   def _reduce_75(val, _values, result)
                  lhs = val[0]
-             lhs.alias = val[1]
+             lhs.alias_name = val[1]
              val[3].each {|hash|
                @grammar.add_rule(lhs: lhs, rhs: hash[:rhs], lineno: hash[:lineno])
              }
@@ -1654,7 +1654,7 @@ module_eval(<<'.,.,', 'parser.y', 287)
 module_eval(<<'.,.,', 'parser.y', 292)
   def _reduce_81(val, _values, result)
                token = val[1]
-           token.alias = val[2]
+           token.alias_name = val[2]
            result = val[0].append(token)
 
     result
@@ -1711,7 +1711,7 @@ module_eval(<<'.,.,', 'parser.y', 321)
 module_eval(<<'.,.,', 'parser.y', 325)
   def _reduce_87(val, _values, result)
                token = val[3]
-           token.alias = val[6]
+           token.alias_name = val[6]
            result = val[0].append(token)
 
     result
