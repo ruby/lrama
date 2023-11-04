@@ -35,6 +35,7 @@ module Lrama
       define_type(:Tag)              # <int>
       define_type(:Ident)            # api.pure, tNUMBER
       define_type(:Char)             # '+'
+      define_type(:Parameterizing)   # actual?, actual+, actual*
     end
   end
 end
