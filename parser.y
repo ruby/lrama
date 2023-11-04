@@ -296,17 +296,17 @@ rule
          }
      | rhs "?"
           {
-            token = Token.new(type: Token::Option, s_value: val[1])
+            token = Token.new(type: Token::Parameterizing, s_value: val[1])
             result = val[0].append(token)
           }
      | rhs "+"
           {
-            token = Token.new(type: Token::Nonempty_list, s_value: val[1])
+            token = Token.new(type: Token::Parameterizing, s_value: val[1])
             result = val[0].append(token)
           }
      | rhs "*"
           {
-             token = Token.new(type: Token::List, s_value: val[1])
+             token = Token.new(type: Token::Parameterizing, s_value: val[1])
              result = val[0].append(token)
           }
      | rhs "{"

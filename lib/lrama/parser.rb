@@ -1663,7 +1663,7 @@ module_eval(<<'.,.,', 'parser.y', 292)
 
 module_eval(<<'.,.,', 'parser.y', 298)
   def _reduce_82(val, _values, result)
-                token = Token.new(type: Token::Option, s_value: val[1])
+                token = Token.new(type: Token::Parameterizing, s_value: val[1])
             result = val[0].append(token)
 
     result
@@ -1672,7 +1672,7 @@ module_eval(<<'.,.,', 'parser.y', 298)
 
 module_eval(<<'.,.,', 'parser.y', 303)
   def _reduce_83(val, _values, result)
-                token = Token.new(type: Token::Nonempty_list, s_value: val[1])
+                token = Token.new(type: Token::Parameterizing, s_value: val[1])
             result = val[0].append(token)
 
     result
@@ -1681,7 +1681,7 @@ module_eval(<<'.,.,', 'parser.y', 303)
 
 module_eval(<<'.,.,', 'parser.y', 308)
   def _reduce_84(val, _values, result)
-                 token = Token.new(type: Token::List, s_value: val[1])
+                 token = Token.new(type: Token::Parameterizing, s_value: val[1])
              result = val[0].append(token)
 
     result

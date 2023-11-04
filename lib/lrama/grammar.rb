@@ -564,27 +564,8 @@ module Lrama
 
         c = code ? Code.new(type: :user_code, token_code: code) : nil
         # Expand Parameterizing rules
-        if rhs2.any? {|r| r.type == Token::Option }
-          option_token = Token.new(type: Token::Ident, s_value: "option_#{rhs2[0].s_value}")
-          token = Token.new(type: Token::Ident, s_value: rhs2[0].s_value)
-          add_term(id: option_token)
-          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], code: c, precedence_sym: precedence_sym, lineno: lineno)
-          @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], code: c, precedence_sym: precedence_sym, lineno: lineno)
-          @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], code: c, precedence_sym: precedence_sym, lineno: lineno)
-        elsif rhs2.any? {|r| r.type == Token::Nonempty_list }
-          nonempty_list_token = Token.new(type: Token::Ident, s_value: "nonempty_list_#{rhs2[0].s_value}")
-          token = Token.new(type: Token::Ident, s_value: rhs2[0].s_value)
-          add_term(id: nonempty_list_token)
-          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], code: c, precedence_sym: precedence_sym, lineno: lineno)
-          @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], code: c, precedence_sym: precedence_sym, lineno: lineno)
-          @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], code: c, precedence_sym: precedence_sym, lineno: lineno)
-        elsif rhs2.any? {|r| r.type == Token::List }
-          list_token = Token.new(type: Token::Ident, s_value: "list_#{rhs2[0].s_value}")
-          token = Token.new(type: Token::Ident, s_value: rhs2[0].s_value)
-          add_term(id: list_token)
-          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [list_token], code: c, precedence_sym: precedence_sym, lineno: lineno)
-          @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], code: c, precedence_sym: precedence_sym, lineno: lineno)
-          @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [list_token, token], code: c, precedence_sym: precedence_sym, lineno: lineno)
+        if rhs2.any? {|r| r.type == Token::Parameterizing }
+          expand_parameterizing_rules(lhs, rhs2, c, precedence_sym, lineno)
         else
           @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
         end
@@ -592,6 +573,29 @@ module Lrama
         a.each do |new_token, _|
           add_nterm(id: new_token)
         end
+      end
+    end
+
+    def expand_parameterizing_rules(lhs, rhs, code, precedence_sym, lineno)
+      token = Token.new(type: Token::Ident, s_value: rhs[0].s_value)
+      if rhs.any? {|r| r.type == Token::Parameterizing && r.s_value == "?" }
+        option_token = Token.new(type: Token::Ident, s_value: "option_#{rhs[0].s_value}")
+        add_term(id: option_token)
+        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+      elsif rhs.any? {|r| r.type == Token::Parameterizing && r.s_value == "+" }
+        nonempty_list_token = Token.new(type: Token::Ident, s_value: "nonempty_list_#{rhs[0].s_value}")
+        add_term(id: nonempty_list_token)
+        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+      elsif rhs.any? {|r| r.type == Token::Parameterizing && r.s_value == "*" }
+        list_token = Token.new(type: Token::Ident, s_value: "list_#{rhs[0].s_value}")
+        add_term(id: list_token)
+        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [list_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [list_token, token], code: code, precedence_sym: precedence_sym, lineno: lineno)
       end
     end
 
