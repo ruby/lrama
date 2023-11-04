@@ -552,6 +552,65 @@ RSpec.describe Lrama::Parser do
       ])
     end
 
+    context 'when parametrizing rules' do
+      it "option" do
+        path = "parameterizing_rules/option.y"
+        y = File.read(fixture_path(path))
+        grammar = Lrama::Parser.new(y, path).parse
+
+        expect(grammar.nterms.sort_by(&:number)).to eq([
+          Sym.new(id: T.new(type: T::Ident, s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T.new(type: T::Ident, s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
+        ])
+
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("YYEOF"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+            lineno: 20,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("option_number"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("option_number"),
+            lineno: 20,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("option_number"),
+            rhs: [],
+            code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 20,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("option_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 20,
+          ),
+        ])
+      end
+    end
+
     it "; for rules is optional" do
       y = header + <<~INPUT
 %%
