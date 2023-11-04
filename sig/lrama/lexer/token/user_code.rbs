@@ -1,0 +1,9 @@
+module Lrama
+  class Lexer
+    class Token
+      class UserCode < Token
+        attr_accessor references: Array[[Symbol, (String|Integer), Token?, Integer, Integer]]
+      end
+    end
+  end
+end

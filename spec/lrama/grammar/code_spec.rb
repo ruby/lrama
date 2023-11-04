@@ -1,7 +1,7 @@
 RSpec.describe Lrama::Grammar::Code do
   let(:token_class) { Lrama::Lexer::Token }
-  let(:user_code_token) { token_class.new(type: token_class::User_code, s_value: "{ code 1 }") }
-  let(:initial_act_token) { token_class.new(type: token_class::User_code, s_value: "%initial-action") }
+  let(:user_code_token) { token_class::UserCode.new(s_value: "{ code 1 }") }
+  let(:initial_act_token) { token_class::UserCode.new(s_value: "%initial-action") }
 
   describe "#translated_code" do
     context "when the code type is :user_code" do
@@ -26,7 +26,7 @@ RSpec.describe Lrama::Grammar::Code do
   end
 
   describe "#translated_printer_code" do
-    let(:printer_token) { token_class.new(type: token_class::User_code, s_value: '<val>') }
+    let(:printer_token) { token_class::UserCode.new(s_value: '<val>') }
 
     context "when the ref.value is '$' and ref.type is :dollar" do
       let(:reference) { Lrama::Grammar::Reference.new(value: '$', type: :dollar, first_column: 0, last_column: 4) }

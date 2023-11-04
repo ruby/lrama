@@ -1,25 +1,17 @@
 module Lrama
   class Lexer
     class Token
-
+      attr_accessor s_value: String
+      attr_accessor alias_name: String
       attr_accessor line: Integer
       attr_accessor column: Integer
       attr_accessor referred: bool
-      attr_accessor references: Array[[Symbol, (String|Integer), Token?, Integer, Integer]]
+
+      def initialize: (?s_value: String, ?alias_name: String) -> void
 
       def to_s: () -> String
       def referred_by?: (String string) -> bool
       def ==: (Token other) -> bool
-
-      self.@i: Integer
-      self.@types: Array[Type]
-      def self.define_type: (Symbol name) -> void
-
-      # Token types
-      User_code: Type
-      Tag: Type
-      Ident: Type
-      Char: Type
     end
   end
 end
