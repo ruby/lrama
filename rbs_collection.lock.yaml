@@ -2,7 +2,7 @@
 sources:
 - type: git
   name: ruby/gem_rbs_collection
-  revision: 95ad664324500c9eec78569b45da98c65a27a511
+  revision: 2de2d4535caba275f3b8533684aab110d921f553
   remote: https://github.com/ruby/gem_rbs_collection.git
   repo_dir: gems
 path: ".gem_rbs_collection"
@@ -11,6 +11,18 @@ gems:
   version: '0'
   source:
     type: stdlib
+- name: fileutils
+  version: '0'
+  source:
+    type: stdlib
+- name: rake
+  version: '13.0'
+  source:
+    type: git
+    name: ruby/gem_rbs_collection
+    revision: 2de2d4535caba275f3b8533684aab110d921f553
+    remote: https://github.com/ruby/gem_rbs_collection.git
+    repo_dir: gems
 - name: stackprof
   version: '0.2'
   source:
