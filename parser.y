@@ -47,6 +47,18 @@ rule
                            @grammar.parse_param = @grammar.build_code(:parse_param, token).token_code.s_value
                          }
                        }
+                   | "%code" IDENTIFIER "{"
+                       {
+                         begin_c_declaration("}")
+                       }
+                     C_DECLARATION
+                       {
+                         end_c_declaration
+                       }
+                     "}"
+                       {
+                         @grammar.add_percent_code(id: val[1], code: val[4])
+                       }
                    | "%initial-action" "{"
                        {
                          begin_c_declaration("}")
