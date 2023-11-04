@@ -37,6 +37,7 @@ module Lrama
       define_type(:Char)             # '+'
       define_type(:Option)           # actual?
       define_type(:Nonempty_list)    # actual+
+      define_type(:List)             # actual*
     end
   end
 end

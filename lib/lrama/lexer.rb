@@ -79,7 +79,7 @@ module Lrama
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
         return [@scanner.matched, @scanner.matched]
-      when @scanner.scan(/[\?\+]/)
+      when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/<\w+>/)
         return [:TAG, build_token(type: Token::Tag, s_value: @scanner.matched)]

@@ -578,6 +578,13 @@ module Lrama
           @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], code: c, precedence_sym: precedence_sym, lineno: lineno)
           @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], code: c, precedence_sym: precedence_sym, lineno: lineno)
           @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], code: c, precedence_sym: precedence_sym, lineno: lineno)
+        elsif rhs2.any? {|r| r.type == Token::List }
+          list_token = Token.new(type: Token::Ident, s_value: "list_#{rhs2[0].s_value}")
+          token = Token.new(type: Token::Ident, s_value: rhs2[0].s_value)
+          add_term(id: list_token)
+          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [list_token], code: c, precedence_sym: precedence_sym, lineno: lineno)
+          @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], code: c, precedence_sym: precedence_sym, lineno: lineno)
+          @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [list_token, token], code: c, precedence_sym: precedence_sym, lineno: lineno)
         else
           @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
         end
