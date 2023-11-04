@@ -1,8 +1,15 @@
+require "tmpdir"
 require "tempfile"
 require "open3"
 
 RSpec.describe "integration" do
   module IntegrationHelper
+    def generate_object(grammar_file_path, c_path, obj_path, command_args: [])
+      Lrama::Command.new.run(%W[-d -o #{c_path}] + command_args + %W[#{grammar_file_path}])
+      `gcc -Wall #{c_path} -o #{obj_path}`
+      expect($?.success?).to be true
+    end
+
     def test_grammar(grammar, expected, command_args: [])
       Tempfile.create(%w[test .y]) do |f|
         f << grammar
@@ -10,9 +17,7 @@ RSpec.describe "integration" do
         c_path = File.dirname(f.path) + "/test.c"
         obj_path = File.dirname(f.path) + "/test"
 
-        Lrama::Command.new.run(%W[-d -o #{c_path}] + command_args + %W[#{f.path}])
-
-        `gcc -Wall #{c_path} -o #{obj_path}`
+        generate_object(f.path, c_path, obj_path, command_args: command_args)
 
         result = Open3.popen3(obj_path) do |stdin, stdout, stderr, wait_thr|
           stdout.read
@@ -442,6 +447,23 @@ int main() {
 
   %%
       Rules
+    end
+  end
+
+  describe "sample files" do
+    let(:c_path)   { Dir.tmpdir + "/test.c" }
+    let(:obj_path) { Dir.tmpdir + "/test" }
+
+    describe "calc.y" do
+      it "works without errors" do
+        expect { generate_object(sample_path("calc.y"), c_path, obj_path) }.not_to raise_error
+      end
+    end
+
+    describe "parse.y" do
+      it "works without errors" do
+        expect { generate_object(sample_path("parse.y"), c_path, obj_path) }.not_to raise_error
+      end
     end
   end
 end

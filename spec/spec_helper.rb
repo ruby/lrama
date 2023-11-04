@@ -35,6 +35,10 @@ def fixture_path(file_name)
   File.expand_path("../fixtures/#{file_name}", __FILE__)
 end
 
+def sample_path(file_name)
+  File.expand_path("../../sample/#{file_name}", __FILE__)
+end
+
 def exe_path(file_name)
   File.expand_path("../../exe/#{file_name}", __FILE__)
 end
