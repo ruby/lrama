@@ -101,7 +101,7 @@ module Lrama
           end
         return [type, token]
       else
-        raise
+        raise ParseError, "Unexpected token: #{@scanner.peek(10).chomp}."
       end
     end
 
@@ -137,7 +137,7 @@ module Lrama
           code += @scanner.getch
         end
       end
-      raise
+      raise ParseError, "Unexpected code: #{code}."
     end
 
     private
