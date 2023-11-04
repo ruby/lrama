@@ -586,7 +586,6 @@ module Lrama
           add_nterm(id: new_token)
         end
       end
-      pp @rules
     end
 
     # Collect symbols from rules
