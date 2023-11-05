@@ -3,15 +3,20 @@ module Lrama
     class Token
       attr_accessor s_value: String
       attr_accessor alias_name: String
-      attr_accessor line: Integer
-      attr_accessor column: Integer
+      attr_accessor location: Location
       attr_accessor referred: bool
 
-      def initialize: (?s_value: String, ?alias_name: String) -> void
+      def initialize: (?s_value: String, ?alias_name: String, ?location: Location) -> void
 
       def to_s: () -> String
       def referred_by?: (String string) -> bool
       def ==: (Token other) -> bool
+      def first_line: () -> Integer
+      def first_column: () -> Integer
+      def last_line: () -> Integer
+      def last_column: () -> Integer
+      alias line first_line
+      alias column first_column
     end
   end
 end
