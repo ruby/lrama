@@ -3,7 +3,7 @@ module Lrama
     class Token
       class Parameterizing < Token
         def option?
-          self.s_value == "?"
+          %w(option ?).include?(self.s_value)
         end
 
         def nonempty_list?
