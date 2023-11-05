@@ -3,6 +3,7 @@ require "lrama/lexer/token"
 
 module Lrama
   class Lexer
+    attr_reader :head_line, :head_column
     attr_accessor :status
     attr_accessor :end_symbol
 
