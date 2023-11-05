@@ -352,7 +352,7 @@ module Lrama
     end
 
     def numberize_references(lhs, rhs, references)
-      references.map! {|ref|
+      references.each do |ref|
         ref_name = ref.value
         if ref_name.is_a?(::String) && ref_name != '$'
           value =
@@ -373,7 +373,7 @@ module Lrama
         else
           ref
         end
-      }
+      end
     end
 
     # 1. Add $accept rule to the top of rules
