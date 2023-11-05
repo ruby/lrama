@@ -146,7 +146,7 @@ module Lrama
     end
 
     def prepare
-      extract_references
+      preprocess_references
       normalize_rules
       collect_symbols
       replace_token_with_symbol
@@ -305,7 +305,7 @@ module Lrama
 
     private
 
-    def extract_references
+    def preprocess_references
       @_rules.each do |lhs, rhs, _|
         rhs.each_with_index do |token, index|
           next unless token.class == Lrama::Lexer::Token::UserCode
