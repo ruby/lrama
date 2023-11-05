@@ -409,10 +409,18 @@ def next_token
 end
 
 def on_error(error_token_id, error_value, value_stack)
+  if error_value.respond_to?(:line) && error_value.respond_to?(:column)
+    line = error_value.line
+    first_column = error_value.column
+  else
+    line = @lexer.line
+    first_column = @lexer.head_column
+  end
+
   raise ParseError, <<~ERROR
-    #{@path}:#{@lexer.line}:#{error_value.column}: parse error on value #{error_value.inspect} (#{token_to_str(error_token_id) || '?'})
-    #{@text.split("\n")[error_value.line - 1]}
-    #{carrets(error_value)}
+    #{@path}:#{line}:#{first_column}: parse error on value #{error_value.inspect} (#{token_to_str(error_token_id) || '?'})
+    #{@text.split("\n")[line - 1]}
+    #{carrets(first_column)}
   ERROR
 end
 
@@ -433,6 +441,6 @@ def end_c_declaration
   @lexer.end_symbol = nil
 end
 
-def carrets(error_value)
-  ' ' * (error_value.column + 1) + '^' * (@lexer.column - error_value.column)
+def carrets(first_column)
+  ' ' * (first_column + 1) + '^' * (@lexer.column - first_column)
 end

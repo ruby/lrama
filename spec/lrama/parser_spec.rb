@@ -1497,8 +1497,9 @@ expr[result]: NUM
     end
 
     describe "error messages" do
-      it "contains line number and column" do
-        y = <<~INPUT
+      context "error_value has line number and column" do
+        it "contains line number and column" do
+          y = <<~INPUT
 %{
 // Prologue
 %}
@@ -1509,12 +1510,35 @@ expr[result]: NUM
 
 program: /* empty */
        ;
-        INPUT
-        expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(<<~ERROR)
-          error_messages/parse.y:5:7: parse error on value #<struct Lrama::Lexer::Token::Ident s_value="invalid", alias_name=nil> (IDENTIFIER)
-          %expect invalid
-                  ^^^^^^^
-        ERROR
+          INPUT
+          expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
+            error_messages/parse.y:5:7: parse error on value #<struct Lrama::Lexer::Token::Ident s_value="invalid", alias_name=nil> (IDENTIFIER)
+            %expect invalid
+                    ^^^^^^^
+          ERROR
+        end
+      end
+
+      context "error_value doesn't have line number and column" do
+        it "contains line number and column" do
+          y = <<~INPUT
+%{
+// Prologue
+%}
+
+%expect 0 10
+
+%%
+
+program: /* empty */
+       ;
+          INPUT
+          expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
+            error_messages/parse.y:5:9: parse error on value 10 (INTEGER)
+            %expect 0 10
+                      ^^
+          ERROR
+        end
       end
     end
   end
