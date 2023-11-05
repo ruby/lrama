@@ -31,8 +31,8 @@ module Lrama
 
     def initialize(text)
       @scanner = StringScanner.new(text)
-      @head = @scanner.pos
-      @line = 1
+      @head_column = @head = @scanner.pos
+      @head_line = @line = 1
       @status = :initial
       @end_symbol = nil
     end
