@@ -1,6 +1,6 @@
 module Lrama
   class Grammar
-    class Rule < Struct.new(:id, :lhs, :rhs, :code, :nullable, :precedence_sym, :lineno, keyword_init: true)
+    class Rule < Struct.new(:id, :lhs, :rhs, :token_code, :nullable, :precedence_sym, :lineno, keyword_init: true)
       # TODO: Change this to display_name
       def to_s
         l = lhs.id.s_value
@@ -32,7 +32,9 @@ module Lrama
       end
 
       def translated_code
-        code&.translated_code
+        return nil unless token_code
+
+        Code::RuleAction.new(type: :rule_action, token_code: token_code).translated_code
       end
     end
   end

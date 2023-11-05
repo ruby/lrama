@@ -1345,7 +1345,7 @@ module_eval(<<'.,.,', 'parser.y', 108)
   def _reduce_33(val, _values, result)
                                @grammar.add_printer(
                              ident_or_tags: val[6],
-                             code: Grammar::Code::PrinterCode.new(type: :printer, token_code: val[3]),
+                             token_code: val[3],
                              lineno: val[3].line
                            )
 
@@ -1373,7 +1373,7 @@ module_eval(<<'.,.,', 'parser.y', 124)
   def _reduce_36(val, _values, result)
                                @grammar.add_error_token(
                              ident_or_tags: val[6],
-                             code: Grammar::Code::PrinterCode.new(type: :error_token, token_code: val[3]),
+                             token_code: val[3],
                              lineno: val[3].line
                            )
 

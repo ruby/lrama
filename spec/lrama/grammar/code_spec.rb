@@ -60,26 +60,22 @@ RSpec.describe Lrama::Grammar::Code do
       let(:tag) { token_class::Tag.new(s_value: '<val>') }
 
       it "translats '$$' to '((*yyvaluep).val)'" do
-        code = described_class.new(type: :printer, token_code: user_code_dollar_dollar)
-        code.tag = tag
+        code = described_class.new(type: :printer, token_code: user_code_dollar_dollar, tag: tag)
         expect(code.translated_code).to eq("print(((*yyvaluep).val));")
       end
 
       it "translats '@$' to '(*yylocationp)'" do
-        code = described_class.new(type: :printer, token_code: user_code_at_dollar)
-        code.tag = tag
+        code = described_class.new(type: :printer, token_code: user_code_at_dollar, tag: tag)
         expect(code.translated_code).to eq("print((*yylocationp));")
       end
 
       it "raises error for '$n'" do
-        code = described_class.new(type: :printer, token_code: user_code_dollar_n)
-        code.tag = tag
+        code = described_class.new(type: :printer, token_code: user_code_dollar_n, tag: tag)
         expect { code.translated_code }.to raise_error("$n can not be used in printer.")
       end
 
       it "raises error for '@n'" do
-        code = described_class.new(type: :printer, token_code: user_code_at_n)
-        code.tag = tag
+        code = described_class.new(type: :printer, token_code: user_code_at_n, tag: tag)
         expect { code.translated_code }.to raise_error("@n can not be used in printer.")
       end
     end
