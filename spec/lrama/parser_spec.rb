@@ -614,7 +614,6 @@ RSpec.describe Lrama::Parser do
             rhs: [
               grammar.find_symbol_by_s_value!("option_number_alias"),
             ],
-            code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("option_number_alias"),
             lineno: 24,
@@ -623,7 +622,6 @@ RSpec.describe Lrama::Parser do
             id: 5,
             lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
             rhs: [],
-            code: nil,
             nullable: true,
             precedence_sym: nil,
             lineno: 24,
@@ -634,7 +632,6 @@ RSpec.describe Lrama::Parser do
             rhs: [
               grammar.find_symbol_by_s_value!("number_alias"),
             ],
-            code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
             lineno: 24,
@@ -706,7 +703,6 @@ RSpec.describe Lrama::Parser do
             rhs: [
               grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
             ],
-            code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
             lineno: 24,
@@ -717,7 +713,6 @@ RSpec.describe Lrama::Parser do
             rhs: [
               grammar.find_symbol_by_s_value!("number_alias"),
             ],
-            code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
             lineno: 24,
@@ -729,7 +724,6 @@ RSpec.describe Lrama::Parser do
               grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
               grammar.find_symbol_by_s_value!("number_alias"),
             ],
-            code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
             lineno: 24,
@@ -799,7 +793,6 @@ RSpec.describe Lrama::Parser do
             rhs: [
               grammar.find_symbol_by_s_value!("list_number_alias"),
             ],
-            code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("list_number_alias"),
             lineno: 24,
@@ -808,7 +801,6 @@ RSpec.describe Lrama::Parser do
             id: 5,
             lhs: grammar.find_symbol_by_s_value!("list_number_alias"),
             rhs: [],
-            code: nil,
             nullable: true,
             precedence_sym: nil,
             lineno: 24,
@@ -820,7 +812,6 @@ RSpec.describe Lrama::Parser do
               grammar.find_symbol_by_s_value!("list_number_alias"),
               grammar.find_symbol_by_s_value!("number_alias"),
             ],
-            code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
             lineno: 24,
