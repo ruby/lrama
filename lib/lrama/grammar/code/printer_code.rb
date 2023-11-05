@@ -15,10 +15,10 @@ module Lrama
         # * (@1) error
         def reference_to_c(ref)
           case
-          when ref.value == "$" && ref.type == :dollar # $$
+          when ref.type == :dollar && ref.value == "$" # $$
             member = @tag.member
             str = "((*yyvaluep).#{member})"
-          when ref.value == "$" && ref.type == :at # @$
+          when ref.type == :at && ref.value == "$" # @$
             str = "(*yylocationp)"
           when ref.type == :dollar # $n
             raise "$#{ref.value} can not be used in #{type}."

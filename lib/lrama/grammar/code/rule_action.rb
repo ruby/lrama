@@ -10,10 +10,10 @@ module Lrama
         # * (@1) yylsp[i]
         def reference_to_c(ref)
           case
-          when ref.value == "$" && ref.type == :dollar # $$
+          when ref.type == :dollar && ref.value == "$" # $$
             member = ref.tag.member
             str = "(yyval.#{member})"
-          when ref.value == "$" && ref.type == :at # @$
+          when ref.type == :at && ref.value == "$" # @$
             str = "(yyloc)"
           when ref.type == :dollar # $n
             i = -ref.position_in_rhs + ref.value
