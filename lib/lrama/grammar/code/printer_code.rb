@@ -17,9 +17,9 @@ module Lrama
           case
           when ref.type == :dollar && ref.value == "$" # $$
             member = @tag.member
-            str = "((*yyvaluep).#{member})"
+            "((*yyvaluep).#{member})"
           when ref.type == :at && ref.value == "$" # @$
-            str = "(*yylocationp)"
+            "(*yylocationp)"
           when ref.type == :dollar # $n
             raise "$#{ref.value} can not be used in #{type}."
           when ref.type == :at # @n
