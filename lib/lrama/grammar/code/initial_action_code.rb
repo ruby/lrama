@@ -11,9 +11,9 @@ module Lrama
         def reference_to_c(ref)
           case
           when ref.type == :dollar && ref.value == "$" # $$
-            str = "yylval"
+            "yylval"
           when ref.type == :at && ref.value == "$" # @$
-            str = "yylloc"
+            "yylloc"
           when ref.type == :dollar # $n
             raise "$#{ref.value} can not be used in initial_action."
           when ref.type == :at # @n

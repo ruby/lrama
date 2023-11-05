@@ -12,16 +12,16 @@ module Lrama
           case
           when ref.type == :dollar && ref.value == "$" # $$
             member = ref.tag.member
-            str = "(yyval.#{member})"
+            "(yyval.#{member})"
           when ref.type == :at && ref.value == "$" # @$
-            str = "(yyloc)"
+            "(yyloc)"
           when ref.type == :dollar # $n
             i = -ref.position_in_rhs + ref.value
             member = ref.tag.member
-            str = "(yyvsp[#{i}].#{member})"
+            "(yyvsp[#{i}].#{member})"
           when ref.type == :at # @n
             i = -ref.position_in_rhs + ref.value
-            str = "(yylsp[#{i}])"
+            "(yylsp[#{i}])"
           else
             raise "Unexpected. #{self}, #{ref}"
           end
