@@ -648,8 +648,9 @@ RSpec.describe Lrama::Parser do
         grammar = Lrama::Parser.new(y, path).parse
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  8, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number:  9, tag: nil, term: false, token_id: 2, nullable: false),
         ])
 
         expect(grammar.rules).to eq([
@@ -663,7 +664,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 20,
+            lineno: 21,
           ),
           Rule.new(
             id: 1,
@@ -674,7 +675,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("nonempty_list_number"),
-            lineno: 20,
+            lineno: 21,
           ),
           Rule.new(
             id: 2,
@@ -685,7 +686,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 20,
+            lineno: 21,
           ),
           Rule.new(
             id: 3,
@@ -697,7 +698,41 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 20,
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("alias"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 5,
+            lhs: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number_alias"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 6,
+            lhs: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+              grammar.find_symbol_by_s_value!("number_alias"),
+            ],
+            code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+            lineno: 24,
           ),
         ])
       end

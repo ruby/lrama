@@ -14,10 +14,14 @@ static int yyerror(YYLTYPE *loc, const char *str);
 }
 
 %token <i> number
+%token <i> number_alias
 
 %%
 
-program         : number+
+program         : nonempty_list(number)
+                ;
+
+alias           : number_alias+
                 ;
 
 %%

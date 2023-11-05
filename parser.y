@@ -325,6 +325,11 @@ rule
           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0])
           result = val[2].append(token)
         }
+     | "nonempty_list" "(" rhs ")"
+        {
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0])
+          result = val[2].append(token)
+        }
      | rhs "{"
          {
            if @prec_seen

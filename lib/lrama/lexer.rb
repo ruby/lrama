@@ -31,6 +31,7 @@ module Lrama
     )
     PARAMETERIZING_TOKENS = %w(
       option
+      nonempty_list
     )
 
     def initialize(text)

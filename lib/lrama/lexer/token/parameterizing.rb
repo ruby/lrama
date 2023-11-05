@@ -7,7 +7,7 @@ module Lrama
         end
 
         def nonempty_list?
-          self.s_value == "+"
+          %w(nonempty_list +).include?(self.s_value)
         end
 
         def list?
