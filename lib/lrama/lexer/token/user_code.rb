@@ -4,7 +4,7 @@ module Lrama
       class UserCode < Token
         attr_accessor :references
 
-        def initialize(s_value: nil, alias_name: nil)
+        def initialize(s_value: nil, alias_name: nil, location: nil)
           super
           self.references = []
         end
