@@ -8,7 +8,7 @@ module Lrama
     attr_accessor :status
     attr_accessor :end_symbol
 
-    SYMBOLS = %w(%{ %} %% { } \[ \] : \| ;)
+    SYMBOLS = ['%{', '%}', '%%', '{', '}', '\[', '\]', '\(', '\)', ':', '\|', ';']
     PERCENT_TOKENS = %w(
       %union
       %token
@@ -29,6 +29,11 @@ module Lrama
       %empty
       %code
     )
+    PARAMETERIZING_TOKENS = [
+      'option\(',
+      'nonempty_list\(',
+      'list\('
+    ]
 
     def initialize(text)
       @scanner = StringScanner.new(text)
@@ -88,6 +93,8 @@ module Lrama
       when @scanner.scan(/#{SYMBOLS.join('|')}/)
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
+        return [@scanner.matched, @scanner.matched]
+      when @scanner.scan(/#{PARAMETERIZING_TOKENS.join('|')}/)
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, @scanner.matched]

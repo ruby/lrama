@@ -320,6 +320,11 @@ rule
             token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
             result = val[0].append(token)
           }
+     | parameterizing_prefix rhs ")"
+        {
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
+          result = val[1].append(token)
+        }
      | rhs "{"
          {
            if @prec_seen
@@ -344,6 +349,10 @@ rule
            result = val[0].append(sym)
            @prec_seen = true
          }
+
+  parameterizing_prefix: "option("
+                       | "nonempty_list("
+                       | "list("
 
   parameterizing_suffix: "?"
                        | "+"
