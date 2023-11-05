@@ -2,7 +2,10 @@ module Lrama
   class Grammar
     class Code
       class PrinterCode < Code
-        attr_accessor :tag
+        def initialize(type: nil, token_code: nil, tag: nil)
+          super(type: type, token_code: token_code)
+          @tag = tag
+        end
 
         private
 

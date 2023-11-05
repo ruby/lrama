@@ -56,12 +56,12 @@ RSpec.describe Lrama::Parser do
       expect(grammar.printers).to eq([
         Printer.new(
           ident_or_tags: [T::Tag.new(s_value: "<int>")],
-          code: Code::PrinterCode.new(type: :printer, token_code: T::UserCode.new(s_value: "\n    print_int();\n")),
+          token_code: T::UserCode.new(s_value: "\n    print_int();\n"),
           lineno: 15
         ),
         Printer.new(
           ident_or_tags: [T::Ident.new(s_value: "tNUMBER"), T::Ident.new(s_value: "tSTRING")],
-          code: Code::PrinterCode.new(type: :printer, token_code: T::UserCode.new(s_value: "\n    print_token();\n")),
+          token_code: T::UserCode.new(s_value: "\n    print_token();\n"),
           lineno: 18
         ),
       ])
