@@ -1,8 +1,8 @@
 module Lrama
   class Lexer
-    class Token < Struct.new(:s_value, :alias_name, keyword_init: true)
+    class Token < Struct.new(:s_value, :alias_name, :location, keyword_init: true)
 
-      attr_accessor :line, :column, :referred
+      attr_accessor :referred
 
       def to_s
         "#{super} line: #{line}, column: #{column}"
@@ -14,6 +14,24 @@ module Lrama
 
       def ==(other)
         self.class == other.class && self.s_value == other.s_value
+      end
+
+      def first_line
+        location.first_line
+      end
+      alias :line :first_line
+
+      def first_column
+        location.first_column
+      end
+      alias :column :first_column
+
+      def last_line
+        location.last_line
+      end
+
+      def last_column
+        location.last_column
       end
     end
   end

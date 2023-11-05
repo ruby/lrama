@@ -1,0 +1,14 @@
+module Lrama
+  class Lexer
+    class Location
+      attr_reader first_line: Integer
+      attr_reader first_column: Integer
+      attr_reader last_line: Integer
+      attr_reader last_column: Integer
+
+      def initialize: (first_line: Integer, first_column: Integer, last_line: Integer, last_column: Integer) -> void
+
+      def ==: (Location other) -> bool
+    end
+  end
+end

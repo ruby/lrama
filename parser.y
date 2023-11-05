@@ -409,18 +409,22 @@ def next_token
 end
 
 def on_error(error_token_id, error_value, value_stack)
-  if error_value.respond_to?(:line) && error_value.respond_to?(:column)
-    line = error_value.line
-    first_column = error_value.column
+  if error_value.is_a?(Lrama::Lexer::Token)
+    line = error_value.first_line
+    first_column = error_value.first_column
+    last_column = error_value.last_column
+    value = "'#{error_value.s_value}'"
   else
     line = @lexer.line
     first_column = @lexer.head_column
+    last_column = @lexer.column
+    value = error_value.inspect
   end
 
   raise ParseError, <<~ERROR
-    #{@path}:#{line}:#{first_column}: parse error on value #{error_value.inspect} (#{token_to_str(error_token_id) || '?'})
+    #{@path}:#{line}:#{first_column}: parse error on value #{value} (#{token_to_str(error_token_id) || '?'})
     #{@text.split("\n")[line - 1]}
-    #{carrets(first_column)}
+    #{carrets(first_column, last_column)}
   ERROR
 end
 
@@ -441,6 +445,6 @@ def end_c_declaration
   @lexer.end_symbol = nil
 end
 
-def carrets(first_column)
-  ' ' * (first_column + 1) + '^' * (@lexer.column - first_column)
+def carrets(first_column, last_column)
+  ' ' * (first_column + 1) + '^' * (last_column - first_column)
 end
