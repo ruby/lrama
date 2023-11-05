@@ -1,5 +1,3 @@
-require "strscan"
-
 require "lrama/grammar/auxiliary"
 require "lrama/grammar/code"
 require "lrama/grammar/error_token"
@@ -305,104 +303,13 @@ module Lrama
       @nterms ||= @symbols.select(&:nterm?)
     end
 
-    def scan_reference(scanner)
-      start = scanner.pos
-      case
-      # $ references
-      # It need to wrap an identifier with brackets to use ".-" for identifiers
-      when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\$/) # $$, $<long>$
-        tag = scanner[1] ? Lrama::Lexer::Token::Tag.new(s_value: scanner[1]) : nil
-        return Reference.new(type: :dollar, value: "$", ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
-      when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?(\d+)/) # $1, $2, $<long>1
-        tag = scanner[1] ? Lrama::Lexer::Token::Tag.new(s_value: scanner[1]) : nil
-        return Reference.new(type: :dollar, value: Integer(scanner[2]), ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
-      when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?([a-zA-Z_][a-zA-Z0-9_]*)/) # $foo, $expr, $<long>program (named reference without brackets)
-        tag = scanner[1] ? Lrama::Lexer::Token::Tag.new(s_value: scanner[1]) : nil
-        return Reference.new(type: :dollar, value: scanner[2], ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
-      when scanner.scan(/\$(<[a-zA-Z0-9_]+>)?\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # $expr.right, $expr-right, $<long>program (named reference with brackets)
-        tag = scanner[1] ? Lrama::Lexer::Token::Tag.new(s_value: scanner[1]) : nil
-        return Reference.new(type: :dollar, value: scanner[2], ex_tag: tag, first_column: start, last_column: scanner.pos - 1)
-
-      # @ references
-      # It need to wrap an identifier with brackets to use ".-" for identifiers
-      when scanner.scan(/@\$/) # @$
-        return Reference.new(type: :at, value: "$", first_column: start, last_column: scanner.pos - 1)
-      when scanner.scan(/@(\d+)/) # @1
-        return Reference.new(type: :at, value: Integer(scanner[1]), first_column: start, last_column: scanner.pos - 1)
-      when scanner.scan(/@([a-zA-Z][a-zA-Z0-9_]*)/) # @foo, @expr (named reference without brackets)
-        return Reference.new(type: :at, value: scanner[1], first_column: start, last_column: scanner.pos - 1)
-      when scanner.scan(/@\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # @expr.right, @expr-right  (named reference with brackets)
-        return Reference.new(type: :at, value: scanner[1], first_column: start, last_column: scanner.pos - 1)
-      end
-    end
-
     private
 
     def extract_references
-      unless initial_action.nil?
-        scanner = StringScanner.new(initial_action.s_value)
-        references = []
-
-        while !scanner.eos? do
-          if reference = scan_reference(scanner)
-            references << reference
-          else
-            scanner.getch
-          end
-        end
-
-        initial_action.token_code.references = references
-      end
-
-      @printers.each do |printer|
-        scanner = StringScanner.new(printer.code.s_value)
-        references = []
-
-        while !scanner.eos? do
-          if reference = scan_reference(scanner)
-            references << reference
-          else
-            scanner.getch
-          end
-        end
-
-        printer.code.token_code.references = references
-      end
-
-      @error_tokens.each do |error_token|
-        scanner = StringScanner.new(error_token.code.s_value)
-        references = []
-
-        while !scanner.eos? do
-          if reference = scan_reference(scanner)
-            references << reference
-          else
-            scanner.getch
-          end
-        end
-
-        error_token.code.token_code.references = references
-      end
-
       @_rules.each do |lhs, rhs, _|
         rhs.each_with_index do |token, index|
           next unless token.class == Lrama::Lexer::Token::UserCode
 
-          scanner = StringScanner.new(token.s_value)
-          references = []
-
-          while !scanner.eos? do
-            case
-            when reference = scan_reference(scanner)
-              references << reference
-            when scanner.scan(/\/\*/)
-              scanner.scan_until(/\*\//)
-            else
-              scanner.getch
-            end
-          end
-
-          token.references = references
           numberize_references(lhs, rhs, token.references)
         end
       end

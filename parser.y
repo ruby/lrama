@@ -36,14 +36,12 @@ rule
                    | "%lex-param" params
                        {
                          val[1].each {|token|
-                           token.references = []
                            @grammar.lex_param = @grammar.build_code(:lex_param, token).token_code.s_value
                          }
                        }
                    | "%parse-param" params
                        {
                          val[1].each {|token|
-                           token.references = []
                            @grammar.parse_param = @grammar.build_code(:parse_param, token).token_code.s_value
                          }
                        }
