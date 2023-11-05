@@ -2,7 +2,12 @@ module Lrama
   class Lexer
     class Token
       class UserCode < Token
-        attr_accessor references: Array[[Symbol, (String|Integer), Token?, Integer, Integer]]
+        def references: () -> Array[Lrama::Grammar::Reference]
+
+        private
+
+        def _references: () -> Array[Lrama::Grammar::Reference]
+        def scan_reference: (StringScanner scanner) -> Lrama::Grammar::Reference?
       end
     end
   end

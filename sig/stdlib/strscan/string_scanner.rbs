@@ -1,0 +1,5 @@
+class StringScanner
+  # TODO: Is it better to define `StringScanner#fetch` whose type '(Integer) -> String' ?
+  def []: (Integer) -> String
+        | ...
+end

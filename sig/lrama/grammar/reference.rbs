@@ -11,9 +11,9 @@ module Lrama
       attr_accessor position_in_rhs: Integer?
 
       def initialize: (
-        type: Symbol, value: (String|Integer), ex_tag: Lexer::Token?,
+        type: Symbol, value: (String|Integer), ?ex_tag: Lexer::Token?,
         first_column: Integer, last_column: Integer,
-        referring_symbol: untyped, position_in_rhs: Integer?
+        ?referring_symbol: untyped, ?position_in_rhs: Integer?
       ) -> void
 
       def tag: () -> untyped
