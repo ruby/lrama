@@ -304,20 +304,10 @@ rule
            token.alias_name = val[2]
            result = val[0].append(token)
          }
-     | rhs "?"
+     | rhs parameterizing_suffix
           {
             token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
             result = val[0].append(token)
-          }
-     | rhs "+"
-          {
-            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
-            result = val[0].append(token)
-          }
-     | rhs "*"
-          {
-             token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
-             result = val[0].append(token)
           }
      | rhs "{"
          {
@@ -343,6 +333,10 @@ rule
            result = val[0].append(sym)
            @prec_seen = true
          }
+
+  parameterizing_suffix: "?"
+                       | "+"
+                       | "*"
 
   named_ref_opt: # empty
                | '[' IDENTIFIER ']' { result = val[1].s_value }
