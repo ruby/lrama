@@ -658,7 +658,7 @@ end
 module Lrama
   class Parser < Racc::Parser
 
-module_eval(<<'...end parser.y/module_eval...', 'parser.y', 383)
+module_eval(<<'...end parser.y/module_eval...', 'parser.y', 381)
 
 include Lrama::Report::Duration
 
@@ -1207,7 +1207,6 @@ module_eval(<<'.,.,', 'parser.y', 31)
 module_eval(<<'.,.,', 'parser.y', 37)
   def _reduce_15(val, _values, result)
                              val[1].each {|token|
-                           token.references = []
                            @grammar.lex_param = @grammar.build_code(:lex_param, token).token_code.s_value
                          }
 
@@ -1215,10 +1214,9 @@ module_eval(<<'.,.,', 'parser.y', 37)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 44)
+module_eval(<<'.,.,', 'parser.y', 43)
   def _reduce_16(val, _values, result)
                              val[1].each {|token|
-                           token.references = []
                            @grammar.parse_param = @grammar.build_code(:parse_param, token).token_code.s_value
                          }
 
@@ -1226,7 +1224,7 @@ module_eval(<<'.,.,', 'parser.y', 44)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 51)
+module_eval(<<'.,.,', 'parser.y', 49)
   def _reduce_17(val, _values, result)
                              begin_c_declaration("}")
 
@@ -1234,7 +1232,7 @@ module_eval(<<'.,.,', 'parser.y', 51)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 55)
+module_eval(<<'.,.,', 'parser.y', 53)
   def _reduce_18(val, _values, result)
                              end_c_declaration
 
@@ -1242,7 +1240,7 @@ module_eval(<<'.,.,', 'parser.y', 55)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 59)
+module_eval(<<'.,.,', 'parser.y', 57)
   def _reduce_19(val, _values, result)
                              @grammar.add_percent_code(id: val[1], code: val[4])
 
@@ -1250,7 +1248,7 @@ module_eval(<<'.,.,', 'parser.y', 59)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 63)
+module_eval(<<'.,.,', 'parser.y', 61)
   def _reduce_20(val, _values, result)
                              begin_c_declaration("}")
 
@@ -1258,7 +1256,7 @@ module_eval(<<'.,.,', 'parser.y', 63)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 67)
+module_eval(<<'.,.,', 'parser.y', 65)
   def _reduce_21(val, _values, result)
                              end_c_declaration
 
@@ -1266,7 +1264,7 @@ module_eval(<<'.,.,', 'parser.y', 67)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 71)
+module_eval(<<'.,.,', 'parser.y', 69)
   def _reduce_22(val, _values, result)
                              @grammar.initial_action = @grammar.build_code(:initial_action, val[3])
 
@@ -1276,7 +1274,7 @@ module_eval(<<'.,.,', 'parser.y', 71)
 
 # reduce 23 omitted
 
-module_eval(<<'.,.,', 'parser.y', 77)
+module_eval(<<'.,.,', 'parser.y', 75)
   def _reduce_24(val, _values, result)
                                begin_c_declaration("}")
 
@@ -1284,7 +1282,7 @@ module_eval(<<'.,.,', 'parser.y', 77)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 81)
+module_eval(<<'.,.,', 'parser.y', 79)
   def _reduce_25(val, _values, result)
                                end_c_declaration
 
@@ -1292,7 +1290,7 @@ module_eval(<<'.,.,', 'parser.y', 81)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 85)
+module_eval(<<'.,.,', 'parser.y', 83)
   def _reduce_26(val, _values, result)
                                @grammar.set_union(@grammar.build_code(:union, val[3]), val[3].line)
 
@@ -1302,7 +1300,7 @@ module_eval(<<'.,.,', 'parser.y', 85)
 
 # reduce 27 omitted
 
-module_eval(<<'.,.,', 'parser.y', 90)
+module_eval(<<'.,.,', 'parser.y', 88)
   def _reduce_28(val, _values, result)
                                begin_c_declaration("}")
 
@@ -1310,7 +1308,7 @@ module_eval(<<'.,.,', 'parser.y', 90)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 94)
+module_eval(<<'.,.,', 'parser.y', 92)
   def _reduce_29(val, _values, result)
                                end_c_declaration
 
@@ -1320,7 +1318,7 @@ module_eval(<<'.,.,', 'parser.y', 94)
 
 # reduce 30 omitted
 
-module_eval(<<'.,.,', 'parser.y', 99)
+module_eval(<<'.,.,', 'parser.y', 97)
   def _reduce_31(val, _values, result)
                                begin_c_declaration("}")
 
@@ -1328,7 +1326,7 @@ module_eval(<<'.,.,', 'parser.y', 99)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 103)
+module_eval(<<'.,.,', 'parser.y', 101)
   def _reduce_32(val, _values, result)
                                end_c_declaration
 
@@ -1336,7 +1334,7 @@ module_eval(<<'.,.,', 'parser.y', 103)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 107)
+module_eval(<<'.,.,', 'parser.y', 105)
   def _reduce_33(val, _values, result)
                                @grammar.add_printer(ident_or_tags: val[6], code: @grammar.build_code(:printer, val[3]), lineno: val[3].line)
 
@@ -1344,7 +1342,7 @@ module_eval(<<'.,.,', 'parser.y', 107)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 111)
+module_eval(<<'.,.,', 'parser.y', 109)
   def _reduce_34(val, _values, result)
                                begin_c_declaration("}")
 
@@ -1352,7 +1350,7 @@ module_eval(<<'.,.,', 'parser.y', 111)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 115)
+module_eval(<<'.,.,', 'parser.y', 113)
   def _reduce_35(val, _values, result)
                                end_c_declaration
 
@@ -1360,7 +1358,7 @@ module_eval(<<'.,.,', 'parser.y', 115)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 119)
+module_eval(<<'.,.,', 'parser.y', 117)
   def _reduce_36(val, _values, result)
                                @grammar.add_error_token(ident_or_tags: val[6], code: @grammar.build_code(:error_token, val[3]), lineno: val[3].line)
 
@@ -1370,7 +1368,7 @@ module_eval(<<'.,.,', 'parser.y', 119)
 
 # reduce 37 omitted
 
-module_eval(<<'.,.,', 'parser.y', 125)
+module_eval(<<'.,.,', 'parser.y', 123)
   def _reduce_38(val, _values, result)
                               val[1].each {|hash|
                             hash[:tokens].each {|id|
@@ -1382,7 +1380,7 @@ module_eval(<<'.,.,', 'parser.y', 125)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 133)
+module_eval(<<'.,.,', 'parser.y', 131)
   def _reduce_39(val, _values, result)
                               val[1].each {|hash|
                             hash[:tokens].each {|id|
@@ -1396,7 +1394,7 @@ module_eval(<<'.,.,', 'parser.y', 133)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 143)
+module_eval(<<'.,.,', 'parser.y', 141)
   def _reduce_40(val, _values, result)
                               val[1].each {|hash|
                             hash[:tokens].each {|id|
@@ -1410,7 +1408,7 @@ module_eval(<<'.,.,', 'parser.y', 143)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 153)
+module_eval(<<'.,.,', 'parser.y', 151)
   def _reduce_41(val, _values, result)
                               val[1].each {|hash|
                             hash[:tokens].each {|id|
@@ -1424,7 +1422,7 @@ module_eval(<<'.,.,', 'parser.y', 153)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 163)
+module_eval(<<'.,.,', 'parser.y', 161)
   def _reduce_42(val, _values, result)
                               val[1].each {|hash|
                             hash[:tokens].each {|id|
@@ -1438,7 +1436,7 @@ module_eval(<<'.,.,', 'parser.y', 163)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 174)
+module_eval(<<'.,.,', 'parser.y', 172)
   def _reduce_43(val, _values, result)
                               val[0].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: nil, replace: true)
@@ -1448,7 +1446,7 @@ module_eval(<<'.,.,', 'parser.y', 174)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 180)
+module_eval(<<'.,.,', 'parser.y', 178)
   def _reduce_44(val, _values, result)
                               val[1].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[0], replace: true)
@@ -1458,7 +1456,7 @@ module_eval(<<'.,.,', 'parser.y', 180)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 186)
+module_eval(<<'.,.,', 'parser.y', 184)
   def _reduce_45(val, _values, result)
                               val[2].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[1], replace: true)
@@ -1468,21 +1466,21 @@ module_eval(<<'.,.,', 'parser.y', 186)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 191)
+module_eval(<<'.,.,', 'parser.y', 189)
   def _reduce_46(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 192)
+module_eval(<<'.,.,', 'parser.y', 190)
   def _reduce_47(val, _values, result)
      result = val[0].append(val[1])
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 194)
+module_eval(<<'.,.,', 'parser.y', 192)
   def _reduce_48(val, _values, result)
      result = val
     result
@@ -1497,7 +1495,7 @@ module_eval(<<'.,.,', 'parser.y', 194)
 
 # reduce 52 omitted
 
-module_eval(<<'.,.,', 'parser.y', 204)
+module_eval(<<'.,.,', 'parser.y', 202)
   def _reduce_53(val, _values, result)
                                result = [{tag: nil, tokens: val[0]}]
 
@@ -1505,7 +1503,7 @@ module_eval(<<'.,.,', 'parser.y', 204)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 208)
+module_eval(<<'.,.,', 'parser.y', 206)
   def _reduce_54(val, _values, result)
                                result = [{tag: val[0], tokens: val[1]}]
 
@@ -1513,7 +1511,7 @@ module_eval(<<'.,.,', 'parser.y', 208)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 212)
+module_eval(<<'.,.,', 'parser.y', 210)
   def _reduce_55(val, _values, result)
                              result = val[0].append({tag: val[1], tokens: val[2]})
 
@@ -1521,14 +1519,14 @@ module_eval(<<'.,.,', 'parser.y', 212)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 215)
+module_eval(<<'.,.,', 'parser.y', 213)
   def _reduce_56(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 216)
+module_eval(<<'.,.,', 'parser.y', 214)
   def _reduce_57(val, _values, result)
      result = val[0].append(val[1])
     result
@@ -1539,7 +1537,7 @@ module_eval(<<'.,.,', 'parser.y', 216)
 
 # reduce 59 omitted
 
-module_eval(<<'.,.,', 'parser.y', 223)
+module_eval(<<'.,.,', 'parser.y', 221)
   def _reduce_60(val, _values, result)
                   begin_c_declaration("}")
 
@@ -1547,7 +1545,7 @@ module_eval(<<'.,.,', 'parser.y', 223)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 227)
+module_eval(<<'.,.,', 'parser.y', 225)
   def _reduce_61(val, _values, result)
                   end_c_declaration
 
@@ -1555,7 +1553,7 @@ module_eval(<<'.,.,', 'parser.y', 227)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 231)
+module_eval(<<'.,.,', 'parser.y', 229)
   def _reduce_62(val, _values, result)
                   result = val[0].append(val[3])
 
@@ -1563,7 +1561,7 @@ module_eval(<<'.,.,', 'parser.y', 231)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 235)
+module_eval(<<'.,.,', 'parser.y', 233)
   def _reduce_63(val, _values, result)
                   begin_c_declaration("}")
 
@@ -1571,7 +1569,7 @@ module_eval(<<'.,.,', 'parser.y', 235)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 239)
+module_eval(<<'.,.,', 'parser.y', 237)
   def _reduce_64(val, _values, result)
                   end_c_declaration
 
@@ -1579,7 +1577,7 @@ module_eval(<<'.,.,', 'parser.y', 239)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 243)
+module_eval(<<'.,.,', 'parser.y', 241)
   def _reduce_65(val, _values, result)
                   result = [val[2]]
 
@@ -1587,7 +1585,7 @@ module_eval(<<'.,.,', 'parser.y', 243)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 248)
+module_eval(<<'.,.,', 'parser.y', 246)
   def _reduce_66(val, _values, result)
                                              result = [{tag: nil, tokens: val[0]}]
 
@@ -1595,7 +1593,7 @@ module_eval(<<'.,.,', 'parser.y', 248)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 252)
+module_eval(<<'.,.,', 'parser.y', 250)
   def _reduce_67(val, _values, result)
                                              result = [{tag: val[0], tokens: val[1]}]
 
@@ -1603,7 +1601,7 @@ module_eval(<<'.,.,', 'parser.y', 252)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 256)
+module_eval(<<'.,.,', 'parser.y', 254)
   def _reduce_68(val, _values, result)
                                              result = val[0].append({tag: nil, tokens: val[1]})
 
@@ -1611,14 +1609,14 @@ module_eval(<<'.,.,', 'parser.y', 256)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 259)
+module_eval(<<'.,.,', 'parser.y', 257)
   def _reduce_69(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 260)
+module_eval(<<'.,.,', 'parser.y', 258)
   def _reduce_70(val, _values, result)
      result = val[0].append(val[1])
     result
@@ -1627,14 +1625,14 @@ module_eval(<<'.,.,', 'parser.y', 260)
 
 # reduce 71 omitted
 
-module_eval(<<'.,.,', 'parser.y', 264)
+module_eval(<<'.,.,', 'parser.y', 262)
   def _reduce_72(val, _values, result)
      raise "Ident after %prec" if @prec_seen
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 265)
+module_eval(<<'.,.,', 'parser.y', 263)
   def _reduce_73(val, _values, result)
      raise "Char after %prec" if @prec_seen
     result
@@ -1649,7 +1647,7 @@ module_eval(<<'.,.,', 'parser.y', 265)
 
 # reduce 77 omitted
 
-module_eval(<<'.,.,', 'parser.y', 275)
+module_eval(<<'.,.,', 'parser.y', 273)
   def _reduce_78(val, _values, result)
                  lhs = val[0]
              lhs.alias_name = val[1]
@@ -1661,7 +1659,7 @@ module_eval(<<'.,.,', 'parser.y', 275)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 284)
+module_eval(<<'.,.,', 'parser.y', 282)
   def _reduce_79(val, _values, result)
                     result = [{rhs: val[0], lineno: val[0].first&.line || @lexer.line - 1}]
 
@@ -1669,7 +1667,7 @@ module_eval(<<'.,.,', 'parser.y', 284)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 288)
+module_eval(<<'.,.,', 'parser.y', 286)
   def _reduce_80(val, _values, result)
                     result = val[0].append({rhs: val[2], lineno: val[2].first&.line || @lexer.line - 1})
 
@@ -1679,7 +1677,7 @@ module_eval(<<'.,.,', 'parser.y', 288)
 
 # reduce 81 omitted
 
-module_eval(<<'.,.,', 'parser.y', 294)
+module_eval(<<'.,.,', 'parser.y', 292)
   def _reduce_82(val, _values, result)
                reset_precs
            result = []
@@ -1688,7 +1686,7 @@ module_eval(<<'.,.,', 'parser.y', 294)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 299)
+module_eval(<<'.,.,', 'parser.y', 297)
   def _reduce_83(val, _values, result)
                reset_precs
            result = []
@@ -1697,7 +1695,7 @@ module_eval(<<'.,.,', 'parser.y', 299)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 304)
+module_eval(<<'.,.,', 'parser.y', 302)
   def _reduce_84(val, _values, result)
                token = val[1]
            token.alias_name = val[2]
@@ -1707,7 +1705,7 @@ module_eval(<<'.,.,', 'parser.y', 304)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 310)
+module_eval(<<'.,.,', 'parser.y', 308)
   def _reduce_85(val, _values, result)
                 token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
             result = val[0].append(token)
@@ -1716,7 +1714,7 @@ module_eval(<<'.,.,', 'parser.y', 310)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 315)
+module_eval(<<'.,.,', 'parser.y', 313)
   def _reduce_86(val, _values, result)
                 token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
             result = val[0].append(token)
@@ -1725,7 +1723,7 @@ module_eval(<<'.,.,', 'parser.y', 315)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 320)
+module_eval(<<'.,.,', 'parser.y', 318)
   def _reduce_87(val, _values, result)
                  token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
              result = val[0].append(token)
@@ -1734,7 +1732,7 @@ module_eval(<<'.,.,', 'parser.y', 320)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 325)
+module_eval(<<'.,.,', 'parser.y', 323)
   def _reduce_88(val, _values, result)
                if @prec_seen
              raise "Multiple User_code after %prec" if @code_after_prec
@@ -1746,7 +1744,7 @@ module_eval(<<'.,.,', 'parser.y', 325)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 333)
+module_eval(<<'.,.,', 'parser.y', 331)
   def _reduce_89(val, _values, result)
                end_c_declaration
 
@@ -1754,7 +1752,7 @@ module_eval(<<'.,.,', 'parser.y', 333)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 337)
+module_eval(<<'.,.,', 'parser.y', 335)
   def _reduce_90(val, _values, result)
                token = val[3]
            token.alias_name = val[6]
@@ -1764,7 +1762,7 @@ module_eval(<<'.,.,', 'parser.y', 337)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 343)
+module_eval(<<'.,.,', 'parser.y', 341)
   def _reduce_91(val, _values, result)
                sym = @grammar.find_symbol_by_id!(val[2])
            result = val[0].append(sym)
@@ -1776,7 +1774,7 @@ module_eval(<<'.,.,', 'parser.y', 343)
 
 # reduce 92 omitted
 
-module_eval(<<'.,.,', 'parser.y', 349)
+module_eval(<<'.,.,', 'parser.y', 347)
   def _reduce_93(val, _values, result)
      result = val[1].s_value
     result
@@ -1787,7 +1785,7 @@ module_eval(<<'.,.,', 'parser.y', 349)
 
 # reduce 95 omitted
 
-module_eval(<<'.,.,', 'parser.y', 356)
+module_eval(<<'.,.,', 'parser.y', 354)
   def _reduce_96(val, _values, result)
                         begin_c_declaration('\Z')
                     @grammar.epilogue_first_lineno = @lexer.line + 1
@@ -1796,7 +1794,7 @@ module_eval(<<'.,.,', 'parser.y', 356)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 361)
+module_eval(<<'.,.,', 'parser.y', 359)
   def _reduce_97(val, _values, result)
                         end_c_declaration
                     @grammar.epilogue = val[2].s_value
@@ -1815,14 +1813,14 @@ module_eval(<<'.,.,', 'parser.y', 361)
 
 # reduce 102 omitted
 
-module_eval(<<'.,.,', 'parser.y', 372)
+module_eval(<<'.,.,', 'parser.y', 370)
   def _reduce_103(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 373)
+module_eval(<<'.,.,', 'parser.y', 371)
   def _reduce_104(val, _values, result)
      result = val[0].append(val[1])
     result
@@ -1833,7 +1831,7 @@ module_eval(<<'.,.,', 'parser.y', 373)
 
 # reduce 106 omitted
 
-module_eval(<<'.,.,', 'parser.y', 378)
+module_eval(<<'.,.,', 'parser.y', 376)
   def _reduce_107(val, _values, result)
      result = Lrama::Lexer::Token::Ident.new(s_value: val[0])
     result
