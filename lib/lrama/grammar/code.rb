@@ -30,8 +30,7 @@ module Lrama
 
           case
           when ref.value == "$" && ref.type == :dollar # $$
-            # Omit "<>"
-            member = tag.s_value[1..-2]
+            member = tag.member
             str = "((*yyvaluep).#{member})"
           when ref.value == "$" && ref.type == :at # @$
             str = "(*yylocationp)"
@@ -65,15 +64,13 @@ module Lrama
 
           case
           when ref.value == "$" && ref.type == :dollar # $$
-            # Omit "<>"
-            member = ref.tag.s_value[1..-2]
+            member = ref.tag.member
             str = "(yyval.#{member})"
           when ref.value == "$" && ref.type == :at # @$
             str = "(yyloc)"
           when ref.type == :dollar # $n
             i = -ref.position_in_rhs + ref.value
-            # Omit "<>"
-            member = ref.tag.s_value[1..-2]
+            member = ref.tag.member
             str = "(yyvsp[#{i}].#{member})"
           when ref.type == :at # @n
             i = -ref.position_in_rhs + ref.value
