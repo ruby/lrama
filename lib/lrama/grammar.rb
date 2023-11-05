@@ -125,10 +125,6 @@ module Lrama
       @_rules << [lhs, rhs, lineno]
     end
 
-    def build_code(type, token_code)
-      Code.new(type: type, token_code: token_code)
-    end
-
     def prologue_first_lineno=(prologue_first_lineno)
       @aux.prologue_first_lineno = prologue_first_lineno
     end
@@ -471,10 +467,10 @@ module Lrama
         # Extract actions in the middle of RHS
         # into new rules.
         a.each do |new_token, code|
-          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], code: Code.new(type: :user_code, token_code: code), lineno: code.line)
+          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], code: Code::RuleAction.new(type: :rule_action, token_code: code), lineno: code.line)
         end
 
-        c = code ? Code.new(type: :user_code, token_code: code) : nil
+        c = code ? Code::RuleAction.new(type: :rule_action, token_code: code) : nil
         # Expand Parameterizing rules
         if rhs2.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
           expand_parameterizing_rules(lhs, rhs2, c, precedence_sym, lineno)
