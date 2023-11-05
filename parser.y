@@ -320,15 +320,20 @@ rule
             token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
             result = val[0].append(token)
           }
-     | "option" "(" rhs ")"
+     | "option(" rhs ")"
         {
-          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0])
-          result = val[2].append(token)
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
+          result = val[1].append(token)
         }
-     | "nonempty_list" "(" rhs ")"
+     | "nonempty_list(" rhs ")"
         {
-          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0])
-          result = val[2].append(token)
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
+          result = val[1].append(token)
+        }
+     | "list(" rhs ")"
+        {
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
+          result = val[1].append(token)
         }
      | rhs "{"
          {

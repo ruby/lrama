@@ -11,7 +11,7 @@ module Lrama
         end
 
         def list?
-          self.s_value == "*"
+          %w(list *).include?(self.s_value)
         end
       end
     end

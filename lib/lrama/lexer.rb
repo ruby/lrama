@@ -8,7 +8,7 @@ module Lrama
     attr_accessor :status
     attr_accessor :end_symbol
 
-    SYMBOLS = %w(%{ %} %% { } \[ \] \\( \\) : \| ;)
+    SYMBOLS = ['%{', '%}', '%%', '{', '}', '\[', '\]', '\(', '\)', ':', '\|', ';']
     PERCENT_TOKENS = %w(
       %union
       %token
@@ -29,10 +29,11 @@ module Lrama
       %empty
       %code
     )
-    PARAMETERIZING_TOKENS = %w(
-      option
-      nonempty_list
-    )
+    PARAMETERIZING_TOKENS = [
+      'option\(',
+      'nonempty_list\(',
+      'list\('
+    ]
 
     def initialize(text)
       @scanner = StringScanner.new(text)
