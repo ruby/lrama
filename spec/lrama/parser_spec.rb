@@ -1510,7 +1510,7 @@ expr[result]: NUM
 program: /* empty */
        ;
         INPUT
-        expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(<<~ERROR)
+        expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
           error_messages/parse.y:5:7: parse error on value #<struct Lrama::Lexer::Token::Ident s_value="invalid", alias_name=nil> (IDENTIFIER)
           %expect invalid
                   ^^^^^^^
