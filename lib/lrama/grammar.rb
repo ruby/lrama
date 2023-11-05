@@ -399,7 +399,7 @@ module Lrama
       accept = find_symbol_by_s_value!("$accept")
       eof = find_symbol_by_number!(0)
       lineno = @_rules.first ? @_rules.first[2] : 0
-      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [@_rules.first[0], eof], code: nil, lineno: lineno)
+      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [@_rules.first[0], eof], token_code: nil, lineno: lineno)
 
       extracted_action_number = 1 # @n as nterm
 
@@ -467,15 +467,14 @@ module Lrama
         # Extract actions in the middle of RHS
         # into new rules.
         a.each do |new_token, code|
-          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], code: Code::RuleAction.new(type: :rule_action, token_code: code), lineno: code.line)
+          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], token_code: code, lineno: code.line)
         end
 
-        c = code ? Code::RuleAction.new(type: :rule_action, token_code: code) : nil
         # Expand Parameterizing rules
         if rhs2.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
-          expand_parameterizing_rules(lhs, rhs2, c, precedence_sym, lineno)
+          expand_parameterizing_rules(lhs, rhs2, code, precedence_sym, lineno)
         else
-          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, code: c, precedence_sym: precedence_sym, lineno: lineno)
+          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         end
         add_nterm(id: lhs)
         a.each do |new_token, _|
@@ -489,21 +488,21 @@ module Lrama
       if rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.option? }
         option_token = Lrama::Lexer::Token::Ident.new(s_value: "option_#{rhs[0].s_value}")
         add_term(id: option_token)
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
       elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.nonempty_list? }
         nonempty_list_token = Lrama::Lexer::Token::Ident.new(s_value: "nonempty_list_#{rhs[0].s_value}")
         add_term(id: nonempty_list_token)
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
       elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.list? }
         list_token = Lrama::Lexer::Token::Ident.new(s_value: "list_#{rhs[0].s_value}")
         add_term(id: list_token)
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [list_token], code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [list_token, token], code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
       end
     end
 
@@ -604,8 +603,8 @@ module Lrama
           token_to_symbol(t)
         end
 
-        if rule.code
-          rule.code.references.each do |ref|
+        if rule.token_code
+          rule.token_code.references.each do |ref|
             next if ref.type == :at
 
             if !ref.referring_symbol.is_a?(Lrama::Lexer::Token::UserCode)
@@ -708,9 +707,9 @@ module Lrama
       errors = []
 
       rules.each do |rule|
-        next unless rule.code
+        next unless rule.token_code
 
-        rule.code.references.select do |ref|
+        rule.token_code.references.select do |ref|
           ref.type == :dollar && !ref.tag
         end.each do |ref|
           errors << "$#{ref.value} of '#{rule.lhs.id.s_value}' has no declared type"
