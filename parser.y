@@ -36,13 +36,13 @@ rule
                    | "%lex-param" params
                        {
                          val[1].each {|token|
-                           @grammar.lex_param = @grammar.build_code(:lex_param, token).token_code.s_value
+                           @grammar.lex_param = Grammar::Code::NoReferenceCode.new(type: :lex_param, token_code: token).token_code.s_value
                          }
                        }
                    | "%parse-param" params
                        {
                          val[1].each {|token|
-                           @grammar.parse_param = @grammar.build_code(:parse_param, token).token_code.s_value
+                           @grammar.parse_param = Grammar::Code::NoReferenceCode.new(type: :parse_param, token_code: token).token_code.s_value
                          }
                        }
                    | "%code" IDENTIFIER "{"
@@ -67,7 +67,7 @@ rule
                        }
                      "}"
                        {
-                         @grammar.initial_action = @grammar.build_code(:initial_action, val[3])
+                         @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[3])
                        }
                    | ";"
 
@@ -81,7 +81,10 @@ rule
                          }
                        "}"
                          {
-                           @grammar.set_union(@grammar.build_code(:union, val[3]), val[3].line)
+                           @grammar.set_union(
+                             Grammar::Code::NoReferenceCode.new(type: :union, token_code: val[3]),
+                             val[3].line
+                           )
                          }
                      | symbol_declaration
                      | "%destructor" "{"
@@ -103,7 +106,11 @@ rule
                          }
                        "}" generic_symlist
                          {
-                           @grammar.add_printer(ident_or_tags: val[6], code: @grammar.build_code(:printer, val[3]), lineno: val[3].line)
+                           @grammar.add_printer(
+                             ident_or_tags: val[6],
+                             code: Grammar::Code::PrinterCode.new(type: :printer, token_code: val[3]),
+                             lineno: val[3].line
+                           )
                          }
                      | "%error-token" "{"
                          {
@@ -115,7 +122,11 @@ rule
                          }
                        "}" generic_symlist
                          {
-                           @grammar.add_error_token(ident_or_tags: val[6], code: @grammar.build_code(:error_token, val[3]), lineno: val[3].line)
+                           @grammar.add_error_token(
+                             ident_or_tags: val[6],
+                             code: Grammar::Code::PrinterCode.new(type: :error_token, token_code: val[3]),
+                             lineno: val[3].line
+                           )
                          }
 
   symbol_declaration: "%token" token_declarations
