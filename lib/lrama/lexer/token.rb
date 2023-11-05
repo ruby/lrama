@@ -16,12 +16,22 @@ module Lrama
         self.class == other.class && self.s_value == other.s_value
       end
 
-      def line
+      def first_line
         location.first_line
       end
+      alias :line :first_line
 
-      def column
+      def first_column
         location.first_column
+      end
+      alias :column :first_column
+
+      def last_line
+        location.last_line
+      end
+
+      def last_column
+        location.last_column
       end
     end
   end
