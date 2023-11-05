@@ -408,6 +408,15 @@ module Lrama
 
           token.references = references
           token.numberize_references(lhs, rhs)
+          unless token.tag.nil?
+            lhs_ref = token.references.find {|ref| ref[0] == :dollar && ref[1] == '$' }
+            lhs_ref[2] ||= token.tag unless lhs_ref.nil?
+          end
+          token.references.each do |ref|
+            if ref[0] == :dollar && ref[1].is_a?(Integer) && rhs[ref[1]].type == Token::User_code
+              ref[2] ||= rhs[ref[1]].tag
+            end
+          end
           build_references(token)
         end
       end

@@ -6,7 +6,7 @@ module Lrama
 
       attr_accessor :line, :column, :referred
       # For User_code
-      attr_accessor :references
+      attr_accessor :references, :tag
 
       def to_s
         "#{super} line: #{line}, column: #{column}"

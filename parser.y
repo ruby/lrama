@@ -302,7 +302,28 @@ rule
            token.alias = val[2]
            result = val[0].append(token)
          }
-     | rhs "{"
+     | rhs tag_opt "{"
+         {
+           if @prec_seen
+             raise "Multiple User_code after %prec" if @code_after_prec
+             @code_after_prec = true
+           end
+           @lexer.status = :c_declaration
+           @lexer.end_symbol = '}'
+         }
+       C_DECLARATION
+         {
+           @lexer.status = :initial
+           @lexer.end_symbol = nil
+         }
+       "}" named_ref_opt
+         {
+           token = val[4]
+           token.tag = val[1]
+           token.alias = val[7]
+           result = val[0].append(token)
+         }
+     | tag_opt "{"
          {
            if @prec_seen
              raise "Multiple User_code after %prec" if @code_after_prec
@@ -319,27 +340,8 @@ rule
        "}" named_ref_opt
          {
            token = val[3]
+           token.tag = val[0]
            token.alias = val[6]
-           result = val[0].append(token)
-         }
-     | "{"
-         {
-           if @prec_seen
-             raise "Multiple User_code after %prec" if @code_after_prec
-             @code_after_prec = true
-           end
-           @lexer.status = :c_declaration
-           @lexer.end_symbol = '}'
-         }
-       C_DECLARATION
-         {
-           @lexer.status = :initial
-           @lexer.end_symbol = nil
-         }
-       "}" named_ref_opt
-         {
-           token = val[2]
-           token.alias = val[5]
            result = [token]
          }
      | rhs "%prec" symbol
@@ -351,6 +353,9 @@ rule
 
   named_ref_opt: # empty
                | '[' IDENTIFIER ']' { result = val[1].s_value }
+
+  tag_opt: # empty
+         | TAG
 
   id_colon: IDENT_COLON
 

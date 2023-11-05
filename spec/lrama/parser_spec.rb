@@ -820,7 +820,7 @@ class : keyword_class
         expect(codes[0].s_value).to eq(<<-STR.chomp)
 
             func("}");
-        
+
         STR
       end
     end
@@ -847,7 +847,7 @@ class : keyword_class
         expect(codes[0].s_value).to eq(<<-STR.chomp)
 
             func('}');
-        
+
         STR
       end
     end
@@ -1337,7 +1337,7 @@ program: lambda ;
 
 lambda: tLAMBDA
           <i>{ $<i>1 = 1; $$ = 2; }
-          <i>{ $$ = 3; }
+          <l>{ $$ = 3; }
           <i>{ $$ = 4; }
         tARGS
           { 5; }
@@ -1359,7 +1359,7 @@ lambda: tLAMBDA
               code: nil,
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("EOI"),
-              lineno: 14,
+              lineno: 15,
             ),
             Rule.new(
               id: 1,
@@ -1370,43 +1370,43 @@ lambda: tLAMBDA
               code: nil,
               nullable: false,
               precedence_sym: nil,
-              lineno: 14,
+              lineno: 15,
             ),
             Rule.new(
               id: 2,
               lhs: grammar.find_symbol_by_s_value!("@1"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>1 = 1; $<i>$ = 2; ")),
-              nullable: true,
-              precedence_sym: nil,
-              lineno: 17,
-            ),
-            Rule.new(
-              id: 3,
-              lhs: grammar.find_symbol_by_s_value!("@2"),
-              rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 3; ")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>1 = 1; $$ = 2; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 18,
             ),
             Rule.new(
-              id: 4,
-              lhs: grammar.find_symbol_by_s_value!("$@3"),
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("@2"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>$ = 4; ")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$ = 3; ")),
               nullable: true,
               precedence_sym: nil,
               lineno: 19,
             ),
             Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("$@3"),
+              rhs: [],
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $$ = 4; ")),
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 20,
+            ),
+            Rule.new(
               id: 5,
               lhs: grammar.find_symbol_by_s_value!("$@4"),
               rhs: [],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " 5; ")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " 5; ", tag: nil)),
               nullable: true,
               precedence_sym: nil,
-              lineno: 21,
+              lineno: 22,
             ),
             Rule.new(
               id: 6,
@@ -1420,10 +1420,10 @@ lambda: tLAMBDA
                 grammar.find_symbol_by_s_value!("$@4"),
                 grammar.find_symbol_by_s_value!("tBODY"),
               ],
-              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; ")),
+              code: Code.new(type: :user_code, token_code: T.new(type: T::User_code, s_value: " $<i>2; $3; $<i>5; $<i>7; $<i>$ = 1; ")),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("tBODY"),
-              lineno: 16,
+              lineno: 17,
             ),
           ])
         end
