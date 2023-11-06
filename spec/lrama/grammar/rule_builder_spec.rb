@@ -99,7 +99,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
     let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end", location: location) }
 
-    it "can not add rhs after #freeze_rhs is called" do
+    it "resolves index of references and fills its value with index" do
       # class : keyword_class tSTRING keyword_end { $class = $1 + $keyword_end }
       rule_builder.lhs = token_1
       rule_builder.add_rhs(token_2)
