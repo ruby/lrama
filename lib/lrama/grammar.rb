@@ -305,7 +305,7 @@ module Lrama
 
     def preprocess_references
       @rule_builders.each do |builder|
-        builder.numberize_references
+        builder.preprocess_references
       end
     end
 
@@ -383,8 +383,6 @@ module Lrama
         precedence_sym = builder.precedence_sym
 
         a = []
-
-        builder.setup_references
 
         rhs2 = rhs1.map do |token|
           if token.is_a?(Lrama::Lexer::Token::UserCode)

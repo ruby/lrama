@@ -38,6 +38,13 @@ module Lrama
         @rhs.freeze
       end
 
+      def preprocess_references
+        numberize_references
+        setup_references
+      end
+
+      private
+
       def numberize_references
         (rhs + [user_code]).compact.each do |token|
           next unless token.is_a?(Lrama::Lexer::Token::UserCode)
@@ -96,8 +103,6 @@ module Lrama
           end
         end
       end
-
-      private
 
       def flush_user_code
         if c = @user_code

@@ -108,7 +108,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.user_code = token_5
       rule_builder.freeze_rhs
 
-      rule_builder.numberize_references
+      rule_builder.send(:numberize_references)
 
       expect(token_5.references.count).to eq 3
       expect(token_5.references[0].value).to eq '$'
