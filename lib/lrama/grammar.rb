@@ -305,7 +305,7 @@ module Lrama
 
     def preprocess_references
       @rule_builders.each do |builder|
-        builder.rhs.each_with_index do |token, index|
+        (builder.rhs + [builder.user_code]).compact.each_with_index do |token, index|
           next unless token.class == Lrama::Lexer::Token::UserCode
 
           numberize_references(builder.lhs, builder.rhs, token.references)
@@ -375,9 +375,8 @@ module Lrama
     end
 
     # 1. Add $accept rule to the top of rules
-    # 2. Extract precedence and last action
-    # 3. Extract action in the middle of RHS into new Empty rule
-    # 4. Append id and extract action then create Rule
+    # 2. Extract action in the middle of RHS into new Empty rule
+    # 3. Append id and extract action then create Rule
     #
     # Bison 3.8.2 uses different orders for symbol number and rule number
     # when a rule has actions in the middle of a rule.
@@ -407,26 +406,12 @@ module Lrama
 
       @rule_builders.each do |builder|
         lhs = builder.lhs
-        rhs = builder.rhs
+        rhs1 = builder.rhs
         lineno = builder.line
+        code = builder.user_code
+        precedence_sym = builder.precedence_sym
 
         a = []
-        rhs1 = []
-        code = nil
-        precedence_sym = nil
-
-        # 2. Extract precedence and last action
-        rhs.reverse.each do |r|
-          case
-          when r.is_a?(Symbol) # precedence_sym
-            precedence_sym = r
-          when r.is_a?(Lrama::Lexer::Token::UserCode) && precedence_sym.nil? && code.nil? && rhs1.empty?
-            code = r
-          else
-            rhs1 << r
-          end
-        end
-        rhs1.reverse!
 
         # Bison n'th component is 1-origin
         (rhs1 + [code]).compact.each.with_index(1) do |token, i|
@@ -470,8 +455,7 @@ module Lrama
           end
         end
 
-        # Extract actions in the middle of RHS
-        # into new rules.
+        # Extract actions in the middle of RHS into new rules.
         a.each do |new_token, code|
           @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], token_code: code, lineno: code.line)
         end
