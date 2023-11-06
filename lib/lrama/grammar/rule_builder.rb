@@ -113,9 +113,8 @@ module Lrama
                 target_tokens = ([lhs] + rhs + [user_code]).compact.first(i)
                 referring_symbol_candidate = target_tokens.filter {|token| token.referred_by?(ref.value) }
                 raise "Referring symbol `#{ref.value}` is duplicated. #{token}" if referring_symbol_candidate.size >= 2
-                raise "Referring symbol `#{ref.value}` is not found. #{token}" if referring_symbol_candidate.count == 0
+                raise "Referring symbol `#{ref.value}` is not found. #{token}" unless referring_symbol = referring_symbol_candidate.first
 
-                referring_symbol = referring_symbol_candidate.first
                 referring_symbol.referred = true
                 ref.referring_symbol = referring_symbol
               end

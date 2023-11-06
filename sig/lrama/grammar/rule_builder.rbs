@@ -3,18 +3,26 @@ module Lrama
     class RuleBuilder
       attr_accessor lhs: Lexer::Token
       attr_accessor line: Integer?
-      attr_reader rhs: [Lexer::Token]
+      attr_reader rhs: Array[Lexer::Token]
       attr_reader user_code: Lexer::Token::UserCode?
       attr_reader precedence_sym: Lexer::Token?
+      attr_accessor extracted_action_number: Integer
 
       @user_code: Lexer::Token::UserCode?
+      @code_to_new_token: Hash[Lexer::Token, Lexer::Token]
 
       def add_rhs: (Lexer::Token rhs) -> void
       def user_code=: (Lexer::Token::UserCode user_code) -> void
       def precedence_sym=: (Lexer::Token user_code) -> void
+      def freeze_rhs: () -> void
+      def preprocess_references: () -> void
+      def midrule_action_rules: () -> Array[Rule]
+      def rhs_with_new_tokens: () -> Array[Lexer::Token]
 
       private
 
+      def numberize_references: () -> void
+      def setup_references: () -> void
       def flush_user_code: () -> void
     end
   end
