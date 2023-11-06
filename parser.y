@@ -286,6 +286,7 @@ rule
              lhs.alias_name = val[1]
              val[3].each do |builder|
                builder.lhs = lhs
+               builder.freeze_rhs
                @grammar.add_rule_builder(builder)
              end
            }

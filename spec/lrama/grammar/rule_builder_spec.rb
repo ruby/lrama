@@ -79,4 +79,15 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       end
     end
   end
+
+  describe "#freeze_rhs" do
+    let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+    let(:token) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+
+    it "can not add rhs after #freeze_rhs is called" do
+      rule_builder.add_rhs(token)
+      rule_builder.freeze_rhs
+      expect { rule_builder.add_rhs(token) }.to raise_error(FrozenError)
+    end
+  end
 end

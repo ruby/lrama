@@ -34,6 +34,10 @@ module Lrama
         @precedence_sym = precedence_sym
       end
 
+      def freeze_rhs
+        @rhs.freeze
+      end
+
       private
 
       def flush_user_code
