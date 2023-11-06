@@ -9,6 +9,7 @@ target :lib do
   check "lib/lrama/grammar/percent_code.rb"
   # TODO: Include this file once Lrama::Grammar::Symbol type is defined
   # check "lib/lrama/grammar/reference.rb"
+  check "lib/lrama/grammar/rule_builder.rb"
   check "lib/lrama/lexer/token/char.rb"
   check "lib/lrama/lexer/token/ident.rb"
   check "lib/lrama/lexer/token/parameterizing.rb"

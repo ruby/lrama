@@ -6,6 +6,7 @@ require "lrama/grammar/precedence"
 require "lrama/grammar/printer"
 require "lrama/grammar/reference"
 require "lrama/grammar/rule"
+require "lrama/grammar/rule_builder"
 require "lrama/grammar/symbol"
 require "lrama/grammar/union"
 require "lrama/lexer"
@@ -19,7 +20,7 @@ module Lrama
                   :printers, :error_tokens,
                   :lex_param, :parse_param, :initial_action,
                   :symbols, :types,
-                  :rules, :_rules,
+                  :rules, :rule_builders,
                   :sym_to_rules
 
     def initialize
@@ -29,7 +30,7 @@ module Lrama
       @error_tokens = []
       @symbols = []
       @types = []
-      @_rules = []
+      @rule_builders = []
       @rules = []
       @sym_to_rules = {}
       @empty_symbol = nil
@@ -121,8 +122,8 @@ module Lrama
       @union = Union.new(code: code, lineno: lineno)
     end
 
-    def add_rule(lhs:, rhs:, lineno:)
-      @_rules << [lhs, rhs, lineno]
+    def add_rule_builder(builder)
+      @rule_builders << builder
     end
 
     def prologue_first_lineno=(prologue_first_lineno)
@@ -303,12 +304,8 @@ module Lrama
     private
 
     def preprocess_references
-      @_rules.each do |lhs, rhs, _|
-        rhs.each_with_index do |token, index|
-          next unless token.class == Lrama::Lexer::Token::UserCode
-
-          numberize_references(lhs, rhs, token.references)
-        end
+      @rule_builders.each do |builder|
+        builder.numberize_references
       end
     end
 
@@ -348,35 +345,9 @@ module Lrama
       @accept_symbol = term
     end
 
-    def numberize_references(lhs, rhs, references)
-      references.each do |ref|
-        ref_name = ref.value
-        if ref_name.is_a?(::String) && ref_name != '$'
-          value =
-            if lhs.referred_by?(ref_name)
-              '$'
-            else
-              index = rhs.find_index {|token| token.referred_by?(ref_name) }
-
-              if index
-                index + 1
-              else
-                raise "'#{ref_name}' is invalid name."
-              end
-            end
-
-          ref.value = value
-          ref
-        else
-          ref
-        end
-      end
-    end
-
     # 1. Add $accept rule to the top of rules
-    # 2. Extract precedence and last action
-    # 3. Extract action in the middle of RHS into new Empty rule
-    # 4. Append id and extract action then create Rule
+    # 2. Extract action in the middle of RHS into new Empty rule
+    # 3. Append id and extract action then create Rule
     #
     # Bison 3.8.2 uses different orders for symbol number and rule number
     # when a rule has actions in the middle of a rule.
@@ -399,29 +370,19 @@ module Lrama
       # 1. Add $accept rule to the top of rules
       accept = find_symbol_by_s_value!("$accept")
       eof = find_symbol_by_number!(0)
-      lineno = @_rules.first ? @_rules.first[2] : 0
-      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [@_rules.first[0], eof], token_code: nil, lineno: lineno)
+      lineno = @rule_builders.first ? @rule_builders.first.line : 0
+      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
 
       extracted_action_number = 1 # @n as nterm
 
-      @_rules.each do |lhs, rhs, lineno|
-        a = []
-        rhs1 = []
-        code = nil
-        precedence_sym = nil
+      @rule_builders.each do |builder|
+        lhs = builder.lhs
+        rhs1 = builder.rhs
+        lineno = builder.line
+        code = builder.user_code
+        precedence_sym = builder.precedence_sym
 
-        # 2. Extract precedence and last action
-        rhs.reverse.each do |r|
-          case
-          when r.is_a?(Symbol) # precedence_sym
-            precedence_sym = r
-          when r.is_a?(Lrama::Lexer::Token::UserCode) && precedence_sym.nil? && code.nil? && rhs1.empty?
-            code = r
-          else
-            rhs1 << r
-          end
-        end
-        rhs1.reverse!
+        a = []
 
         # Bison n'th component is 1-origin
         (rhs1 + [code]).compact.each.with_index(1) do |token, i|
@@ -465,8 +426,7 @@ module Lrama
           end
         end
 
-        # Extract actions in the middle of RHS
-        # into new rules.
+        # Extract actions in the middle of RHS into new rules.
         a.each do |new_token, code|
           @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], token_code: code, lineno: code.line)
         end
