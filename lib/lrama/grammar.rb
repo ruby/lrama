@@ -159,6 +159,7 @@ module Lrama
     def validate!
       validate_symbol_number_uniqueness!
       validate_no_declared_type_reference!
+      validate_rule_lhs_is_nterm!
     end
 
     def compute_nullable
@@ -487,19 +488,19 @@ module Lrama
       token = Lrama::Lexer::Token::Ident.new(s_value: rhs[0].s_value)
       if rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.option? }
         option_token = Lrama::Lexer::Token::Ident.new(s_value: "option_#{rhs[0].s_value}")
-        add_term(id: option_token)
+        add_nterm(id: option_token)
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
       elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.nonempty_list? }
         nonempty_list_token = Lrama::Lexer::Token::Ident.new(s_value: "nonempty_list_#{rhs[0].s_value}")
-        add_term(id: nonempty_list_token)
+        add_nterm(id: nonempty_list_token)
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
       elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.list? }
         list_token = Lrama::Lexer::Token::Ident.new(s_value: "list_#{rhs[0].s_value}")
-        add_term(id: list_token)
+        add_nterm(id: list_token)
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
@@ -714,6 +715,20 @@ module Lrama
         end.each do |ref|
           errors << "$#{ref.value} of '#{rule.lhs.id.s_value}' has no declared type"
         end
+      end
+
+      return if errors.empty?
+
+      raise errors.join("\n")
+    end
+
+    def validate_rule_lhs_is_nterm!
+      errors = []
+
+      rules.each do |rule|
+        next if rule.lhs.nterm?
+
+        errors << "[BUG] LHS of #{rule} (line: #{rule.lineno}) is term. It should be nterm."
       end
 
       return if errors.empty?
