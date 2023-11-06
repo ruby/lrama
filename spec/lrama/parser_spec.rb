@@ -832,8 +832,9 @@ RSpec.describe Lrama::Parser do
         grammar = Lrama::Parser.new(y, path).parse
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_number"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 2, nullable: false),
         ])
 
         expect(grammar.rules).to eq([
@@ -853,16 +854,16 @@ RSpec.describe Lrama::Parser do
             id: 1,
             lhs: grammar.find_symbol_by_s_value!("program"),
             rhs: [
-              grammar.find_symbol_by_s_value!("separated_list_number"),
+              grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
             ],
             token_code: nil,
             nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("separated_list_number"),
+            precedence_sym: nil,
             lineno: 20,
           ),
           Rule.new(
             id: 2,
-            lhs: grammar.find_symbol_by_s_value!("separated_list_number"),
+            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
             rhs: [
               grammar.find_symbol_by_s_value!("number"),
             ],
@@ -873,10 +874,10 @@ RSpec.describe Lrama::Parser do
           ),
           Rule.new(
             id: 3,
-            lhs: grammar.find_symbol_by_s_value!("separated_list_number"),
+            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
             rhs: [
-              grammar.find_symbol_by_s_value!("separated_list_number"),
-              grammar.find_symbol_by_number!(5),
+              grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
+              grammar.find_symbol_by_number!(4),
               grammar.find_symbol_by_s_value!("number"),
             ],
             token_code: nil,
@@ -893,8 +894,9 @@ RSpec.describe Lrama::Parser do
         grammar = Lrama::Parser.new(y, path).parse
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "separated_list_number"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 2, nullable: true),
         ])
 
         expect(grammar.rules).to eq([
@@ -917,8 +919,8 @@ RSpec.describe Lrama::Parser do
               grammar.find_symbol_by_s_value!("separated_list_number"),
             ],
             token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("separated_list_number"),
+            nullable: true,
+            precedence_sym: nil,
             lineno: 20,
           ),
           Rule.new(
@@ -946,7 +948,7 @@ RSpec.describe Lrama::Parser do
             lhs: grammar.find_symbol_by_s_value!("separated_list_number"),
             rhs: [
               grammar.find_symbol_by_s_value!("separated_list_number"),
-              grammar.find_symbol_by_number!(5),
+              grammar.find_symbol_by_number!(4),
               grammar.find_symbol_by_s_value!("number"),
             ],
             token_code: nil,

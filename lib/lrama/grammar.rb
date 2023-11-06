@@ -465,15 +465,15 @@ module Lrama
         @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
       elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.separated_nonempty_list? }
-        separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_list_#{rhs[0].s_value}")
-        add_term(id: separated_list_token)
+        separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_nonempty_list_#{rhs[0].s_value}")
+        add_nterm(id: separated_list_token)
         add_term(id: rhs[2])
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [separated_list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: separated_list_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: separated_list_token, rhs: [separated_list_token, rhs[2], token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
       elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.separated_list? }
         separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_list_#{rhs[0].s_value}")
-        add_term(id: separated_list_token)
+        add_nterm(id: separated_list_token)
         add_term(id: rhs[2])
         @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [separated_list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         @rules << Rule.new(id: @rules.count, lhs: separated_list_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)

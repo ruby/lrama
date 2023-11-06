@@ -658,7 +658,7 @@ end
 module Lrama
   class Parser < Racc::Parser
 
-module_eval(<<'...end parser.y/module_eval...', 'parser.y', 423)
+module_eval(<<'...end parser.y/module_eval...', 'parser.y', 426)
 
 include Lrama::Report::Duration
 
@@ -1798,13 +1798,16 @@ module_eval(<<'.,.,', 'parser.y', 338)
 module_eval(<<'.,.,', 'parser.y', 345)
   def _reduce_87(val, _values, result)
               token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
-          result = val[3].append(token).append(val[1])
+          builder = val[3]
+          builder.add_rhs(token)
+          builder.add_rhs(val[1])
+          result = builder
 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 350)
+module_eval(<<'.,.,', 'parser.y', 353)
   def _reduce_88(val, _values, result)
                if @prec_seen
              raise "Multiple User_code after %prec" if @code_after_prec
@@ -1816,7 +1819,7 @@ module_eval(<<'.,.,', 'parser.y', 350)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 358)
+module_eval(<<'.,.,', 'parser.y', 361)
   def _reduce_89(val, _values, result)
                end_c_declaration
 
@@ -1824,7 +1827,7 @@ module_eval(<<'.,.,', 'parser.y', 358)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 362)
+module_eval(<<'.,.,', 'parser.y', 365)
   def _reduce_90(val, _values, result)
                token = val[3]
            token.alias_name = val[6]
@@ -1836,7 +1839,7 @@ module_eval(<<'.,.,', 'parser.y', 362)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 370)
+module_eval(<<'.,.,', 'parser.y', 373)
   def _reduce_91(val, _values, result)
                sym = @grammar.find_symbol_by_id!(val[2])
            @prec_seen = true
@@ -1866,7 +1869,7 @@ module_eval(<<'.,.,', 'parser.y', 370)
 
 # reduce 100 omitted
 
-module_eval(<<'.,.,', 'parser.y', 389)
+module_eval(<<'.,.,', 'parser.y', 392)
   def _reduce_101(val, _values, result)
      result = val[1].s_value
     result
@@ -1877,7 +1880,7 @@ module_eval(<<'.,.,', 'parser.y', 389)
 
 # reduce 103 omitted
 
-module_eval(<<'.,.,', 'parser.y', 396)
+module_eval(<<'.,.,', 'parser.y', 399)
   def _reduce_104(val, _values, result)
                         begin_c_declaration('\Z')
                     @grammar.epilogue_first_lineno = @lexer.line + 1
@@ -1886,7 +1889,7 @@ module_eval(<<'.,.,', 'parser.y', 396)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 401)
+module_eval(<<'.,.,', 'parser.y', 404)
   def _reduce_105(val, _values, result)
                         end_c_declaration
                     @grammar.epilogue = val[2].s_value
@@ -1905,14 +1908,14 @@ module_eval(<<'.,.,', 'parser.y', 401)
 
 # reduce 110 omitted
 
-module_eval(<<'.,.,', 'parser.y', 412)
+module_eval(<<'.,.,', 'parser.y', 415)
   def _reduce_111(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 413)
+module_eval(<<'.,.,', 'parser.y', 416)
   def _reduce_112(val, _values, result)
      result = val[0].append(val[1])
     result
@@ -1923,7 +1926,7 @@ module_eval(<<'.,.,', 'parser.y', 413)
 
 # reduce 114 omitted
 
-module_eval(<<'.,.,', 'parser.y', 418)
+module_eval(<<'.,.,', 'parser.y', 421)
   def _reduce_115(val, _values, result)
      result = Lrama::Lexer::Token::Ident.new(s_value: val[0])
     result

@@ -344,7 +344,10 @@ rule
      | parameterizing_separated_prefix symbol "," rhs ")"
         {
           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
-          result = val[3].append(token).append(val[1])
+          builder = val[3]
+          builder.add_rhs(token)
+          builder.add_rhs(val[1])
+          result = builder
         }
      | rhs "{"
          {
