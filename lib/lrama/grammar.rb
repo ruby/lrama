@@ -159,6 +159,7 @@ module Lrama
     def validate!
       validate_symbol_number_uniqueness!
       validate_no_declared_type_reference!
+      validate_rule_lhs_is_nterm!
     end
 
     def compute_nullable
@@ -714,6 +715,20 @@ module Lrama
         end.each do |ref|
           errors << "$#{ref.value} of '#{rule.lhs.id.s_value}' has no declared type"
         end
+      end
+
+      return if errors.empty?
+
+      raise errors.join("\n")
+    end
+
+    def validate_rule_lhs_is_nterm!
+      errors = []
+
+      rules.each do |rule|
+        next if rule.lhs.nterm?
+
+        errors << "[BUG] LHS of #{rule} (line: #{rule.lineno}) is term. It should be nterm."
       end
 
       return if errors.empty?
