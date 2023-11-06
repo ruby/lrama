@@ -39,7 +39,7 @@ module Lrama
       end
 
       def numberize_references
-        (rhs + [user_code]).compact.each_with_index do |token, index|
+        (rhs + [user_code]).compact.each do |token|
           next unless token.class == Lrama::Lexer::Token::UserCode
 
           token.references.each do |ref|
@@ -59,8 +59,6 @@ module Lrama
                 end
 
               ref.value = value
-              ref
-            else
               ref
             end
           end
