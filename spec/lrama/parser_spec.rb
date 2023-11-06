@@ -103,7 +103,8 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: T::Ident.new(s_value: "string"),    alias_name: nil, number: 30, tag: nil,                                 term: false, token_id: 11, nullable: false, precedence: nil, printer: nil),
       ])
       expect(grammar.types).to eq([Type.new(id: T::Ident.new(s_value: "class"), tag: T::Tag.new(s_value: "<i>"))])
-      expect(grammar._rules).to eq([
+      _rules = grammar.rule_builders.map {|b| [b.lhs, b.rhs, b.line] }
+      expect(_rules).to eq([
         [
           T::Ident.new(s_value: "program"),
           [
@@ -840,7 +841,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
       grammar = Lrama::Parser.new(y, "parse.y").parse
 
-      expect(grammar._rules).to eq([
+      _rules = grammar.rule_builders.map {|b| [b.lhs, b.rhs, b.line] }
+      expect(_rules).to eq([
         [
           T::Ident.new(s_value: "program"),
           [
@@ -896,7 +898,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
         Sym.new(id: T::Ident.new(s_value: "tEQ"),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2)),
         Sym.new(id: T::Ident.new(s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0)),
       ])
-      expect(grammar._rules).to eq([
+      _rules = grammar.rule_builders.map {|b| [b.lhs, b.rhs, b.line] }
+      expect(_rules).to eq([
         [
           T::Ident.new(s_value: "program"),
           [

@@ -284,47 +284,62 @@ rule
            {
              lhs = val[0]
              lhs.alias_name = val[1]
-             val[3].each {|hash|
-               @grammar.add_rule(lhs: lhs, rhs: hash[:rhs], lineno: hash[:lineno])
-             }
+             val[3].each do |builder|
+               builder.lhs = lhs
+               @grammar.add_rule_builder(builder)
+             end
            }
 
   rhs_list: rhs
               {
-                result = [{rhs: val[0], lineno: val[0].first&.line || @lexer.line - 1}]
+                builder = val[0]
+                if !builder.line
+                  builder.line = @lexer.line - 1
+                end
+                result = [builder]
               }
           | rhs_list "|" rhs
               {
-                result = val[0].append({rhs: val[2], lineno: val[2].first&.line || @lexer.line - 1})
+                builder = val[2]
+                if !builder.line
+                  builder.line = @lexer.line - 1
+                end
+                result = val[0].append(builder)
               }
           | rhs_list ";"
 
   rhs: /* empty */
          {
            reset_precs
-           result = []
+           result = Grammar::RuleBuilder.new
          }
      | "%empty"
          {
            reset_precs
-           result = []
+           result = Grammar::RuleBuilder.new
          }
      | rhs symbol named_ref_opt
          {
            token = val[1]
            token.alias_name = val[2]
-           result = val[0].append(token)
+           builder = val[0]
+           builder.add_rhs(token)
+           result = builder
          }
      | rhs parameterizing_suffix
-          {
-            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
-            result = val[0].append(token)
-          }
+         {
+           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
+           builder = val[0]
+           builder.add_rhs(token)
+           result = builder
+         }
      | parameterizing_prefix rhs ")"
-        {
-          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
-          result = val[1].append(token)
-        }
+         {
+           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
+           builder = val[1]
+           builder.add_rhs(token)
+           result = builder
+         }
      | rhs "{"
          {
            if @prec_seen
@@ -341,13 +356,17 @@ rule
          {
            token = val[3]
            token.alias_name = val[6]
-           result = val[0].append(token)
+           builder = val[0]
+           builder.user_code = token
+           result = builder
          }
      | rhs "%prec" symbol
          {
            sym = @grammar.find_symbol_by_id!(val[2])
-           result = val[0].append(sym)
            @prec_seen = true
+           builder = val[0]
+           builder.precedence_sym = sym
+           result = builder
          }
 
   parameterizing_prefix: "option("
