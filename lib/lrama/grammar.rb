@@ -384,35 +384,7 @@ module Lrama
 
         a = []
 
-        # Bison n'th component is 1-origin
-        (rhs1 + [code]).compact.each.with_index(1) do |token, i|
-          if token.is_a?(Lrama::Lexer::Token::UserCode)
-            token.references.each do |ref|
-              # Need to keep position_in_rhs for actions in the middle of RHS
-              ref.position_in_rhs = i - 1
-              next if ref.type == :at
-              # $$, $n, @$, @n can be used in any actions
-
-              if ref.value == "$"
-                # TODO: Should be postponed after middle actions are extracted?
-                ref.referring_symbol = lhs
-              elsif ref.value.is_a?(Integer)
-                raise "Can not refer following component. #{ref.value} >= #{i}. #{token}" if ref.value >= i
-                rhs1[ref.value - 1].referred = true
-                ref.referring_symbol = rhs1[ref.value - 1]
-              elsif ref.value.is_a?(String)
-                target_tokens = ([lhs] + rhs1 + [code]).compact.first(i)
-                referring_symbol_candidate = target_tokens.filter {|token| token.referred_by?(ref.value) }
-                raise "Referring symbol `#{ref.value}` is duplicated. #{token}" if referring_symbol_candidate.size >= 2
-                raise "Referring symbol `#{ref.value}` is not found. #{token}" if referring_symbol_candidate.count == 0
-
-                referring_symbol = referring_symbol_candidate.first
-                referring_symbol.referred = true
-                ref.referring_symbol = referring_symbol
-              end
-            end
-          end
-        end
+        builder.setup_references
 
         rhs2 = rhs1.map do |token|
           if token.is_a?(Lrama::Lexer::Token::UserCode)
