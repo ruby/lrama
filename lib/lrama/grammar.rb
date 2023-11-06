@@ -305,11 +305,7 @@ module Lrama
 
     def preprocess_references
       @rule_builders.each do |builder|
-        (builder.rhs + [builder.user_code]).compact.each_with_index do |token, index|
-          next unless token.class == Lrama::Lexer::Token::UserCode
-
-          numberize_references(builder.lhs, builder.rhs, token.references)
-        end
+        builder.numberize_references
       end
     end
 
@@ -347,31 +343,6 @@ module Lrama
       term = add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "$accept"))
       term.accept_symbol = true
       @accept_symbol = term
-    end
-
-    def numberize_references(lhs, rhs, references)
-      references.each do |ref|
-        ref_name = ref.value
-        if ref_name.is_a?(::String) && ref_name != '$'
-          value =
-            if lhs.referred_by?(ref_name)
-              '$'
-            else
-              index = rhs.find_index {|token| token.referred_by?(ref_name) }
-
-              if index
-                index + 1
-              else
-                raise "'#{ref_name}' is invalid name."
-              end
-            end
-
-          ref.value = value
-          ref
-        else
-          ref
-        end
-      end
     end
 
     # 1. Add $accept rule to the top of rules

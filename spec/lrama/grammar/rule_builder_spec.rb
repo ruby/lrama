@@ -90,4 +90,30 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       expect { rule_builder.add_rhs(token) }.to raise_error(FrozenError)
     end
   end
+
+  describe "#numberize_references" do
+    let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+    let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+    let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
+    let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+    let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
+    let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end", location: location) }
+
+    it "can not add rhs after #freeze_rhs is called" do
+      # class : keyword_class tSTRING keyword_end { $class = $1 + $keyword_end }
+      rule_builder.lhs = token_1
+      rule_builder.add_rhs(token_2)
+      rule_builder.add_rhs(token_3)
+      rule_builder.add_rhs(token_4)
+      rule_builder.user_code = token_5
+      rule_builder.freeze_rhs
+
+      rule_builder.numberize_references
+
+      expect(token_5.references.count).to eq 3
+      expect(token_5.references[0].value).to eq '$'
+      expect(token_5.references[1].value).to eq 1
+      expect(token_5.references[2].value).to eq 3
+    end
+  end
 end

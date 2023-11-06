@@ -38,6 +38,35 @@ module Lrama
         @rhs.freeze
       end
 
+      def numberize_references
+        (rhs + [user_code]).compact.each_with_index do |token, index|
+          next unless token.class == Lrama::Lexer::Token::UserCode
+
+          token.references.each do |ref|
+            ref_name = ref.value
+            if ref_name.is_a?(::String) && ref_name != '$'
+              value =
+                if lhs.referred_by?(ref_name)
+                  '$'
+                else
+                  index = rhs.find_index {|token| token.referred_by?(ref_name) }
+
+                  if index
+                    index + 1
+                  else
+                    raise "'#{ref_name}' is invalid name."
+                  end
+                end
+
+              ref.value = value
+              ref
+            else
+              ref
+            end
+          end
+        end
+      end
+
       private
 
       def flush_user_code
