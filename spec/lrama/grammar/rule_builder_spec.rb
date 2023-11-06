@@ -149,4 +149,39 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       expect(rules[1].token_code.s_value).to eq '$2 + $3'
     end
   end
+
+  describe "#rhs_with_new_tokens" do
+    let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+    let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+    let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
+    let(:token_3) { Lrama::Lexer::Token::UserCode.new(s_value: "$1", location: location) }
+    let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+    let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$2 + $3", location: location) }
+    let(:token_6) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
+    let(:token_7) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end", location: location) }
+
+    it "returns token list whose user codes are replaced with @n token" do
+      # class : keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
+      rule_builder.lhs = token_1
+      rule_builder.add_rhs(token_2)
+      rule_builder.user_code = token_3
+      rule_builder.add_rhs(token_4)
+      rule_builder.user_code = token_5
+      rule_builder.add_rhs(token_6)
+      rule_builder.user_code = token_7
+      rule_builder.freeze_rhs
+
+      rule_builder.preprocess_references
+      rule_builder.extracted_action_number = 1
+      rule_builder.midrule_action_rules
+      tokens = rule_builder.rhs_with_new_tokens
+
+      expect(tokens.count).to eq 5
+      expect(tokens[0].s_value).to eq 'keyword_class'
+      expect(tokens[1].s_value).to eq '@1'
+      expect(tokens[2].s_value).to eq 'tSTRING'
+      expect(tokens[3].s_value).to eq '$@2'
+      expect(tokens[4].s_value).to eq 'keyword_end'
+    end
+  end
 end
