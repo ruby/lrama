@@ -2,6 +2,7 @@ module Lrama
   class Grammar
     class RuleBuilder
       attr_accessor :lhs, :line
+      attr_accessor :extracted_action_number
       attr_reader :rhs, :user_code, :precedence_sym
 
       def initialize
@@ -10,6 +11,7 @@ module Lrama
         @user_code = nil
         @precedence_sym = nil
         @line = nil
+        @code_to_new_token = {}
       end
 
       def add_rhs(rhs)
@@ -41,6 +43,24 @@ module Lrama
       def preprocess_references
         numberize_references
         setup_references
+      end
+
+      def midrule_action_rules
+        @midrule_action_rules ||= rhs.select do |token|
+          token.is_a?(Lrama::Lexer::Token::UserCode)
+        end.each_with_index.map do |code, i|
+          prefix = code.referred ? "@" : "$@"
+          new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + (extracted_action_number + i).to_s)
+          @code_to_new_token[code] = new_token
+          # id is set later
+          Rule.new(id: nil, lhs: new_token, rhs: [], token_code: code, lineno: code.line)
+        end
+      end
+
+      def rhs_with_new_tokens
+        rhs.map do |token|
+          @code_to_new_token[token] || token
+        end
       end
 
       private

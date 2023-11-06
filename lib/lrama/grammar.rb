@@ -377,28 +377,19 @@ module Lrama
 
       @rule_builders.each do |builder|
         lhs = builder.lhs
-        rhs1 = builder.rhs
         lineno = builder.line
         code = builder.user_code
         precedence_sym = builder.precedence_sym
 
-        a = []
+        builder.extracted_action_number = extracted_action_number
+        extracted_action_number += builder.midrule_action_rules.count
 
-        rhs2 = rhs1.map do |token|
-          if token.is_a?(Lrama::Lexer::Token::UserCode)
-            prefix = token.referred ? "@" : "$@"
-            new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + extracted_action_number.to_s)
-            extracted_action_number += 1
-            a << [new_token, token]
-            new_token
-          else
-            token
-          end
-        end
+        rhs2 = builder.rhs_with_new_tokens
 
         # Extract actions in the middle of RHS into new rules.
-        a.each do |new_token, code|
-          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], token_code: code, lineno: code.line)
+        builder.midrule_action_rules.each do |rule|
+          rule.id = @rules.count
+          @rules << rule
         end
 
         # Expand Parameterizing rules
@@ -407,9 +398,11 @@ module Lrama
         else
           @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, token_code: code, precedence_sym: precedence_sym, lineno: lineno)
         end
+
         add_nterm(id: lhs)
-        a.each do |new_token, _|
-          add_nterm(id: new_token)
+
+        builder.midrule_action_rules.each do |rule|
+          add_nterm(id: rule.lhs)
         end
       end
     end
