@@ -14,6 +14,10 @@ module Lrama
           %w(list *).include?(self.s_value)
         end
 
+        def separated_nonempty_list?
+          %w(separated_nonempty_list).include?(self.s_value)
+        end
+
         def separated_list?
           %w(separated_list).include?(self.s_value)
         end

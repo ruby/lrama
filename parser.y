@@ -325,7 +325,7 @@ rule
           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
           result = val[1].append(token)
         }
-     | "separated_list(" symbol "," rhs ")"
+     | parameterizing_separated_prefix symbol "," rhs ")"
         {
           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
           result = val[3].append(token).append(val[1])
@@ -358,6 +358,9 @@ rule
   parameterizing_prefix: "option("
                        | "nonempty_list("
                        | "list("
+
+  parameterizing_separated_prefix: "separated_nonempty_list("
+                                 | "separated_list("
 
   parameterizing_suffix: "?"
                        | "+"

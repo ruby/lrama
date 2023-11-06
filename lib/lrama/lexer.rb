@@ -33,6 +33,7 @@ module Lrama
       'option\(',
       'nonempty_list\(',
       'list\(',
+      'separated_nonempty_list\(',
       'separated_list\(',
     ]
 
