@@ -40,7 +40,7 @@ module Lrama
 
       def numberize_references
         (rhs + [user_code]).compact.each do |token|
-          next unless token.class == Lrama::Lexer::Token::UserCode
+          next unless token.is_a?(Lrama::Lexer::Token::UserCode)
 
           token.references.each do |ref|
             ref_name = ref.value
@@ -68,8 +68,8 @@ module Lrama
       private
 
       def flush_user_code
-        if @user_code
-          @rhs << @user_code
+        if c = @user_code
+          @rhs << c
           @user_code = nil
         end
       end
