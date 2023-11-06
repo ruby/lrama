@@ -8,7 +8,7 @@ module Lrama
     attr_accessor :status
     attr_accessor :end_symbol
 
-    SYMBOLS = ['%{', '%}', '%%', '{', '}', '\[', '\]', '\(', '\)', ':', '\|', ';']
+    SYMBOLS = ['%{', '%}', '%%', '{', '}', '\[', '\]', '\(', '\)', '\,', ':', '\|', ';']
     PERCENT_TOKENS = %w(
       %union
       %token
@@ -32,7 +32,8 @@ module Lrama
     PARAMETERIZING_TOKENS = [
       'option\(',
       'nonempty_list\(',
-      'list\('
+      'list\(',
+      'separated_list\(',
     ]
 
     def initialize(text)

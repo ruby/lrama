@@ -13,6 +13,10 @@ module Lrama
         def list?
           %w(list *).include?(self.s_value)
         end
+
+        def separated_list?
+          %w(separated_list).include?(self.s_value)
+        end
       end
     end
   end

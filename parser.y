@@ -325,6 +325,11 @@ rule
           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
           result = val[1].append(token)
         }
+     | "separated_list(" symbol "," rhs ")"
+        {
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
+          result = val[3].append(token).append(val[1])
+        }
      | rhs "{"
          {
            if @prec_seen
