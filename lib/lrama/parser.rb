@@ -666,6 +666,7 @@ def initialize(text, path, debug = false)
   @text = text
   @path = path
   @yydebug = debug
+  @rule_counter = Lrama::Grammar::Counter.new(1)
   @midrule_action_counter = Lrama::Grammar::Counter.new(1)
 end
 
@@ -1725,7 +1726,7 @@ module_eval(<<'.,.,', 'parser.y', 303)
 module_eval(<<'.,.,', 'parser.y', 313)
   def _reduce_82(val, _values, result)
                reset_precs
-           result = Grammar::RuleBuilder.new(@midrule_action_counter)
+           result = Grammar::RuleBuilder.new(@rule_counter, @midrule_action_counter)
 
     result
   end
@@ -1734,7 +1735,7 @@ module_eval(<<'.,.,', 'parser.y', 313)
 module_eval(<<'.,.,', 'parser.y', 318)
   def _reduce_83(val, _values, result)
                reset_precs
-           result = Grammar::RuleBuilder.new(@midrule_action_counter)
+           result = Grammar::RuleBuilder.new(@rule_counter, @midrule_action_counter)
 
     result
   end

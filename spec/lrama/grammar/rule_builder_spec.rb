@@ -1,6 +1,7 @@
 RSpec.describe Lrama::Grammar::RuleBuilder do
+  let(:rule_counter) { Lrama::Grammar::Counter.new(1) }
   let(:midrule_action_counter) { Lrama::Grammar::Counter.new(1) }
-  let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(midrule_action_counter) }
+  let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(rule_counter, midrule_action_counter) }
 
   describe "#add_rhs" do
     describe "@line" do

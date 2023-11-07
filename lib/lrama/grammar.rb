@@ -377,13 +377,11 @@ module Lrama
       @rule_builders.each do |builder|
         # Extract actions in the middle of RHS into new rules.
         builder.midrule_action_rules.each do |rule|
-          rule.id = @rules.count
           @rules << rule
         end
 
         builder.build_rules.each do |rule|
           add_nterm(id: rule.lhs)
-          rule.id = @rules.count
           @rules << rule
         end
 
