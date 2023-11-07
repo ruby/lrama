@@ -1037,7 +1037,11 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
         INPUT
         parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error("Ident after %prec")
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31: ident after %prec
+          class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
+                                                    ^^^^^^^^^^^
+        ERROR
       end
 
       it do

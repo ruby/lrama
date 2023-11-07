@@ -271,7 +271,7 @@ rule
 
   token_declaration_for_precedence: id
 
-  id: IDENTIFIER { raise "Ident after %prec" if @prec_seen }
+  id: IDENTIFIER { on_action_error("ident after %prec") if @prec_seen }
     | CHARACTER { on_action_error("char after %prec") if @prec_seen }
 
   grammar: rules_or_grammar_declaration

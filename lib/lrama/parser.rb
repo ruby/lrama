@@ -1671,7 +1671,7 @@ module_eval(<<'.,.,', 'parser.y', 269)
 
 module_eval(<<'.,.,', 'parser.y', 273)
   def _reduce_72(val, _values, result)
-     raise "Ident after %prec" if @prec_seen
+     on_action_error("ident after %prec") if @prec_seen
     result
   end
 .,.,
