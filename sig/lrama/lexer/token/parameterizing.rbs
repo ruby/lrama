@@ -5,6 +5,8 @@ module Lrama
         def option?: () -> bool
         def nonempty_list?: () -> bool
         def list?: () -> bool
+        def separated_nonempty_list?: () -> bool
+        def separated_list?: () -> bool
       end
     end
   end
