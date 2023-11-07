@@ -93,7 +93,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
   end
 
-  describe "#numberize_references" do
+  describe "#preprocess_references" do
     let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
     let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
     let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
@@ -110,7 +110,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.user_code = token_5
       rule_builder.freeze_rhs
 
-      rule_builder.send(:numberize_references)
+      rule_builder.preprocess_references
 
       expect(token_5.references.count).to eq 3
       expect(token_5.references[0].value).to eq '$'
