@@ -2,6 +2,9 @@ module Lrama
   class Lexer
     class Token
       class Parameterizing < Token
+        def option?: () -> bool
+        def nonempty_list?: () -> bool
+        def list?: () -> bool
       end
     end
   end

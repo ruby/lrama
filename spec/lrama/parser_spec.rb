@@ -561,10 +561,10 @@ RSpec.describe Lrama::Parser do
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
         ])
 
         expect(grammar.rules).to eq([
@@ -649,10 +649,10 @@ RSpec.describe Lrama::Parser do
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "nonempty_list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "nonempty_list_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "nonempty_list_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "nonempty_list_number_alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: false),
         ])
 
         expect(grammar.rules).to eq([
@@ -743,10 +743,10 @@ RSpec.describe Lrama::Parser do
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "list_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "list_number_alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
         ])
 
         expect(grammar.rules).to eq([

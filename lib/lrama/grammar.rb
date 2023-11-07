@@ -305,7 +305,7 @@ module Lrama
 
     def preprocess_references
       @rule_builders.each do |builder|
-        builder.numberize_references
+        builder.preprocess_references
       end
     end
 
@@ -376,111 +376,24 @@ module Lrama
       extracted_action_number = 1 # @n as nterm
 
       @rule_builders.each do |builder|
-        lhs = builder.lhs
-        rhs1 = builder.rhs
-        lineno = builder.line
-        code = builder.user_code
-        precedence_sym = builder.precedence_sym
-
-        a = []
-
-        # Bison n'th component is 1-origin
-        (rhs1 + [code]).compact.each.with_index(1) do |token, i|
-          if token.is_a?(Lrama::Lexer::Token::UserCode)
-            token.references.each do |ref|
-              # Need to keep position_in_rhs for actions in the middle of RHS
-              ref.position_in_rhs = i - 1
-              next if ref.type == :at
-              # $$, $n, @$, @n can be used in any actions
-
-              if ref.value == "$"
-                # TODO: Should be postponed after middle actions are extracted?
-                ref.referring_symbol = lhs
-              elsif ref.value.is_a?(Integer)
-                raise "Can not refer following component. #{ref.value} >= #{i}. #{token}" if ref.value >= i
-                rhs1[ref.value - 1].referred = true
-                ref.referring_symbol = rhs1[ref.value - 1]
-              elsif ref.value.is_a?(String)
-                target_tokens = ([lhs] + rhs1 + [code]).compact.first(i)
-                referring_symbol_candidate = target_tokens.filter {|token| token.referred_by?(ref.value) }
-                raise "Referring symbol `#{ref.value}` is duplicated. #{token}" if referring_symbol_candidate.size >= 2
-                raise "Referring symbol `#{ref.value}` is not found. #{token}" if referring_symbol_candidate.count == 0
-
-                referring_symbol = referring_symbol_candidate.first
-                referring_symbol.referred = true
-                ref.referring_symbol = referring_symbol
-              end
-            end
-          end
-        end
-
-        rhs2 = rhs1.map do |token|
-          if token.is_a?(Lrama::Lexer::Token::UserCode)
-            prefix = token.referred ? "@" : "$@"
-            new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + extracted_action_number.to_s)
-            extracted_action_number += 1
-            a << [new_token, token]
-            new_token
-          else
-            token
-          end
-        end
+        builder.extracted_action_number = extracted_action_number
+        extracted_action_number += builder.midrule_action_rules.count
 
         # Extract actions in the middle of RHS into new rules.
-        a.each do |new_token, code|
-          @rules << Rule.new(id: @rules.count, lhs: new_token, rhs: [], token_code: code, lineno: code.line)
+        builder.midrule_action_rules.each do |rule|
+          rule.id = @rules.count
+          @rules << rule
         end
 
-        # Expand Parameterizing rules
-        if rhs2.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
-          expand_parameterizing_rules(lhs, rhs2, code, precedence_sym, lineno)
-        else
-          @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: rhs2, token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        builder.build_rules.each do |rule|
+          add_nterm(id: rule.lhs)
+          rule.id = @rules.count
+          @rules << rule
         end
-        add_nterm(id: lhs)
-        a.each do |new_token, _|
-          add_nterm(id: new_token)
-        end
-      end
-    end
 
-    def expand_parameterizing_rules(lhs, rhs, code, precedence_sym, lineno)
-      token = Lrama::Lexer::Token::Ident.new(s_value: rhs[0].s_value)
-      if rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.option? }
-        option_token = Lrama::Lexer::Token::Ident.new(s_value: "option_#{rhs[0].s_value}")
-        add_nterm(id: option_token)
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [option_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: option_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-      elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.nonempty_list? }
-        nonempty_list_token = Lrama::Lexer::Token::Ident.new(s_value: "nonempty_list_#{rhs[0].s_value}")
-        add_nterm(id: nonempty_list_token)
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [nonempty_list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-      elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.list? }
-        list_token = Lrama::Lexer::Token::Ident.new(s_value: "list_#{rhs[0].s_value}")
-        add_nterm(id: list_token)
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: list_token, rhs: [list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-      elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.separated_nonempty_list? }
-        separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_nonempty_list_#{rhs[0].s_value}")
-        add_nterm(id: separated_list_token)
-        add_term(id: rhs[2])
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [separated_list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: separated_list_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: separated_list_token, rhs: [separated_list_token, rhs[2], token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-      elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.separated_list? }
-        separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_list_#{rhs[0].s_value}")
-        add_nterm(id: separated_list_token)
-        add_term(id: rhs[2])
-        @rules << Rule.new(id: @rules.count, lhs: lhs, rhs: [separated_list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: separated_list_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: separated_list_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-        @rules << Rule.new(id: @rules.count, lhs: separated_list_token, rhs: [separated_list_token, rhs[2], token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
-      else
-        raise "Unknown parameterizing rule. #{rhs}"
+        builder.midrule_action_rules.each do |rule|
+          add_nterm(id: rule.lhs)
+        end
       end
     end
 
