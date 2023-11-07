@@ -63,7 +63,43 @@ module Lrama
         end
       end
 
+      def build_rules
+        tokens = rhs_with_new_tokens
+
+        # Expand Parameterizing rules
+        if tokens.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
+          expand_parameterizing_rules(lhs, tokens, user_code, precedence_sym, line)
+        else
+          # id is set later
+          [Rule.new(id: nil, lhs: lhs, rhs: tokens, token_code: user_code, precedence_sym: precedence_sym, lineno: line)]
+        end
+      end
+
       private
+
+      def expand_parameterizing_rules(lhs, rhs, code, precedence_sym, lineno)
+        rules = []
+        token = Lrama::Lexer::Token::Ident.new(s_value: rhs[0].s_value)
+
+        if rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.option? }
+          option_token = Lrama::Lexer::Token::Ident.new(s_value: "option_#{rhs[0].s_value}")
+          rules << Rule.new(id: nil, lhs: lhs, rhs: [option_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+          rules << Rule.new(id: nil, lhs: option_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+          rules << Rule.new(id: nil, lhs: option_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.nonempty_list? }
+          nonempty_list_token = Lrama::Lexer::Token::Ident.new(s_value: "nonempty_list_#{rhs[0].s_value}")
+          rules << Rule.new(id: nil, lhs: lhs, rhs: [nonempty_list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+          rules << Rule.new(id: nil, lhs: nonempty_list_token, rhs: [token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+          rules << Rule.new(id: nil, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.list? }
+          list_token = Lrama::Lexer::Token::Ident.new(s_value: "list_#{rhs[0].s_value}")
+          rules << Rule.new(id: nil, lhs: lhs, rhs: [list_token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+          rules << Rule.new(id: nil, lhs: list_token, rhs: [], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+          rules << Rule.new(id: nil, lhs: list_token, rhs: [list_token, token], token_code: code, precedence_sym: precedence_sym, lineno: lineno)
+        end
+
+        rules
+      end
 
       def numberize_references
         (rhs + [user_code]).compact.each do |token|
