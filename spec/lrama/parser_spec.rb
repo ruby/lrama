@@ -1602,7 +1602,7 @@ expr[result]: NUM
 ;
             INPUT
 
-            expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error("'results' is invalid name.")
+            expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(/Referring symbol `results` is not found\./)
           end
         end
       end

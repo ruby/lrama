@@ -190,7 +190,30 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.user_code = token_5
         rule_builder.freeze_rhs
 
-        expect { rule_builder.preprocess_references }.to raise_error("'classes' is invalid name.")
+        expect { rule_builder.preprocess_references }.to raise_error(/Referring symbol `classes` is not found\./)
+      end
+    end
+
+    context "component name is duplicated" do
+      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
+      let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+      let(:token_5) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
+      let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $tSTRING;", location: location) }
+
+      it "raises error" do
+        # class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
+        rule_builder.lhs = token_1
+        rule_builder.add_rhs(token_2)
+        rule_builder.add_rhs(token_3)
+        rule_builder.add_rhs(token_4)
+        rule_builder.add_rhs(token_5)
+        rule_builder.user_code = token_6
+        rule_builder.freeze_rhs
+
+        expect { rule_builder.preprocess_references }.to raise_error(/Referring symbol `tSTRING` is duplicated\./)
       end
     end
   end
