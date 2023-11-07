@@ -709,6 +709,14 @@ def on_error(error_token_id, error_value, value_stack)
   ERROR
 end
 
+def on_action_error(error_message)
+  raise ParseError, <<~ERROR
+    #{@path}:#{@lexer.line}: #{error_message}
+    #{@text.split("\n")[@lexer.line - 1]}
+    #{carrets(@lexer.head_column, @lexer.column)}
+  ERROR
+end
+
 private
 
 def reset_precs
@@ -1663,14 +1671,14 @@ module_eval(<<'.,.,', 'parser.y', 269)
 
 module_eval(<<'.,.,', 'parser.y', 273)
   def _reduce_72(val, _values, result)
-     raise "Ident after %prec" if @prec_seen
+     on_action_error("ident after %prec") if @prec_seen
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 274)
   def _reduce_73(val, _values, result)
-     raise "Char after %prec" if @prec_seen
+     on_action_error("char after %prec") if @prec_seen
     result
   end
 .,.,
@@ -1778,7 +1786,7 @@ module_eval(<<'.,.,', 'parser.y', 338)
 module_eval(<<'.,.,', 'parser.y', 345)
   def _reduce_87(val, _values, result)
                if @prec_seen
-             raise "Multiple User_code after %prec" if @code_after_prec
+             on_action_error("multiple User_code after %prec")  if @code_after_prec
              @code_after_prec = true
            end
            begin_c_declaration("}")

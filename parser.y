@@ -271,8 +271,8 @@ rule
 
   token_declaration_for_precedence: id
 
-  id: IDENTIFIER { raise "Ident after %prec" if @prec_seen }
-    | CHARACTER { raise "Char after %prec" if @prec_seen }
+  id: IDENTIFIER { on_action_error("ident after %prec") if @prec_seen }
+    | CHARACTER { on_action_error("char after %prec") if @prec_seen }
 
   grammar: rules_or_grammar_declaration
          | grammar rules_or_grammar_declaration
@@ -344,7 +344,7 @@ rule
      | rhs "{"
          {
            if @prec_seen
-             raise "Multiple User_code after %prec" if @code_after_prec
+             on_action_error("multiple User_code after %prec")  if @code_after_prec
              @code_after_prec = true
            end
            begin_c_declaration("}")
@@ -459,6 +459,14 @@ def on_error(error_token_id, error_value, value_stack)
     #{@path}:#{line}:#{first_column}: parse error on value #{value} (#{token_to_str(error_token_id) || '?'})
     #{@text.split("\n")[line - 1]}
     #{carrets(first_column, last_column)}
+  ERROR
+end
+
+def on_action_error(error_message)
+  raise ParseError, <<~ERROR
+    #{@path}:#{@lexer.line}: #{error_message}
+    #{@text.split("\n")[@lexer.line - 1]}
+    #{carrets(@lexer.head_column, @lexer.column)}
   ERROR
 end
 

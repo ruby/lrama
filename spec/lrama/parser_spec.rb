@@ -1037,7 +1037,11 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
         INPUT
         parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error("Ident after %prec")
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31: ident after %prec
+          class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
+                                                    ^^^^^^^^^^^
+        ERROR
       end
 
       it do
@@ -1054,7 +1058,11 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
         INPUT
         parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error("Char after %prec")
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31: char after %prec
+          class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
+                                                             ^^^
+        ERROR
       end
 
       it do
@@ -1071,7 +1079,11 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
         INPUT
         parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error("Multiple User_code after %prec")
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31: multiple User_code after %prec
+          class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
+                                                                                        ^
+        ERROR
       end
     end
 
