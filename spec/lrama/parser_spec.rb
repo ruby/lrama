@@ -833,8 +833,8 @@ RSpec.describe Lrama::Parser do
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_number"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 2, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_number"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 2, nullable: false),
         ])
 
         expect(grammar.rules).to eq([
@@ -895,8 +895,8 @@ RSpec.describe Lrama::Parser do
 
         expect(grammar.nterms.sort_by(&:number)).to eq([
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "separated_list_number"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 2, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "separated_list_number"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 2, nullable: true),
         ])
 
         expect(grammar.rules).to eq([

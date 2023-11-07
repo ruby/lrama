@@ -3,11 +3,12 @@ module Lrama
     class RuleBuilder
       attr_accessor :lhs, :line
       attr_accessor :extracted_action_number
-      attr_reader :rhs, :user_code, :precedence_sym
+      attr_reader :rhs, :separators, :user_code, :precedence_sym
 
       def initialize
         @lhs = nil
         @rhs = []
+        @separators = []
         @user_code = nil
         @precedence_sym = nil
         @line = nil
@@ -22,6 +23,12 @@ module Lrama
         flush_user_code
 
         @rhs << rhs
+      end
+
+      def add_rhs_separator(separator)
+        add_rhs(separator)
+
+        @separators << separator
       end
 
       def user_code=(user_code)
@@ -97,6 +104,17 @@ module Lrama
           rules << Rule.new(id: nil, lhs: lhs, rhs: [list_token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
           rules << Rule.new(id: nil, lhs: list_token, rhs: [], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
           rules << Rule.new(id: nil, lhs: list_token, rhs: [list_token, token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+        elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.separated_nonempty_list? }
+          separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_nonempty_list_#{rhs[0].s_value}")
+          rules << Rule.new(id: nil, lhs: lhs, rhs: [separated_list_token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+          rules << Rule.new(id: nil, lhs: separated_list_token, rhs: [token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+          rules << Rule.new(id: nil, lhs: separated_list_token, rhs: [separated_list_token, rhs[2], token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+        elsif rhs.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) && r.separated_list? }
+          separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_list_#{rhs[0].s_value}")
+          rules << Rule.new(id: nil, lhs: lhs, rhs: [separated_list_token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+          rules << Rule.new(id: nil, lhs: separated_list_token, rhs: [], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+          rules << Rule.new(id: nil, lhs: separated_list_token, rhs: [token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+          rules << Rule.new(id: nil, lhs: separated_list_token, rhs: [separated_list_token, rhs[2], token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
         end
 
         rules

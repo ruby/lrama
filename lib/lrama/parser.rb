@@ -1800,7 +1800,7 @@ module_eval(<<'.,.,', 'parser.y', 345)
               token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
           builder = val[3]
           builder.add_rhs(token)
-          builder.add_rhs(val[1])
+          builder.add_rhs_separator(val[1])
           result = builder
 
     result

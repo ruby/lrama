@@ -385,6 +385,10 @@ module Lrama
           @rules << rule
         end
 
+        builder.separators.each do |separator|
+          add_term(id: separator)
+        end
+
         builder.build_rules.each do |rule|
           add_nterm(id: rule.lhs)
           rule.id = @rules.count
