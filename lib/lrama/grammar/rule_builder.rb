@@ -2,10 +2,11 @@ module Lrama
   class Grammar
     class RuleBuilder
       attr_accessor :lhs, :line
-      attr_accessor :extracted_action_number
       attr_reader :rhs, :user_code, :precedence_sym
 
-      def initialize
+      def initialize(midrule_action_counter)
+        @midrule_action_counter = midrule_action_counter
+
         @lhs = nil
         @rhs = []
         @user_code = nil
@@ -50,7 +51,7 @@ module Lrama
           token.is_a?(Lrama::Lexer::Token::UserCode)
         end.each_with_index.map do |code, i|
           prefix = code.referred ? "@" : "$@"
-          new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + (extracted_action_number + i).to_s)
+          new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
           @code_to_new_token[code] = new_token
           # id is set later
           Rule.new(id: nil, lhs: new_token, rhs: [], token_code: code, lineno: code.line)

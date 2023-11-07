@@ -11,6 +11,7 @@ module Lrama
       @user_code: Lexer::Token::UserCode?
       @code_to_new_token: Hash[Lexer::Token, Lexer::Token]
 
+      def initialize: (Counter midrule_action_counter) -> void
       def add_rhs: (Lexer::Token rhs) -> void
       def user_code=: (Lexer::Token::UserCode user_code) -> void
       def precedence_sym=: (Lexer::Token user_code) -> void
