@@ -312,12 +312,12 @@ rule
   rhs: /* empty */
          {
            reset_precs
-           result = Grammar::RuleBuilder.new
+           result = Grammar::RuleBuilder.new(@rule_counter, @midrule_action_counter)
          }
      | "%empty"
          {
            reset_precs
-           result = Grammar::RuleBuilder.new
+           result = Grammar::RuleBuilder.new(@rule_counter, @midrule_action_counter)
          }
      | rhs symbol named_ref_opt
          {
@@ -419,12 +419,14 @@ def initialize(text, path, debug = false)
   @text = text
   @path = path
   @yydebug = debug
+  @rule_counter = Lrama::Grammar::Counter.new(0)
+  @midrule_action_counter = Lrama::Grammar::Counter.new(1)
 end
 
 def parse
   report_duration(:parse) do
     @lexer = Lrama::Lexer.new(@text)
-    @grammar = Lrama::Grammar.new
+    @grammar = Lrama::Grammar.new(@rule_counter)
     @precedence_number = 0
     reset_precs
     do_parse

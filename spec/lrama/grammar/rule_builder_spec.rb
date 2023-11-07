@@ -1,5 +1,7 @@
 RSpec.describe Lrama::Grammar::RuleBuilder do
-  let(:rule_builder) { Lrama::Grammar::RuleBuilder.new }
+  let(:rule_counter) { Lrama::Grammar::Counter.new(1) }
+  let(:midrule_action_counter) { Lrama::Grammar::Counter.new(1) }
+  let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(rule_counter, midrule_action_counter) }
 
   describe "#add_rhs" do
     describe "@line" do
@@ -139,7 +141,6 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.freeze_rhs
 
       rule_builder.preprocess_references
-      rule_builder.extracted_action_number = 1
       rules = rule_builder.midrule_action_rules
 
       expect(rules.count).to eq 2
@@ -172,7 +173,6 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.freeze_rhs
 
       rule_builder.preprocess_references
-      rule_builder.extracted_action_number = 1
       rule_builder.midrule_action_rules
       tokens = rule_builder.rhs_with_new_tokens
 
