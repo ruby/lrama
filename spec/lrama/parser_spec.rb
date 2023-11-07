@@ -1071,7 +1071,11 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
         INPUT
         parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error("Multiple User_code after %prec")
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31: multiple User_code after %prec
+          class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
+                                                                                        ^
+        ERROR
       end
     end
 
