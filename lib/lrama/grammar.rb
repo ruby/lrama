@@ -24,7 +24,9 @@ module Lrama
                   :rules, :rule_builders,
                   :sym_to_rules
 
-    def initialize
+    def initialize(rule_counter)
+      @rule_counter = rule_counter
+
       # Code defined by "%code"
       @percent_codes = []
       @printers = []
@@ -372,7 +374,7 @@ module Lrama
       accept = find_symbol_by_s_value!("$accept")
       eof = find_symbol_by_number!(0)
       lineno = @rule_builders.first ? @rule_builders.first.line : 0
-      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
+      @rules << Rule.new(id: @rule_counter.increment, lhs: accept, rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
 
       @rule_builders.each do |builder|
         # Extract actions in the middle of RHS into new rules.
