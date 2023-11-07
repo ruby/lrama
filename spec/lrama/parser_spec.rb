@@ -1054,7 +1054,11 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
         INPUT
         parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error("Char after %prec")
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31: char after %prec
+          class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
+                                                             ^^^
+        ERROR
       end
 
       it do

@@ -1678,7 +1678,7 @@ module_eval(<<'.,.,', 'parser.y', 273)
 
 module_eval(<<'.,.,', 'parser.y', 274)
   def _reduce_73(val, _values, result)
-     raise "Char after %prec" if @prec_seen
+     on_action_error("char after %prec") if @prec_seen
     result
   end
 .,.,
