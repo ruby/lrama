@@ -118,11 +118,7 @@ module Lrama
                   raise "Referring symbol `#{ref.value}` is duplicated. #{token}" if candidates.size >= 2
                   raise "Referring symbol `#{ref.value}` is not found. #{token}" unless referring_symbol = candidates.first
 
-                  if referring_symbol
-                    referring_symbol[1] + 1
-                  else
-                    raise "'#{ref_name}' is invalid name."
-                  end
+                  referring_symbol[1] + 1
                 end
 
               ref.value = value
