@@ -99,7 +99,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
     let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
     let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
-    let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end", location: location) }
+    let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end; @class = @1 + @keyword_end", location: location) }
 
     it "resolves index of references and fills its value with index" do
       # class : keyword_class tSTRING keyword_end { $class = $1 + $keyword_end }
@@ -112,10 +112,19 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
       rule_builder.preprocess_references
 
-      expect(token_5.references.count).to eq 3
+      expect(token_5.references.count).to eq 6
+      expect(token_5.references[0].type).to eq :dollar
       expect(token_5.references[0].value).to eq '$'
+      expect(token_5.references[1].type).to eq :dollar
       expect(token_5.references[1].value).to eq 1
+      expect(token_5.references[2].type).to eq :dollar
       expect(token_5.references[2].value).to eq 3
+      expect(token_5.references[3].type).to eq :at
+      expect(token_5.references[3].value).to eq '$'
+      expect(token_5.references[4].type).to eq :at
+      expect(token_5.references[4].value).to eq 1
+      expect(token_5.references[5].type).to eq :at
+      expect(token_5.references[5].value).to eq 3
     end
   end
 
