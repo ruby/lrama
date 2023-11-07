@@ -1,5 +1,6 @@
 require "lrama/grammar/auxiliary"
 require "lrama/grammar/code"
+require "lrama/grammar/counter"
 require "lrama/grammar/error_token"
 require "lrama/grammar/percent_code"
 require "lrama/grammar/precedence"
@@ -23,7 +24,9 @@ module Lrama
                   :rules, :rule_builders,
                   :sym_to_rules
 
-    def initialize
+    def initialize(rule_counter)
+      @rule_counter = rule_counter
+
       # Code defined by "%code"
       @percent_codes = []
       @printers = []
@@ -371,17 +374,11 @@ module Lrama
       accept = find_symbol_by_s_value!("$accept")
       eof = find_symbol_by_number!(0)
       lineno = @rule_builders.first ? @rule_builders.first.line : 0
-      @rules << Rule.new(id: @rules.count, lhs: accept, rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
-
-      extracted_action_number = 1 # @n as nterm
+      @rules << Rule.new(id: @rule_counter.increment, lhs: accept, rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
 
       @rule_builders.each do |builder|
-        builder.extracted_action_number = extracted_action_number
-        extracted_action_number += builder.midrule_action_rules.count
-
         # Extract actions in the middle of RHS into new rules.
         builder.midrule_action_rules.each do |rule|
-          rule.id = @rules.count
           @rules << rule
         end
 
@@ -391,7 +388,6 @@ module Lrama
 
         builder.build_rules.each do |rule|
           add_nterm(id: rule.lhs)
-          rule.id = @rules.count
           @rules << rule
         end
 
