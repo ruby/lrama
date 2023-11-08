@@ -162,6 +162,7 @@ module Lrama
     # TODO: More validation methods
     def validate!
       validate_symbol_number_uniqueness!
+      validate_symbol_alias_name_uniqueness!
       validate_no_declared_type_reference!
       validate_rule_lhs_is_nterm!
     end
@@ -262,7 +263,6 @@ module Lrama
 
     def find_symbol_by_id(id)
       @symbols.find do |sym|
-        # TODO: validate uniqueness of Token#s_value and Symbol#alias_name
         sym.id == id || sym.alias_name == id.s_value
       end
     end
@@ -588,6 +588,16 @@ module Lrama
       return if invalid.empty?
 
       raise "Symbol number is duplicated. #{invalid}"
+    end
+
+    def validate_symbol_alias_name_uniqueness!
+      invalid = @symbols.select(&:alias_name).group_by(&:alias_name).select do |alias_name, syms|
+        syms.count > 1
+      end
+
+      return if invalid.empty?
+
+      raise "Symbol alias name is duplicated. #{invalid}"
     end
 
     def validate_no_declared_type_reference!
