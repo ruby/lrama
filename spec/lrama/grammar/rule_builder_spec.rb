@@ -93,29 +93,128 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
   end
 
-  describe "#numberize_references" do
-    let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
-    let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
-    let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
-    let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
-    let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
-    let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end", location: location) }
+  describe "#preprocess_references" do
+    context "variables refer to correct name and correct position" do
+      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
+      let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
+      let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end; @class = @1 + @keyword_end;", location: location) }
 
-    it "resolves index of references and fills its value with index" do
-      # class : keyword_class tSTRING keyword_end { $class = $1 + $keyword_end }
-      rule_builder.lhs = token_1
-      rule_builder.add_rhs(token_2)
-      rule_builder.add_rhs(token_3)
-      rule_builder.add_rhs(token_4)
-      rule_builder.user_code = token_5
-      rule_builder.freeze_rhs
+      it "resolves index of references and fills its value with index" do
+        # class : keyword_class tSTRING keyword_end { $class = $1 + $keyword_end; @class = @1 + @keyword_end; }
+        rule_builder.lhs = token_1
+        rule_builder.add_rhs(token_2)
+        rule_builder.add_rhs(token_3)
+        rule_builder.add_rhs(token_4)
+        rule_builder.user_code = token_5
+        rule_builder.freeze_rhs
 
-      rule_builder.send(:numberize_references)
+        rule_builder.preprocess_references
 
-      expect(token_5.references.count).to eq 3
-      expect(token_5.references[0].value).to eq '$'
-      expect(token_5.references[1].value).to eq 1
-      expect(token_5.references[2].value).to eq 3
+        expect(token_5.references.count).to eq 6
+        expect(token_5.references[0].type).to eq :dollar
+        expect(token_5.references[0].value).to eq '$'
+        expect(token_5.references[1].type).to eq :dollar
+        expect(token_5.references[1].value).to eq 1
+        expect(token_5.references[2].type).to eq :dollar
+        expect(token_5.references[2].value).to eq 3
+        expect(token_5.references[3].type).to eq :at
+        expect(token_5.references[3].value).to eq '$'
+        expect(token_5.references[4].type).to eq :at
+        expect(token_5.references[4].value).to eq 1
+        expect(token_5.references[5].type).to eq :at
+        expect(token_5.references[5].value).to eq 3
+      end
+    end
+
+    context "variables refer to wrong position" do
+      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
+      let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
+      let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $10;", location: location) }
+
+      it "raises error" do
+        # class : keyword_class tSTRING keyword_end { $class = $10; }
+        rule_builder.lhs = token_1
+        rule_builder.add_rhs(token_2)
+        rule_builder.add_rhs(token_3)
+        rule_builder.add_rhs(token_4)
+        rule_builder.user_code = token_5
+        rule_builder.freeze_rhs
+
+        expect { rule_builder.preprocess_references }.to raise_error(/Can not refer following component\. 10 >= 4\./)
+      end
+    end
+
+    context "variables in mid rule refer to following component" do
+      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
+      let(:token_3) { Lrama::Lexer::Token::UserCode.new(s_value: "$3;", location: location) }
+      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+      let(:token_5) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
+      let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1;", location: location) }
+
+      it "raises error" do
+        # class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }
+        rule_builder.lhs = token_1
+        rule_builder.add_rhs(token_2)
+        rule_builder.user_code = token_3
+        rule_builder.add_rhs(token_4)
+        rule_builder.add_rhs(token_5)
+        rule_builder.user_code = token_6
+        rule_builder.freeze_rhs
+
+        expect { rule_builder.preprocess_references }.to raise_error(/Can not refer following component\. 3 >= 2\./)
+      end
+    end
+
+    context "variables refer with wrong name" do
+      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
+      let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
+      let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$classes = $1;", location: location) }
+
+      it "raises error" do
+        # class : keyword_class tSTRING keyword_end { $classes = $1; }
+        rule_builder.lhs = token_1
+        rule_builder.add_rhs(token_2)
+        rule_builder.add_rhs(token_3)
+        rule_builder.add_rhs(token_4)
+        rule_builder.user_code = token_5
+        rule_builder.freeze_rhs
+
+        expect { rule_builder.preprocess_references }.to raise_error(/Referring symbol `classes` is not found\./)
+      end
+    end
+
+    context "component name is duplicated" do
+      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
+      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
+      let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
+      let(:token_5) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
+      let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $tSTRING;", location: location) }
+
+      it "raises error" do
+        # class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
+        rule_builder.lhs = token_1
+        rule_builder.add_rhs(token_2)
+        rule_builder.add_rhs(token_3)
+        rule_builder.add_rhs(token_4)
+        rule_builder.add_rhs(token_5)
+        rule_builder.user_code = token_6
+        rule_builder.freeze_rhs
+
+        expect { rule_builder.preprocess_references }.to raise_error(/Referring symbol `tSTRING` is duplicated\./)
+      end
     end
   end
 

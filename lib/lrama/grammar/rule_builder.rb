@@ -113,13 +113,12 @@ module Lrama
                 if lhs.referred_by?(ref_name)
                   '$'
                 else
-                  index = rhs.find_index {|token| token.referred_by?(ref_name) }
+                  candidates = rhs.each_with_index.select {|token, i| token.referred_by?(ref_name) }
 
-                  if index
-                    index + 1
-                  else
-                    raise "'#{ref_name}' is invalid name."
-                  end
+                  raise "Referring symbol `#{ref.value}` is duplicated. #{token}" if candidates.size >= 2
+                  raise "Referring symbol `#{ref.value}` is not found. #{token}" unless referring_symbol = candidates.first
+
+                  referring_symbol[1] + 1
                 end
 
               ref.value = value
@@ -147,13 +146,7 @@ module Lrama
                 rhs[ref.value - 1].referred = true
                 ref.referring_symbol = rhs[ref.value - 1]
               elsif ref.value.is_a?(String)
-                target_tokens = ([lhs] + rhs + [user_code]).compact.first(i)
-                referring_symbol_candidate = target_tokens.filter {|token| token.referred_by?(ref.value) }
-                raise "Referring symbol `#{ref.value}` is duplicated. #{token}" if referring_symbol_candidate.size >= 2
-                raise "Referring symbol `#{ref.value}` is not found. #{token}" unless referring_symbol = referring_symbol_candidate.first
-
-                referring_symbol.referred = true
-                ref.referring_symbol = referring_symbol
+                raise "[BUG] Unreachable #{token}."
               end
             end
           end
