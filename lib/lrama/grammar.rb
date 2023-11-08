@@ -263,7 +263,6 @@ module Lrama
 
     def find_symbol_by_id(id)
       @symbols.find do |sym|
-        # TODO: validate uniqueness of Token#s_value
         sym.id == id || sym.alias_name == id.s_value
       end
     end
