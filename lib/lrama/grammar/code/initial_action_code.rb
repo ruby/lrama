@@ -10,9 +10,9 @@ module Lrama
         # * (@1) error
         def reference_to_c(ref)
           case
-          when ref.type == :dollar && ref.value == "$" # $$
+          when ref.type == :dollar && ref.name == "$" # $$
             "yylval"
-          when ref.type == :at && ref.value == "$" # @$
+          when ref.type == :at && ref.name == "$" # @$
             "yylloc"
           when ref.type == :dollar # $n
             raise "$#{ref.value} can not be used in initial_action."
