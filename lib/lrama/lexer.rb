@@ -30,12 +30,12 @@ module Lrama
       %code
     )
     PARAMETERIZING_TOKENS = [
-      'option\(',
-      'nonempty_list\(',
-      'list\(',
-      'separated_nonempty_list\(',
-      'separated_list\(',
-    ]
+      'option',
+      'nonempty_list',
+      'list',
+      'separated_nonempty_list',
+      'separated_list',
+    ].map { |token| token + '\s*\(' }
 
     def initialize(text)
       @scanner = StringScanner.new(text)
@@ -43,9 +43,12 @@ module Lrama
       @head_line = @line = 1
       @status = :initial
       @end_symbol = nil
+      @lex_stack = []
     end
 
     def next_token
+      return @lex_stack.pop unless @lex_stack.empty?
+
       case @status
       when :initial
         lex_token
@@ -97,7 +100,9 @@ module Lrama
       when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/#{PARAMETERIZING_TOKENS.join('|')}/)
-        return [@scanner.matched, @scanner.matched]
+        @lex_stack << ['(', '(']
+        token = @scanner.matched.sub(/\s*\(/, '')
+        return [token, token]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/<\w+>/)

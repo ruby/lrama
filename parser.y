@@ -334,19 +334,19 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | parameterizing_prefix rhs ")"
+     | parameterizing_prefix "(" rhs ")"
          {
-           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
-           builder = val[1]
+           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0])
+           builder = val[2]
            builder.add_rhs(token)
            result = builder
          }
-     | parameterizing_separated_prefix symbol "," rhs ")"
+     | parameterizing_separated_prefix "(" symbol "," rhs ")"
         {
-          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
-          builder = val[3]
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0])
+          builder = val[4]
           builder.add_rhs(token)
-          builder.add_rhs_separator(val[1])
+          builder.add_rhs_separator(val[2])
           result = builder
         }
      | rhs "{"
@@ -378,12 +378,12 @@ rule
            result = builder
          }
 
-  parameterizing_prefix: "option("
-                       | "nonempty_list("
-                       | "list("
+  parameterizing_prefix: "option"
+                       | "nonempty_list"
+                       | "list"
 
-  parameterizing_separated_prefix: "separated_nonempty_list("
-                                 | "separated_list("
+  parameterizing_separated_prefix: "separated_nonempty_list"
+                                 | "separated_list"
 
   parameterizing_suffix: "?"
                        | "+"
