@@ -341,6 +341,14 @@ rule
            builder.add_rhs(token)
            result = builder
          }
+     | parameterizing_separated_prefix symbol "," rhs ")"
+        {
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].chop)
+          builder = val[3]
+          builder.add_rhs(token)
+          builder.add_rhs_separator(val[1])
+          result = builder
+        }
      | rhs "{"
          {
            if @prec_seen
@@ -373,6 +381,9 @@ rule
   parameterizing_prefix: "option("
                        | "nonempty_list("
                        | "list("
+
+  parameterizing_separated_prefix: "separated_nonempty_list("
+                                 | "separated_list("
 
   parameterizing_suffix: "?"
                        | "+"
