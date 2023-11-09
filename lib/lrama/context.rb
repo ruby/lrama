@@ -367,7 +367,7 @@ module Lrama
         end
 
         j = @sorted_actions.count - 1
-        state_id, froms_and_tos, count, width = action
+        _state_id, _froms_and_tos, count, width = action
 
         while (j >= 0) do
           case
