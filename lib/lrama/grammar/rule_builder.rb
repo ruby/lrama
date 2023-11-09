@@ -125,22 +125,18 @@ module Lrama
           next unless token.is_a?(Lrama::Lexer::Token::UserCode)
 
           token.references.each do |ref|
-            ref_name = ref.value
-            if ref_name.is_a?(::String) && ref_name != '$'
-              value =
-                if lhs.referred_by?(ref_name)
-                  '$'
-                else
-                  candidates = rhs.each_with_index.select {|token, i| token.referred_by?(ref_name) }
+            ref_name = ref.name
+            if ref_name && ref_name != '$'
+              if lhs.referred_by?(ref_name)
+                ref.name = '$'
+              else
+                candidates = rhs.each_with_index.select {|token, i| token.referred_by?(ref_name) }
 
-                  raise "Referring symbol `#{ref.value}` is duplicated. #{token}" if candidates.size >= 2
-                  raise "Referring symbol `#{ref.value}` is not found. #{token}" unless referring_symbol = candidates.first
+                raise "Referring symbol `#{ref_name}` is duplicated. #{token}" if candidates.size >= 2
+                raise "Referring symbol `#{ref_name}` is not found. #{token}" unless referring_symbol = candidates.first
 
-                  referring_symbol[1] + 1
-                end
-
-              ref.value = value
-              ref
+                ref.index = referring_symbol[1] + 1
+              end
             end
           end
         end
@@ -156,14 +152,14 @@ module Lrama
               next if ref.type == :at
               # $$, $n, @$, @n can be used in any actions
 
-              if ref.value == "$"
+              if ref.name == "$"
                 # TODO: Should be postponed after middle actions are extracted?
                 ref.referring_symbol = lhs
-              elsif ref.value.is_a?(Integer)
-                raise "Can not refer following component. #{ref.value} >= #{i}. #{token}" if ref.value >= i
-                rhs[ref.value - 1].referred = true
-                ref.referring_symbol = rhs[ref.value - 1]
-              elsif ref.value.is_a?(String)
+              elsif ref.index
+                raise "Can not refer following component. #{ref.index} >= #{i}. #{token}" if ref.index >= i
+                rhs[ref.index - 1].referred = true
+                ref.referring_symbol = rhs[ref.index - 1]
+              else
                 raise "[BUG] Unreachable #{token}."
               end
             end

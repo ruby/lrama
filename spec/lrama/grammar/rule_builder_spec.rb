@@ -115,17 +115,28 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
         expect(token_5.references.count).to eq 6
         expect(token_5.references[0].type).to eq :dollar
-        expect(token_5.references[0].value).to eq '$'
+        expect(token_5.references[0].name).to eq '$'
+        expect(token_5.references[0].index).to eq nil
+
         expect(token_5.references[1].type).to eq :dollar
-        expect(token_5.references[1].value).to eq 1
+        expect(token_5.references[1].name).to eq nil
+        expect(token_5.references[1].index).to eq 1
+
         expect(token_5.references[2].type).to eq :dollar
-        expect(token_5.references[2].value).to eq 3
+        expect(token_5.references[2].name).to eq 'keyword_end'
+        expect(token_5.references[2].index).to eq 3
+
         expect(token_5.references[3].type).to eq :at
-        expect(token_5.references[3].value).to eq '$'
+        expect(token_5.references[3].name).to eq '$'
+        expect(token_5.references[3].index).to eq nil
+
         expect(token_5.references[4].type).to eq :at
-        expect(token_5.references[4].value).to eq 1
+        expect(token_5.references[4].name).to eq nil
+        expect(token_5.references[4].index).to eq 1
+
         expect(token_5.references[5].type).to eq :at
-        expect(token_5.references[5].value).to eq 3
+        expect(token_5.references[5].name).to eq 'keyword_end'
+        expect(token_5.references[5].index).to eq 3
       end
     end
 
@@ -150,17 +161,28 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
         expect(token_4.references.count).to eq 6
         expect(token_4.references[0].type).to eq :dollar
-        expect(token_4.references[0].value).to eq '$'
+        expect(token_4.references[0].name).to eq '$'
+        expect(token_4.references[0].index).to eq nil
+
         expect(token_4.references[1].type).to eq :dollar
-        expect(token_4.references[1].value).to eq 1
+        expect(token_4.references[1].name).to eq 'keyword_class'
+        expect(token_4.references[1].index).to eq 1
+
         expect(token_4.references[2].type).to eq :dollar
-        expect(token_4.references[2].value).to eq 2
+        expect(token_4.references[2].name).to eq nil
+        expect(token_4.references[2].index).to eq 2
+
         expect(token_4.references[3].type).to eq :at
-        expect(token_4.references[3].value).to eq '$'
+        expect(token_4.references[3].name).to eq '$'
+        expect(token_4.references[3].index).to eq nil
+
         expect(token_4.references[4].type).to eq :at
-        expect(token_4.references[4].value).to eq 1
+        expect(token_4.references[4].name).to eq 'keyword_class'
+        expect(token_4.references[4].index).to eq 1
+
         expect(token_4.references[5].type).to eq :at
-        expect(token_4.references[5].value).to eq 2
+        expect(token_4.references[5].name).to eq nil
+        expect(token_4.references[5].index).to eq 2
       end
     end
 
