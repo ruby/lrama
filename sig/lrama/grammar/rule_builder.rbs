@@ -9,7 +9,6 @@ module Lrama
       attr_accessor extracted_action_number: Integer
 
       @user_code: Lexer::Token::UserCode?
-      @code_to_new_token: Hash[Lexer::Token, Lexer::Token]
 
       def initialize: (Counter rule_counter, Counter midrule_action_counter) -> void
       def add_rhs: (Lexer::Token rhs) -> void
@@ -22,6 +21,7 @@ module Lrama
 
       private
 
+      def process_rhs: () -> void
       def expand_parameterizing_rules: () -> Array[Rule]
       def numberize_references: () -> void
       def setup_references: () -> void
