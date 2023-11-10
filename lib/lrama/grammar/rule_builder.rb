@@ -14,7 +14,6 @@ module Lrama
         @user_code = nil
         @precedence_sym = nil
         @line = nil
-        @code_to_new_token = {}
       end
 
       def add_rhs(rhs)
@@ -55,20 +54,15 @@ module Lrama
       end
 
       def midrule_action_rules
-        @midrule_action_rules ||= rhs.select do |token|
-          token.is_a?(Lrama::Lexer::Token::UserCode)
-        end.each_with_index.map do |code, i|
-          prefix = code.referred ? "@" : "$@"
-          new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
-          @code_to_new_token[code] = new_token
-          Rule.new(id: @rule_counter.increment, lhs: new_token, rhs: [], token_code: code, lineno: code.line)
-        end
+        process_rhs
+
+        @midrule_action_rules
       end
 
       def rhs_with_new_tokens
-        rhs.map do |token|
-          @code_to_new_token[token] || token
-        end
+        process_rhs
+
+        @replaced_rhs
       end
 
       def build_rules
@@ -83,6 +77,34 @@ module Lrama
       end
 
       private
+
+      # rhs is a mixture of variety type of tokens like `Ident`, `Parameterizing`, `UserCode` and so on.
+      # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
+      def process_rhs
+        return @replaced_rhs if @replaced_rhs
+
+        @replaced_rhs = []
+        @midrule_action_rules = []
+
+        rhs.each_with_index do |token|
+          case token
+          when Lrama::Lexer::Token::Char
+            @replaced_rhs << token
+          when Lrama::Lexer::Token::Ident
+            @replaced_rhs << token
+          when Lrama::Lexer::Token::Parameterizing
+            # TODO: Expand Parameterizing here
+            @replaced_rhs << token
+          when Lrama::Lexer::Token::UserCode
+            prefix = token.referred ? "@" : "$@"
+            new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
+            @replaced_rhs << new_token
+            @midrule_action_rules << Rule.new(id: @rule_counter.increment, lhs: new_token, rhs: [], token_code: token, lineno: token.line)
+          else
+            raise "Unexpected token. #{token}"
+          end
+        end
+      end
 
       def expand_parameterizing_rules
         rhs = rhs_with_new_tokens
