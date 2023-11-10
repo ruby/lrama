@@ -5,7 +5,7 @@ module Lrama
       attr_accessor :referred
 
       def to_s
-        "#{super} line: #{line}, column: #{column}"
+        "#{super} location: #{location}"
       end
 
       def referred_by?(string)
