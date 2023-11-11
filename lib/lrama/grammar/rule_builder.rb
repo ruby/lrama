@@ -44,6 +44,30 @@ module Lrama
         @precedence_sym = precedence_sym
       end
 
+      def complete_input
+        freeze_rhs
+      end
+
+      def setup_rules
+        preprocess_references
+        process_rhs
+        build_rules
+      end
+
+      def midrule_action_rules
+        @midrule_action_rules
+      end
+
+      def rhs_with_new_tokens
+        @replaced_rhs
+      end
+
+      def rules
+        @rules
+      end
+
+      private
+
       def freeze_rhs
         @rhs.freeze
       end
@@ -53,30 +77,16 @@ module Lrama
         setup_references
       end
 
-      def midrule_action_rules
-        process_rhs
-
-        @midrule_action_rules
-      end
-
-      def rhs_with_new_tokens
-        process_rhs
-
-        @replaced_rhs
-      end
-
       def build_rules
         tokens = rhs_with_new_tokens
 
         # Expand Parameterizing rules
         if tokens.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
-          expand_parameterizing_rules
+          @rules = expand_parameterizing_rules
         else
-          [Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: tokens, token_code: user_code, precedence_sym: precedence_sym, lineno: line)]
+          @rules = [Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: tokens, token_code: user_code, precedence_sym: precedence_sym, lineno: line)]
         end
       end
-
-      private
 
       # rhs is a mixture of variety type of tokens like `Ident`, `Parameterizing`, `UserCode` and so on.
       # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.

@@ -88,7 +88,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
     it "can not add rhs after #freeze_rhs is called" do
       rule_builder.add_rhs(token)
-      rule_builder.freeze_rhs
+      rule_builder.send(:freeze_rhs)
       expect { rule_builder.add_rhs(token) }.to raise_error(FrozenError)
     end
   end
@@ -109,9 +109,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(token_3)
         rule_builder.add_rhs(token_4)
         rule_builder.user_code = token_5
-        rule_builder.freeze_rhs
+        rule_builder.complete_input
 
-        rule_builder.preprocess_references
+        rule_builder.send(:preprocess_references)
 
         expect(token_5.references.count).to eq 6
         expect(token_5.references[0].type).to eq :dollar
@@ -155,9 +155,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(token_3)
         rule_builder.user_code = token_4
         rule_builder.add_rhs(token_5)
-        rule_builder.freeze_rhs
+        rule_builder.complete_input
 
-        rule_builder.preprocess_references
+        rule_builder.send(:preprocess_references)
 
         expect(token_4.references.count).to eq 6
         expect(token_4.references[0].type).to eq :dollar
@@ -201,9 +201,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(token_3)
         rule_builder.add_rhs(token_4)
         rule_builder.user_code = token_5
-        rule_builder.freeze_rhs
+        rule_builder.complete_input
 
-        expect { rule_builder.preprocess_references }.to raise_error(/Can not refer following component\. 10 >= 4\./)
+        expect { rule_builder.send(:preprocess_references) }.to raise_error(/Can not refer following component\. 10 >= 4\./)
       end
     end
 
@@ -224,9 +224,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(token_4)
         rule_builder.add_rhs(token_5)
         rule_builder.user_code = token_6
-        rule_builder.freeze_rhs
+        rule_builder.complete_input
 
-        expect { rule_builder.preprocess_references }.to raise_error(/Can not refer following component\. 3 >= 2\./)
+        expect { rule_builder.send(:preprocess_references) }.to raise_error(/Can not refer following component\. 3 >= 2\./)
       end
     end
 
@@ -245,9 +245,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(token_3)
         rule_builder.add_rhs(token_4)
         rule_builder.user_code = token_5
-        rule_builder.freeze_rhs
+        rule_builder.complete_input
 
-        expect { rule_builder.preprocess_references }.to raise_error(/Referring symbol `classes` is not found\./)
+        expect { rule_builder.send(:preprocess_references) }.to raise_error(/Referring symbol `classes` is not found\./)
       end
     end
 
@@ -268,9 +268,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(token_4)
         rule_builder.add_rhs(token_5)
         rule_builder.user_code = token_6
-        rule_builder.freeze_rhs
+        rule_builder.complete_input
 
-        expect { rule_builder.preprocess_references }.to raise_error(/Referring symbol `tSTRING` is duplicated\./)
+        expect { rule_builder.send(:preprocess_references) }.to raise_error(/Referring symbol `tSTRING` is duplicated\./)
       end
     end
   end
@@ -294,9 +294,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.user_code = token_5
       rule_builder.add_rhs(token_6)
       rule_builder.user_code = token_7
-      rule_builder.freeze_rhs
+      rule_builder.complete_input
+      rule_builder.setup_rules
 
-      rule_builder.preprocess_references
       rules = rule_builder.midrule_action_rules
 
       expect(rules.count).to eq 2
@@ -326,9 +326,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.user_code = token_5
       rule_builder.add_rhs(token_6)
       rule_builder.user_code = token_7
-      rule_builder.freeze_rhs
+      rule_builder.complete_input
+      rule_builder.setup_rules
 
-      rule_builder.preprocess_references
       rule_builder.midrule_action_rules
       tokens = rule_builder.rhs_with_new_tokens
 
