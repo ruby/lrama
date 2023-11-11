@@ -58,10 +58,6 @@ module Lrama
         @midrule_action_rules
       end
 
-      def rhs_with_new_tokens
-        @replaced_rhs
-      end
-
       def rules
         @rules
       end
@@ -78,7 +74,7 @@ module Lrama
       end
 
       def build_rules
-        tokens = rhs_with_new_tokens
+        tokens = @replaced_rhs
 
         # Expand Parameterizing rules
         if tokens.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
@@ -117,7 +113,7 @@ module Lrama
       end
 
       def expand_parameterizing_rules
-        rhs = rhs_with_new_tokens
+        rhs = @replaced_rhs
         rules = []
         token = Lrama::Lexer::Token::Ident.new(s_value: rhs[0].s_value)
 

@@ -307,7 +307,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
   end
 
-  describe "#rhs_with_new_tokens" do
+  describe "@replaced_rhs" do
     let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
     let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
     let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
@@ -317,7 +317,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     let(:token_6) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
     let(:token_7) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end", location: location) }
 
-    it "returns token list whose user codes are replaced with @n token" do
+    it "is a token list whose user codes are replaced with @n token" do
       # class : keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
       rule_builder.lhs = token_1
       rule_builder.add_rhs(token_2)
@@ -329,8 +329,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.complete_input
       rule_builder.setup_rules
 
-      rule_builder.midrule_action_rules
-      tokens = rule_builder.rhs_with_new_tokens
+      tokens = rule_builder.instance_variable_get(:@replaced_rhs)
 
       expect(tokens.count).to eq 5
       expect(tokens[0].s_value).to eq 'keyword_class'
