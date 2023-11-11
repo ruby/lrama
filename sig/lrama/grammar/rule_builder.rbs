@@ -26,6 +26,7 @@ module Lrama
       def numberize_references: () -> void
       def setup_references: () -> void
       def flush_user_code: () -> void
+      def build_rules: () -> void
     end
   end
 end
