@@ -87,7 +87,7 @@ module Lrama
       # rhs is a mixture of variety type of tokens like `Ident`, `Parameterizing`, `UserCode` and so on.
       # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
       def process_rhs
-        return @replaced_rhs if @replaced_rhs
+        return if @replaced_rhs
 
         @replaced_rhs = []
         @midrule_action_rules = []
