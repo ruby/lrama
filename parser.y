@@ -271,8 +271,8 @@ rule
 
   token_declaration_for_precedence: id
 
-  id: IDENTIFIER { on_action_error("ident after %prec") if @prec_seen }
-    | CHARACTER { on_action_error("char after %prec") if @prec_seen }
+  id: IDENTIFIER { on_action_error("ident after %prec", val[0]) if @prec_seen }
+    | CHARACTER { on_action_error("char after %prec", val[0]) if @prec_seen }
 
   grammar: rules_or_grammar_declaration
          | grammar rules_or_grammar_declaration
@@ -327,32 +327,32 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs parameterizing_suffix
+     | rhs IDENTIFIER parameterizing_suffix
          {
-           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1])
+           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[2], location: @lexer.location, args: [val[1]])
            builder = val[0]
            builder.add_rhs(token)
            result = builder
          }
-     | parameterizing_prefix "(" rhs ")"
+     | rhs IDENTIFIER "(" symbol ")"
          {
-           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0])
-           builder = val[2]
+           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: [val[3]])
+           builder = val[0]
            builder.add_rhs(token)
            result = builder
          }
-     | parameterizing_separated_prefix "(" symbol "," rhs ")"
+     | rhs IDENTIFIER "(" symbol "," symbol ")"
         {
-          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0])
-          builder = val[4]
+          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: [val[3], val[5]])
+          builder = val[0]
           builder.add_rhs(token)
-          builder.add_rhs_separator(val[2])
+          builder.add_rhs_separator(val[3])
           result = builder
         }
      | rhs "{"
          {
            if @prec_seen
-             on_action_error("multiple User_code after %prec")  if @code_after_prec
+             on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
              @code_after_prec = true
            end
            begin_c_declaration("}")
@@ -377,13 +377,6 @@ rule
            builder.precedence_sym = sym
            result = builder
          }
-
-  parameterizing_prefix: "option"
-                       | "nonempty_list"
-                       | "list"
-
-  parameterizing_separated_prefix: "separated_nonempty_list"
-                                 | "separated_list"
 
   parameterizing_suffix: "?"
                        | "+"
@@ -473,11 +466,21 @@ def on_error(error_token_id, error_value, value_stack)
   ERROR
 end
 
-def on_action_error(error_message)
+def on_action_error(error_message, error_value)
+  if error_value.is_a?(Lrama::Lexer::Token)
+    line = error_value.first_line
+    first_column = error_value.first_column
+    last_column = error_value.last_column
+  else
+    line = @lexer.line
+    first_column = @lexer.head_column
+    last_column = @lexer.column
+  end
+
   raise ParseError, <<~ERROR
-    #{@path}:#{@lexer.line}: #{error_message}
-    #{@text.split("\n")[@lexer.line - 1]}
-    #{carrets(@lexer.head_column, @lexer.column)}
+    #{@path}:#{line}: #{error_message}
+    #{@text.split("\n")[line - 1]}
+    #{carrets(first_column, last_column)}
   ERROR
 end
 
