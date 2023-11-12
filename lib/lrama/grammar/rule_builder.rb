@@ -6,9 +6,10 @@ module Lrama
       attr_accessor :lhs, :line
       attr_reader :rhs, :separators, :user_code, :precedence_sym
 
-      def initialize(rule_counter, midrule_action_counter)
+      def initialize(rule_counter, midrule_action_counter, skip_preprocess_references: false)
         @rule_counter = rule_counter
         @midrule_action_counter = midrule_action_counter
+        @skip_preprocess_references = skip_preprocess_references
 
         @lhs = nil
         @rhs = []
@@ -16,6 +17,7 @@ module Lrama
         @user_code = nil
         @precedence_sym = nil
         @line = nil
+        @rule_builders_for_midrule_action = []
       end
 
       def add_rhs(rhs)
@@ -55,7 +57,7 @@ module Lrama
       end
 
       def setup_rules
-        preprocess_references
+        preprocess_references unless @skip_preprocess_references
         process_rhs
         build_rules
       end
@@ -65,7 +67,9 @@ module Lrama
       end
 
       def midrule_action_rules
-        @midrule_action_rules
+        @midrule_action_rules ||= @rule_builders_for_midrule_action.map do |rule_builder|
+          rule_builder.rules
+        end.flatten
       end
 
       def rules
@@ -100,7 +104,6 @@ module Lrama
         return if @replaced_rhs
 
         @replaced_rhs = []
-        @midrule_action_rules = []
         @parameterizing_rules = []
 
         rhs.each_with_index do |token|
@@ -116,7 +119,14 @@ module Lrama
             prefix = token.referred ? "@" : "$@"
             new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
             @replaced_rhs << new_token
-            @midrule_action_rules << Rule.new(id: @rule_counter.increment, lhs: new_token, rhs: [], token_code: token, lineno: token.line)
+
+            rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, skip_preprocess_references: true)
+            rule_builder.lhs = new_token
+            rule_builder.user_code = token
+            rule_builder.complete_input
+            rule_builder.setup_rules
+
+            @rule_builders_for_midrule_action << rule_builder
           else
             raise "Unexpected token. #{token}"
           end
