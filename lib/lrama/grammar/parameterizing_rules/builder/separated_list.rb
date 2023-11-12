@@ -5,7 +5,7 @@ module Lrama
         class SeparatedList < Base
           def initialize(token, rule_counter, lhs, user_code, precedence_sym, line)
             super
-            @separater = @args[0]
+            @separator = @args[0]
             @token = @args[1]
             @expected_argument_num = 2
           end
@@ -18,7 +18,7 @@ module Lrama
             rules << Rule.new(id: @rule_counter.increment, lhs: @lhs, rhs: [separated_list_token], token_code: @user_code, precedence_sym: @precedence_sym, lineno: @line)
             rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [], token_code: @user_code, precedence_sym: @precedence_sym, lineno: @line)
             rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [@token], token_code: @user_code, precedence_sym: @precedence_sym, lineno: @line)
-            rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [separated_list_token, @separater, @token], token_code: @user_code, precedence_sym: @precedence_sym, lineno: @line)
+            rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [separated_list_token, @separator, @token], token_code: @user_code, precedence_sym: @precedence_sym, lineno: @line)
             rules
           end
         end
