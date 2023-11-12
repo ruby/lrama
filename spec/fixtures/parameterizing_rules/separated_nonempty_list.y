@@ -17,7 +17,7 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %%
 
-program         : separated_nonempty_list(",", number)
+program         : separated_nonempty_list(',', number)
                 ;
 
 %%
