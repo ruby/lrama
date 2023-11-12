@@ -1051,6 +1051,24 @@ RSpec.describe Lrama::Parser do
           ),
         ])
       end
+
+      context 'when error case' do
+        context "when invalid argument number" do
+          it "raise an error" do
+            path = "parameterizing_rules/invalid_argument_number.y"
+            y = File.read(fixture_path(path))
+            expect { Lrama::Parser.new(y, path).parse }.to raise_error(/Invalid number of arguments\. expect: 1 actual: 2/)
+          end
+        end
+
+        context "when invalid rule name" do
+          it "raise an error" do
+            path = "parameterizing_rules/invalid_rule_name.y"
+            y = File.read(fixture_path(path))
+            expect { Lrama::Parser.new(y, path).parse }.to raise_error(/Parameterizing rule does not exist\. `invalid`/)
+          end
+        end
+      end
     end
 
     it "; for rules is optional" do
