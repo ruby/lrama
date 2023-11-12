@@ -146,7 +146,6 @@ module Lrama
     end
 
     def prepare
-      preprocess_references
       normalize_rules
       collect_symbols
       replace_token_with_symbol
@@ -306,9 +305,9 @@ module Lrama
 
     private
 
-    def preprocess_references
+    def setup_rules
       @rule_builders.each do |builder|
-        builder.preprocess_references
+        builder.setup_rules
       end
     end
 
@@ -376,6 +375,8 @@ module Lrama
       lineno = @rule_builders.first ? @rule_builders.first.line : 0
       @rules << Rule.new(id: @rule_counter.increment, lhs: accept, rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
 
+      setup_rules
+
       @rule_builders.each do |builder|
         # Extract actions in the middle of RHS into new rules.
         builder.midrule_action_rules.each do |rule|
@@ -386,7 +387,7 @@ module Lrama
           add_term(id: separator)
         end
 
-        builder.build_rules.each do |rule|
+        builder.rules.each do |rule|
           add_nterm(id: rule.lhs)
           @rules << rule
         end
