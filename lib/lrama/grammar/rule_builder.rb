@@ -67,9 +67,7 @@ module Lrama
       end
 
       def midrule_action_rules
-        @midrule_action_rules ||= @rule_builders_for_midrule_action.map do |rule_builder|
-          rule_builder.rules
-        end.flatten
+        @midrule_action_rules
       end
 
       def rules
@@ -93,10 +91,14 @@ module Lrama
         # Expand Parameterizing rules
         if tokens.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
           @rules = @parameterizing_rules
+          @midrule_action_rules = []
         else
           rule = Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: tokens, token_code: user_code, precedence_sym: precedence_sym, lineno: line)
           @rules = [rule]
-          midrule_action_rules.each do |r|
+          @midrule_action_rules = @rule_builders_for_midrule_action.map do |rule_builder|
+            rule_builder.rules
+          end.flatten
+          @midrule_action_rules.each do |r|
             r.original_rule = rule
           end
         end
