@@ -36,12 +36,9 @@ module Lrama
       @head_line = @line = 1
       @status = :initial
       @end_symbol = nil
-      @lex_stack = []
     end
 
     def next_token
-      return @lex_stack.pop unless @lex_stack.empty?
-
       case @status
       when :initial
         lex_token
