@@ -33,6 +33,10 @@ module Lrama
       end
 
       def user_code=(user_code)
+        if !@line
+          @line = user_code.line
+        end
+
         flush_user_code
 
         @user_code = user_code
