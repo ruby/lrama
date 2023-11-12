@@ -60,6 +60,32 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         end
       end
     end
+
+    describe "@line" do
+      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:token) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
+
+      context "@line is nil" do
+        it "sets rhs.line to @line" do
+          # Assertion
+          expect(rule_builder.line).to be nil
+
+          rule_builder.user_code = token
+          expect(rule_builder.line).to eq 1
+        end
+      end
+
+      context "@line is not nil" do
+        it "doesn't change @line" do
+          rule_builder.line = 0
+          # Assertion
+          expect(rule_builder.line).to eq 0
+
+          rule_builder.user_code = token
+          expect(rule_builder.line).to eq 0
+        end
+      end
+    end
   end
 
   describe "#precedence_sym=" do
