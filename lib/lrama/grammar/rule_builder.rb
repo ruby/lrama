@@ -17,7 +17,7 @@ module Lrama
         @user_code = nil
         @precedence_sym = nil
         @line = nil
-        @rule_builders_for_midrule_action = []
+        @rule_builders_for_derived_rules = []
       end
 
       def add_rhs(rhs)
@@ -92,7 +92,7 @@ module Lrama
             position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
           )
           @rules = [rule]
-          @midrule_action_rules = @rule_builders_for_midrule_action.map do |rule_builder|
+          @midrule_action_rules = @rule_builders_for_derived_rules.map do |rule_builder|
             rule_builder.rules
           end.flatten
           @midrule_action_rules.each do |r|
@@ -129,7 +129,7 @@ module Lrama
             rule_builder.complete_input
             rule_builder.setup_rules
 
-            @rule_builders_for_midrule_action << rule_builder
+            @rule_builders_for_derived_rules << rule_builder
           else
             raise "Unexpected token. #{token}"
           end
