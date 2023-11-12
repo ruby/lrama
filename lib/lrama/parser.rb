@@ -1721,7 +1721,7 @@ module_eval(<<'.,.,', 'parser.y', 284)
              lhs.alias_name = val[1]
              val[3].each do |builder|
                builder.lhs = lhs
-               builder.freeze_rhs
+               builder.complete_input
                @grammar.add_rule_builder(builder)
              end
 
