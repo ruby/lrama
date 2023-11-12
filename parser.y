@@ -346,7 +346,6 @@ rule
           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: [val[3], val[5]])
           builder = val[0]
           builder.add_rhs(token)
-          builder.add_rhs_separator(val[3])
           result = builder
         }
      | rhs "{"

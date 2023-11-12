@@ -4,7 +4,7 @@ module Lrama
   class Grammar
     class RuleBuilder
       attr_accessor :lhs, :line
-      attr_reader :rhs, :separators, :user_code, :precedence_sym
+      attr_reader :rhs, :user_code, :precedence_sym
 
       def initialize(rule_counter, midrule_action_counter, position_in_original_rule_rhs = nil, skip_preprocess_references: false)
         @rule_counter = rule_counter
@@ -14,7 +14,6 @@ module Lrama
 
         @lhs = nil
         @rhs = []
-        @separators = []
         @user_code = nil
         @precedence_sym = nil
         @line = nil
@@ -29,12 +28,6 @@ module Lrama
         flush_user_code
 
         @rhs << rhs
-      end
-
-      def add_rhs_separator(separator)
-        add_rhs(separator)
-
-        @separators << separator
       end
 
       def user_code=(user_code)
