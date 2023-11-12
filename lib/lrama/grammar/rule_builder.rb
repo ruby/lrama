@@ -76,7 +76,6 @@ module Lrama
 
       def preprocess_references
         numberize_references
-        setup_references
       end
 
       def build_rules
@@ -137,7 +136,8 @@ module Lrama
       end
 
       def numberize_references
-        (rhs + [user_code]).compact.each do |token|
+        # Bison n'th component is 1-origin
+        (rhs + [user_code]).compact.each.with_index(1) do |token, i|
           next unless token.is_a?(Lrama::Lexer::Token::UserCode)
 
           token.references.each do |ref|
@@ -154,26 +154,15 @@ module Lrama
                 ref.index = referring_symbol[1] + 1
               end
             end
-          end
-        end
-      end
 
-      def setup_references
-        # Bison n'th component is 1-origin
-        (rhs + [user_code]).compact.each.with_index(1) do |token, i|
-          if token.is_a?(Lrama::Lexer::Token::UserCode)
-            token.references.each do |ref|
-              next if ref.type == :at
-              # $$, $n, @$, @n can be used in any actions
+            # TODO: Need to check index of @ too?
+            next if ref.type == :at
 
-              if ref.name == "$"
-                # TODO: Should be postponed after middle actions are extracted?
-              elsif ref.index
-                raise "Can not refer following component. #{ref.index} >= #{i}. #{token}" if ref.index >= i
-                rhs[ref.index - 1].referred = true
-              else
-                raise "[BUG] Unreachable #{token}."
-              end
+            if ref.index
+              # TODO: Prohibit $0 even so Bison allows it?
+              # See: https://www.gnu.org/software/bison/manual/html_node/Actions.html
+              raise "Can not refer following component. #{ref.index} >= #{i}. #{token}" if ref.index >= i
+              rhs[ref.index - 1].referred = true
             end
           end
         end
