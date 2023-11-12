@@ -12,4 +12,9 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = FileList['spec/**/*_spec.rb']
 end
 
-task default: %i[spec]
+desc "steep check"
+task :steep do
+  sh "bundle exec steep check"
+end
+
+task default: %i[spec steep]
