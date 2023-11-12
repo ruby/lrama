@@ -1,6 +1,8 @@
 module Lrama
   class Grammar
     class Rule < Struct.new(:id, :lhs, :rhs, :token_code, :nullable, :precedence_sym, :lineno, keyword_init: true)
+      attr_accessor :original_rule
+
       # TODO: Change this to display_name
       def to_s
         l = lhs.id.s_value

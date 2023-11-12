@@ -94,7 +94,11 @@ module Lrama
         if tokens.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
           @rules = @parameterizing_rules
         else
-          @rules = [Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: tokens, token_code: user_code, precedence_sym: precedence_sym, lineno: line)]
+          rule = Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: tokens, token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+          @rules = [rule]
+          midrule_action_rules.each do |r|
+            r.original_rule = rule
+          end
         end
       end
 

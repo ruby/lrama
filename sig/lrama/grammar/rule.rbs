@@ -1,6 +1,8 @@
 module Lrama
   class Grammar
     class Rule
+      attr_accessor original_rule: Rule
+
       def initialize: (
         ?id: untyped, ?lhs: untyped, ?rhs: untyped,
         ?token_code: untyped, ?nullable: untyped,

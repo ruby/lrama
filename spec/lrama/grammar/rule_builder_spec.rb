@@ -323,13 +323,16 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.complete_input
       rule_builder.setup_rules
 
+      rule = rule_builder.rules.first
       rules = rule_builder.midrule_action_rules
 
       expect(rules.count).to eq 2
       expect(rules[0].lhs.s_value).to eq '@1'
       expect(rules[0].token_code.s_value).to eq '$1'
+      expect(rules[0].original_rule).to eq rule
       expect(rules[1].lhs.s_value).to eq '$@2'
       expect(rules[1].token_code.s_value).to eq '$2 + $3'
+      expect(rules[1].original_rule).to eq rule
     end
   end
 
