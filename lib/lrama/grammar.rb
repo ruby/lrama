@@ -159,10 +159,11 @@ module Lrama
     end
 
     # TODO: More validation methods
+    #
+    # * Validaiton for no_declared_type_reference
     def validate!
       validate_symbol_number_uniqueness!
       validate_symbol_alias_name_uniqueness!
-      validate_no_declared_type_reference!
       validate_rule_lhs_is_nterm!
     end
 
@@ -494,16 +495,6 @@ module Lrama
         rule.rhs.map! do |t|
           token_to_symbol(t)
         end
-
-        if rule.token_code
-          rule.token_code.references.each do |ref|
-            next if ref.type == :at
-
-            if !ref.referring_symbol.is_a?(Lrama::Lexer::Token::UserCode)
-              ref.referring_symbol = token_to_symbol(ref.referring_symbol)
-            end
-          end
-        end
       end
     end
 
@@ -603,24 +594,6 @@ module Lrama
       return if invalid.empty?
 
       raise "Symbol alias name is duplicated. #{invalid}"
-    end
-
-    def validate_no_declared_type_reference!
-      errors = []
-
-      rules.each do |rule|
-        next unless rule.token_code
-
-        rule.token_code.references.select do |ref|
-          ref.type == :dollar && !ref.tag
-        end.each do |ref|
-          errors << "$#{ref.value} of '#{rule.lhs.id.s_value}' has no declared type"
-        end
-      end
-
-      return if errors.empty?
-
-      raise errors.join("\n")
     end
 
     def validate_rule_lhs_is_nterm!

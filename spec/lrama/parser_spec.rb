@@ -275,6 +275,7 @@ RSpec.describe Lrama::Parser do
           lhs: grammar.find_symbol_by_s_value!("$@1"),
           rhs: [],
           token_code: T::UserCode.new(s_value: " code 2 "),
+          position_in_original_rule_rhs: 1,
           nullable: true,
           precedence_sym: nil,
           lineno: 64,
@@ -284,6 +285,7 @@ RSpec.describe Lrama::Parser do
           lhs: grammar.find_symbol_by_s_value!("$@2"),
           rhs: [],
           token_code: T::UserCode.new(s_value: " code 3 "),
+          position_in_original_rule_rhs: 5,
           nullable: true,
           precedence_sym: nil,
           lineno: 64,
@@ -309,6 +311,7 @@ RSpec.describe Lrama::Parser do
           lhs: grammar.find_symbol_by_s_value!("$@3"),
           rhs: [],
           token_code: T::UserCode.new(s_value: " code 4 "),
+          position_in_original_rule_rhs: 1,
           nullable: true,
           precedence_sym: nil,
           lineno: 65,
@@ -318,6 +321,7 @@ RSpec.describe Lrama::Parser do
           lhs: grammar.find_symbol_by_s_value!("$@4"),
           rhs: [],
           token_code: T::UserCode.new(s_value: " code 5 "),
+          position_in_original_rule_rhs: 5,
           nullable: true,
           precedence_sym: nil,
           lineno: 65,
@@ -1200,6 +1204,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
           lhs: grammar.find_symbol_by_s_value!("$@1"),
           rhs: [],
           token_code: T::UserCode.new(s_value: " code 1 "),
+          position_in_original_rule_rhs: 1,
           nullable: true,
           precedence_sym: nil,
           lineno: 31,
@@ -1209,6 +1214,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
           lhs: grammar.find_symbol_by_s_value!("$@2"),
           rhs: [],
           token_code: T::UserCode.new(s_value: " code 2 "),
+          position_in_original_rule_rhs: 3,
           nullable: true,
           precedence_sym: nil,
           lineno: 31,
@@ -1522,6 +1528,7 @@ lambda: tLAMBDA
               lhs: grammar.find_symbol_by_s_value!("@1"),
               rhs: [],
               token_code: T::UserCode.new(s_value: " $<i>1 = 1; $<i>$ = 2; "),
+              position_in_original_rule_rhs: 1,
               nullable: true,
               precedence_sym: nil,
               lineno: 17,
@@ -1531,6 +1538,7 @@ lambda: tLAMBDA
               lhs: grammar.find_symbol_by_s_value!("@2"),
               rhs: [],
               token_code: T::UserCode.new(s_value: " $<i>$ = 3; "),
+              position_in_original_rule_rhs: 2,
               nullable: true,
               precedence_sym: nil,
               lineno: 18,
@@ -1540,6 +1548,7 @@ lambda: tLAMBDA
               lhs: grammar.find_symbol_by_s_value!("$@3"),
               rhs: [],
               token_code: T::UserCode.new(s_value: " $<i>$ = 4; "),
+              position_in_original_rule_rhs: 3,
               nullable: true,
               precedence_sym: nil,
               lineno: 19,
@@ -1549,6 +1558,7 @@ lambda: tLAMBDA
               lhs: grammar.find_symbol_by_s_value!("$@4"),
               rhs: [],
               token_code: T::UserCode.new(s_value: " 5; "),
+              position_in_original_rule_rhs: 5,
               nullable: true,
               precedence_sym: nil,
               lineno: 21,
@@ -1963,57 +1973,7 @@ class : keyword_class tSTRING keyword_end
         expect(codes[0]).to be nil
         expect(codes[1]).to be nil
         expect(codes[2].references.count).to eq(1)
-        expect(codes[2].references[0].tag.s_value).to eq("<l>")
-      end
-    end
-  end
-
-  describe "Grammar#validate!" do
-    describe "#validate_no_declared_type_reference!" do
-      it "raises error when referred nterm, term and action have no tag so that type is not declared" do
-        y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-    int val;
-}
-
-%token NUM
-
-%%
-
-program : stmt
-        ;
-
-stmt : {} {} expr { $$ = $1 + $<val>2; }
-     ;
-
-expr : expr1
-     | expr2
-     ;
-
-expr1 : NUM { $$ = $1; }
-      ;
-
-expr2 : expr '+' expr { $$ = $1 + $3; }
-      ;
-
-%%
-        INPUT
-
-        expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(RuntimeError) do |e|
-          expect(e.message).to eq(<<~MSG.chomp)
-            $$ of 'stmt' has no declared type
-            $1 of 'stmt' has no declared type
-            $$ of 'expr1' has no declared type
-            $1 of 'expr1' has no declared type
-            $$ of 'expr2' has no declared type
-            $1 of 'expr2' has no declared type
-            $3 of 'expr2' has no declared type
-          MSG
-        end
+        expect(codes[2].references[0].ex_tag.s_value).to eq("<l>")
       end
     end
   end
