@@ -1,3 +1,5 @@
+require 'lrama/grammar/parameterizing_rules/builder'
+
 module Lrama
   class Grammar
     class RuleBuilder
@@ -108,7 +110,7 @@ module Lrama
           when Lrama::Lexer::Token::Ident
             @replaced_rhs << token
           when Lrama::Lexer::Token::Parameterizing
-            expand_parameterizing_rules(token)
+            @parameterizing_rules = ParameterizingRules::Builder.new(token, @rule_counter, lhs, user_code, precedence_sym, line).build
             @replaced_rhs << token
           when Lrama::Lexer::Token::UserCode
             prefix = token.referred ? "@" : "$@"
@@ -118,41 +120,6 @@ module Lrama
           else
             raise "Unexpected token. #{token}"
           end
-        end
-      end
-
-      def expand_parameterizing_rules(from)
-        args = from.args
-        token = args.first
-
-        if from.option?
-          option_token = Lrama::Lexer::Token::Ident.new(s_value: "option_#{token.s_value}")
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: [option_token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: option_token, rhs: [], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: option_token, rhs: [token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-        elsif from.nonempty_list?
-          nonempty_list_token = Lrama::Lexer::Token::Ident.new(s_value: "nonempty_list_#{token.s_value}")
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: [nonempty_list_token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: nonempty_list_token, rhs: [token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: nonempty_list_token, rhs: [nonempty_list_token, token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-        elsif from.list?
-          list_token = Lrama::Lexer::Token::Ident.new(s_value: "list_#{token.s_value}")
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: [list_token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: list_token, rhs: [], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: list_token, rhs: [list_token, token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-        elsif from.separated_nonempty_list?
-          token = args[1]
-          separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_nonempty_list_#{token.s_value}")
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: [separated_list_token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [separated_list_token, args.first, token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-        elsif from.separated_list?
-          token = args[1]
-          separated_list_token = Lrama::Lexer::Token::Ident.new(s_value: "separated_list_#{token.s_value}")
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: [separated_list_token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
-          @parameterizing_rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [separated_list_token, args.first, token], token_code: user_code, precedence_sym: precedence_sym, lineno: line)
         end
       end
 
