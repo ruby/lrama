@@ -1,3 +1,4 @@
+require 'lrama/grammar/parameterizing_rules/builder/base'
 require 'lrama/grammar/parameterizing_rules/builder/list'
 require 'lrama/grammar/parameterizing_rules/builder/nonempty_list'
 require 'lrama/grammar/parameterizing_rules/builder/option'

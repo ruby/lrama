@@ -2,18 +2,12 @@ module Lrama
   class Grammar
     class ParameterizingRules
       class Builder
-        class SeparatedNonemptyList
-          EXPECTED_ARGUMENT_NUM = 2
-
+        class SeparatedNonemptyList < Base
           def initialize(token, rule_counter, lhs, user_code, precedence_sym, line)
-            @args = token.args
+            super
             @separater = @args[0]
             @token = @args[1]
-            @rule_counter = rule_counter
-            @lhs = lhs
-            @user_code = user_code
-            @precedence_sym = precedence_sym
-            @line = line
+            @expected_argument_num = 2
           end
 
           def build
@@ -25,14 +19,6 @@ module Lrama
             rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [@token], token_code: @user_code, precedence_sym: @precedence_sym, lineno: @line)
             rules << Rule.new(id: @rule_counter.increment, lhs: separated_list_token, rhs: [separated_list_token, @separater, @token], token_code: @user_code, precedence_sym: @precedence_sym, lineno: @line)
             rules
-          end
-
-          private
-
-          def validate_argument_number!
-            unless @args.count == EXPECTED_ARGUMENT_NUM
-              raise "Invalid number of arguments. expect: #{EXPECTED_ARGUMENT_NUM} actual: #{@args.count}"
-            end
           end
         end
       end
