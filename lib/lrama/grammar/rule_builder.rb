@@ -6,9 +6,10 @@ module Lrama
       attr_accessor :lhs, :line
       attr_reader :rhs, :separators, :user_code, :precedence_sym
 
-      def initialize(rule_counter, midrule_action_counter, skip_preprocess_references: false)
+      def initialize(rule_counter, midrule_action_counter, position_in_original_rule_rhs = nil, skip_preprocess_references: false)
         @rule_counter = rule_counter
         @midrule_action_counter = midrule_action_counter
+        @position_in_original_rule_rhs = position_in_original_rule_rhs
         @skip_preprocess_references = skip_preprocess_references
 
         @lhs = nil
@@ -93,7 +94,10 @@ module Lrama
           @rules = @parameterizing_rules
           @midrule_action_rules = []
         else
-          rule = Rule.new(id: @rule_counter.increment, lhs: lhs, rhs: tokens, token_code: user_code, precedence_sym: precedence_sym, lineno: line)
+          rule = Rule.new(
+            id: @rule_counter.increment, lhs: lhs, rhs: tokens, token_code: user_code,
+            position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
+          )
           @rules = [rule]
           @midrule_action_rules = @rule_builders_for_midrule_action.map do |rule_builder|
             rule_builder.rules
@@ -112,7 +116,7 @@ module Lrama
         @replaced_rhs = []
         @parameterizing_rules = []
 
-        rhs.each_with_index do |token|
+        rhs.each_with_index do |token, i|
           case token
           when Lrama::Lexer::Token::Char
             @replaced_rhs << token
@@ -126,7 +130,7 @@ module Lrama
             new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
             @replaced_rhs << new_token
 
-            rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, skip_preprocess_references: true)
+            rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, skip_preprocess_references: true)
             rule_builder.lhs = new_token
             rule_builder.user_code = token
             rule_builder.complete_input
@@ -166,18 +170,14 @@ module Lrama
         (rhs + [user_code]).compact.each.with_index(1) do |token, i|
           if token.is_a?(Lrama::Lexer::Token::UserCode)
             token.references.each do |ref|
-              # Need to keep position_in_rhs for actions in the middle of RHS
-              ref.position_in_rhs = i - 1
               next if ref.type == :at
               # $$, $n, @$, @n can be used in any actions
 
               if ref.name == "$"
                 # TODO: Should be postponed after middle actions are extracted?
-                ref.referring_symbol = lhs
               elsif ref.index
                 raise "Can not refer following component. #{ref.index} >= #{i}. #{token}" if ref.index >= i
                 rhs[ref.index - 1].referred = true
-                ref.referring_symbol = rhs[ref.index - 1]
               else
                 raise "[BUG] Unreachable #{token}."
               end

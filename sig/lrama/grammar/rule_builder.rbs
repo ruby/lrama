@@ -9,7 +9,7 @@ module Lrama
 
       @user_code: Lexer::Token::UserCode?
 
-      def initialize: (Counter rule_counter, Counter midrule_action_counter, ?skip_preprocess_references: bool) -> void
+      def initialize: (Counter rule_counter, Counter midrule_action_counter, ?Integer position_in_original_rule_rhs, ?skip_preprocess_references: bool) -> void
       def add_rhs: (Lexer::Token rhs) -> void
       def user_code=: (Lexer::Token::UserCode user_code) -> void
       def precedence_sym=: (Lexer::Token user_code) -> void
