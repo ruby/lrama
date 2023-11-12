@@ -29,13 +29,6 @@ module Lrama
       %empty
       %code
     )
-    PARAMETERIZING_TOKENS = [
-      'option\(',
-      'nonempty_list\(',
-      'list\(',
-      'separated_nonempty_list\(',
-      'separated_list\(',
-    ]
 
     def initialize(text)
       @scanner = StringScanner.new(text)
@@ -95,8 +88,6 @@ module Lrama
       when @scanner.scan(/#{SYMBOLS.join('|')}/)
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
-        return [@scanner.matched, @scanner.matched]
-      when @scanner.scan(/#{PARAMETERIZING_TOKENS.join('|')}/)
         return [@scanner.matched, @scanner.matched]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, @scanner.matched]
