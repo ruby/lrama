@@ -1,7 +1,10 @@
+/.DS_Store
+/.bundle/
 /.gem_rbs_collection/
-/tmp
-.irbrc
+/.irbrc
 /Gemfile.lock
-/pkg/
-coverage/
+/coverage/
 /parser.output
+/pkg/
+/tmp/
+/vendor/bundle
