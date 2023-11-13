@@ -1,7 +1,7 @@
 /.gem_rbs_collection/
-/tmp/
 /.irbrc
 /Gemfile.lock
-/pkg/
 /coverage/
 /parser.output
+/pkg/
+/tmp/
