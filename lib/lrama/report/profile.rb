@@ -7,7 +7,7 @@ module Lrama
       #
       # 2. Run lrama command, for example
       #
-      #   $ ./exe/lrama --trace=time spec/fixtures/integration/ruby_3_2_0/parse.tmp.y
+      #   $ ./exe/lrama --trace=time sample/parse_for_report_profile.y
       #
       # 3. Generate html file
       #
