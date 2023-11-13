@@ -11,6 +11,7 @@ require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = FileList['spec/**/*_spec.rb']
 end
+task :spec => "build:parser"
 
 desc "steep check"
 task :steep do
