@@ -1,3 +1,5 @@
+/.DS_Store
+/.bundle/
 /.gem_rbs_collection/
 /.irbrc
 /Gemfile.lock
@@ -5,3 +7,4 @@
 /parser.output
 /pkg/
 /tmp/
+/vendor/bundle
