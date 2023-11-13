@@ -1,5 +1,5 @@
 class Lrama::Parser
-  expect 7
+  expect 1
 
   token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
 
@@ -261,9 +261,9 @@ rule
                                        {
                                          result = [{tag: val[0], tokens: val[1]}]
                                        }
-                                   | token_declarations_for_precedence token_declaration_list_for_precedence
+                                   | token_declarations_for_precedence TAG token_declaration_list_for_precedence
                                        {
-                                         result = val[0].append({tag: nil, tokens: val[1]})
+                                         result = val[0].append({tag: val[1], tokens: val[2]})
                                        }
 
   token_declaration_list_for_precedence: token_declaration_for_precedence { result = [val[0]] }
