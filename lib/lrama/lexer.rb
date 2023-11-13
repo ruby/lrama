@@ -136,13 +136,13 @@ module Lrama
         when @scanner.scan(/\n/)
           code += @scanner.matched
           newline
-        when @scanner.scan(/"/)
-          matched = @scanner.scan_until(/"/)
-          code += %Q("#{matched})
-          @line += matched.count("\n")
-        when @scanner.scan(/'/)
-          matched = @scanner.scan_until(/'/)
-          code += %Q('#{matched})
+        when @scanner.scan(/\/\*/)
+          lex_comment
+        when @scanner.scan(/"(\\.|[^\\"])*"/)
+          code += %Q("#{@scanner.matched})
+          @line += @scanner.matched.count("\n")
+        when @scanner.scan(/'(\\.|[^\\'])*'/)
+          code += %Q('#{@scanner.matched})
         else
           code += @scanner.getch
         end
