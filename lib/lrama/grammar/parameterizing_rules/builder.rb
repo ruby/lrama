@@ -31,10 +31,28 @@ module Lrama
         end
 
         def build
-          if RULES.key?(@key)
-            RULES[@key].new(@token, @rule_counter, @lhs, @user_code, @precedence_sym, @line).build
-          else
+          validate_key!
+          rules = inside_rules
+          unless rules.empty?
+            @token.args.first.s_value = rules.last.lhs.s_value
+          end
+          rules << RULES[@key].new(@token, @rule_counter, @lhs, @user_code, @precedence_sym, @line).build
+          rules.flatten
+        end
+
+        private
+
+        def validate_key!
+          unless RULES.key?(@key)
             raise "Parameterizing rule does not exist. `#{@key}`"
+          end
+        end
+
+        def inside_rules
+          if @token.args.any? { |arg| arg.is_a?(Lrama::Lexer::Token::Parameterizing) }
+            ParameterizingRules::Builder.new(@token.args.first, @rule_counter, @lhs, @user_code, @precedence_sym, @line).build
+          else
+            []
           end
         end
       end
