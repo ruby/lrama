@@ -1269,7 +1269,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
     end
 
     describe "invalid_prec" do
-      it do
+      it "raises error if ident exists after %prec" do
         y = header + <<~INPUT
 %%
 
@@ -1290,7 +1290,7 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
         ERROR
       end
 
-      it do
+      it "raises error if char exists after %prec" do
         y = header + <<~INPUT
 %%
 
@@ -1311,7 +1311,7 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
         ERROR
       end
 
-      it do
+      it "raises error if code exists after %prec" do
         y = header + <<~INPUT
 %%
 
