@@ -18,7 +18,7 @@ module Lrama
             case
             when reference = scan_reference(scanner)
               references << reference
-            when scanner.scan(/\/\*/)
+            when scanner.scan("/*")
               scanner.scan_until(/\*\//)
             else
               scanner.getch

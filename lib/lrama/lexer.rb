@@ -65,13 +65,13 @@ module Lrama
     def lex_token
       while !@scanner.eos? do
         case
-        when @scanner.scan(/\n/)
+        when @scanner.scan("\n")
           newline
         when @scanner.scan(/\s+/)
           # noop
-        when @scanner.scan(/\/\*/)
+        when @scanner.scan("/*")
           lex_comment
-        when @scanner.scan(/\/\//)
+        when @scanner.scan("//")
           @scanner.scan_until(/\n/)
           newline
         else
@@ -97,7 +97,7 @@ module Lrama
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/'\\\\'|'\\b'|'\\t'|'\\f'|'\\r'|'\\n'|'\\v'|'\\13'/)
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/"/)
+      when @scanner.scan('"')
         return [:STRING, %Q("#{@scanner.scan_until(/"/)})]
       when @scanner.scan(/\d+/)
         return [:INTEGER, Integer(@scanner.matched)]
@@ -133,14 +133,14 @@ module Lrama
           end
         when @scanner.check(/#{@end_symbol}/)
           return [:C_DECLARATION, Lrama::Lexer::Token::UserCode.new(s_value: code, location: location)]
-        when @scanner.scan(/\n/)
+        when @scanner.scan("\n")
           code += @scanner.matched
           newline
-        when @scanner.scan(/"/)
+        when @scanner.scan('"')
           matched = @scanner.scan_until(/"/)
           code += %Q("#{matched})
           @line += matched.count("\n")
-        when @scanner.scan(/'/)
+        when @scanner.scan("'")
           matched = @scanner.scan_until(/'/)
           code += %Q('#{matched})
         else
@@ -155,10 +155,10 @@ module Lrama
     def lex_comment
       while !@scanner.eos? do
         case
-        when @scanner.scan(/\n/)
+        when @scanner.scan("\n")
           @line += 1
           @head = @scanner.pos + 1
-        when @scanner.scan(/\*\//)
+        when @scanner.scan("*/")
           return
         else
           @scanner.getch
