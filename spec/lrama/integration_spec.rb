@@ -132,6 +132,29 @@ int main() {
     end
   end
 
+  it "prologue and epilogue are optional" do
+    test_grammar(<<~Grammar, "")
+  %code provides {
+  static int yylex(YYSTYPE *val, YYLTYPE *loc) { return 0; }
+  static int yyerror(YYLTYPE *loc, const char *str) { return 0; }
+
+  int main() {
+    return 0;
+  }
+  }
+
+  %union {
+    int val;
+  }
+
+  %%
+
+  program : { }
+          ;
+
+    Grammar
+  end
+
   describe "YYDEBUG, %lex-param, %parse-param, error_recovery option are enabled" do
     it "returns 9 for '(1+2)*3'" do
       # (1+2)*3 #=> 9
