@@ -9,7 +9,7 @@ module Lrama
       end
 
       def referred_by?(string)
-        [self.s_value, self.alias_name].include?(string)
+        [self.s_value, self.alias_name].compact.include?(string)
       end
 
       def ==(other)
