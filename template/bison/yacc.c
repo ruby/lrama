@@ -69,11 +69,13 @@
 
 
 <%# b4_user_pre_prologue -%>
+<%- if output.aux.prologue -%>
 /* First part of user prologue.  */
 #line <%= output.aux.prologue_first_lineno %> "<%= output.grammar_file_path %>"
 
 <%= output.aux.prologue %>
 #line [@oline@] [@ofile@]
+<%- end -%>
 
 <%# b4_cast_define -%>
 # ifndef YY_CAST
@@ -2043,7 +2045,9 @@ yyreturnlab:
 }
 
 <%# b4_percent_code_get([[epilogue]]) -%>
+<%- if output.aux.epilogue -%>
 #line <%= output.aux.epilogue_first_lineno - 1 %> "<%= output.grammar_file_path %>"
 
 <%= output.aux.epilogue -%>
+<%- end -%>
 
