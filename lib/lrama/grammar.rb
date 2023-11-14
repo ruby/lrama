@@ -156,6 +156,8 @@ module Lrama
       fill_symbol_printer
       fill_symbol_error_token
       @symbols.sort_by!(&:number)
+      compute_nullable
+      compute_first_set
     end
 
     # TODO: More validation methods
@@ -166,6 +168,61 @@ module Lrama
       validate_symbol_alias_name_uniqueness!
       validate_rule_lhs_is_nterm!
     end
+
+    def find_symbol_by_s_value(s_value)
+      @symbols.find do |sym|
+        sym.id.s_value == s_value
+      end
+    end
+
+    def find_symbol_by_s_value!(s_value)
+      find_symbol_by_s_value(s_value) || (raise "Symbol not found: #{s_value}")
+    end
+
+    def find_symbol_by_id(id)
+      @symbols.find do |sym|
+        sym.id == id || sym.alias_name == id.s_value
+      end
+    end
+
+    def find_symbol_by_id!(id)
+      find_symbol_by_id(id) || (raise "Symbol not found: #{id}")
+    end
+
+    def find_symbol_by_number!(number)
+      sym = @symbols[number]
+
+      raise "Symbol not found: #{number}" unless sym
+      raise "[BUG] Symbol number mismatch. #{number}, #{sym}" if sym.number != number
+
+      sym
+    end
+
+    def find_rules_by_symbol!(sym)
+      find_rules_by_symbol(sym) || (raise "Rules for #{sym} not found")
+    end
+
+    def find_rules_by_symbol(sym)
+      @sym_to_rules[sym.number]
+    end
+
+    def terms_count
+      terms.count
+    end
+
+    def terms
+      @terms ||= @symbols.select(&:term?)
+    end
+
+    def nterms_count
+      nterms.count
+    end
+
+    def nterms
+      @nterms ||= @symbols.select(&:nterm?)
+    end
+
+    private
 
     def compute_nullable
       @rules.each do |rule|
@@ -250,61 +307,6 @@ module Lrama
         end.to_set
       end
     end
-
-    def find_symbol_by_s_value(s_value)
-      @symbols.find do |sym|
-        sym.id.s_value == s_value
-      end
-    end
-
-    def find_symbol_by_s_value!(s_value)
-      find_symbol_by_s_value(s_value) || (raise "Symbol not found: #{s_value}")
-    end
-
-    def find_symbol_by_id(id)
-      @symbols.find do |sym|
-        sym.id == id || sym.alias_name == id.s_value
-      end
-    end
-
-    def find_symbol_by_id!(id)
-      find_symbol_by_id(id) || (raise "Symbol not found: #{id}")
-    end
-
-    def find_symbol_by_number!(number)
-      sym = @symbols[number]
-
-      raise "Symbol not found: #{number}" unless sym
-      raise "[BUG] Symbol number mismatch. #{number}, #{sym}" if sym.number != number
-
-      sym
-    end
-
-    def find_rules_by_symbol!(sym)
-      find_rules_by_symbol(sym) || (raise "Rules for #{sym} not found")
-    end
-
-    def find_rules_by_symbol(sym)
-      @sym_to_rules[sym.number]
-    end
-
-    def terms_count
-      terms.count
-    end
-
-    def terms
-      @terms ||= @symbols.select(&:term?)
-    end
-
-    def nterms_count
-      nterms.count
-    end
-
-    def nterms
-      @nterms ||= @symbols.select(&:nterm?)
-    end
-
-    private
 
     def setup_rules
       @rule_builders.each do |builder|
