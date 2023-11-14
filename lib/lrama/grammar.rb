@@ -374,7 +374,7 @@ module Lrama
       accept = find_symbol_by_s_value!("$accept")
       eof = find_symbol_by_number!(0)
       lineno = @rule_builders.first ? @rule_builders.first.line : 0
-      @rules << Rule.new(id: @rule_counter.increment, lhs: accept, rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
+      @rules << Rule.new(id: @rule_counter.increment, lhs: accept, _rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
 
       setup_rules
 
@@ -397,7 +397,7 @@ module Lrama
 
     # Collect symbols from rules
     def collect_symbols
-      @rules.flat_map(&:rhs).each do |s|
+      @rules.flat_map(&:_rhs).each do |s|
         case s
         when Lrama::Lexer::Token::Char
           add_term(id: s)
@@ -488,7 +488,7 @@ module Lrama
       @rules.each do |rule|
         rule.lhs = token_to_symbol(rule.lhs)
 
-        rule.rhs.map! do |t|
+        rule.rhs = rule._rhs.map do |t|
           token_to_symbol(t)
         end
       end

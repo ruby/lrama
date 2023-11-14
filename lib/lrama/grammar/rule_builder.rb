@@ -87,7 +87,7 @@ module Lrama
           @midrule_action_rules = []
         else
           rule = Rule.new(
-            id: @rule_counter.increment, lhs: lhs, rhs: tokens, token_code: user_code,
+            id: @rule_counter.increment, lhs: lhs, _rhs: tokens, token_code: user_code,
             position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
           )
           @rules = [rule]
