@@ -434,8 +434,6 @@ def parse
     reset_precs
     do_parse
     @grammar.prepare
-    @grammar.compute_nullable
-    @grammar.compute_first_set
     @grammar.validate!
     @grammar
   end
