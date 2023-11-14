@@ -116,7 +116,7 @@ int main() {
 
   %%
 
-  program : { (void)yynerrs; }
+  program : /* empty */
        | expr { printf("=> %d", $1); }
        ;
   expr : NUM
@@ -149,7 +149,7 @@ int main() {
 
   %%
 
-  program : { }
+  program : /* empty */
           ;
 
     Grammar
@@ -195,7 +195,7 @@ int main() {
 
   %%
 
-  program : { (void)yynerrs; }
+  program : /* empty */
        | expr { printf("=> %d", $1); }
        ;
   expr : NUM
@@ -290,8 +290,6 @@ int main() {
 
   line: expr
           {
-            (void)yynerrs;
-
             printf("line (%d): ", @expr.first_line);
             print_location(&@expr);
 
@@ -411,7 +409,7 @@ int main() {
 
   %%
 
-  program : { (void)yynerrs; }
+  program : /* empty */
        | expr { printf("=> %d", $1); }
        ;
 
@@ -457,7 +455,7 @@ int main() {
 
   %%
 
-  program : { (void)yynerrs; }
+  program : /* empty */
        | expr { printf("=> %d", $1); }
        ;
   expr : NUM
