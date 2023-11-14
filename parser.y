@@ -327,27 +327,16 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs IDENTIFIER parameterizing_suffix
-         {
-           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[2], location: @lexer.location, args: [val[1]])
-           builder = val[0]
-           builder.add_rhs(token)
-           result = builder
-         }
-     | rhs IDENTIFIER "(" symbol ")"
-         {
-           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: [val[3]])
-           builder = val[0]
-           builder.add_rhs(token)
-           result = builder
-         }
-     | rhs IDENTIFIER "(" symbol "," symbol ")"
-        {
-          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: [val[3], val[5]])
-          builder = val[0]
-          builder.add_rhs(token)
-          result = builder
-        }
+     | rhs parameterizing_rules
+          {
+            token = val[1]
+            builder = val[0]
+            builder.add_rhs(token)
+            token.args.each {|arg|
+              builder.add_rhs(arg)
+            }
+            result = builder
+          }
      | rhs "{"
          {
            if @prec_seen
@@ -376,6 +365,30 @@ rule
            builder.precedence_sym = sym
            result = builder
          }
+
+
+  parameterizing_rules: IDENTIFIER parameterizing_suffix
+                          {
+                            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1], location: @lexer.location, args: [val[0]])
+                            builder = val[0]
+                            builder.add_rhs(token)
+                            result = builder
+                          }
+                      | IDENTIFIER "(" parameterizing_rule ")"
+                          {
+                            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].s_value, location: @lexer.location, args: [val[2]])
+                            result = token
+                          }
+                      | IDENTIFIER "(" symbol "," parameterizing_rule ")"
+                          {
+                            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].s_value, location: @lexer.location, args: [val[2], val[4]])
+                            builder = val[0]
+                            builder.add_rhs(token)
+                            result = builder
+                          }
+
+  parameterizing_rule: parameterizing_rules
+                     | symbol
 
   parameterizing_suffix: "?"
                        | "+"
