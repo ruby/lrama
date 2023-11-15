@@ -1485,7 +1485,7 @@ YYLTYPE yylloc = yyloc_default;
 <%# b4_declare_parser_state_variables -%>
     /* Number of syntax errors so far.  */
     int yynerrs = 0;
-    (void) yynerrs; /* Silence compiler warning.  */
+    YY_USE (yynerrs); /* Silence compiler warning.  */
 
     yy_state_fast_t yystate = 0;
     /* Number of tokens to shift before error messages enabled.  */
