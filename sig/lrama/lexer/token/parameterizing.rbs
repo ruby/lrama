@@ -2,6 +2,8 @@ module Lrama
   class Lexer
     class Token
       class Parameterizing < Token
+        attr_accessor args: Array[Lrama::Lexer::Token]
+
         def option?: () -> bool
         def nonempty_list?: () -> bool
         def list?: () -> bool
