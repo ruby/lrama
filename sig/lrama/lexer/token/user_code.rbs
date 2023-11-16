@@ -2,7 +2,7 @@ module Lrama
   class Lexer
     class Token
       class UserCode < Token
-        self.@references: Array[Lrama::Grammar::Reference]
+        @references: Array[Lrama::Grammar::Reference]
 
         def references: () -> Array[Lrama::Grammar::Reference]
 
