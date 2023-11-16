@@ -6,6 +6,7 @@ target :lib do
 
   check "lib/lrama/bitmap.rb"
   check "lib/lrama/digraph.rb"
+  check "lib/lrama/grammar/code.rb"
   check "lib/lrama/grammar/counter.rb"
   check "lib/lrama/grammar/percent_code.rb"
   check "lib/lrama/grammar/precedence.rb"

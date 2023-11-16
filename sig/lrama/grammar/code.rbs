@@ -1,0 +1,22 @@
+module Lrama
+  class Grammar
+    class Code
+      extend Forwardable
+
+      attr_accessor type: untyped
+      attr_accessor token_code: untyped
+
+      # delegated
+      def s_value: -> String
+      def line: -> Integer
+      def column: -> untyped
+      def references: -> untyped
+
+      def translated_code: () -> String
+
+      private
+
+      def reference_to_c: (untyped ref) -> untyped
+    end
+  end
+end
