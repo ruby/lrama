@@ -12,6 +12,8 @@ module Lrama
       def column: -> untyped
       def references: -> untyped
 
+      def initialize: (?type: untyped, ?token_code: untyped) -> void
+
       def translated_code: () -> String
 
       private
