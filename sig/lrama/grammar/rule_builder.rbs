@@ -10,7 +10,7 @@ module Lrama
       @rule_counter: Counter
       @midrule_action_counter: Counter
       @position_in_original_rule_rhs: Integer?
-      @skip_preprocess_references: bool?
+      @skip_preprocess_references: bool
       @user_code: Lexer::Token::UserCode?
       @rule_builders_for_derived_rules: Array[RuleBuilder]
       @rules: Array[Rule]
