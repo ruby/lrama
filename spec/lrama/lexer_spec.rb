@@ -293,4 +293,9 @@ RSpec.describe Lrama::Lexer do
       expect { lexer.next_token }.to raise_error(ParseError, "Unexpected code: @invalid.")
     end
   end
+
+  it 'lex a line comment without newline' do
+    lexer = Lrama::Lexer.new("// foo")
+    expect(lexer.next_token).to be_nil
+  end
 end

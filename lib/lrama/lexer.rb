@@ -71,9 +71,8 @@ module Lrama
           # noop
         when @scanner.scan(/\/\*/)
           lex_comment
-        when @scanner.scan(/\/\//)
-          @scanner.scan_until(/\n/)
-          newline
+        when @scanner.scan(/\/\/.*(?<newline>\n)?/)
+          newline if @scanner[:newline]
         else
           break
         end
