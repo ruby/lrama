@@ -376,7 +376,7 @@ module Lrama
       accept = find_symbol_by_s_value!("$accept")
       eof = find_symbol_by_number!(0)
       lineno = @rule_builders.first ? @rule_builders.first.line : 0
-      @rules << Rule.new(id: @rule_counter.increment, lhs: accept, _rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
+      @rules << Rule.new(id: @rule_counter.increment, _lhs: accept.id, _rhs: [@rule_builders.first.lhs, eof.id], token_code: nil, lineno: lineno)
 
       setup_rules
 
@@ -404,8 +404,6 @@ module Lrama
         when Lrama::Lexer::Token::Char
           add_term(id: s)
         when Lrama::Lexer::Token
-          # skip
-        when Symbol
           # skip
         else
           raise "Unknown class: #{s}"
@@ -500,8 +498,6 @@ module Lrama
       case token
       when Lrama::Lexer::Token
         find_symbol_by_id!(token)
-      when Symbol
-        token
       else
         raise "Unknown class: #{token}"
       end
