@@ -4,7 +4,7 @@ module Lrama
       attr_accessor original_rule: Rule
 
       def initialize: (
-        ?id: untyped, ?lhs: untyped, ?_rhs: untyped, ?rhs: untyped,
+        ?id: untyped, ?_lhs: untyped, ?lhs: untyped, ?_rhs: untyped, ?rhs: untyped,
         ?token_code: untyped, ?position_in_original_rule_rhs: untyped, ?nullable: untyped,
         ?precedence_sym: untyped, ?lineno: untyped
       ) -> void

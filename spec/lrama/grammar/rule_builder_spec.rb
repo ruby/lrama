@@ -327,10 +327,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rules = rule_builder.midrule_action_rules
 
       expect(rules.count).to eq 2
-      expect(rules[0].lhs.s_value).to eq '@1'
+      expect(rules[0]._lhs.s_value).to eq '@1'
       expect(rules[0].token_code.s_value).to eq '$1'
       expect(rules[0].original_rule).to eq rule
-      expect(rules[1].lhs.s_value).to eq '$@2'
+      expect(rules[1]._lhs.s_value).to eq '$@2'
       expect(rules[1].token_code.s_value).to eq '$2 + $3'
       expect(rules[1].original_rule).to eq rule
     end

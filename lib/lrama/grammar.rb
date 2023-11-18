@@ -387,12 +387,12 @@ module Lrama
         end
 
         builder.rules.each do |rule|
-          add_nterm(id: rule.lhs)
+          add_nterm(id: rule._lhs)
           @rules << rule
         end
 
         builder.midrule_action_rules.each do |rule|
-          add_nterm(id: rule.lhs)
+          add_nterm(id: rule._lhs)
         end
       end
     end
@@ -488,7 +488,7 @@ module Lrama
 
     def replace_token_with_symbol
       @rules.each do |rule|
-        rule.lhs = token_to_symbol(rule.lhs)
+        rule.lhs = token_to_symbol(rule._lhs) if rule._lhs
 
         rule.rhs = rule._rhs.map do |t|
           token_to_symbol(t)
