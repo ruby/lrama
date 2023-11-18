@@ -373,8 +373,8 @@ module Lrama
     #
     def normalize_rules
       # 1. Add $accept rule to the top of rules
-      accept = find_symbol_by_s_value!("$accept")
-      eof = find_symbol_by_number!(0)
+      accept = @accept_symbol
+      eof = @eof_symbol
       lineno = @rule_builders.first ? @rule_builders.first.line : 0
       @rules << Rule.new(id: @rule_counter.increment, _lhs: accept.id, _rhs: [@rule_builders.first.lhs, eof.id], token_code: nil, lineno: lineno)
 
