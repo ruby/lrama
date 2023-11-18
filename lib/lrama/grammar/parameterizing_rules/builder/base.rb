@@ -3,9 +3,10 @@ module Lrama
     class ParameterizingRules
       class Builder
         class Base
-          def initialize(token, rule_counter, lhs, user_code, precedence_sym, line)
-            @args = token.args
+          def initialize(args, s_value, rule_counter, lhs, user_code, precedence_sym, line)
+            @args = args
             @token = @args.first
+            @s_value = s_value
             @rule_counter = rule_counter
             @lhs = lhs
             @user_code = user_code

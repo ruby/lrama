@@ -83,7 +83,7 @@ module Lrama
 
         # Expand Parameterizing rules
         if tokens.any? {|r| r.is_a?(Lrama::Lexer::Token::Parameterizing) }
-          @rules = @parameterizing_rules
+          @rules = parameterizing_rules
           @midrule_action_rules = []
         else
           rule = Rule.new(

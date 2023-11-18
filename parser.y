@@ -366,9 +366,7 @@ rule
   parameterizing_rules: IDENTIFIER parameterizing_suffix
                           {
                             token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1], location: @lexer.location, args: [val[0]])
-                            builder = val[0]
-                            builder.add_rhs(token)
-                            result = builder
+                            result = token
                           }
                       | IDENTIFIER "(" parameterizing_rule ")"
                           {
@@ -378,9 +376,7 @@ rule
                       | IDENTIFIER "(" symbol "," symbol ")"
                           {
                             token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[0].s_value, location: @lexer.location, args: [val[2], val[4]])
-                            builder = val[0]
-                            builder.add_rhs(token)
-                            result = builder
+                            result = token
                           }
 
   parameterizing_rule: parameterizing_rules

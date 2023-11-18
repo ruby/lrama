@@ -489,8 +489,8 @@ module Lrama
         rule.lhs = token_to_symbol(rule._lhs) if rule._lhs
 
         rule.rhs = rule._rhs.map do |t|
-          token_to_symbol(t)
-        end
+          token_to_symbol(t) unless t.is_a?(Lrama::Lexer::Token::Parameterizing)
+        end.compact
       end
     end
 

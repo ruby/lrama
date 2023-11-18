@@ -32,11 +32,14 @@ module Lrama
 
         def build
           validate_key!
+
           rules = inside_rules
-          unless rules.empty?
-            @token.args.first.s_value = rules.last.lhs.s_value
-          end
-          rules << RULES[@key].new(@token, @rule_counter, @lhs, @user_code, @precedence_sym, @line).build
+          s_value = if rules.empty?
+                      @token.args.first.s_value
+                    else
+                      rules.last._lhs.s_value
+                    end
+          rules << RULES[@key].new(@token.args, s_value, @rule_counter, @lhs, @user_code, @precedence_sym, @line).build
           rules.flatten
         end
 
