@@ -42,3 +42,7 @@ end
 def exe_path(file_name)
   File.expand_path("../../exe/#{file_name}", __FILE__)
 end
+
+def windows?
+  return /mswin|mingw|bccwin/ =~ RUBY_PLATFORM
+end
