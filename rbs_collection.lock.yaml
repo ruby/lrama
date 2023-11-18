@@ -2,7 +2,7 @@
 sources:
 - type: git
   name: ruby/gem_rbs_collection
-  revision: 2de2d4535caba275f3b8533684aab110d921f553
+  revision: 25286c51a19927f28623aee3cd36655f902399ba
   remote: https://github.com/ruby/gem_rbs_collection.git
   repo_dir: gems
 path: ".gem_rbs_collection"
@@ -12,6 +12,10 @@ gems:
   source:
     type: stdlib
 - name: fileutils
+  version: '0'
+  source:
+    type: stdlib
+- name: forwardable
   version: '0'
   source:
     type: stdlib

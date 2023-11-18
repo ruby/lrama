@@ -71,8 +71,8 @@ module Lrama
           # noop
         when @scanner.scan(/\/\*/)
           lex_comment
-        when @scanner.scan(/\/\/.*?\n/)
-          newline
+        when @scanner.scan(/\/\/.*(?<newline>\n)?/)
+          newline if @scanner[:newline]
         else
           break
         end
@@ -141,7 +141,11 @@ module Lrama
         when @scanner.scan(/'.*?'/)
           code += %Q(#{@scanner.matched})
         else
-          code += @scanner.getch
+          if @scanner.scan(/[^\"'\{\}\n#{@end_symbol}]+/)
+            code += @scanner.matched
+          else
+            code += @scanner.getch
+          end
         end
       end
       raise ParseError, "Unexpected code: #{code}."

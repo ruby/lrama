@@ -6,8 +6,12 @@ target :lib do
 
   check "lib/lrama/bitmap.rb"
   check "lib/lrama/digraph.rb"
+  check "lib/lrama/grammar/code.rb"
+  check "lib/lrama/grammar/code/printer_code.rb"
   check "lib/lrama/grammar/counter.rb"
   check "lib/lrama/grammar/percent_code.rb"
+  check "lib/lrama/grammar/precedence.rb"
+  check "lib/lrama/grammar/printer.rb"
   check "lib/lrama/grammar/reference.rb"
   check "lib/lrama/grammar/rule_builder.rb"
   check "lib/lrama/lexer/token/char.rb"

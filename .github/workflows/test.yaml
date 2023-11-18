@@ -20,6 +20,7 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
+      - run: flex --help
       - run: bundle install
       - run: bundle exec rspec
   test-windows:
@@ -34,6 +35,8 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
+      - run: choco install winflexbison
+      - run: win_flex --help
       - run: bundle install
       - run: bundle exec rspec
   check-misc:
@@ -65,6 +68,8 @@ jobs:
       fail-fast: false
       matrix:
         ruby: ['head']
+    env:
+      INSTALL_STEEP: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
