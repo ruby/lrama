@@ -96,8 +96,8 @@ module Lrama
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/'\\\\'|'\\b'|'\\t'|'\\f'|'\\r'|'\\n'|'\\v'|'\\13'/)
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/"/)
-        return [:STRING, %Q("#{@scanner.scan_until(/"/)})]
+      when @scanner.scan(/".*?"/)
+        return [:STRING, %Q(#{@scanner.matched})]
       when @scanner.scan(/\d+/)
         return [:INTEGER, Integer(@scanner.matched)]
       when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
@@ -135,13 +135,11 @@ module Lrama
         when @scanner.scan(/\n/)
           code += @scanner.matched
           newline
-        when @scanner.scan(/"/)
-          matched = @scanner.scan_until(/"/)
-          code += %Q("#{matched})
-          @line += matched.count("\n")
-        when @scanner.scan(/'/)
-          matched = @scanner.scan_until(/'/)
-          code += %Q('#{matched})
+        when @scanner.scan(/".*?"/)
+          code += %Q(#{@scanner.matched})
+          @line += @scanner.matched.count("\n")
+        when @scanner.scan(/'.*?'/)
+          code += %Q(#{@scanner.matched})
         else
           if @scanner.scan(/[^\"'\{\}\n#{@end_symbol}]+/)
             code += @scanner.matched
