@@ -1,5 +1,5 @@
 class Lrama::Parser
-  expect 1
+  expect 0
 
   token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
 
@@ -31,7 +31,6 @@ rule
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
-                   | "%require" STRING
                    | "%param" params
                    | "%lex-param" params
                        {
