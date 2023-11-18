@@ -373,10 +373,10 @@ module Lrama
     #
     def normalize_rules
       # 1. Add $accept rule to the top of rules
-      accept = find_symbol_by_s_value!("$accept")
-      eof = find_symbol_by_number!(0)
+      accept = @accept_symbol
+      eof = @eof_symbol
       lineno = @rule_builders.first ? @rule_builders.first.line : 0
-      @rules << Rule.new(id: @rule_counter.increment, lhs: accept, _rhs: [@rule_builders.first.lhs, eof], token_code: nil, lineno: lineno)
+      @rules << Rule.new(id: @rule_counter.increment, _lhs: accept.id, _rhs: [@rule_builders.first.lhs, eof.id], token_code: nil, lineno: lineno)
 
       setup_rules
 
@@ -387,12 +387,12 @@ module Lrama
         end
 
         builder.rules.each do |rule|
-          add_nterm(id: rule.lhs)
+          add_nterm(id: rule._lhs)
           @rules << rule
         end
 
         builder.midrule_action_rules.each do |rule|
-          add_nterm(id: rule.lhs)
+          add_nterm(id: rule._lhs)
         end
       end
     end
@@ -404,8 +404,6 @@ module Lrama
         when Lrama::Lexer::Token::Char
           add_term(id: s)
         when Lrama::Lexer::Token
-          # skip
-        when Symbol
           # skip
         else
           raise "Unknown class: #{s}"
@@ -488,7 +486,7 @@ module Lrama
 
     def replace_token_with_symbol
       @rules.each do |rule|
-        rule.lhs = token_to_symbol(rule.lhs)
+        rule.lhs = token_to_symbol(rule._lhs) if rule._lhs
 
         rule.rhs = rule._rhs.map do |t|
           token_to_symbol(t)
@@ -500,8 +498,6 @@ module Lrama
       case token
       when Lrama::Lexer::Token
         find_symbol_by_id!(token)
-      when Symbol
-        token
       else
         raise "Unknown class: #{token}"
       end
