@@ -33,7 +33,10 @@ RSpec.describe "integration" do
         status = wait_thr.value
       end
 
-      STDERR.puts err if debug && !err.empty?
+      if debug
+        STDERR.puts out
+        STDERR.puts err
+      end
       expect(status.success?).to be(true), status.to_s
       expect(out).to eq(expected)
     end
