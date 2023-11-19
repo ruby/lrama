@@ -1,5 +1,3 @@
-# TODO: spec for Lrama::Grammar::Code::RuleAction
-
 RSpec.describe Lrama::Grammar::Code do
   let(:token_class) { Lrama::Lexer::Token }
   let(:user_code_dollar_dollar) { token_class::UserCode.new(s_value: 'print($$);') }
