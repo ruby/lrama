@@ -25,14 +25,19 @@ RSpec.describe "integration" do
       exec_command("#{flex} --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
       exec_command("gcc -Wall -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
 
-      out = err = nil
+      out = err = status = nil
 
       Open3.popen3(obj_path, input) do |stdin, stdout, stderr, wait_thr|
         out = stdout.read
         err = stderr.read
+        status = wait_thr.value
       end
 
-      STDERR.puts err if debug && !err.empty?
+      if debug
+        STDERR.puts out
+        STDERR.puts err
+      end
+      expect(status.success?).to be(true), status.to_s
       expect(out).to eq(expected)
     end
 
