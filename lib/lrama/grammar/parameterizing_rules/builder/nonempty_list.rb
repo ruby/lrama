@@ -3,6 +3,14 @@ module Lrama
     class ParameterizingRules
       class Builder
         class NonemptyList < Base
+
+          # program: nonempty_list(number)
+          #
+          # =>
+          #
+          # program: nonempty_list_number
+          # nonempty_list_number: number
+          # nonempty_list_number: nonempty_list_number, number
           def build
             validate_argument_number!
 

@@ -3,6 +3,14 @@ module Lrama
     class ParameterizingRules
       class Builder
         class Option < Base
+
+          # program: option(number)
+          #
+          # =>
+          #
+          # program: option_number
+          # option_number: ε
+          # option_number: number
           def build
             validate_argument_number!
 
