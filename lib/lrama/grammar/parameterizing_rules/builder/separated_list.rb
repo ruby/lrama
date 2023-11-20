@@ -10,6 +10,14 @@ module Lrama
             @expected_argument_num = 2
           end
 
+          # program: separated_list(',', number)
+          #
+          # =>
+          #
+          # program: separated_list_number
+          # separated_list_number: ε
+          # separated_list_number: number
+          # separated_list_number: separated_list_number, ',', number
           def build
             validate_argument_number!
 

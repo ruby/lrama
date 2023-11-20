@@ -3,6 +3,14 @@ module Lrama
     class ParameterizingRules
       class Builder
         class List < Base
+
+          # program: list(number)
+          #
+          # =>
+          #
+          # program: list_number
+          # list_number: ε
+          # list_number: list_number, number
           def build
             validate_argument_number!
 
