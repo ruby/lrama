@@ -1,7 +1,7 @@
 class Lrama::Parser
   expect 0
 
-  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
+  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER AT_IDENTIFIER INTEGER STRING TAG
 
 rule
 
@@ -290,17 +290,19 @@ rule
              end
            }
 
-  rhs_list: rhs
+  rhs_list: attributes_opt rhs
               {
-                builder = val[0]
+                builder = val[1]
+                builder.attributes = val[0]
                 if !builder.line
                   builder.line = @lexer.line - 1
                 end
                 result = [builder]
               }
-          | rhs_list "|" rhs
+          | rhs_list "|" attributes_opt rhs
               {
-                builder = val[2]
+                builder = val[3]
+                builder.attributes = val[2]
                 if !builder.line
                   builder.line = @lexer.line - 1
                 end
@@ -382,6 +384,24 @@ rule
 
   named_ref_opt: # empty
                | '[' IDENTIFIER ']' { result = val[1].s_value }
+
+  attributes_opt: /* empty */ { result = [] }
+                | attributes { result = val[0] }
+
+  attributes: attribute { result = [val[0]] }
+            | attributes attribute { result = val[0].append(val[1]) }
+
+  attribute: '[' AT_IDENTIFIER args_opt ']' { result = Grammar::Attribute.new(val[1], val[2]) }
+
+  args_opt: # empty
+          | args
+
+  args: arg { result = [val[0]] }
+      | args arg { result = val[0].append(val[1]) }
+
+  arg: INTEGER
+     | IDENTIFIER
+     | CHARACTER
 
   id_colon: IDENT_COLON
 

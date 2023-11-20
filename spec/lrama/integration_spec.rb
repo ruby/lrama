@@ -111,6 +111,15 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "named references" do
+    it "changes precedences within {}" do
+      test_parser("attributes", "2 + 3 * 4", "=> 14")
+      test_parser("attributes", "2 * 3 + 4", "=> 10")
+      test_parser("attributes", "{ 2 + 3 * 4 }", "=> 20")
+      test_parser("attributes", "{ 2 * 3 + 4 }", "=> 14")
+    end
+  end
+
   describe "sample files" do
     let(:c_path)   { Dir.tmpdir + "/test.c" }
     let(:obj_path) { Dir.tmpdir + "/test" }

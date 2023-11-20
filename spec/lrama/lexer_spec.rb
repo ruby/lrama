@@ -282,7 +282,7 @@ RSpec.describe Lrama::Lexer do
     it do
       text = File.read(fixture_path("common/unexpected_token.y"))
       lexer = Lrama::Lexer.new(text)
-      expect { lexer.next_token }.to raise_error(ParseError, "Unexpected token: @invalid.")
+      expect { lexer.next_token }.to raise_error(ParseError, "Unexpected token: @@invalid.")
     end
   end
 

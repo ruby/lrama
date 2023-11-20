@@ -3,7 +3,7 @@ require 'lrama/grammar/parameterizing_rules/builder'
 module Lrama
   class Grammar
     class RuleBuilder
-      attr_accessor :lhs, :line
+      attr_accessor :lhs, :line, :attributes
       attr_reader :rhs, :user_code, :precedence_sym
 
       def initialize(rule_counter, midrule_action_counter, position_in_original_rule_rhs = nil, skip_preprocess_references: false)
@@ -87,7 +87,7 @@ module Lrama
           @midrule_action_rules = []
         else
           rule = Rule.new(
-            id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, token_code: user_code,
+            id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, token_code: user_code, attributes: attributes,
             position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
           )
           @rules = [rule]

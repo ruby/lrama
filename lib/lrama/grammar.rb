@@ -1,3 +1,4 @@
+require "lrama/grammar/attribute"
 require "lrama/grammar/auxiliary"
 require "lrama/grammar/code"
 require "lrama/grammar/counter"
@@ -155,6 +156,7 @@ module Lrama
       fill_nterm_type
       fill_symbol_printer
       fill_symbol_error_token
+      set_attributes_precedences
       @symbols.sort_by!(&:number)
       compute_nullable
       compute_first_set
@@ -490,6 +492,26 @@ module Lrama
 
         rule.rhs = rule._rhs.map do |t|
           token_to_symbol(t)
+        end
+      end
+    end
+
+    def set_attributes_precedences
+      @rules.each do |rule|
+        if rule.attributes && !rule.attributes.empty?
+          rule.attributes_precedences = rule.attributes.select do |attribute|
+            attribute.id.s_value == "@prec"
+          end.map do |attribute|
+            token = attribute.args[0]
+            prec_id = attribute.args[1]
+
+            sym = find_symbol_by_id!(token)
+            prec = terms.find do |term|
+              term.id == prec_id
+            end.precedence
+
+            [sym, prec]
+          end.to_h
         end
       end
     end
