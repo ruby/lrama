@@ -431,8 +431,11 @@ module Lrama
             next if !reduce.look_ahead.include?(sym)
 
             # Shift/Reduce conflict
-            shift_prec = sym.precedence
-            reduce_prec = reduce.item.rule.precedence
+            precedences = reduce.item.rule.attributes_precedences || {}
+            reduce_sym = reduce.item.rule.precedence_sym
+
+            shift_prec = precedences[sym] || sym.precedence
+            reduce_prec = reduce_sym && (precedences[reduce_sym] || reduce_sym.precedence)
 
             # Can resolve only when both have prec
             unless shift_prec && reduce_prec

@@ -100,6 +100,8 @@ module Lrama
         return [:STRING, %Q(#{@scanner.matched})]
       when @scanner.scan(/\d+/)
         return [:INTEGER, Integer(@scanner.matched)]
+      when @scanner.scan(/(@[a-zA-Z_.][-a-zA-Z0-9_.]*)/)
+        return [:AT_IDENTIFIER, Lrama::Lexer::Token::Ident.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
         token = Lrama::Lexer::Token::Ident.new(s_value: @scanner.matched, location: location)
         type =
