@@ -148,7 +148,7 @@ module Lrama
     def prepare
       normalize_rules
       collect_symbols
-      replace_token_with_symbol
+      set_lhs_and_rhs
       fill_symbol_number
       fill_default_precedence
       fill_sym_to_rules
@@ -484,7 +484,7 @@ module Lrama
       end
     end
 
-    def replace_token_with_symbol
+    def set_lhs_and_rhs
       @rules.each do |rule|
         rule.lhs = token_to_symbol(rule._lhs) if rule._lhs
 
