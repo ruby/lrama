@@ -81,6 +81,9 @@ int main(int argc, char *argv[]) {
         yy_scan_string(argv[1]);
     }
 
-    yyparse();
+    if (yyparse()) {
+        fprintf(stderr, "syntax error\n");
+        return 1;
+    }
     return 0;
 }
