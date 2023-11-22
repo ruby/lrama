@@ -10,7 +10,7 @@ module Lrama
           #
           # program: list_number
           # list_number: ε
-          # list_number: list_number, number
+          # list_number: list_number number
           def build
             validate_argument_number!
 

@@ -10,7 +10,7 @@ module Lrama
           #
           # program: nonempty_list_number
           # nonempty_list_number: number
-          # nonempty_list_number: nonempty_list_number, number
+          # nonempty_list_number: nonempty_list_number number
           def build
             validate_argument_number!
 
