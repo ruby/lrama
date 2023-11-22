@@ -735,6 +735,66 @@ RSpec.describe Lrama::Parser do
         ])
       end
 
+      it "option between rhs" do
+        path = "parameterizing_rules/between_rhs.y"
+        y = File.read(fixture_path(path))
+        grammar = Lrama::Parser.new(y, path).parse
+
+        expect(grammar.nterms.sort_by(&:number)).to eq([
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "option_bar"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: true),
+        ])
+
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("YYEOF"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+            lineno: 22,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("foo"),
+              grammar.find_symbol_by_s_value!("option_bar"),
+              grammar.find_symbol_by_s_value!("baz"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("baz"),
+            lineno: 22,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("option_bar"),
+            rhs: [],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 22,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("option_bar"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("bar")
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("bar"),
+            lineno: 22,
+          ),
+        ])
+      end
+
       it "nonempty list" do
         path = "parameterizing_rules/nonempty_list.y"
         y = File.read(fixture_path(path))

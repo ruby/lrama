@@ -391,6 +391,11 @@ module Lrama
           @rules << rule
         end
 
+        builder.parameterizing_rules.each do |rule|
+          add_nterm(id: rule._lhs)
+          @rules << rule
+        end
+
         builder.midrule_action_rules.each do |rule|
           add_nterm(id: rule._lhs)
         end
