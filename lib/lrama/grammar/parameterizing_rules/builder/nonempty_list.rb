@@ -2,6 +2,7 @@ module Lrama
   class Grammar
     class ParameterizingRules
       class Builder
+        # Builder for nonempty list of general parameterizing rules
         class NonemptyList < Base
 
           # program: nonempty_list(number)

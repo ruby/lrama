@@ -2,6 +2,7 @@ module Lrama
   class Grammar
     class ParameterizingRules
       class Builder
+        # Builder for separated list of general parameterizing rules
         class SeparatedNonemptyList < Base
           def initialize(token, rule_counter, lhs, user_code, precedence_sym, line)
             super

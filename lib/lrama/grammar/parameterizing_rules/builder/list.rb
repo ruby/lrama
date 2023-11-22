@@ -2,6 +2,7 @@ module Lrama
   class Grammar
     class ParameterizingRules
       class Builder
+        # Builder for list of general parameterizing rules
         class List < Base
 
           # program: list(number)
