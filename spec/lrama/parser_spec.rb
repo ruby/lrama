@@ -990,6 +990,7 @@ RSpec.describe Lrama::Parser do
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
           Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: true),
           Sym.new(id: T::Ident.new(s_value: "separated_list_number"), alias_name: nil, number:  7, tag: nil, term: false, token_id: 2, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_number"), alias_name: nil, number:  8, tag: nil, term: false, token_id: 3, nullable: false),
         ])
 
         expect(grammar.rules).to eq([
@@ -1029,7 +1030,18 @@ RSpec.describe Lrama::Parser do
             id: 3,
             lhs: grammar.find_symbol_by_s_value!("separated_list_number"),
             rhs: [
-              grammar.find_symbol_by_s_value!("number"),
+              grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: nil,
+            lineno: 20,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number")
             ],
             token_code: nil,
             nullable: false,
@@ -1037,10 +1049,10 @@ RSpec.describe Lrama::Parser do
             lineno: 20,
           ),
           Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("separated_list_number"),
+            id: 5,
+            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
             rhs: [
-              grammar.find_symbol_by_s_value!("separated_list_number"),
+              grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
               grammar.find_symbol_by_number!(4),
               grammar.find_symbol_by_s_value!("number"),
             ],
