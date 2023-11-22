@@ -16,7 +16,7 @@ module Lrama
           #
           # program: separated_nonempty_list_number
           # separated_nonempty_list_number: number
-          # separated_nonempty_list_number: separated_nonempty_list_number, ',', number
+          # separated_nonempty_list_number: separated_nonempty_list_number ',' number
           def build
             validate_argument_number!
 
