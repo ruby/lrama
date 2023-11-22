@@ -2,6 +2,7 @@ module Lrama
   class Grammar
     class ParameterizingRules
       class Builder
+        # Builder for option of general parameterizing rules
         class Option < Base
 
           # program: option(number)

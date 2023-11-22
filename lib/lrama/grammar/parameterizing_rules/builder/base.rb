@@ -2,6 +2,7 @@ module Lrama
   class Grammar
     class ParameterizingRules
       class Builder
+        # Base class for parameterizing rules builder
         class Base
           def initialize(token, rule_counter, lhs, user_code, precedence_sym, line)
             @args = token.args

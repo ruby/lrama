@@ -8,6 +8,7 @@ require 'lrama/grammar/parameterizing_rules/builder/separated_list'
 module Lrama
   class Grammar
     class ParameterizingRules
+      # Builder for parameterizing rules
       class Builder
         RULES = {
           option: Lrama::Grammar::ParameterizingRules::Builder::Option,
