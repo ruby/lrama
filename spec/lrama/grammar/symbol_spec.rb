@@ -53,4 +53,57 @@ RSpec.describe Lrama::Grammar::Symbol do
       end
     end
   end
+
+  describe "#comment" do
+    describe "symbol is accept_symbol" do
+      it "returns s_value" do
+        sym = described_class.new(id: token_class::Ident.new(s_value: "$accept"))
+        sym.accept_symbol = true
+
+        expect(sym.comment).to eq("$accept")
+      end
+    end
+
+    describe "symbol is eof_symbol" do
+      it "returns alias_name" do
+        sym = described_class.new(id: token_class::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0)
+        sym.number = 0
+        sym.eof_symbol = true
+
+        expect(sym.comment).to eq("\"end of file\"")
+      end
+    end
+
+    describe "symbol's token_id is less than 128" do
+      it "returns alias_name or s_value" do
+        sym1 = described_class.new(id: token_class::Char.new(s_value: "'\\\\'"), alias_name: "\"backslash\"", token_id: 92, number: 70, term: true)
+        sym2 = described_class.new(id: token_class::Char.new(s_value: "'.'"), alias_name: nil, token_id: 46, number: 69, term: true)
+        sym3 = described_class.new(id: token_class::Char.new(s_value: "'\\n'"), alias_name: nil, token_id: 10, number: 162, term: true)
+
+        expect(sym1.comment).to eq("\"backslash\"")
+        expect(sym2.comment).to eq("'.'")
+        expect(sym3.comment).to eq("'\\n'")
+      end
+    end
+
+    describe "symbol includes $ or @" do
+      it "returns s_value" do
+        sym1 = described_class.new(id: token_class::Ident.new(s_value: "$@1"), token_id: -1, number: 165, term: false)
+        sym2 = described_class.new(id: token_class::Ident.new(s_value: "@2"), token_id: -1, number: 166, term: false)
+
+        expect(sym1.comment).to eq("$@1")
+        expect(sym2.comment).to eq("@2")
+      end
+    end
+
+    describe "symbol's token_id is greater than 127" do
+      it "returns alias_name or s_value" do
+        sym1 = described_class.new(id: token_class::Ident.new(s_value: "keyword_class"), alias_name: "\"`class'\"", token_id: 258, number: 3, term: true)
+        sym2 = described_class.new(id: token_class::Ident.new(s_value: "top_compstmt"), token_id: 166, number: -1, term: false)
+
+        expect(sym1.comment).to eq("\"`class'\"")
+        expect(sym2.comment).to eq("top_compstmt")
+      end
+    end
+  end
 end
