@@ -333,20 +333,13 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs IDENTIFIER "(" symbol ")"
+     | rhs IDENTIFIER "(" parameterizing_args ")"
          {
-           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: [val[3]])
+           token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: val[3])
            builder = val[0]
            builder.add_rhs(token)
            result = builder
          }
-     | rhs IDENTIFIER "(" symbol "," symbol ")"
-        {
-          token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: [val[3], val[5]])
-          builder = val[0]
-          builder.add_rhs(token)
-          result = builder
-        }
      | rhs "{"
          {
            if @prec_seen
@@ -379,6 +372,9 @@ rule
   parameterizing_suffix: "?"
                        | "+"
                        | "*"
+
+  parameterizing_args: symbol { result = [val[0]] }
+                     | parameterizing_args ',' symbol { result = val[0].append(val[2]) }
 
   named_ref_opt: # empty
                | '[' IDENTIFIER ']' { result = val[1].s_value }
