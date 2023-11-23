@@ -39,6 +39,26 @@ jobs:
       - run: win_flex --help
       - run: bundle install
       - run: bundle exec rspec
+  test-memory:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['head']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - run: |
+          sudo apt-get update -q
+          sudo apt-get install --no-install-recommends -q -y valgrind
+      - run: valgrind --version
+      - run: bundle install
+      - run: bundle exec rspec spec/lrama/integration_spec.rb
+        env:
+          ENABEL_VALGRIND: 'true'
   check-misc:
     runs-on: ubuntu-20.04
     strategy:

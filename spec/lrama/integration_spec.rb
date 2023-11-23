@@ -20,14 +20,19 @@ RSpec.describe "integration" do
       obj_path = tmpdir + "/#{parser_name}"
 
       flex = windows? ? "win_flex" : "flex"
+      command = [obj_path, input]
+      if ENV['ENABEL_VALGRIND']
+        command = ["valgrind", "--leak-check=full", "--show-leak-kinds=all", "--leak-resolution=high"] + command
+        debug = true
+      end
 
       Lrama::Command.new.run(%W[-H#{parser_h_path} -o#{parser_c_path}] + lrama_command_args + %W[#{grammar_file_path}])
       exec_command("#{flex} --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
-      exec_command("gcc -Wall -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
+      exec_command("gcc -Wall -ggdb3 -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
 
       out = err = status = nil
 
-      Open3.popen3(obj_path, input) do |stdin, stdout, stderr, wait_thr|
+      Open3.popen3(*command) do |stdin, stdout, stderr, wait_thr|
         out = stdout.read
         err = stderr.read
         status = wait_thr.value
