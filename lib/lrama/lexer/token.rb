@@ -11,6 +11,7 @@ module Lrama
       attr_accessor :alias_name, :referred
 
       def initialize(s_value:, alias_name: nil, location: nil)
+        s_value.freeze
         @s_value = s_value
         @alias_name = alias_name
         @location = location
