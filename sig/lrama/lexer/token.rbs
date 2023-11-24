@@ -1,12 +1,12 @@
 module Lrama
   class Lexer
     class Token
-      attr_accessor s_value: String
+      attr_reader s_value: String
       attr_accessor alias_name: String
-      attr_accessor location: Location
+      attr_reader location: Location
       attr_accessor referred: bool
 
-      def initialize: (?s_value: String, ?alias_name: String, ?location: Location) -> void
+      def initialize: (s_value: String, ?alias_name: String, ?location: Location) -> void
 
       def to_s: () -> String
       def referred_by?: (String string) -> bool
