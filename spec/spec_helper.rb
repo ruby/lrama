@@ -18,6 +18,24 @@ end
 
 require "lrama"
 
+module RspecHelper
+  def fixture_path(file_name)
+    File.expand_path("../fixtures/#{file_name}", __FILE__)
+  end
+
+  def sample_path(file_name)
+    File.expand_path("../../sample/#{file_name}", __FILE__)
+  end
+
+  def exe_path(file_name)
+    File.expand_path("../../exe/#{file_name}", __FILE__)
+  end
+
+  def windows?
+    return /mswin|mingw|bccwin/ =~ RUBY_PLATFORM
+  end
+end
+
 RSpec.configure do |config|
   # Disable RSpec exposing methods globally on `Module` and `main`
   config.disable_monkey_patching!
@@ -26,23 +44,9 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.include(RspecHelper)
+
   # Allow to limit the run of the specs
   # NOTE: Please do not commit the filter option.
   # config.filter_run_when_matching :focus
-end
-
-def fixture_path(file_name)
-  File.expand_path("../fixtures/#{file_name}", __FILE__)
-end
-
-def sample_path(file_name)
-  File.expand_path("../../sample/#{file_name}", __FILE__)
-end
-
-def exe_path(file_name)
-  File.expand_path("../../exe/#{file_name}", __FILE__)
-end
-
-def windows?
-  return /mswin|mingw|bccwin/ =~ RUBY_PLATFORM
 end
