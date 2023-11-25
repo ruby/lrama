@@ -94,6 +94,7 @@ RSpec.describe Lrama::Grammar::Code do
     int rule4;
     int rule5;
     int rule6;
+    int rule7;
 }
 
 %token <i> keyword_class
@@ -107,6 +108,7 @@ RSpec.describe Lrama::Grammar::Code do
 %type <rule4> rule4
 %type <rule5> rule5
 %type <rule6> rule6
+%type <rule7> rule7
 
 %%
 
@@ -117,6 +119,7 @@ program: rule1
        | rule5
        | rule6
        | rule7
+       | rule8
        ;
 
 rule1: expr '+' expr { $$ = 0; }
@@ -137,7 +140,10 @@ rule5: expr '+' expr { $1 + $<integer>3; }
 rule6: expr '+' { $<integer>$ = $1; @$ = @1; } expr { $1 + $<integer>4; }
      ;
 
-rule7: expr { $$ = $1 } '+' expr { $3; }
+rule7: expr { $$ = $1 } '+' expr { $2; }
+     ;
+
+rule8: expr { $$ = $1 } '+' expr { $2; }
      ;
 
 %%
@@ -173,6 +179,7 @@ rule7: expr { $$ = $1 } '+' expr { $3; }
 
       context "midrule action exists" do
         it "uses index on the original rule (-1)" do
+          # midrule action in rule6
           code = grammar.rules.find {|r| r.lhs.id.s_value == "$@1" }
           expect(code.translated_code).to eq(" (yyval.integer) = (yyvsp[-1].expr); (yyloc) = (yylsp[-1]); ")
 
@@ -183,11 +190,21 @@ rule7: expr { $$ = $1 } '+' expr { $3; }
 
       context "can not resolve tag of references" do
         it "raises error" do
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "$@2" }
-          expect { code.translated_code }.to raise_error("Tag is not specified for '$$' in '$@2 -> ε'")
+          # midrule action in rule7
+          # rule7 has tag
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "@2" }
+          expect { code.translated_code }.to raise_error("Tag is not specified for '$$' in '@2 -> ε'")
 
           code = grammar.rules.find {|r| r.lhs.id.s_value == "rule7" }
-          expect { code.translated_code }.to raise_error("Tag is not specified for '$3' in 'rule7 -> expr, $@2, '+', expr'")
+          expect { code.translated_code }.to raise_error("Tag is not specified for '$2' in 'rule7 -> expr, @2, '+', expr'")
+
+          # midrule action in rule8
+          # rule8 has no tag
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "@3" }
+          expect { code.translated_code }.to raise_error("Tag is not specified for '$$' in '@3 -> ε'")
+
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule8" }
+          expect { code.translated_code }.to raise_error("Tag is not specified for '$2' in 'rule8 -> expr, @3, '+', expr'")
         end
       end
     end
