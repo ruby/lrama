@@ -4,7 +4,7 @@ RSpec.describe Lrama::Grammar::Symbol do
   describe "#enum_name" do
     describe "symbol is accept_symbol" do
       it "returns 'YYSYMBOL_YYACCEPT'" do
-        sym = described_class.new(id: token_class::Ident.new(s_value: "$accept"))
+        sym = described_class.new(id: token_class::Ident.new(s_value: "$accept"), term: false)
         sym.accept_symbol = true
 
         expect(sym.enum_name).to eq("YYSYMBOL_YYACCEPT")
@@ -13,7 +13,7 @@ RSpec.describe Lrama::Grammar::Symbol do
 
     describe "symbol is eof_symbol" do
       it "returns 'YYSYMBOL_YYEOF'" do
-        sym = described_class.new(id: token_class::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0)
+        sym = described_class.new(id: token_class::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0, term: true)
         sym.number = 0
         sym.eof_symbol = true
 
@@ -57,7 +57,7 @@ RSpec.describe Lrama::Grammar::Symbol do
   describe "#comment" do
     describe "symbol is accept_symbol" do
       it "returns s_value" do
-        sym = described_class.new(id: token_class::Ident.new(s_value: "$accept"))
+        sym = described_class.new(id: token_class::Ident.new(s_value: "$accept"), term: false)
         sym.accept_symbol = true
 
         expect(sym.comment).to eq("$accept")
@@ -66,7 +66,7 @@ RSpec.describe Lrama::Grammar::Symbol do
 
     describe "symbol is eof_symbol" do
       it "returns alias_name" do
-        sym = described_class.new(id: token_class::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0)
+        sym = described_class.new(id: token_class::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0, term: true)
         sym.number = 0
         sym.eof_symbol = true
 
