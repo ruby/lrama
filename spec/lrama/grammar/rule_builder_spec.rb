@@ -92,7 +92,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     describe "@user_code" do
       let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
-      let(:sym) { Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: "tPLUS")) }
+      let(:sym) { Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: "tPLUS"), term: true) }
 
       context "@user_code is not nil" do
         it "sets @user_code to be nil and add previous user_code to rhs" do
