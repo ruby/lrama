@@ -9,9 +9,9 @@ require "lrama/grammar/reference"
 require "lrama/grammar/rule"
 require "lrama/grammar/rule_builder"
 require "lrama/grammar/symbol"
+require "lrama/grammar/type"
 require "lrama/grammar/union"
 require "lrama/lexer"
-require "lrama/type"
 
 module Lrama
   # Grammar is the result of parsing an input grammar file
