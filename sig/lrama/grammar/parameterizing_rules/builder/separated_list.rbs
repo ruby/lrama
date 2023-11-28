@@ -3,7 +3,7 @@ module Lrama
     class ParameterizingRules
       class Builder
         class SeparatedList < Base
-          def initialize: (Lexer::Token token, Counter rule_counter, Lexer::Token lhs, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
+          def initialize: (Lexer::Token token, Counter rule_counter, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
           def build: -> Array[Rule]
         end
       end
