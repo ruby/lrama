@@ -1,7 +1,7 @@
 module Lrama
   class Grammar
     class Reference
-      attr_accessor type: Symbol
+      attr_accessor type: ::Symbol
       attr_accessor name: String
       attr_accessor index: Integer
       attr_accessor ex_tag: Lexer::Token?
@@ -10,7 +10,7 @@ module Lrama
       attr_accessor position_in_rhs: Integer?
 
       def initialize: (
-        type: Symbol, ?name: String, ?index: Integer, ?ex_tag: Lexer::Token?,
+        type: ::Symbol, ?name: String, ?index: Integer, ?ex_tag: Lexer::Token?,
         first_column: Integer, last_column: Integer,
         ?position_in_rhs: Integer?
       ) -> void

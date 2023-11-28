@@ -1,0 +1,37 @@
+module Lrama
+  class Grammar
+    class Symbol
+      attr_accessor id: Lexer::Token
+      attr_accessor alias_name: String
+      attr_accessor number: Integer
+      attr_accessor tag: Lexer::Token?
+      attr_accessor term: bool
+      attr_accessor token_id: Integer
+      attr_accessor nullable: bool
+      attr_accessor precedence: Precedence?
+      attr_accessor printer: Printer?
+      attr_accessor error_token: ErrorToken
+
+      attr_accessor first_set: Set[Array[Symbol]]
+      attr_accessor first_set_bitmap: Integer
+      attr_writer eof_symbol: Symbol
+      attr_writer error_symbol: Symbol
+      attr_writer undef_symbol: Symbol
+      attr_writer accept_symbol: Symbol
+
+      def initialize: (
+          id: Lexer::Token, alias_name: String?, number: Integer?, tag: Lexer::Token?,
+          term: bool, token_id: Integer?, nullable: bool?, precedence: Precedence?, printer: Printer?) -> void
+
+      def term?: () -> bool
+      def nterm?: () -> bool
+      def eof_symbol?: () -> bool
+      def error_symbol?: () -> bool
+      def undef_symbol?: () -> bool
+      def accept_symbol?: () -> bool
+      def display_name: () -> String
+      def enum_name: () -> String
+      def comment: () -> String
+    end
+  end
+end

@@ -54,6 +54,7 @@ module Lrama
       # name for yysymbol_kind_t
       #
       # See: b4_symbol_kind_base
+      # @type var name: String
       def enum_name
         case
         when accept_symbol?
