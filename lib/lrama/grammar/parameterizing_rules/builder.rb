@@ -21,10 +21,11 @@ module Lrama
           separated_list: Lrama::Grammar::ParameterizingRules::Builder::SeparatedList,
         }
 
-        def initialize(token, rule_counter, user_code, precedence_sym, line)
+        def initialize(token, rule_counter, lhs_tag, user_code, precedence_sym, line)
           @token = token
           @key = token.s_value.to_sym
           @rule_counter = rule_counter
+          @lhs_tag = lhs_tag
           @user_code = user_code
           @precedence_sym = precedence_sym
           @line = line
@@ -46,7 +47,7 @@ module Lrama
         def create_builder
           unless @builder
             validate_key!
-            @builder = RULES[@key].new(@token, @rule_counter, @user_code, @precedence_sym, @line)
+            @builder = RULES[@key].new(@token, @rule_counter, @lhs_tag, @user_code, @precedence_sym, @line)
           end
         end
 

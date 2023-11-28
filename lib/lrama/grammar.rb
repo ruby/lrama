@@ -392,7 +392,7 @@ module Lrama
         end
 
         builder.parameterizing_rules.each do |rule|
-          add_nterm(id: rule._lhs)
+          add_nterm(id: rule._lhs, tag: rule.lhs_tag)
           @rules << rule
         end
 

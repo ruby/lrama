@@ -2,7 +2,7 @@ module Lrama
   class Grammar
     class ParameterizingRules
       class Builder
-        def initialize: (Lexer::Token token, Counter rule_counter, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
+        def initialize: (Lexer::Token token, Counter rule_counter, untyped lhs_tag, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
         def build: () -> Array[Rule]
         def build_token: () -> Lrama::Lexer::Token
       end

@@ -795,6 +795,98 @@ RSpec.describe Lrama::Parser do
         ])
       end
 
+      it "option with tag" do
+        path = "parameterizing_rules/option_with_tag.y"
+        y = File.read(fixture_path(path))
+        grammar = Lrama::Parser.new(y, path).parse
+
+        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 7, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 2, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 9, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 4, nullable: true),
+        ])
+
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("YYEOF"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("option_number"),
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("option_number"),
+            rhs: [],
+            lhs_tag: T::Tag.new(s_value: "<i>"),
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("option_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number"),
+            ],
+            lhs_tag: T::Tag.new(s_value: "<i>"),
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("alias"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("option_number_alias"),
+            ],
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 5,
+            lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
+            rhs: [],
+            lhs_tag: T::Tag.new(s_value: "<i>"),
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 6,
+            lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number_alias"),
+            ],
+            lhs_tag: T::Tag.new(s_value: "<i>"),
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+            lineno: 24,
+          ),
+        ])
+      end
+
       it "nonempty list" do
         path = "parameterizing_rules/nonempty_list.y"
         y = File.read(fixture_path(path))
