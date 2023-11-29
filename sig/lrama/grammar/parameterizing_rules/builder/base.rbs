@@ -3,7 +3,7 @@ module Lrama
     class ParameterizingRules
       class Builder
         class Base
-          def initialize: (Lexer::Token::Parameterizing token, Counter rule_counter, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
+          def initialize: (Lexer::Token::Parameterizing token, Counter rule_counter, untyped lhs_tag, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
           def build: () -> Array[Rule]
 
           @args: Array[Lexer::Token]
