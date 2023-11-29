@@ -4,7 +4,6 @@ module Lrama
       class Builder
         class SeparatedList < Base
           def initialize: (Lexer::Token token, Counter rule_counter, untyped lhs_tag, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
-          def build: -> Array[Rule]
         end
       end
     end
