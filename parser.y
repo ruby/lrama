@@ -326,18 +326,22 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs IDENTIFIER parameterizing_suffix
+     | rhs IDENTIFIER parameterizing_suffix tag_opt
          {
            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[2], location: @lexer.location, args: [val[1]])
            builder = val[0]
            builder.add_rhs(token)
+           builder.lhs_tag = val[3]
+           builder.line = val[1].first_line
            result = builder
          }
-     | rhs IDENTIFIER "(" parameterizing_args ")"
+     | rhs IDENTIFIER "(" parameterizing_args ")" tag_opt
          {
            token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: val[3])
            builder = val[0]
            builder.add_rhs(token)
+           builder.lhs_tag = val[5]
+           builder.line = val[1].first_line
            result = builder
          }
      | rhs "{"
@@ -407,6 +411,9 @@ rule
                       | TAG
 
   string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
+
+  tag_opt: # empty
+         | TAG
 end
 
 ---- inner

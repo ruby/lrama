@@ -3,7 +3,7 @@ require 'lrama/grammar/parameterizing_rules/builder'
 module Lrama
   class Grammar
     class RuleBuilder
-      attr_accessor :lhs, :line
+      attr_accessor :lhs, :lhs_tag, :line
       attr_reader :rhs, :user_code, :precedence_sym
 
       def initialize(rule_counter, midrule_action_counter, position_in_original_rule_rhs = nil, skip_preprocess_references: false)
@@ -14,6 +14,7 @@ module Lrama
 
         @lhs = nil
         @rhs = []
+        @lhs_tag = nil
         @user_code = nil
         @precedence_sym = nil
         @line = nil
@@ -109,7 +110,7 @@ module Lrama
           when Lrama::Lexer::Token::Ident
             @replaced_rhs << token
           when Lrama::Lexer::Token::Parameterizing
-            parameterizing = ParameterizingRules::Builder.new(token, @rule_counter, user_code, precedence_sym, line)
+            parameterizing = ParameterizingRules::Builder.new(token, @rule_counter, @lhs_tag, user_code, precedence_sym, line)
             parameterizing.build.each do |r|
               @parameterizing_rules << r
             end

@@ -6,10 +6,11 @@ module Lrama
         class Base
           attr_reader :build_token
 
-          def initialize(token, rule_counter, user_code, precedence_sym, line)
+          def initialize(token, rule_counter, lhs_tag, user_code, precedence_sym, line)
             @args = token.args
             @token = @args.first
             @rule_counter = rule_counter
+            @lhs_tag = lhs_tag
             @user_code = user_code
             @precedence_sym = precedence_sym
             @line = line
