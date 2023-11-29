@@ -3,7 +3,6 @@ module Lrama
     class ParameterizingRules
       class Builder
         class List < Base
-          def build: -> Array[Rule]
         end
       end
     end
