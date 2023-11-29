@@ -18,6 +18,10 @@ module Lrama
             @build_token = nil
           end
 
+          def build
+            raise NotImplementedError
+          end
+
           private
 
           def validate_argument_number!

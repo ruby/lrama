@@ -1,0 +1,10 @@
+module Lrama
+  class Grammar
+    class ParameterizingRules
+      class Builder
+        class Option < Base
+        end
+      end
+    end
+  end
+end

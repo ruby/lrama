@@ -1,0 +1,10 @@
+module Lrama
+  class Grammar
+    class ParameterizingRules
+      class Builder
+        class NonemptyList < Base
+        end
+      end
+    end
+  end
+end
