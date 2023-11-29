@@ -35,7 +35,7 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - run: choco install winflexbison
+      - run: choco install winflexbison || choco install winflexbison
       - run: win_flex --help
       - run: bundle install
       - run: bundle exec rspec
