@@ -1814,10 +1814,10 @@ module_eval(<<'.,.,', 'parser.y', 356)
 
 module_eval(<<'.,.,', 'parser.y', 360)
   def _reduce_88(val, _values, result)
-               token = val[3]
-           token.alias_name = val[6]
+               user_code = val[3]
+           user_code.alias_name = val[6]
            builder = val[0]
-           builder.user_code = token
+           builder.user_code = user_code
            result = builder
 
     result
