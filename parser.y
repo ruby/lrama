@@ -358,10 +358,10 @@ rule
          }
        "}" named_ref_opt
          {
-           token = val[3]
-           token.alias_name = val[6]
+           user_code = val[3]
+           user_code.alias_name = val[6]
            builder = val[0]
-           builder.user_code = token
+           builder.user_code = user_code
            result = builder
          }
      | rhs "%prec" symbol
