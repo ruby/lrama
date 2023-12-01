@@ -107,6 +107,19 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "__LINE__ of each place" do
+    it "prints line number of each place" do
+      expected = <<~STR
+        line_pre_program: 31
+        line_1: 15
+        line_2: 55
+        line_post_program: 37
+      STR
+
+      test_parser("line_number", "1 + 2", expected)
+    end
+  end
+
   # TODO: Add test case for "(1+2"
   describe "error_recovery" do
     it "returns 101 for '(1+)'" do
