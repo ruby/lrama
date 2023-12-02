@@ -7,14 +7,15 @@ module Lrama
         @token: Lexer::Token::Parameterizing
         @key: Symbol
         @rule_counter: Counter
-        @lhs: Lexer::Token
+        @lhs_tag: untyped
         @user_code: Lexer::Token::UserCode?
         @precedence_sym: Lexer::Token?
         @line: Integer?
+        @builder: Grammar::ParameterizingRules::Builder::Base
 
         def initialize: (Lexer::Token token, Counter rule_counter, untyped lhs_tag, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
         def build: () -> Array[Rule]
-        def build_token: () -> Lrama::Lexer::Token
+        def build_token: () -> Lexer::Token
         def create_builder: () -> void
         def validate_key!: () -> void
       end
