@@ -47,8 +47,8 @@ module Lrama
               { \\
                 if (#{stack_prefix} + #{states_stack_size_name} - 1 <= #{stack_prefix}_p) \\
                   YYSTATE_STACK_INCREASE (#{stack_prefix}_a, #{stack_prefix}, #{stack_prefix}_p, #{states_stack_size_name}, "#{state_name}"); \\
-                YYDPRINTF ((stderr, "Push %s to #{state_name}\\n", #{state_name_macro} (value))); \\
-                *++#{stack_prefix}_p = value; \\
+                YYDPRINTF ((stderr, "Push %s to #{state_name}\\n", #{state_name_macro} (yyparser_state_ ## value))); \\
+                *++#{stack_prefix}_p = yyparser_state_ ## value; \\
               } \\
             while (0)
 
@@ -70,8 +70,8 @@ module Lrama
           # define YYSET_STATE_#{state_name.upcase}(value) \\
             do \\
               { \\
-                YYDPRINTF ((stderr, "Set %s to #{state_name}\\n", #{state_name_macro} (value))); \\
-                *#{stack_prefix}_p = value; \\
+                YYDPRINTF ((stderr, "Set %s to #{state_name}\\n", #{state_name_macro} (yyparser_state_ ## value))); \\
+                *#{stack_prefix}_p = yyparser_state_ ## value; \\
               } \\
             while (0)
 

@@ -60,8 +60,8 @@ RSpec.describe Lrama::Grammar::ParserState do
             { \\
               if (yyparser_state_in_rescue + yyparser_state_in_rescue_stacksize - 1 <= yyparser_state_in_rescue_p) \\
                 YYSTATE_STACK_INCREASE (yyparser_state_in_rescue_a, yyparser_state_in_rescue, yyparser_state_in_rescue_p, yyparser_state_in_rescue_stacksize, "in_rescue"); \\
-              YYDPRINTF ((stderr, "Push %s to in_rescue\\n", YY_STATE_IN_RESCUE_NAME (value))); \\
-              *++yyparser_state_in_rescue_p = value; \\
+              YYDPRINTF ((stderr, "Push %s to in_rescue\\n", YY_STATE_IN_RESCUE_NAME (yyparser_state_ ## value))); \\
+              *++yyparser_state_in_rescue_p = yyparser_state_ ## value; \\
             } \\
           while (0)
 
@@ -83,8 +83,8 @@ RSpec.describe Lrama::Grammar::ParserState do
         # define YYSET_STATE_IN_RESCUE(value) \\
           do \\
             { \\
-              YYDPRINTF ((stderr, "Set %s to in_rescue\\n", YY_STATE_IN_RESCUE_NAME (value))); \\
-              *yyparser_state_in_rescue_p = value; \\
+              YYDPRINTF ((stderr, "Set %s to in_rescue\\n", YY_STATE_IN_RESCUE_NAME (yyparser_state_ ## value))); \\
+              *yyparser_state_in_rescue_p = yyparser_state_ ## value; \\
             } \\
           while (0)
 
