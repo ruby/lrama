@@ -58,8 +58,8 @@ RSpec.describe Lrama::Grammar::ParserState do
         # define YYPUSH_STATE_IN_RESCUE(value) \\
           do \\
             { \\
-              if (yyparser_state_in_rescue + yyparser_state_in_rescue_stacksize - 1 <= yyparser_state_in_rescue_p) \\
-                YYSTATE_STACK_INCREASE (yyparser_state_in_rescue_a, yyparser_state_in_rescue, yyparser_state_in_rescue_p, yyparser_state_in_rescue_stacksize, "in_rescue"); \\
+              if (yyparser_state_in_rescue_b + yyparser_state_in_rescue_stacksize - 1 <= yyparser_state_in_rescue_p) \\
+                YYSTATE_STACK_INCREASE (yyparser_state_in_rescue_a, yyparser_state_in_rescue_b, yyparser_state_in_rescue_p, yyparser_state_in_rescue_stacksize, "in_rescue"); \\
               YYDPRINTF ((stderr, "Push %s to in_rescue\\n", YY_STATE_IN_RESCUE_NAME (yyparser_state_ ## value))); \\
               *++yyparser_state_in_rescue_p = yyparser_state_ ## value; \\
             } \\
@@ -69,7 +69,7 @@ RSpec.describe Lrama::Grammar::ParserState do
           do \\
             { \\
               YYDPRINTF ((stderr, "Pop in_rescue\\n")); \\
-              if (yyparser_state_in_rescue_p != yyparser_state_in_rescue) \\
+              if (yyparser_state_in_rescue_p != yyparser_state_in_rescue_b) \\
                 { \\
                   yyparser_state_in_rescue_p -= 1; \\
                 } \\
@@ -96,8 +96,8 @@ RSpec.describe Lrama::Grammar::ParserState do
   describe "#states_clean_up_stack" do
     it "returns states clean up codes" do
       expect(parser_state.states_clean_up_stack).to eq <<~CODE
-        if (yyparser_state_in_rescue != yyparser_state_in_rescue_a)
-          YYSTACK_FREE (yyparser_state_in_rescue);
+        if (yyparser_state_in_rescue_b != yyparser_state_in_rescue_a)
+          YYSTACK_FREE (yyparser_state_in_rescue_b);
       CODE
     end
   end
@@ -116,8 +116,8 @@ RSpec.describe Lrama::Grammar::ParserState do
 
         /* The parser state stack (yyparser_state_in_rescue): array, bottom, top.  */
         int yyparser_state_in_rescue_a[YYINITDEPTH];
-        int *yyparser_state_in_rescue = yyparser_state_in_rescue_a;
-        int *yyparser_state_in_rescue_p = yyparser_state_in_rescue;
+        int *yyparser_state_in_rescue_b = yyparser_state_in_rescue_a;
+        int *yyparser_state_in_rescue_p = yyparser_state_in_rescue_b;
       STACKS
     end
   end

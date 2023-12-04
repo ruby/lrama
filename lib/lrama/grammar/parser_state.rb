@@ -45,8 +45,8 @@ module Lrama
           # define YYPUSH_STATE_#{state_name.upcase}(value) \\
             do \\
               { \\
-                if (#{stack_prefix} + #{states_stack_size_name} - 1 <= #{stack_prefix}_p) \\
-                  YYSTATE_STACK_INCREASE (#{stack_prefix}_a, #{stack_prefix}, #{stack_prefix}_p, #{states_stack_size_name}, "#{state_name}"); \\
+                if (#{stack_prefix}_b + #{states_stack_size_name} - 1 <= #{stack_prefix}_p) \\
+                  YYSTATE_STACK_INCREASE (#{stack_prefix}_a, #{stack_prefix}_b, #{stack_prefix}_p, #{states_stack_size_name}, "#{state_name}"); \\
                 YYDPRINTF ((stderr, "Push %s to #{state_name}\\n", #{state_name_macro} (yyparser_state_ ## value))); \\
                 *++#{stack_prefix}_p = yyparser_state_ ## value; \\
               } \\
@@ -56,7 +56,7 @@ module Lrama
             do \\
               { \\
                 YYDPRINTF ((stderr, "Pop #{state_name}\\n")); \\
-                if (#{stack_prefix}_p != #{stack_prefix}) \\
+                if (#{stack_prefix}_p != #{stack_prefix}_b) \\
                   { \\
                     #{stack_prefix}_p -= 1; \\
                   } \\
@@ -81,8 +81,8 @@ module Lrama
 
       def states_clean_up_stack
         <<~CODE
-          if (#{stack_prefix} != #{stack_prefix}_a)
-            YYSTACK_FREE (#{stack_prefix});
+          if (#{stack_prefix}_b != #{stack_prefix}_a)
+            YYSTACK_FREE (#{stack_prefix}_b);
         CODE
       end
 
@@ -97,8 +97,8 @@ module Lrama
 
           /* The parser state stack (#{stack_prefix}): array, bottom, top.  */
           int #{stack_prefix}_a[YYINITDEPTH];
-          int *#{stack_prefix} = #{stack_prefix}_a;
-          int *#{stack_prefix}_p = #{stack_prefix};
+          int *#{stack_prefix}_b = #{stack_prefix}_a;
+          int *#{stack_prefix}_p = #{stack_prefix}_b;
         STACKS
       end
 
