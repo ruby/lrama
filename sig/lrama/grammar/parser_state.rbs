@@ -19,6 +19,9 @@ module Lrama
       def int_to_name: () -> Array[String]
       def enum_name_table_name: () -> String
       def stack_prefix: () -> String
+
+      private
+      def enum_numbers:() -> Array[String]
     end
   end
 end
