@@ -122,7 +122,7 @@ jobs:
       - run: mkdir -p tool/lrama
         working-directory: ../ruby
       - name: Copy Lrama to ruby/tool
-        run: cp -r LEGAL.md MIT exe lib template ../ruby/tool/lrama
+        run: cp -r LEGAL.md NEWS.md MIT exe lib template ../ruby/tool/lrama
         working-directory:
       - run: tree tool/lrama
         working-directory: ../ruby

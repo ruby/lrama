@@ -138,7 +138,7 @@ $ stackprof --d3-flamegraph tmp/stackprof-cpu-myapp.dump > tmp/flamegraph.html
 
 1. Update `Lrama::VERSION`
 2. Release as a gem by `rake release`
-3. Update Lrama in ruby/ruby by `cp -r LEGAL.md MIT exe lib template ruby/tool/lrama`
+3. Update Lrama in ruby/ruby by `cp -r LEGAL.md NEWS.md MIT exe lib template ruby/tool/lrama`
 4. Create new release on [GitHub](https://github.com/ruby/lrama/releases)
 
 ## License
