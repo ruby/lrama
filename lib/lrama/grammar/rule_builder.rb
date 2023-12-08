@@ -51,9 +51,9 @@ module Lrama
         freeze_rhs
       end
 
-      def setup_rules
+      def setup_rules(parameterizing_resolver)
         preprocess_references unless @skip_preprocess_references
-        process_rhs
+        process_rhs(parameterizing_resolver)
         build_rules
       end
 
@@ -97,7 +97,7 @@ module Lrama
 
       # rhs is a mixture of variety type of tokens like `Ident`, `Parameterizing`, `UserCode` and so on.
       # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
-      def process_rhs
+      def process_rhs(parameterizing_resolver)
         return if @replaced_rhs
 
         @replaced_rhs = []
@@ -110,11 +110,16 @@ module Lrama
           when Lrama::Lexer::Token::Ident
             @replaced_rhs << token
           when Lrama::Lexer::Token::Parameterizing
-            parameterizing = ParameterizingRules::Builder.new(token, @rule_counter, @lhs_tag, user_code, precedence_sym, line)
-            parameterizing.build.each do |r|
-              @parameterizing_rules << r
+            if parameterizing_resolver.defined?(token.s_value)
+              parameterizing_resolver.build_rules(token, @rule_counter, @lhs_tag, user_code, precedence_sym, line)
+              @parameterizing_rules = @parameterizing_rules + parameterizing_resolver.rules
+              @replaced_rhs = @replaced_rhs + parameterizing_resolver.tokens
+            else
+              # TODO: Delete when the standard library will defined as a grammar file.
+              parameterizing = ParameterizingRules::Builder.new(token, @rule_counter, @lhs_tag, user_code, precedence_sym, line)
+              @parameterizing_rules = @parameterizing_rules + parameterizing.build
+              @replaced_rhs << parameterizing.build_token
             end
-            @replaced_rhs << parameterizing.build_token
           when Lrama::Lexer::Token::UserCode
             prefix = token.referred ? "@" : "$@"
             new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
@@ -124,7 +129,7 @@ module Lrama
             rule_builder.lhs = new_token
             rule_builder.user_code = token
             rule_builder.complete_input
-            rule_builder.setup_rules
+            rule_builder.setup_rules(parameterizing_resolver)
 
             @rule_builders_for_derived_rules << rule_builder
           else

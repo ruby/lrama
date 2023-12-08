@@ -8,6 +8,9 @@ require "lrama/grammar/printer"
 require "lrama/grammar/reference"
 require "lrama/grammar/rule"
 require "lrama/grammar/rule_builder"
+require "lrama/grammar/parameterizing_rule_builder"
+require "lrama/grammar/parameterizing_rule_resolver"
+require "lrama/grammar/parameterizing_rule_rhs_builder"
 require "lrama/grammar/symbol"
 require "lrama/grammar/type"
 require "lrama/grammar/union"
@@ -36,6 +39,7 @@ module Lrama
       @rule_builders = []
       @rules = []
       @sym_to_rules = {}
+      @parameterizing_resolver = ParameterizingRuleResolver.new
       @empty_symbol = nil
       @eof_symbol = nil
       @error_symbol = nil
@@ -127,6 +131,10 @@ module Lrama
 
     def add_rule_builder(builder)
       @rule_builders << builder
+    end
+
+    def add_parameterizing_rule_builder(builder)
+      @parameterizing_resolver.add_parameterizing_rule_builder(builder)
     end
 
     def prologue_first_lineno=(prologue_first_lineno)
@@ -310,7 +318,7 @@ module Lrama
 
     def setup_rules
       @rule_builders.each do |builder|
-        builder.setup_rules
+        builder.setup_rules(@parameterizing_resolver)
       end
     end
 
@@ -399,6 +407,10 @@ module Lrama
         builder.midrule_action_rules.each do |rule|
           add_nterm(id: rule._lhs)
         end
+      end
+
+      if @parameterizing_resolver.term
+        add_term(id: @parameterizing_resolver.term)
       end
     end
 

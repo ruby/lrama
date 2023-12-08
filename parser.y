@@ -29,6 +29,7 @@ rule
                     | bison_declarations bison_declaration
 
   bison_declaration: grammar_declaration
+                   | rule_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
                    | "%param" params
@@ -201,6 +202,73 @@ rule
                         | token_declaration_list token_declaration { result = val[0].append(val[1]) }
 
   token_declaration: id int_opt alias { result = val }
+
+  rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
+                      {
+                        builder = Grammar::ParameterizingRuleBuilder.new(val[1].s_value, val[3], val[6])
+                        @grammar.add_parameterizing_rule_builder(builder)
+                      }
+
+  rule_args: IDENTIFIER { result = [val[0]] }
+           | rule_args "," IDENTIFIER { result = val[0].append(val[2]) }
+
+  rule_rhs_list: rule_rhs
+                {
+                  builder = val[0]
+                  result = [builder]
+                }
+          | rule_rhs_list "|" rule_rhs
+                {
+                  builder = val[2]
+                  result = val[0].append(builder)
+                }
+
+  rule_rhs: /* empty */
+            {
+              reset_precs
+              result = Grammar::ParameterizingRuleRhsBuilder.new
+            }
+          | "%empty"
+            {
+              reset_precs
+              result = Grammar::ParameterizingRuleRhsBuilder.new
+            }
+          | rule_rhs symbol named_ref_opt
+            {
+              token = val[1]
+              token.alias_name = val[2]
+              builder = val[0]
+              builder.symbol = token
+              result = builder
+            }
+          | rule_rhs "{"
+            {
+              if @prec_seen
+                on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
+                @code_after_prec = true
+              end
+              begin_c_declaration("}")
+            }
+          C_DECLARATION
+            {
+              end_c_declaration
+            }
+          "}" named_ref_opt
+            {
+              user_code = val[3]
+              user_code.alias_name = val[6]
+              builder = val[0]
+              builder.user_code = user_code
+              result = builder
+            }
+          | rule_rhs "%prec" symbol
+            {
+              sym = @grammar.find_symbol_by_id!(val[2])
+              @prec_seen = true
+              builder = val[0]
+              builder.precedence_sym = sym
+              result = builder
+            }
 
   int_opt: # empty
          | INTEGER

@@ -1,0 +1,21 @@
+module Lrama
+  class Grammar
+    class ParameterizingRuleBuilder
+      attr_reader name: String
+      attr_reader args: Array[Lexer::Token]
+      attr_reader rhs: Array[Grammar::ParameterizingRuleRhsBuilder]
+      attr_reader term: Lexer::Token?
+
+      @required_args_count: Integer
+
+      def initialize: (String name, Array[Lexer::Token] args, Array[Grammar::ParameterizingRuleRhsBuilder]) -> void
+      def build_rules: (Lexer::Token::Parameterizing token, Lexer::Token build_token, Counter rule_counter, untyped lhs_tag, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> Array[Rule]
+      def build_token: (Lexer::Token::Parameterizing token) -> Lexer::Token
+
+      private
+
+      def validate_argument_number!: (Lexer::Token::Parameterizing token) -> void
+      def rhs_term: (Lexer::Token::Parameterizing token, Grammar::ParameterizingRuleRhsBuilder rh) -> Lexer::Token?
+    end
+  end
+end
