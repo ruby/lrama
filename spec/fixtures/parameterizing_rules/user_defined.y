@@ -16,6 +16,10 @@ static int yyerror(YYLTYPE *loc, const char *str);
                        | X
                        ;
 
+%rule unused_define(X): /* empty */
+                      | X
+                      ;
+
 %%
 
 program         : defined_option(number) <i>

@@ -19,12 +19,13 @@ module Lrama
       end
 
       def build_rules(token, rule_counter, lhs_tag, user_code, precedence_sym, line)
-        @parameterizing_rule_builders.each do |builder|
-          build_token = builder.build_token(token)
-          @rules = @rules + builder.build_rules(token, build_token, rule_counter, lhs_tag, user_code, precedence_sym, line)
-          @tokens << build_token
-          @term = builder.term
-        end
+        builder = @parameterizing_rule_builders.select { |b| b.name == token.s_value }.last
+        raise "Unknown parameterizing rule #{token.s_value} at line #{token.line}" unless builder
+
+        build_token = builder.build_token(token)
+        @rules = @rules + builder.build_rules(token, build_token, rule_counter, lhs_tag, user_code, precedence_sym, line)
+        @tokens << build_token
+        @term = builder.term
       end
     end
   end
