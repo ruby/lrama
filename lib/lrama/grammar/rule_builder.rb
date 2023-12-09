@@ -111,7 +111,7 @@ module Lrama
             @replaced_rhs << token
           when Lrama::Lexer::Token::Parameterizing
             if parameterizing_resolver.defined?(token.s_value)
-              parameterizing_resolver.build_rules(token, @rule_counter, @lhs_tag, user_code, precedence_sym, line)
+              parameterizing_resolver.build_rules(token, @rule_counter, @lhs_tag, line)
               @parameterizing_rules = @parameterizing_rules + parameterizing_resolver.rules
               @replaced_rhs = @replaced_rhs + parameterizing_resolver.tokens
             else

@@ -10,7 +10,7 @@ module Lrama
       def initialize: () -> void
       def add_parameterizing_rule_builder: (Grammar::ParameterizingRuleBuilder builder) -> void
       def defined?: (String) -> bool
-      def build_rules: (Lexer::Token::Parameterizing token, Counter rule_counter, untyped lhs_tag, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
+      def build_rules: (Lexer::Token::Parameterizing token, Counter rule_counter, untyped lhs_tag, Integer? line) -> void
     end
   end
 end

@@ -11,7 +11,7 @@ module Lrama
         @required_args_count = args.count
       end
 
-      def build_rules(token, build_token, rule_counter, lhs_tag, user_code, precedence_sym, line)
+      def build_rules(token, build_token, rule_counter, lhs_tag, line)
         validate_argument_number!(token)
         rules = []
         @rhs.each do |rhs|
