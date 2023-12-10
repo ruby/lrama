@@ -69,7 +69,7 @@ rule
                        {
                          @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[3])
                        }
-                   | "%parser-state" IDENTIFIER "(" identifier_list ")"
+                   | "%parser-state" IDENTIFIER "{" identifier_list "}"
                        {
                          @grammar.add_parser_state(val[1], val[3])
                        }

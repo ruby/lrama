@@ -17,9 +17,9 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %expect 0
 
-%parser-state in_rescue (before_rescue, after_rescue, after_else, after_ensure)
-%parser-state in_def (in_def, not_in_def)
-%parser-state in_class (in_class, not_in_class)
+%parser-state in_rescue { before_rescue, after_rescue, after_else, after_ensure }
+%parser-state in_def { in_def, not_in_def }
+%parser-state in_class { in_class, not_in_class }
 
 %token <i> keyword_begin keyword_end keyword_rescue keyword_else keyword_ensure keyword_class keyword_def
 %token <i> NUM
