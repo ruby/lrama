@@ -10,18 +10,14 @@ module Lrama
         @required_args_count = args.count
       end
 
-      def build_rules(token, build_token, rule_counter, lhs_tag, line)
+      def build_rules(token, rule_counter, lhs_tag, line)
         validate_argument_number!(token)
+        lhs = lhs_token(token)
         rules = []
         @rhs.each do |rhs|
-          rules << Rule.new(id: rule_counter.increment, _lhs: build_token, _rhs: [rhs_term(token, rhs)].compact, lhs_tag: lhs_tag, token_code: rhs.user_code, precedence_sym: rhs.precedence_sym, lineno: line)
+          rules << Rule.new(id: rule_counter.increment, _lhs: lhs, _rhs: [rhs_token(token, rhs)].compact, lhs_tag: lhs_tag, token_code: rhs.user_code, precedence_sym: rhs.precedence_sym, lineno: line)
         end
-        rules
-      end
-
-      def build_token(token)
-        validate_argument_number!(token)
-        Lrama::Lexer::Token::Ident.new(s_value: "#{name}_#{token.args.first&.s_value}")
+        ParameterizingRule.new(rules: rules, token: lhs)
       end
 
       private
@@ -32,7 +28,11 @@ module Lrama
         end
       end
 
-      def rhs_term(token, rhs)
+      def lhs_token(token)
+        Lrama::Lexer::Token::Ident.new(s_value: "#{name}_#{token.args.first&.s_value}")
+      end
+
+      def rhs_token(token, rhs)
         return nil unless rhs.symbol
         term = rhs.symbol
         @args.each_with_index do |arg, index|

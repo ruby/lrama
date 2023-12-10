@@ -111,9 +111,9 @@ module Lrama
             @replaced_rhs << token
           when Lrama::Lexer::Token::Parameterizing
             if parameterizing_resolver.defined?(token.s_value)
-              parameterizing_resolver.build_rules(token, @rule_counter, @lhs_tag, line)
-              @parameterizing_rules = @parameterizing_rules + parameterizing_resolver.rules
-              @replaced_rhs = @replaced_rhs + parameterizing_resolver.tokens
+              parameterizing = parameterizing_resolver.build_rules(token, @rule_counter, @lhs_tag, line)
+              @parameterizing_rules = @parameterizing_rules + parameterizing.rules
+              @replaced_rhs << parameterizing.token
             else
               # TODO: Delete when the standard library will defined as a grammar file.
               parameterizing = ParameterizingRules::Builder.new(token, @rule_counter, @lhs_tag, user_code, precedence_sym, line)

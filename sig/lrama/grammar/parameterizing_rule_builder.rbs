@@ -7,14 +7,14 @@ module Lrama
 
       @required_args_count: Integer
 
-      def initialize: (String name, Array[Lexer::Token] args, Array[Grammar::ParameterizingRuleRhsBuilder]) -> void
-      def build_rules: (Lexer::Token::Parameterizing token, Lexer::Token build_token, Counter rule_counter, untyped lhs_tag, Integer? line) -> Array[Rule]
-      def build_token: (Lexer::Token::Parameterizing token) -> Lexer::Token
+      def initialize: (String name, Array[Lexer::Token] args, Array[Grammar::ParameterizingRuleRhsBuilder] rhs) -> void
+      def build_rules: (Lexer::Token::Parameterizing token, Counter rule_counter, untyped lhs_tag, Integer? line) -> Grammar::ParameterizingRule
 
       private
 
       def validate_argument_number!: (Lexer::Token::Parameterizing token) -> void
-      def rhs_term: (Lexer::Token::Parameterizing token, Grammar::ParameterizingRuleRhsBuilder rh) -> Lexer::Token?
+      def lhs_token: (Lexer::Token::Parameterizing token) -> Lexer::Token
+      def rhs_token: (Lexer::Token::Parameterizing token, Grammar::ParameterizingRuleRhsBuilder rhs) -> Lexer::Token?
     end
   end
 end

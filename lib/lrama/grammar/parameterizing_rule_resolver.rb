@@ -1,11 +1,7 @@
 module Lrama
   class Grammar
     class ParameterizingRuleResolver
-      attr_reader :rules, :tokens
-
       def initialize
-        @rules = []
-        @tokens = []
         @parameterizing_rule_builders = []
       end
 
@@ -21,9 +17,7 @@ module Lrama
         builder = @parameterizing_rule_builders.select { |b| b.name == token.s_value }.last
         raise "Unknown parameterizing rule #{token.s_value} at line #{token.line}" unless builder
 
-        build_token = builder.build_token(token)
-        @rules = @rules + builder.build_rules(token, build_token, rule_counter, lhs_tag, line)
-        @tokens << build_token
+        builder.build_rules(token, rule_counter, lhs_tag, line)
       end
     end
   end
