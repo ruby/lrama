@@ -29,7 +29,7 @@ module Lrama
       end
 
       def lhs_token(token)
-        Lrama::Lexer::Token::Ident.new(s_value: "#{name}_#{token.args.first&.s_value}")
+        Lrama::Lexer::Token::Ident.new(s_value: "#{name}_#{token.args.map(&:s_value).join('_')}")
       end
 
       def rhs_token(token, rhs)
