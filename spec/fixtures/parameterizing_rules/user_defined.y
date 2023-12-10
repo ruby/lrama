@@ -12,6 +12,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
     int i;
 }
 
+%token <i> number
+
 %rule defined_option(X): /* empty */
                        | X
                        ;
