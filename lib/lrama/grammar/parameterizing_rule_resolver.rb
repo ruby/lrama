@@ -1,12 +1,11 @@
 module Lrama
   class Grammar
     class ParameterizingRuleResolver
-      attr_reader :rules, :tokens, :term
+      attr_reader :rules, :tokens
 
       def initialize
         @rules = []
         @tokens = []
-        @term = nil
         @parameterizing_rule_builders = []
       end
 
@@ -25,7 +24,6 @@ module Lrama
         build_token = builder.build_token(token)
         @rules = @rules + builder.build_rules(token, build_token, rule_counter, lhs_tag, line)
         @tokens << build_token
-        @term = builder.term
       end
     end
   end

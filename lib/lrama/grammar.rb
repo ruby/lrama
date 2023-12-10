@@ -408,10 +408,6 @@ module Lrama
           add_nterm(id: rule._lhs)
         end
       end
-
-      if @parameterizing_resolver.term
-        add_term(id: @parameterizing_resolver.term)
-      end
     end
 
     # Collect symbols from rules

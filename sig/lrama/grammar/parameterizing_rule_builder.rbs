@@ -4,7 +4,6 @@ module Lrama
       attr_reader name: String
       attr_reader args: Array[Lexer::Token]
       attr_reader rhs: Array[Grammar::ParameterizingRuleRhsBuilder]
-      attr_reader term: Lexer::Token?
 
       @required_args_count: Integer
 

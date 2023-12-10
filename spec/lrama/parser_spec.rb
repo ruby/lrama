@@ -1238,7 +1238,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 25,
+            lineno: 27,
           ),
           Rule.new(
             id: 1,
@@ -1249,7 +1249,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 25,
+            lineno: 27,
           ),
           Rule.new(
             id: 2,
@@ -1259,7 +1259,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 25,
+            lineno: 27,
           ),
           Rule.new(
             id: 3,
@@ -1271,7 +1271,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 25,
+            lineno: 27,
           ),
         ])
       end

@@ -3,7 +3,6 @@ module Lrama
     class ParameterizingRuleResolver
       attr_reader rules: Array[Rule]
       attr_reader tokens: Array[Lexer::Token]
-      attr_reader term: Lexer::Token?
 
       @parameterizing_rule_builders: Array[Grammar::ParameterizingRuleBuilder]
 

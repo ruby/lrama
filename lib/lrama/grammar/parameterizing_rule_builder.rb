@@ -1,13 +1,12 @@
 module Lrama
   class Grammar
     class ParameterizingRuleBuilder
-      attr_reader :name, :args, :rhs, :term
+      attr_reader :name, :args, :rhs
 
       def initialize(name, args, rhs)
         @name = name
         @args = args
         @rhs = rhs
-        @term = nil
         @required_args_count = args.count
       end
 
@@ -15,8 +14,7 @@ module Lrama
         validate_argument_number!(token)
         rules = []
         @rhs.each do |rhs|
-          @term = rhs_term(token, rhs)
-          rules << Rule.new(id: rule_counter.increment, _lhs: build_token, _rhs: [@term].compact, lhs_tag: lhs_tag, token_code: rhs.user_code, precedence_sym: rhs.precedence_sym, lineno: line)
+          rules << Rule.new(id: rule_counter.increment, _lhs: build_token, _rhs: [rhs_term(token, rhs)].compact, lhs_tag: lhs_tag, token_code: rhs.user_code, precedence_sym: rhs.precedence_sym, lineno: line)
         end
         rules
       end
