@@ -6,7 +6,6 @@ module Lrama
 
       def ==(other)
         self.class == other.class &&
-        self.id == other.id &&
         self.lhs == other.lhs &&
         self.lhs_tag == other.lhs_tag &&
         self.rhs == other.rhs &&
