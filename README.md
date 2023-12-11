@@ -49,9 +49,13 @@ Enter the formula:
 
 ## Versions and Branches
 
-### v0_5 (`master` branch)
+### v0_6 (`master` branch)
 
-This branch is for Ruby 3.3. `lrama_0_5` branch is created from this branch, once Ruby 3.3 is released.
+This branch is for Ruby 3.4. `lrama_0_6` branch is created from this branch, once Ruby 3.4 is released.
+
+### v0_5 (`lrama_0_5` branch)
+
+This branch is for Ruby 3.3.
 
 ### v0_4 (`lrama_0_4` branch)
 
