@@ -409,6 +409,8 @@ module Lrama
           add_nterm(id: rule._lhs)
         end
       end
+
+      @rules.sort_by!(&:id)
     end
 
     # Collect symbols from rules
