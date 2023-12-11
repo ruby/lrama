@@ -14,7 +14,7 @@ module Lrama
 
       def validate_argument_number!: (Lexer::Token::Parameterizing token) -> void
       def lhs_token: (Lexer::Token::Parameterizing token) -> Lexer::Token
-      def rhs_token: (Lexer::Token::Parameterizing token, Grammar::ParameterizingRuleRhsBuilder rhs) -> Lexer::Token?
+      def rhs_token: (Lexer::Token::Parameterizing token, Grammar::ParameterizingRuleRhsBuilder rhs) -> Array[Lexer::Token]
     end
   end
 end
