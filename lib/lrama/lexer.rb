@@ -28,6 +28,7 @@ module Lrama
       %error-token
       %empty
       %code
+      %rule
     )
 
     def initialize(text)

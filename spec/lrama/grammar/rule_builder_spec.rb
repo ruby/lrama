@@ -321,7 +321,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.add_rhs(token_6)
       rule_builder.user_code = token_7
       rule_builder.complete_input
-      rule_builder.setup_rules
+      rule_builder.setup_rules(Lrama::Grammar::ParameterizingRuleResolver.new)
 
       rule = rule_builder.rules.first
       rules = rule_builder.midrule_action_rules
@@ -356,7 +356,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.add_rhs(token_6)
       rule_builder.user_code = token_7
       rule_builder.complete_input
-      rule_builder.setup_rules
+      rule_builder.setup_rules(Lrama::Grammar::ParameterizingRuleResolver.new)
 
       tokens = rule_builder.instance_variable_get(:@replaced_rhs)
 

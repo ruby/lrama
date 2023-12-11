@@ -1216,6 +1216,140 @@ RSpec.describe Lrama::Parser do
         ])
       end
 
+      it "user defined" do
+        path = "parameterizing_rules/user_defined.y"
+        y = File.read(fixture_path(path))
+        grammar = Lrama::Parser.new(y, path).parse
+
+        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "defined_option_number"), alias_name: nil, number: 7, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 2, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "multi_args_number_string"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "multi_args_number_number"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: false)
+        ])
+
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("YYEOF"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+            lineno: 33,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("defined_option_number"),
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 33,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("defined_option_number"),
+            rhs: [],
+            lhs_tag: T::Tag.new(s_value: "<i>"),
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 33,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("defined_option_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number"),
+            ],
+            lhs_tag: T::Tag.new(s_value: "<i>"),
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 33,
+          ),
+          Rule.new(
+            id: 6,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("multi_args_number_string"),
+            ],
+            lhs_tag: nil,
+            token_code: nil,
+            nullable: false,
+            precedence_sym: nil,
+            lineno: 34,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("multi_args_number_string"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number"),
+            ],
+            lhs_tag: nil,
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 34,
+          ),
+          Rule.new(
+            id: 5,
+            lhs: grammar.find_symbol_by_s_value!("multi_args_number_string"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("string"),
+            ],
+            lhs_tag: nil,
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("string"),
+            lineno: 34,
+          ),
+          Rule.new(
+            id: 9,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("multi_args_number_number"),
+            ],
+            lhs_tag: nil,
+            token_code: nil,
+            nullable: false,
+            precedence_sym: nil,
+            lineno: 35,
+          ),
+          Rule.new(
+            id: 7,
+            lhs: grammar.find_symbol_by_s_value!("multi_args_number_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number"),
+            ],
+            lhs_tag: nil,
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 35,
+          ),
+          Rule.new(
+            id: 8,
+            lhs: grammar.find_symbol_by_s_value!("multi_args_number_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number"),
+            ],
+            lhs_tag: nil,
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 35,
+          ),
+        ])
+      end
+
       context 'when error case' do
         context "when invalid argument number" do
           it "raise an error" do

@@ -1,0 +1,12 @@
+module Lrama
+  class Grammar
+    class ParameterizingRuleResolver
+      @parameterizing_rule_builders: Array[Grammar::ParameterizingRuleBuilder]
+
+      def initialize: () -> void
+      def add_parameterizing_rule_builder: (Grammar::ParameterizingRuleBuilder builder) -> void
+      def defined?: (String) -> bool
+      def build_rules: (Lexer::Token::Parameterizing token, Counter rule_counter, untyped lhs_tag, Integer? line) -> Grammar::ParameterizingRule
+    end
+  end
+end
