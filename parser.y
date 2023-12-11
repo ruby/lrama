@@ -203,14 +203,11 @@ rule
 
   token_declaration: id int_opt alias { result = val }
 
-  rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
+  rule_declaration: "%rule" IDENTIFIER "(" parameterizing_args ")" ":" rule_rhs_list
                       {
                         builder = Grammar::ParameterizingRuleBuilder.new(val[1].s_value, val[3], val[6])
                         @grammar.add_parameterizing_rule_builder(builder)
                       }
-
-  rule_args: IDENTIFIER { result = [val[0]] }
-           | rule_args "," IDENTIFIER { result = val[0].append(val[2]) }
 
   rule_rhs_list: rule_rhs
                 {
