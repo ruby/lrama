@@ -33,7 +33,6 @@ module Lrama
       end
 
       def rhs_token(token, rhs)
-        return [] if rhs.symbols.empty?
         @args.each_with_index.map do |arg, i|
           token.args[i] if rhs.symbols.any? { |s| s.s_value == arg.s_value }
         end.compact
