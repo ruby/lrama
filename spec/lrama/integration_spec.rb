@@ -76,6 +76,18 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "user defined parameterizing rules" do
+    it "prints messages corresponding to rules" do
+      expected = <<~STR
+        (0, 1)
+        pair even odd
+        (1, 0)
+        pair odd even
+      STR
+      test_parser("user_defined_parameterizing_rules", "0 1 ; 1 0", expected)
+    end
+  end
+
   describe "%printer" do
     it "prints messages" do
       expected = <<~STR.chomp
