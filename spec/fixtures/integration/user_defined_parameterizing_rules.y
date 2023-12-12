@@ -19,7 +19,13 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %token <num> ODD EVEN
 
-%rule pair(X, Y): X Y { printf("(%d, %d)\n", $1, $2); }
+%type <num> stmt
+
+%rule pair(X, Y): X Y
+                    {
+                        $$ = $1 + $2;
+                        printf("(%d, %d)\n", $1, $2);
+                    }
                 ;
 
 %%
@@ -30,8 +36,8 @@ program: stmts
 stmts: separated_list(';', stmt)
      ;
 
-stmt: pair(ODD, EVEN) { printf("pair odd even\n"); }
-    | pair(EVEN, ODD) { printf("pair even odd\n"); }
+stmt: pair(ODD, EVEN) <num> { printf("pair odd even: %d\n", $1); }
+    | pair(EVEN, ODD) <num> { printf("pair even odd: %d\n", $1); }
     ;
 
 %%

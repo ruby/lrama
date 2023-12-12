@@ -79,12 +79,12 @@ RSpec.describe "integration" do
   describe "user defined parameterizing rules" do
     it "prints messages corresponding to rules" do
       expected = <<~STR
-        (0, 1)
-        pair even odd
+        (2, 3)
+        pair even odd: 5
         (1, 0)
-        pair odd even
+        pair odd even: 1
       STR
-      test_parser("user_defined_parameterizing_rules", "0 1 ; 1 0", expected)
+      test_parser("user_defined_parameterizing_rules", "2 3 ; 1 0", expected)
     end
   end
 
