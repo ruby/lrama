@@ -1,10 +1,10 @@
 module Lrama
   class Grammar
     class ParameterizingRuleRhsBuilder
-      attr_accessor :symbol, :user_code, :precedence_sym
+      attr_accessor :symbols, :user_code, :precedence_sym
 
       def initialize
-        @symbol = nil
+        @symbols = []
         @user_code = nil
         @precedence_sym = nil
       end

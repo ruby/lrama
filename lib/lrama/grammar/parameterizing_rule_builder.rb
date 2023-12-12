@@ -15,7 +15,7 @@ module Lrama
         lhs = lhs_token(token)
         rules = []
         @rhs.each do |rhs|
-          rules << Rule.new(id: rule_counter.increment, _lhs: lhs, _rhs: [rhs_token(token, rhs)].compact, lhs_tag: lhs_tag, token_code: rhs.user_code, precedence_sym: rhs.precedence_sym, lineno: line)
+          rules << Rule.new(id: rule_counter.increment, _lhs: lhs, _rhs: rhs_token(token, rhs), lhs_tag: lhs_tag, token_code: rhs.user_code, precedence_sym: rhs.precedence_sym, lineno: line)
         end
         ParameterizingRule.new(rules: rules, token: lhs)
       end
@@ -33,12 +33,14 @@ module Lrama
       end
 
       def rhs_token(token, rhs)
-        return nil unless rhs.symbol
-        term = rhs.symbol
-        @args.each_with_index do |arg, index|
-          term = token.args[index] if arg.s_value == rhs.symbol.s_value
-        end
-        term
+        rhs.symbols.map do |sym|
+          idx = @args.index { |arg| arg.s_value == sym.s_value }
+          if idx.nil?
+            sym
+          else
+            token.args[idx]
+          end
+        end.compact
       end
     end
   end

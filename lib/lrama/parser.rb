@@ -1639,7 +1639,7 @@ module_eval(<<'.,.,', 'parser.y', 237)
                   token = val[1]
               token.alias_name = val[2]
               builder = val[0]
-              builder.symbol = token
+              builder.symbols << token
               result = builder
 
     result

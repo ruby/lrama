@@ -28,11 +28,15 @@ static int yyerror(YYLTYPE *loc, const char *str);
                       | X
                       ;
 
+%rule pair(X, Y): X ',' Y { printf("(%d, %d)\n", $1, $2); }
+                ;
+
 %%
 
 program         : defined_option(number) <i>
                 | multi_args(number, string)
                 | multi_args(number, number)
+                | pair(number, string) { printf("pair odd even\n"); }
                 ;
 
 %%
