@@ -164,23 +164,33 @@ module Lrama
           next unless token.is_a?(Lrama::Lexer::Token::UserCode)
 
           token.references.each do |ref|
+            # Derive number reference index from named reference
             ref_name = ref.name
             if ref_name && ref_name != '$'
               if lhs.referred_by?(ref_name)
                 ref.name = '$'
               else
-                candidates = rhs.each_with_index.select {|token, i| token.referred_by?(ref_name) }
+                candidates = referable_tokens.each_with_index.select {|token, i| token.referred_by?(ref_name) }
 
                 raise "Referring symbol `#{ref_name}` is duplicated. #{token}" if candidates.size >= 2
                 raise "Referring symbol `#{ref_name}` is not found. #{token}" unless referring_symbol = candidates.first
 
-                ref.index = referring_symbol[1] + 1
+                ref.number = referring_symbol[1] + 1
+              end
+            end
+
+            if ref.number
+              # Remapping number reference index to include non referable tokens
+              # TODO: Is it better to separate "number" of reference from actual "index" (Grammar::Reference)?
+              ref.index = number_to_index[ref.number]
+
+              if !ref.index
+                raise "Can not refer to not exist component. $#{ref.number}"
               end
             end
 
             # TODO: Need to check index of @ too?
             next if ref.type == :at
-
             if ref.index
               # TODO: Prohibit $0 even so Bison allows it?
               # See: https://www.gnu.org/software/bison/manual/html_node/Actions.html
@@ -189,6 +199,39 @@ module Lrama
             end
           end
         end
+      end
+
+      def referable_token?(token)
+        case token
+        when Lrama::Lexer::Token::ParserStatePop
+          false
+        when Lrama::Lexer::Token::ParserStatePush
+          false
+        when Lrama::Lexer::Token::ParserStateSet
+          false
+        else
+          true
+        end
+      end
+
+      def referable_tokens
+        rhs.select do |token|
+          referable_token?(token)
+        end
+      end
+
+      def number_to_index
+        return @number_to_index if @number_to_index
+
+        @number_to_index = [0]
+
+        rhs.each.with_index(1) do |token, i|
+          if referable_token?(token)
+            @number_to_index << i
+          end
+        end
+
+        @number_to_index
       end
 
       def flush_user_code

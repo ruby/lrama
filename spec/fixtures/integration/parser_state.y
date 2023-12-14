@@ -86,28 +86,28 @@ primary : NUM { printf("NUM => %d\n", $1); }
           %parser-state-push(in_class, in_class)
           cname
             {
-              printf("1. cname => %s. in_def: %s, in_class: %s.\n", $4, YY_CURRENT_STATE_IN_DEF_NAME, YY_CURRENT_STATE_IN_CLASS_NAME);
+              printf("1. cname => %s. in_def: %s, in_class: %s.\n", $cname, YY_CURRENT_STATE_IN_DEF_NAME, YY_CURRENT_STATE_IN_CLASS_NAME);
             }
           compstmt
           keyword_end
           %parser-state-pop(in_def)
           %parser-state-pop(in_class)
             {
-              printf("2. cname => %s. in_def: %s, in_class: %s.\n", $4, YY_CURRENT_STATE_IN_DEF_NAME, YY_CURRENT_STATE_IN_CLASS_NAME);
+              printf("2. cname => %s. in_def: %s, in_class: %s.\n", $2, YY_CURRENT_STATE_IN_DEF_NAME, YY_CURRENT_STATE_IN_CLASS_NAME);
             }
         | keyword_def
           %parser-state-push(in_def, in_def)
           %parser-state-push(in_class, not_in_class)
           fname
             {
-              printf("1. fname => %s. in_def: %s, in_class: %s.\n", $4, YY_CURRENT_STATE_IN_DEF_NAME, YY_CURRENT_STATE_IN_CLASS_NAME);
+              printf("1. fname => %s. in_def: %s, in_class: %s.\n", $2, YY_CURRENT_STATE_IN_DEF_NAME, YY_CURRENT_STATE_IN_CLASS_NAME);
             }
           compstmt
           keyword_end
           %parser-state-pop(in_def)
           %parser-state-pop(in_class)
             {
-              printf("2. fname => %s. in_def: %s, in_class: %s.\n", $4, YY_CURRENT_STATE_IN_DEF_NAME, YY_CURRENT_STATE_IN_CLASS_NAME);
+              printf("2. fname => %s. in_def: %s, in_class: %s.\n", $fname, YY_CURRENT_STATE_IN_DEF_NAME, YY_CURRENT_STATE_IN_CLASS_NAME);
             }
         ;
 
