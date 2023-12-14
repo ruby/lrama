@@ -17,6 +17,10 @@ module Lrama
         self.last_line == other.last_line &&
         self.last_column == other.last_column
       end
+
+      def to_s
+        "(#{first_line},#{first_column})-(#{last_line},#{last_column})"
+      end
     end
   end
 end
