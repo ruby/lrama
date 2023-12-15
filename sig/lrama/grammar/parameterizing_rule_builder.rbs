@@ -2,12 +2,12 @@ module Lrama
   class Grammar
     class ParameterizingRuleBuilder
       attr_reader name: String
-      attr_reader args: Array[Lexer::Token]
+      attr_reader parameters: Array[Lexer::Token]
       attr_reader rhs: Array[Grammar::ParameterizingRuleRhsBuilder]
 
-      @required_args_count: Integer
+      @required_parameters_count: Integer
 
-      def initialize: (String name, Array[Lexer::Token] args, Array[Grammar::ParameterizingRuleRhsBuilder] rhs) -> void
+      def initialize: (String name, Array[Lexer::Token] parameters, Array[Grammar::ParameterizingRuleRhsBuilder] rhs) -> void
       def build_rules: (Lexer::Token::Parameterizing token, Counter rule_counter, untyped lhs_tag, Integer? line) -> Grammar::ParameterizingRule
 
       private

@@ -1,13 +1,13 @@
 module Lrama
   class Grammar
     class ParameterizingRuleBuilder
-      attr_reader :name, :args, :rhs
+      attr_reader :name, :parameters, :rhs
 
-      def initialize(name, args, rhs)
+      def initialize(name, parameters, rhs)
         @name = name
-        @args = args
+        @parameters = parameters
         @rhs = rhs
-        @required_args_count = args.count
+        @required_parameters_count = parameters.count
       end
 
       def build_rules(token, rule_counter, lhs_tag, line)
@@ -23,8 +23,8 @@ module Lrama
       private
 
       def validate_argument_number!(token)
-        unless @required_args_count == token.args.count
-          raise "Invalid number of arguments. expect: #{@required_args_count} actual: #{token.args.count}"
+        unless @required_parameters_count == token.args.count
+          raise "Invalid number of arguments. expect: #{@required_parameters_count} actual: #{token.args.count}"
         end
       end
 
@@ -34,7 +34,7 @@ module Lrama
 
       def rhs_token(token, rhs)
         rhs.symbols.map do |sym|
-          idx = @args.index { |arg| arg.s_value == sym.s_value }
+          idx = @parameters.index { |parameter| parameter.s_value == sym.s_value }
           if idx.nil?
             sym
           else
