@@ -1,7 +1,7 @@
 module Lrama
   class Lexer
     class Token
-      class Parameterizing < Token
+      class InstantiateRule < Token
         attr_accessor :args
 
         def initialize(s_value:, alias_name: nil, location: nil, args: [])

@@ -1922,7 +1922,7 @@ module_eval(<<'.,.,', 'parser.y', 390)
 
 module_eval(<<'.,.,', 'parser.y', 398)
   def _reduce_97(val, _values, result)
-               token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[2], location: @lexer.location, args: [val[1]])
+               token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
            builder = val[0]
            builder.add_rhs(token)
            builder.lhs_tag = val[3]
@@ -1935,7 +1935,7 @@ module_eval(<<'.,.,', 'parser.y', 398)
 
 module_eval(<<'.,.,', 'parser.y', 407)
   def _reduce_98(val, _values, result)
-               token = Lrama::Lexer::Token::Parameterizing.new(s_value: val[1].s_value, location: @lexer.location, args: val[3])
+               token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3])
            builder = val[0]
            builder.add_rhs(token)
            builder.lhs_tag = val[5]
