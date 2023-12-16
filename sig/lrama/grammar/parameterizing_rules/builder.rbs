@@ -4,7 +4,7 @@ module Lrama
       class Builder
         RULES: Hash[Symbol, singleton(Base)]
 
-        @token: Lexer::Token::Parameterizing
+        @token: Lexer::Token::InstantiateRule
         @key: Symbol
         @rule_counter: Counter
         @lhs_tag: untyped

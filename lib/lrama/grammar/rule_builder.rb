@@ -95,7 +95,7 @@ module Lrama
         end
       end
 
-      # rhs is a mixture of variety type of tokens like `Ident`, `Parameterizing`, `UserCode` and so on.
+      # rhs is a mixture of variety type of tokens like `Ident`, `InstantiateRule`, `UserCode` and so on.
       # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
       def process_rhs(parameterizing_resolver)
         return if @replaced_rhs
@@ -109,7 +109,7 @@ module Lrama
             @replaced_rhs << token
           when Lrama::Lexer::Token::Ident
             @replaced_rhs << token
-          when Lrama::Lexer::Token::Parameterizing
+          when Lrama::Lexer::Token::InstantiateRule
             if parameterizing_resolver.defined?(token.s_value)
               parameterizing = parameterizing_resolver.build_rules(token, @rule_counter, @lhs_tag, line)
               @parameterizing_rules = @parameterizing_rules + parameterizing.rules

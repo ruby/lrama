@@ -5,11 +5,11 @@ module Lrama
         class Base
           attr_reader build_token: Lexer::Token::Ident
 
-          def initialize: (Lexer::Token::Parameterizing token, Counter rule_counter, untyped lhs_tag, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
+          def initialize: (Lexer::Token::InstantiateRule token, Counter rule_counter, untyped lhs_tag, Lexer::Token::UserCode? user_code, Lexer::Token? precedence_sym, Integer? line) -> void
           def build: () -> Array[Rule]
 
           @args: Array[Lexer::Token]
-          @token: Lexer::Token::Parameterizing
+          @token: Lexer::Token::InstantiateRule
           @key: Symbol
           @rule_counter: Counter
           @lhs_tag: untyped
