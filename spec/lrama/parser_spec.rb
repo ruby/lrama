@@ -1377,6 +1377,192 @@ RSpec.describe Lrama::Parser do
         ])
       end
 
+      it "user defined with nest" do
+        path = "parameterizing_rules/user_defined_with_nest.y"
+        y = File.read(fixture_path(path))
+        grammar = Lrama::Parser.new(y, path).parse
+
+        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "nested_option_number"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "nested_nested_option_number"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "multi_option_number_string"), alias_name: nil, number: 10, tag: nil, term: false, token_id: 5, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "nested_multi_option_number"), alias_name: nil, number: 11, tag: nil, term: false, token_id: 6, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "nested_multi_option_string"), alias_name: nil, number: 12, tag: nil, term: false, token_id: 7, nullable: true)
+        ])
+
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("YYEOF"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+            lineno: 42,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("option_number"),
+            rhs: [],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 42,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("nested_option_number"),
+            rhs: [],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 42,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("nested_nested_option_number"),
+            rhs: [],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 42,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("nested_nested_option_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number")
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 42,
+          ),
+          Rule.new(
+            id: 5,
+            lhs: grammar.find_symbol_by_s_value!("nested_option_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("nested_nested_option_number")
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 42,
+          ),
+          Rule.new(
+            id: 6,
+            lhs: grammar.find_symbol_by_s_value!("option_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("nested_option_number")
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 42,
+          ),
+          Rule.new(
+            id: 7,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("option_number")
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 42,
+          ),
+          Rule.new(
+            id: 8,
+            lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
+            rhs: [],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 43,
+          ),
+          Rule.new(
+            id: 9,
+            lhs: grammar.find_symbol_by_s_value!("nested_multi_option_number"),
+            rhs: [],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 43,
+          ),
+          Rule.new(
+            id: 10,
+            lhs: grammar.find_symbol_by_s_value!("nested_multi_option_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number")
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 43,
+          ),
+          Rule.new(
+            id: 11,
+            lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("nested_multi_option_number")
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 43,
+          ),
+          Rule.new(
+            id: 12,
+            lhs: grammar.find_symbol_by_s_value!("nested_multi_option_string"),
+            rhs: [],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 43,
+          ),
+          Rule.new(
+            id: 13,
+            lhs: grammar.find_symbol_by_s_value!("nested_multi_option_string"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("string")
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("string"),
+            lineno: 43,
+          ),
+          Rule.new(
+            id: 14,
+            lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("nested_multi_option_string"),
+              grammar.find_symbol_by_s_value!("number")
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            lineno: 43,
+          ),
+          Rule.new(
+            id: 15,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("multi_option_number_string")
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 43,
+          ),
+        ])
+      end
+
       context 'when error case' do
         context "when invalid argument number" do
           it "raise an error" do

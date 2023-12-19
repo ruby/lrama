@@ -6,7 +6,7 @@ module Lrama
       def initialize: () -> void
       def add_parameterizing_rule_builder: (Grammar::ParameterizingRuleBuilder builder) -> void
       def defined?: (String) -> bool
-      def build_rules: (Lexer::Token::InstantiateRule token, Counter rule_counter, untyped lhs_tag, Integer? line) -> Grammar::ParameterizingRule
+      def build_rules: (Lexer::Token::InstantiateRule token, Counter rule_counter, untyped lhs_tag, Integer? line) -> Array[Grammar::ParameterizingRule]
     end
   end
 end

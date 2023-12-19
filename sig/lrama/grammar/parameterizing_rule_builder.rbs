@@ -8,13 +8,12 @@ module Lrama
       @required_parameters_count: Integer
 
       def initialize: (String name, Array[Lexer::Token] parameters, Array[Grammar::ParameterizingRuleRhsBuilder] rhs) -> void
-      def build_rules: (Lexer::Token::InstantiateRule token, Counter rule_counter, untyped lhs_tag, Integer? line) -> Grammar::ParameterizingRule
+      def build_rules: (Lexer::Token::InstantiateRule token, Array[Lexer::Token] actual_args, Counter rule_counter, untyped lhs_tag, Integer? line, Array[ParameterizingRuleBuilder] rule_builders) -> Array[Grammar::ParameterizingRule]
 
       private
 
       def validate_argument_number!: (Lexer::Token::InstantiateRule token) -> void
-      def lhs_token: (Lexer::Token::InstantiateRule token) -> Lexer::Token
-      def rhs_token: (Lexer::Token::InstantiateRule token, Grammar::ParameterizingRuleRhsBuilder rhs) -> Array[Lexer::Token]
+      def lhs: (Array[Lexer::Token] actual_args) -> Lexer::Token
     end
   end
 end

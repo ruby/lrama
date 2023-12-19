@@ -241,6 +241,18 @@ rule
               builder.symbols << token
               result = builder
             }
+          | rule_rhs IDENTIFIER parameterizing_suffix
+              {
+                builder = val[0]
+                builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
+                result = builder
+              }
+          | rule_rhs IDENTIFIER "(" parameterizing_args ")"
+              {
+                builder = val[0]
+                builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3])
+                result = builder
+              }
           | rule_rhs "{"
             {
               if @prec_seen
