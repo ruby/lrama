@@ -406,7 +406,7 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs IDENTIFIER parameterizing_suffix tag_opt
+     | rhs symbol parameterizing_suffix tag_opt
          {
            token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
            builder = val[0]
