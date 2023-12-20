@@ -662,6 +662,8 @@ module_eval(<<'...end parser.y/module_eval...', 'parser.y', 500)
 
 include Lrama::Report::Duration
 
+TAB_WIDTH = 8
+
 def initialize(text, path, debug = false)
   @text = text
   @path = path
@@ -700,10 +702,12 @@ def on_error(error_token_id, error_value, value_stack)
     value = error_value.inspect
   end
 
+  text = @text.split("\n")[line - 1]
+
   raise ParseError, <<~ERROR
     #{@path}:#{line}:#{first_column}: parse error on value #{value} (#{token_to_str(error_token_id) || '?'})
-    #{@text.split("\n")[line - 1]}
-    #{carrets(first_column, last_column)}
+    #{text}
+    #{carrets(text, first_column, last_column)}
   ERROR
 end
 
@@ -718,10 +722,12 @@ def on_action_error(error_message, error_value)
     last_column = @lexer.column
   end
 
+  text = @text.split("\n")[line - 1]
+
   raise ParseError, <<~ERROR
     #{@path}:#{line}: #{error_message}
-    #{@text.split("\n")[line - 1]}
-    #{carrets(first_column, last_column)}
+    #{text}
+    #{carrets(text, first_column, last_column)}
   ERROR
 end
 
@@ -742,8 +748,22 @@ def end_c_declaration
   @lexer.end_symbol = nil
 end
 
-def carrets(first_column, last_column)
-  ' ' * (first_column + 1) + '^' * (last_column - first_column)
+def first_column_with_tab(text, first_column)
+  column = 1
+
+  text[0..first_column].each_char do |char|
+    if char == "\t"
+      column = (((column - 1) / TAB_WIDTH) + 1) * TAB_WIDTH
+    end
+
+    column += 1
+  end
+
+  column
+end
+
+def carrets(text, first_column, last_column)
+  ' ' * (first_column_with_tab(text, first_column) - 1) + '^' * (last_column - first_column)
 end
 ...end parser.y/module_eval...
 ##### State transition tables begin ###
