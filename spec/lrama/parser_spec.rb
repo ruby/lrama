@@ -2413,6 +2413,28 @@ program: /* empty */
           ERROR
         end
       end
+
+      context "line of invalid syntax contains tab" do
+        it "correctly mark the location of an error" do
+          y = <<~INPUT
+%{
+// Prologue
+%}
+
+%expect\t\tinvalid
+
+%%
+
+program: /* empty */
+       ;
+          INPUT
+          expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
+            error_messages/parse.y:5:8: parse error on value 'invalid' (IDENTIFIER)
+            %expect\t\tinvalid
+                            ^^^^^^^
+          ERROR
+        end
+      end
     end
   end
 
