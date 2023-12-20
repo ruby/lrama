@@ -702,13 +702,9 @@ def on_error(error_token_id, error_value, value_stack)
     value = error_value.inspect
   end
 
-  text = @text.split("\n")[line - 1]
+  error_message = "parse error on value #{value} (#{token_to_str(error_token_id) || '?'})"
 
-  raise ParseError, <<~ERROR
-    #{@path}:#{line}:#{first_column}: parse error on value #{value} (#{token_to_str(error_token_id) || '?'})
-    #{text}
-    #{carrets(text, first_column, last_column)}
-  ERROR
+  raise_parse_error(error_message, line, first_column, last_column)
 end
 
 def on_action_error(error_message, error_value)
@@ -722,13 +718,7 @@ def on_action_error(error_message, error_value)
     last_column = @lexer.column
   end
 
-  text = @text.split("\n")[line - 1]
-
-  raise ParseError, <<~ERROR
-    #{@path}:#{line}: #{error_message}
-    #{text}
-    #{carrets(text, first_column, last_column)}
-  ERROR
+  raise_parse_error(error_message, line, first_column, last_column)
 end
 
 private
@@ -746,6 +736,16 @@ end
 def end_c_declaration
   @lexer.status = :initial
   @lexer.end_symbol = nil
+end
+
+def raise_parse_error(error_message, line, first_column, last_column)
+  text = @text.split("\n")[line - 1]
+
+  raise ParseError, <<~ERROR
+    #{@path}:#{line}:#{first_column}: #{error_message}
+    #{text}
+    #{carrets(text, first_column, last_column)}
+  ERROR
 end
 
 def first_column_with_tab(text, first_column)
