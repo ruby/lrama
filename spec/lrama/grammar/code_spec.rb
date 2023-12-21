@@ -131,7 +131,7 @@ rule2: expr '+' expr { @$ = 0; }
 rule3: expr '+' expr[expr-right] { $1 + $[expr-right]; }
      ;
 
-rule4: expr '+' expr[expr-right] { @1 + @[expr-right]; }
+rule4: expr '+' expr[expr-right] { @1 + @[expr-right]; @0; }
      ;
 
 rule5: expr '+' expr { $1 + $<integer>3; }
@@ -169,7 +169,7 @@ rule8: expr { $$ = $1 } '+' expr { $2; }
 
       it "translats '@n' to '(yylsp)' with index" do
         code = grammar.rules.find {|r| r.lhs.id.s_value == "rule4" }
-        expect(code.translated_code).to eq(" (yylsp[-2]) + (yylsp[0]); ")
+        expect(code.translated_code).to eq(" (yylsp[-2]) + (yylsp[0]); (yylsp[-3]); ")
       end
 
       it "respects explicit tag in a rule" do
