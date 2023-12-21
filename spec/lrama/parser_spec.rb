@@ -1700,11 +1700,11 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
       grammar = Lrama::Parser.new(y, "parse.y").parse
 
       expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 11, tag: nil,                                 term: false, token_id: 0, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 12, tag: nil,                                 term: false, token_id: 1, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "class"),   alias_name: nil, number: 13, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 2, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "$@1"),     alias_name: nil, number: 14, tag: nil,                                 term: false, token_id: 3, nullable: true),
-        Sym.new(id: T::Ident.new(s_value: "$@2"),     alias_name: nil, number: 15, tag: nil,                                 term: false, token_id: 4, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 11, tag: nil,                        term: false, token_id: 0, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 12, tag: nil,                        term: false, token_id: 1, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "$@1"),     alias_name: nil, number: 13, tag: nil,                        term: false, token_id: 2, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "$@2"),     alias_name: nil, number: 14, tag: nil,                        term: false, token_id: 3, nullable: true),
+        Sym.new(id: T::Ident.new(s_value: "class"),   alias_name: nil, number: 15, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 4, nullable: false),
       ])
       expect(grammar.rules).to eq([
         Rule.new(

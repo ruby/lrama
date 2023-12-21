@@ -993,46 +993,46 @@ State 0
 
     $default  reduce using rule 1 ($@1)
 
-    program  go to state 1
-    $@1      go to state 2
+    $@1      go to state 1
+    program  go to state 2
 
 
 State 1
 
-    0 $accept: program • "EOI"
+    2 program: $@1 • expr
+    3 expr: • tNUMBER
 
-    "EOI"  shift, and go to state 3
+    tNUMBER  shift, and go to state 3
+
+    expr  go to state 4
 
 
 State 2
 
-    2 program: $@1 • expr
-    3 expr: • tNUMBER
+    0 $accept: program • "EOI"
 
-    tNUMBER  shift, and go to state 4
-
-    expr  go to state 5
+    "EOI"  shift, and go to state 5
 
 
 State 3
-
-    0 $accept: program "EOI" •
-
-    $default  accept
-
-
-State 4
 
     3 expr: tNUMBER •
 
     $default  reduce using rule 3 (expr)
 
 
-State 5
+State 4
 
     2 program: $@1 expr •
 
     $default  reduce using rule 2 (program)
+
+
+State 5
+
+    0 $accept: program "EOI" •
+
+    $default  accept
 
 
         STR
