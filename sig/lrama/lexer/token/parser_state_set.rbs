@@ -1,0 +1,9 @@
+module Lrama
+  class Lexer
+    class Token
+      class ParserStateSet < Token
+        attr_accessor state: Token
+      end
+    end
+  end
+end

@@ -229,7 +229,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
-        expect { rule_builder.send(:preprocess_references) }.to raise_error(/Can not refer following component\. 10 >= 4\./)
+        expect { rule_builder.send(:preprocess_references) }.to raise_error(/Can not refer to not exist component\. \$10/)
       end
     end
 

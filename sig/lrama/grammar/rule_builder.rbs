@@ -35,7 +35,11 @@ module Lrama
       def preprocess_references: () -> void
       def build_rules: () -> void
       def process_rhs: (Grammar::ParameterizingRuleResolver parameterizing_resolver) -> void
+      def process_parser_state_token: (Lexer::Token, String, String, Integer, Grammar::ParameterizingRuleResolver) -> void
       def numberize_references: () -> void
+      def referable_token?: (Lexer::Token) -> bool
+      def referable_tokens: () -> Array[Lexer::Token]
+      def number_to_index: () -> Array[Integer]
       def flush_user_code: () -> void
     end
   end

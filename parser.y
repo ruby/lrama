@@ -69,6 +69,10 @@ rule
                        {
                          @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[3])
                        }
+                   | "%parser-state" IDENTIFIER "{" identifier_list "}"
+                       {
+                         @grammar.add_parser_state(val[1], val[3])
+                       }
                    | ";"
 
   grammar_declaration: "%union" "{"
@@ -452,6 +456,29 @@ rule
            builder.precedence_sym = sym
            result = builder
          }
+     | rhs "%parser-state-push" "(" IDENTIFIER "," IDENTIFIER ")"
+         {
+           token = Lrama::Lexer::Token::ParserStatePush.new(s_value: val[3].s_value, location: val[3].location)
+           token.state = val[5]
+           builder = val[0]
+           builder.add_rhs(token)
+           result = builder
+         }
+     | rhs "%parser-state-pop" "(" IDENTIFIER ")"
+         {
+           token = Lrama::Lexer::Token::ParserStatePop.new(s_value: val[3].s_value, location: val[3].location)
+           builder = val[0]
+           builder.add_rhs(token)
+           result = builder
+         }
+     | rhs "%parser-state-set" "(" IDENTIFIER "," IDENTIFIER ")"
+         {
+           token = Lrama::Lexer::Token::ParserStateSet.new(s_value: val[3].s_value, location: val[3].location)
+           token.state = val[5]
+           builder = val[0]
+           builder.add_rhs(token)
+           result = builder
+         }
 
   parameterizing_suffix: "?"
                        | "+"
@@ -489,6 +516,9 @@ rule
 
   generic_symlist_item: symbol
                       | TAG
+
+  identifier_list: IDENTIFIER { result = [val[0]] }
+                 | identifier_list "," IDENTIFIER { result = val[0].append(val[2]) }
 
   string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
 

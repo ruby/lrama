@@ -1,5 +1,7 @@
 module Lrama
   class Grammar
+    attr_reader parser_states: Array[ParserState]
+
     def numberize_references: (Lexer::Token lhs, Array[Lexer::Token] rhs, Array[Reference]) -> void
   end
 end

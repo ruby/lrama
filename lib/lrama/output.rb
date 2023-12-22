@@ -358,6 +358,34 @@ module Lrama
       end.join
     end
 
+    def has_parser_states?
+      !@grammar.parser_states.empty?
+    end
+
+    def parser_states_enums
+      @grammar.parser_states.map do |ps|
+        ps.enum_definition
+      end
+    end
+
+    def parser_states_stacks
+      @grammar.parser_states.map do |ps|
+        ps.states_stacks
+      end
+    end
+
+    def parser_states_functions
+      @grammar.parser_states.map do |ps|
+        ps.states_functions
+      end
+    end
+
+    def parser_states_clean_up_stack
+      @grammar.parser_states.map do |ps|
+        ps.states_clean_up_stack
+      end
+    end
+
     private
 
     def eval_template(file, path)

@@ -29,6 +29,10 @@ module Lrama
       %empty
       %code
       %rule
+      %parser-state-push
+      %parser-state-pop
+      %parser-state-set
+      %parser-state
     )
 
     def initialize(text)
