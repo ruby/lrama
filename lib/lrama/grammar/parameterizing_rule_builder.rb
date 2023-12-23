@@ -27,7 +27,7 @@ module Lrama
       end
 
       def lhs(actual_args)
-        Lrama::Lexer::Token::Ident.new(s_value: "#{name}_#{actual_args.map(&:s_value).join('_')}")
+        Lrama::Lexer::Token::Ident.new(s_value: "#{name}_#{actual_args.to_s}")
       end
     end
   end

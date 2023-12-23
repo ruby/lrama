@@ -1,3 +1,5 @@
+require_relative 'instantiate_rule/arguments'
+
 module Lrama
   class Lexer
     class Token
@@ -6,7 +8,7 @@ module Lrama
 
         def initialize(s_value:, alias_name: nil, location: nil, args: [])
           super s_value: s_value, alias_name: alias_name, location: location
-          @args = args
+          @args = Arguments.new(args)
         end
 
         def rule_name

@@ -1,0 +1,19 @@
+module Lrama
+  class Lexer
+    class Token
+      class InstantiateRule < Token
+        class Arguments
+          attr_reader values: Array[Lexer::Token]
+          attr_reader count: Integer
+
+          def initialize: (Array[Lexer::Token] values) -> void
+          def to_s: () -> String
+          def []: (Integer index) -> Lexer::Token
+          def first: () -> (Lexer::Token | nil)
+          def actual_values: (Array[Lexer::Token] actual_args, Array[Lexer::Token] parameters) -> Arguments
+          def replace_token: (Array[Lexer::Token] parameters, Lexer::Token token, Lexer::Token replaced) -> Array[Lexer::Token]
+        end
+      end
+    end
+  end
+end

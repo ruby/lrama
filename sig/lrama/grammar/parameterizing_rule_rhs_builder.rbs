@@ -6,13 +6,13 @@ module Lrama
       attr_reader precedence_sym: Lexer::Token?
 
       def initialize: () -> void
-      def build_rules: (Lexer::Token::InstantiateRule token, Array[Lexer::Token] actual_args, Array[Lexer::Token] parameters, Counter rule_counter, Lexer::Token lhs, untyped lhs_tag, Integer? line, Array[ParameterizingRuleBuilder] rule_builders) -> Grammar::ParameterizingRule
+      def build_rules: (Lexer::Token::InstantiateRule token, Lexer::Token::InstantiateRule::Arguments actual_args, Array[Lexer::Token] parameters, Counter rule_counter, Lexer::Token lhs, untyped lhs_tag, Integer? line, Array[ParameterizingRuleBuilder] rule_builders) -> Grammar::ParameterizingRule
 
       private
 
-      def build_nested_rules: (Lexer::Token::InstantiateRule token, Array[Lexer::Token] actual_args, Array[Lexer::Token] parameters, Counter rule_counter, untyped lhs_tag, Integer? line, Array[ParameterizingRuleBuilder] rule_builders) -> Array[Grammar::ParameterizingRule]
-      def nested_actual_args: (Array[Lexer::Token] actual_args, Array[Lexer::Token] parameters, Integer idx) -> Array[Lexer::Token]
-      def rhs: (Lexer::Token token, Array[Lexer::Token] actual_args, Array[Lexer::Token] parameters, ParameterizingRule? nested_rule) -> Array[Lexer::Token]
+      def build_nested_rules: (Lexer::Token::InstantiateRule::Arguments actual_args, Array[Lexer::Token] parameters, Counter rule_counter, untyped lhs_tag, Integer? line, Array[ParameterizingRuleBuilder] rule_builders) -> Array[Grammar::ParameterizingRule]
+      def nested_actual_args: (Lexer::Token::InstantiateRule::Arguments actual_args, Array[Lexer::Token] parameters, Integer idx) -> Array[Lexer::Token]
+      def rhs: (Lexer::Token token, Lexer::Token::InstantiateRule::Arguments actual_args, Array[Lexer::Token] parameters, ParameterizingRule? nested_rule) -> Array[Lexer::Token]
     end
   end
 end
