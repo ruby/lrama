@@ -1,3 +1,5 @@
+require "tempfile"
+
 RSpec.describe Lrama::Parser do
   T ||= Lrama::Lexer::Token
   Type = Lrama::Grammar::Type
@@ -2363,7 +2365,18 @@ expr[result]: NUM
 ;
             INPUT
 
-            expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(/Referring symbol `results` is not found\./)
+            expected = <<-ERROR
+Referring symbol `results` is not found.
+                { $results = $left + $right; }
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            ERROR
+
+            Tempfile.create("parse.y") do |f|
+              f << y
+              f.close
+
+              expect { Lrama::Parser.new(y, f.path).parse }.to raise_error(expected)
+            end
           end
         end
       end

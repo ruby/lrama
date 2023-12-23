@@ -23,6 +23,30 @@ module Lrama
       def to_s
         "#{grammar_file_path} (#{first_line},#{first_column})-(#{last_line},#{last_column})"
       end
+
+      def line_with_carrets
+        <<~TEXT
+          #{text}
+          #{carrets}
+        TEXT
+      end
+
+      private
+
+      def blanks
+        (text[0...first_column] or raise "#{first_column} is invalid").gsub(/[^\t]/, ' ')
+      end
+
+      def carrets
+        blanks + '^' * (last_column - first_column)
+      end
+
+      def text
+        return @text if @text
+
+        @text = File.read(grammar_file_path).split("\n")[first_line - 1]
+        @text
+      end
     end
   end
 end

@@ -151,8 +151,8 @@ module Lrama
               else
                 candidates = rhs.each_with_index.select {|token, i| token.referred_by?(ref_name) }
 
-                raise "Referring symbol `#{ref_name}` is duplicated. #{token}" if candidates.size >= 2
-                raise "Referring symbol `#{ref_name}` is not found. #{token}" unless referring_symbol = candidates.first
+                raise "Referring symbol `#{ref_name}` is duplicated.\n#{token.location.line_with_carrets}" if candidates.size >= 2
+                raise "Referring symbol `#{ref_name}` is not found.\n#{token.location.line_with_carrets}" unless referring_symbol = candidates.first
 
                 ref.index = referring_symbol[1] + 1
               end
