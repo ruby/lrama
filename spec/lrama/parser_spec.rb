@@ -9,6 +9,21 @@ RSpec.describe Lrama::Parser do
   Printer = Lrama::Grammar::Printer
   Code = Lrama::Grammar::Code
 
+  module ParserSpecHelper
+    private
+
+    def create_grammar_file(file_name, content)
+      Tempfile.create(file_name) do |f|
+        f << content
+        f.close
+
+        yield f, content if block_given?
+      end
+    end
+  end
+
+  include ParserSpecHelper
+
   let(:header) do
     <<~HEADER
 %{
@@ -1794,13 +1809,17 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
 %%
 
         INPUT
-        parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-          parse.y:31:42: ident after %prec
-          class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
-                                                    ^^^^^^^^^^^
-        ERROR
+        create_grammar_file("parse.y", y) do |file, content|
+          parser = Lrama::Parser.new(content, file.path)
+
+          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+            #{file.path}:31:42: ident after %prec
+            class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
+                                                      ^^^^^^^^^^^
+
+          ERROR
+        end
       end
 
       it "raises error if char exists after %prec" do
@@ -1815,13 +1834,17 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
 %%
 
         INPUT
-        parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-          parse.y:31:51: char after %prec
-          class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
-                                                             ^^^
-        ERROR
+        create_grammar_file("parse.y", y) do |file, content|
+          parser = Lrama::Parser.new(content, file.path)
+
+          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+            #{file.path}:31:51: char after %prec
+            class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
+                                                               ^^^
+
+          ERROR
+        end
       end
 
       it "raises error if code exists after %prec" do
@@ -1836,13 +1859,17 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
 %%
 
         INPUT
-        parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-          parse.y:31:78: multiple User_code after %prec
-          class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
-                                                                                        ^
-        ERROR
+        create_grammar_file("parse.y", y) do |file, content|
+          parser = Lrama::Parser.new(content, file.path)
+
+          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+            #{file.path}:31:78: multiple User_code after %prec
+            class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
+                                                                                          ^
+
+          ERROR
+        end
       end
     end
 
@@ -2371,11 +2398,8 @@ Referring symbol `results` is not found.
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             ERROR
 
-            Tempfile.create("parse.y") do |f|
-              f << y
-              f.close
-
-              expect { Lrama::Parser.new(y, f.path).parse }.to raise_error(expected)
+            create_grammar_file("parse.y", y) do |file, content|
+              expect { Lrama::Parser.new(content, file.path).parse }.to raise_error(expected)
             end
           end
         end
@@ -2397,11 +2421,17 @@ Referring symbol `results` is not found.
 program: /* empty */
        ;
           INPUT
-          expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
-            error_messages/parse.y:5:8: parse error on value 'invalid' (IDENTIFIER)
-            %expect invalid
-                    ^^^^^^^
-          ERROR
+
+          create_grammar_file("error_messages/parse.y", y) do |file, content|
+            parser = Lrama::Parser.new(content, file.path)
+
+            expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+              #{file.path}:5:8: parse error on value 'invalid' (IDENTIFIER)
+              %expect invalid
+                      ^^^^^^^
+
+            ERROR
+          end
         end
       end
 
@@ -2419,11 +2449,17 @@ program: /* empty */
 program: /* empty */
        ;
           INPUT
-          expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
-            error_messages/parse.y:5:10: parse error on value 10 (INTEGER)
-            %expect 0 10
-                      ^^
-          ERROR
+
+          create_grammar_file("error_messages/parse.y", y) do |file, content|
+            parser = Lrama::Parser.new(content, file.path)
+
+            expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+              #{file.path}:5:10: parse error on value 10 (INTEGER)
+              %expect 0 10
+                        ^^
+
+            ERROR
+          end
         end
       end
 
@@ -2441,11 +2477,17 @@ program: /* empty */
 program: /* empty */
        ;
           INPUT
-          expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
-            error_messages/parse.y:5:9: parse error on value 'invalid' (IDENTIFIER)
-            %expect\t\tinvalid
-                   \t\t^^^^^^^
-          ERROR
+
+          create_grammar_file("error_messages/parse.y", y) do |file, content|
+            parser = Lrama::Parser.new(content, file.path)
+
+            expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+              #{file.path}:5:9: parse error on value 'invalid' (IDENTIFIER)
+              %expect\t\tinvalid
+                     \t\t^^^^^^^
+
+            ERROR
+          end
         end
       end
     end

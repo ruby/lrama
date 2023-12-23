@@ -528,33 +528,29 @@ end
 def on_error(error_token_id, error_value, value_stack)
   if error_value.is_a?(Lrama::Lexer::Token)
     line = error_value.first_line
-    first_column = error_value.first_column
-    last_column = error_value.last_column
+    location = error_value.location
     value = "'#{error_value.s_value}'"
   else
     line = @lexer.line
-    first_column = @lexer.head_column
-    last_column = @lexer.column
+    location = @lexer.location
     value = error_value.inspect
   end
 
   error_message = "parse error on value #{value} (#{token_to_str(error_token_id) || '?'})"
 
-  raise_parse_error(error_message, line, first_column, last_column)
+  raise_parse_error(error_message, line, location)
 end
 
 def on_action_error(error_message, error_value)
   if error_value.is_a?(Lrama::Lexer::Token)
     line = error_value.first_line
-    first_column = error_value.first_column
-    last_column = error_value.last_column
+    location = error_value.location
   else
     line = @lexer.line
-    first_column = @lexer.head_column
-    last_column = @lexer.column
+    location = @lexer.location
   end
 
-  raise_parse_error(error_message, line, first_column, last_column)
+  raise_parse_error(error_message, line, location)
 end
 
 private
@@ -574,20 +570,9 @@ def end_c_declaration
   @lexer.end_symbol = nil
 end
 
-def raise_parse_error(error_message, line, first_column, last_column)
-  text = @text.split("\n")[line - 1]
-
+def raise_parse_error(error_message, line, location)
   raise ParseError, <<~ERROR
-    #{@path}:#{line}:#{first_column}: #{error_message}
-    #{text}
-    #{carrets(text, first_column, last_column)}
+    #{@path}:#{line}:#{location.first_column}: #{error_message}
+    #{location.line_with_carrets}
   ERROR
-end
-
-def blanks(text, first_column)
-  text[0...first_column].gsub(/[^\t]/, ' ')
-end
-
-def carrets(text, first_column, last_column)
-  blanks(text, first_column) + '^' * (last_column - first_column)
 end
