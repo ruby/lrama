@@ -85,8 +85,6 @@ module Lrama
       def _text
         return @_text if @_text
 
-        offset = 0
-
         @_text = File.read(grammar_file_path).split("\n")[(first_line - 1)...last_line]
         @_text
       end
