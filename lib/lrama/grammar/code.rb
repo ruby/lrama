@@ -17,7 +17,7 @@ module Lrama
 
           str = reference_to_c(ref)
 
-          t_code[first_column..last_column] = str
+          t_code[first_column...last_column] = str
         end
 
         return t_code
