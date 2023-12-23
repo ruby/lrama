@@ -672,7 +672,7 @@ end
 
 def parse
   report_duration(:parse) do
-    @lexer = Lrama::Lexer.new(@text)
+    @lexer = Lrama::Lexer.new(@path, @text)
     @grammar = Lrama::Grammar.new(@rule_counter)
     @precedence_number = 0
     reset_precs

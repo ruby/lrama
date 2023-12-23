@@ -2,10 +2,11 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
   let(:rule_counter) { Lrama::Grammar::Counter.new(1) }
   let(:midrule_action_counter) { Lrama::Grammar::Counter.new(1) }
   let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(rule_counter, midrule_action_counter) }
+  let(:grammar_file_path) { "parse.y" }
 
   describe "#add_rhs" do
     describe "@line" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
 
       context "@line is nil" do
@@ -33,7 +34,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
   describe "#user_code=" do
     describe "@user_code" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
       let(:token_2) { Lrama::Lexer::Token::UserCode.new(s_value: "code 2", location: location) }
 
@@ -62,7 +63,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
 
     describe "@line" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
 
       context "@line is nil" do
@@ -90,7 +91,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
   describe "#precedence_sym=" do
     describe "@user_code" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
       let(:sym) { Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: "tPLUS"), term: true) }
 
@@ -109,7 +110,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
   end
 
   describe "#freeze_rhs" do
-    let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+    let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
     let(:token) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
 
     it "can not add rhs after #freeze_rhs is called" do
@@ -121,7 +122,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
   describe "#preprocess_references" do
     context "variables refer to correct name and correct position" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
       let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
       let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
@@ -167,7 +168,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
 
     context "variables in mid action rule refer to correct name and correct position" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
       let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
       let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
@@ -213,7 +214,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
 
     context "variables refer to wrong position" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
       let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
       let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
@@ -234,7 +235,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
 
     context "variables in mid action rule refer to following component" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
       let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
       let(:token_3) { Lrama::Lexer::Token::UserCode.new(s_value: "$3;", location: location) }
@@ -257,7 +258,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
 
     context "variables refer with wrong name" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
       let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
       let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
@@ -278,7 +279,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
 
     context "component name is duplicated" do
-      let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+      let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
       let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
       let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
@@ -302,7 +303,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
   end
 
   describe "#midrule_action_rules" do
-    let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+    let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
     let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
     let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
     let(:token_3) { Lrama::Lexer::Token::UserCode.new(s_value: "$1", location: location) }
@@ -337,7 +338,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
   end
 
   describe "@replaced_rhs" do
-    let(:location) { Lrama::Lexer::Location.new(first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+    let(:location) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
     let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
     let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
     let(:token_3) { Lrama::Lexer::Token::UserCode.new(s_value: "$1", location: location) }

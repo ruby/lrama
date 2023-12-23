@@ -31,7 +31,8 @@ module Lrama
       %rule
     )
 
-    def initialize(text)
+    def initialize(path, text)
+      @path = path
       @scanner = StringScanner.new(text)
       @head_column = @head = @scanner.pos
       @head_line = @line = 1
@@ -58,6 +59,7 @@ module Lrama
 
     def location
       Location.new(
+        grammar_file_path: @path,
         first_line: @head_line, first_column: @head_column,
         last_line: line, last_column: column
       )
