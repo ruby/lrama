@@ -12,7 +12,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['%{', '%{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '%}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n// Prologue\n")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n// Prologue\n")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 7, first_column: 2, last_line: 9, last_column: 0)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['%}', '%}'])
@@ -27,7 +29,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    print_int();\n")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    print_int();\n")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 15, first_column: 10, last_line: 17, last_column: 0)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -36,7 +40,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    print_token();\n")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    print_token();\n")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 18, first_column: 10, last_line: 20, last_column: 0)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -46,7 +52,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: 'struct lex_params *p')])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: 'struct lex_params *p')])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 22, first_column: 12, last_line: 22, last_column: 32)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -54,7 +62,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: 'struct parse_params *p')])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: 'struct parse_params *p')])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 23, first_column: 14, last_line: 23, last_column: 36)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -62,7 +72,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    initial_action_func(@$);\n")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    initial_action_func(@$);\n")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 26, first_column: 1, last_line: 28, last_column: 0)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -71,7 +83,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    int i;\n    long l;\n    char *str;\n")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    int i;\n    long l;\n    char *str;\n")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 30, first_column: 8, last_line: 34, last_column: 0)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -147,7 +161,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 1 ")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 1 ")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 63, first_column: 11, last_line: 63, last_column: 19)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -156,7 +172,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 2 ")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 2 ")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 64, first_column: 23, last_line: 64, last_column: 31)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -166,7 +184,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 3 ")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 3 ")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 64, first_column: 58, last_line: 64, last_column: 66)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -177,7 +197,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 4 ")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 4 ")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 65, first_column: 23, last_line: 65, last_column: 31)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -187,7 +209,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['{', '{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 5 ")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: " code 5 ")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 65, first_column: 58, last_line: 65, last_column: 66)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['}', '}'])
@@ -232,7 +256,9 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['%{', '%{'])
 
         lexer.status = :c_declaration; lexer.end_symbol = '%}'
-        expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n// Prologue\n")])
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n// Prologue\n")])
+        expect(token[1].location).to eq Lrama::Lexer::Location.new(first_line: 7, first_column: 2, last_line: 9, last_column: 0)
         lexer.status = :initial
 
         expect(lexer.next_token).to eq(['%}', '%}'])
