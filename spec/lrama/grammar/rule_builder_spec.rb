@@ -284,7 +284,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.complete_input
 
         expected = <<-TEXT
-Referring symbol `classes` is not found.
+parse.y:1:42: Referring symbol `classes` is not found.
 class : keyword_class tSTRING keyword_end { $classes = $1; }
                                           ^^^^^^^^^^^^^^^^^^
         TEXT
@@ -323,7 +323,7 @@ class : keyword_class tSTRING keyword_end { $classes = $1; }
         rule_builder.complete_input
 
         expected = <<-TEXT
-Referring symbol `tSTRING` is duplicated.
+parse.y:1:50: Referring symbol `tSTRING` is duplicated.
 class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
                                                   ^^^^^^^^^^^^^^^^^^^^^^
         TEXT

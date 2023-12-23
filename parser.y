@@ -567,8 +567,5 @@ def end_c_declaration
 end
 
 def raise_parse_error(error_message, location)
-  raise ParseError, <<~ERROR
-    #{location.grammar_file_path}:#{location.first_line}:#{location.first_column}: #{error_message}
-    #{location.line_with_carrets}
-  ERROR
+  raise ParseError, location.generate_error_message(error_message)
 end

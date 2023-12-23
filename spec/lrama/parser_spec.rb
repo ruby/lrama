@@ -1817,7 +1817,6 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
             #{file.path}:31:42: ident after %prec
             class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
                                                       ^^^^^^^^^^^
-
           ERROR
         end
       end
@@ -1842,7 +1841,6 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
             #{file.path}:31:51: char after %prec
             class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
                                                                ^^^
-
           ERROR
         end
       end
@@ -1867,7 +1865,6 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
             #{file.path}:31:78: multiple User_code after %prec
             class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
                                                                                           ^
-
           ERROR
         end
       end
@@ -2392,13 +2389,13 @@ expr[result]: NUM
 ;
             INPUT
 
-            expected = <<-ERROR
-Referring symbol `results` is not found.
+            create_grammar_file("parse.y", y) do |file, content|
+              expected = <<-ERROR
+#{file.path}:25:17: Referring symbol `results` is not found.
                 { $results = $left + $right; }
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-            ERROR
+              ERROR
 
-            create_grammar_file("parse.y", y) do |file, content|
               expect { Lrama::Parser.new(content, file.path).parse }.to raise_error(expected)
             end
           end
@@ -2429,7 +2426,6 @@ program: /* empty */
               #{file.path}:5:8: parse error on value 'invalid' (IDENTIFIER)
               %expect invalid
                       ^^^^^^^
-
             ERROR
           end
         end
@@ -2457,7 +2453,6 @@ program: /* empty */
               #{file.path}:5:10: parse error on value 10 (INTEGER)
               %expect 0 10
                         ^^
-
             ERROR
           end
         end
@@ -2485,7 +2480,6 @@ program: /* empty */
               #{file.path}:5:9: parse error on value 'invalid' (IDENTIFIER)
               %expect\t\tinvalid
                      \t\t^^^^^^^
-
             ERROR
           end
         end

@@ -24,6 +24,13 @@ module Lrama
         "#{grammar_file_path} (#{first_line},#{first_column})-(#{last_line},#{last_column})"
       end
 
+      def generate_error_message(error_message)
+        <<~ERROR.chomp
+          #{grammar_file_path}:#{first_line}:#{first_column}: #{error_message}
+          #{line_with_carrets}
+        ERROR
+      end
+
       def line_with_carrets
         <<~TEXT
           #{text}

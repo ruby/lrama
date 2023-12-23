@@ -10,6 +10,7 @@ module Lrama
       def initialize: (grammar_file_path: String, first_line: Integer, first_column: Integer, last_line: Integer, last_column: Integer) -> void
 
       def ==: (Location other) -> bool
+      def generate_error_message: (String) -> String
       def line_with_carrets: () -> String
 
       private

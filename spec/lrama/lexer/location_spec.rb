@@ -6,6 +6,20 @@ RSpec.describe Lrama::Lexer::Location do
     end
   end
 
+  describe "#generate_error_message" do
+    it "returns decorated error message" do
+      path = fixture_path("lexer/location.y")
+      location = Lrama::Lexer::Location.new(grammar_file_path: path, first_line: 33, first_column: 12, last_line: 33, last_column: 15)
+      expected = <<-TEXT
+#{path}:33:12: ERROR
+     | expr '+' expr { $$ = $1 + $3; }
+            ^^^
+      TEXT
+
+      expect(location.generate_error_message("ERROR")).to eq expected
+    end
+  end
+
   describe "#line_with_carrets" do
     it "returns line text with carrets" do
       path = fixture_path("lexer/location.y")
