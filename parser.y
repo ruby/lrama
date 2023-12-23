@@ -527,30 +527,26 @@ end
 
 def on_error(error_token_id, error_value, value_stack)
   if error_value.is_a?(Lrama::Lexer::Token)
-    line = error_value.first_line
     location = error_value.location
     value = "'#{error_value.s_value}'"
   else
-    line = @lexer.line
     location = @lexer.location
     value = error_value.inspect
   end
 
   error_message = "parse error on value #{value} (#{token_to_str(error_token_id) || '?'})"
 
-  raise_parse_error(error_message, line, location)
+  raise_parse_error(error_message, location)
 end
 
 def on_action_error(error_message, error_value)
   if error_value.is_a?(Lrama::Lexer::Token)
-    line = error_value.first_line
     location = error_value.location
   else
-    line = @lexer.line
     location = @lexer.location
   end
 
-  raise_parse_error(error_message, line, location)
+  raise_parse_error(error_message, location)
 end
 
 private
@@ -570,9 +566,9 @@ def end_c_declaration
   @lexer.end_symbol = nil
 end
 
-def raise_parse_error(error_message, line, location)
+def raise_parse_error(error_message, location)
   raise ParseError, <<~ERROR
-    #{@path}:#{line}:#{location.first_column}: #{error_message}
+    #{location.grammar_file_path}:#{location.first_line}:#{location.first_column}: #{error_message}
     #{location.line_with_carrets}
   ERROR
 end
