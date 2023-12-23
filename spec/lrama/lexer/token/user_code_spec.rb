@@ -1,6 +1,7 @@
 RSpec.describe Lrama::Lexer::Token::UserCode do
   describe "#references" do
-    let(:location) { Lrama::Lexer::Location.new(grammar_file_path: "test.y", first_line: 1, first_column: 0, last_line: 1, last_column: 2) }
+    let(:grammar_file) { Lrama::Lexer::GrammarFile.new("test.y", "") }
+    let(:location) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 2) }
 
     it "returns references in user code" do
       # $$

@@ -1,4 +1,5 @@
 require "strscan"
+require "lrama/lexer/grammar_file"
 require "lrama/lexer/location"
 require "lrama/lexer/token"
 
@@ -31,9 +32,9 @@ module Lrama
       %rule
     )
 
-    def initialize(path, text)
-      @path = path
-      @scanner = StringScanner.new(text)
+    def initialize(grammar_file)
+      @grammar_file = grammar_file
+      @scanner = StringScanner.new(grammar_file.text)
       @head_column = @head = @scanner.pos
       @head_line = @line = 1
       @status = :initial
@@ -59,7 +60,7 @@ module Lrama
 
     def location
       Location.new(
-        grammar_file_path: @path,
+        grammar_file: @grammar_file,
         first_line: @head_line, first_column: @head_column,
         last_line: line, last_column: column
       )
