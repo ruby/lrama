@@ -34,7 +34,12 @@ expr : NUM
      | expr '-' expr { $$ = $1 - $3; }
      | expr '*' expr { $$ = $1 * $3; }
      | expr '/' expr { $$ = $1 / $3; }
-     | '(' expr ')'  { $$ = $2; }
+     | '(' expr ')'
+         {
+           printf("debug %d\n", $1);
+           $$ = $2;
+           printf("debug %d\n", $3);
+         }
      ;
 
 %%

@@ -2383,7 +2383,11 @@ line        : '\\n'
 
 expr[result]: NUM
             | expr[left] expr[right] '+'
-                { $results = $left + $right; }
+                {
+                  // comment
+                  $results = $left + $right;
+                  // comment
+                }
             | expr expr '-'
                 { $$ = $1 - $2; }
 ;
@@ -2391,9 +2395,9 @@ expr[result]: NUM
 
             create_grammar_file("parse.y", y) do |file, content|
               expected = <<-ERROR
-#{file.path}:25:17: Referring symbol `results` is not found.
-                { $results = $left + $right; }
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#{file.path}:27:18: Referring symbol `results` is not found.
+                  $results = $left + $right;
+                  ^^^^^^^^
               ERROR
 
               expect { Lrama::Parser.new(content, file.path).parse }.to raise_error(expected)

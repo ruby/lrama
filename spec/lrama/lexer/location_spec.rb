@@ -6,6 +6,15 @@ RSpec.describe Lrama::Lexer::Location do
     end
   end
 
+  describe "#partial_location" do
+    it "creates new partial location" do
+      path = fixture_path("lexer/location.y")
+      location = Lrama::Lexer::Location.new(grammar_file_path: path, first_line: 38, first_column: 10, last_line: 42, last_column: 9)
+
+      expect(location.partial_location(49, 57)).to eq Lrama::Lexer::Location.new(grammar_file_path: path, first_line: 40, first_column: 11, last_line: 40, last_column: 19)
+    end
+  end
+
   describe "#generate_error_message" do
     it "returns decorated error message" do
       path = fixture_path("lexer/location.y")

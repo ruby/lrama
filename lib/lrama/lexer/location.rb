@@ -20,6 +20,36 @@ module Lrama
         self.last_column == other.last_column
       end
 
+      def partial_location(left, right)
+        offset = -first_column
+        new_first_line = -1
+        new_first_column = -1
+        new_last_line = -1
+        new_last_column = -1
+
+        _text.each.with_index do |line, index|
+          new_offset = offset + line.length + 1
+
+          if offset <= left && left <= new_offset
+            new_first_line = first_line + index
+            new_first_column = left - offset
+          end
+
+          if offset <= right && right <= new_offset
+            new_last_line = first_line + index
+            new_last_column = right - offset
+          end
+
+          offset = new_offset
+        end
+
+        Location.new(
+          grammar_file_path: grammar_file_path,
+          first_line: new_first_line, first_column: new_first_column,
+          last_line: new_last_line, last_column: new_last_column
+        )
+      end
+
       def to_s
         "#{grammar_file_path} (#{first_line},#{first_column})-(#{last_line},#{last_column})"
       end
@@ -49,10 +79,16 @@ module Lrama
       end
 
       def text
-        return @text if @text
+        _text.join("\n")
+      end
 
-        @text = File.read(grammar_file_path).split("\n")[first_line - 1]
-        @text
+      def _text
+        return @_text if @_text
+
+        offset = 0
+
+        @_text = File.read(grammar_file_path).split("\n")[(first_line - 1)...last_line]
+        @_text
       end
     end
   end

@@ -263,18 +263,16 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       let(:location_2) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 8, last_line: 1, last_column: 21) }
       let(:location_3) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 22, last_line: 1, last_column: 29) }
       let(:location_4) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 30, last_line: 1, last_column: 41) }
-      let(:location_5) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 42, last_line: 1, last_column: 60) }
+      let(:location_5) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 43, last_line: 1, last_column: 59) }
       let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location_1) }
       let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location_2) }
       let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location_3) }
       let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location_4) }
-      let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$classes = $1;", location: location_5) }
+      let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: " $classes = $1; ", location: location_5) }
 
       it "raises error" do
         # class : keyword_class tSTRING keyword_end { $classes = $1; }
-        [location_1, location_2, location_3, location_4, location_5].each do |location|
-          allow(location).to receive(:text).and_return(text)
-        end
+        allow_any_instance_of(Lrama::Lexer::Location).to receive(:_text).and_return([text])
 
         rule_builder.lhs = token_1
         rule_builder.add_rhs(token_2)
@@ -284,9 +282,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.complete_input
 
         expected = <<-TEXT
-parse.y:1:42: Referring symbol `classes` is not found.
+parse.y:1:44: Referring symbol `classes` is not found.
 class : keyword_class tSTRING keyword_end { $classes = $1; }
-                                          ^^^^^^^^^^^^^^^^^^
+                                            ^^^^^^^^
         TEXT
 
         expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
@@ -300,19 +298,17 @@ class : keyword_class tSTRING keyword_end { $classes = $1; }
       let(:location_3) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 22, last_line: 1, last_column: 29) }
       let(:location_4) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 30, last_line: 1, last_column: 37) }
       let(:location_5) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 38, last_line: 1, last_column: 49) }
-      let(:location_6) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 50, last_line: 1, last_column: 72) }
+      let(:location_6) { Lrama::Lexer::Location.new(grammar_file_path: grammar_file_path, first_line: 1, first_column: 51, last_line: 1, last_column: 71) }
       let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location_1) }
       let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location_2) }
       let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location_3) }
       let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location_4) }
       let(:token_5) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location_5) }
-      let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $tSTRING;", location: location_6) }
+      let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: " $class = $tSTRING; ", location: location_6) }
 
       it "raises error" do
         # class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
-        [location_1, location_2, location_3, location_4, location_5, location_6].each do |location|
-          allow(location).to receive(:text).and_return(text)
-        end
+        allow_any_instance_of(Lrama::Lexer::Location).to receive(:_text).and_return([text])
 
         rule_builder.lhs = token_1
         rule_builder.add_rhs(token_2)
@@ -323,9 +319,9 @@ class : keyword_class tSTRING keyword_end { $classes = $1; }
         rule_builder.complete_input
 
         expected = <<-TEXT
-parse.y:1:50: Referring symbol `tSTRING` is duplicated.
+parse.y:1:61: Referring symbol `tSTRING` is duplicated.
 class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
-                                                  ^^^^^^^^^^^^^^^^^^^^^^
+                                                             ^^^^^^^^
         TEXT
 
         expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
