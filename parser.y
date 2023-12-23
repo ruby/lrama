@@ -585,7 +585,7 @@ def raise_parse_error(error_message, line, first_column, last_column)
 end
 
 def blanks(text, first_column)
-  text[0..first_column].gsub(/[^\t]/, ' ')
+  text[0...first_column].gsub(/[^\t]/, ' ')
 end
 
 def carrets(text, first_column, last_column)

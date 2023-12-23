@@ -1795,7 +1795,7 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
         parser = Lrama::Parser.new(y, "parse.y")
 
         expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-          parse.y:31:41: ident after %prec
+          parse.y:31:42: ident after %prec
           class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
                                                     ^^^^^^^^^^^
         ERROR
@@ -1816,7 +1816,7 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
         parser = Lrama::Parser.new(y, "parse.y")
 
         expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-          parse.y:31:50: char after %prec
+          parse.y:31:51: char after %prec
           class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
                                                              ^^^
         ERROR
@@ -1837,7 +1837,7 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
         parser = Lrama::Parser.new(y, "parse.y")
 
         expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-          parse.y:31:77: multiple User_code after %prec
+          parse.y:31:78: multiple User_code after %prec
           class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
                                                                                         ^
         ERROR
@@ -2385,7 +2385,7 @@ program: /* empty */
        ;
           INPUT
           expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
-            error_messages/parse.y:5:7: parse error on value 'invalid' (IDENTIFIER)
+            error_messages/parse.y:5:8: parse error on value 'invalid' (IDENTIFIER)
             %expect invalid
                     ^^^^^^^
           ERROR
@@ -2407,7 +2407,7 @@ program: /* empty */
        ;
           INPUT
           expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
-            error_messages/parse.y:5:9: parse error on value 10 (INTEGER)
+            error_messages/parse.y:5:10: parse error on value 10 (INTEGER)
             %expect 0 10
                       ^^
           ERROR
@@ -2429,7 +2429,7 @@ program: /* empty */
        ;
           INPUT
           expect { Lrama::Parser.new(y, "error_messages/parse.y").parse }.to raise_error(ParseError, <<~ERROR)
-            error_messages/parse.y:5:8: parse error on value 'invalid' (IDENTIFIER)
+            error_messages/parse.y:5:9: parse error on value 'invalid' (IDENTIFIER)
             %expect\t\tinvalid
                    \t\t^^^^^^^
           ERROR

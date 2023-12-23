@@ -59,7 +59,7 @@ module Lrama
     def location
       Location.new(
         first_line: @head_line, first_column: @head_column,
-        last_line: @line, last_column: column
+        last_line: line, last_column: column
       )
     end
 
@@ -79,8 +79,7 @@ module Lrama
         end
       end
 
-      @head_line = line
-      @head_column = column
+      reset_first_position
 
       case
       when @scanner.eos?
@@ -118,6 +117,8 @@ module Lrama
     def lex_c_code
       nested = 0
       code = ''
+      reset_first_position
+
       while !@scanner.eos? do
         case
         when @scanner.scan(/{/)
@@ -167,9 +168,14 @@ module Lrama
       end
     end
 
+    def reset_first_position
+      @head_line = line
+      @head_column = column
+    end
+
     def newline
       @line += 1
-      @head = @scanner.pos + 1
+      @head = @scanner.pos
     end
   end
 end
