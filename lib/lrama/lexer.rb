@@ -144,12 +144,12 @@ module Lrama
           @line += @scanner.matched.count("\n")
         when @scanner.scan(/'.*?'/)
           code += %Q(#{@scanner.matched})
+        when @scanner.scan(/[^\"'\{\}\n]+/)
+          code += @scanner.matched
+        when @scanner.scan(/#{Regexp.escape(@end_symbol)}/)
+          code += @scanner.matched
         else
-          if @scanner.scan(/[^\"'\{\}\n#{@end_symbol}]+/)
-            code += @scanner.matched
-          else
-            code += @scanner.getch
-          end
+          code += @scanner.getch
         end
       end
       raise ParseError, "Unexpected code: #{code}."
