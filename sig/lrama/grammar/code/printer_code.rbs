@@ -3,7 +3,7 @@ module Lrama
     class Code
       class PrinterCode < Code
         @tag: untyped
-        def initialize: (?type: untyped, ?token_code: untyped, ?tag: untyped) -> void
+        def initialize: (type: untyped, token_code: untyped, tag: untyped) -> void
 
         private
 
