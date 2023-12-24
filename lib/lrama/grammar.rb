@@ -369,17 +369,7 @@ module Lrama
       setup_rules
 
       @rule_builders.each do |builder|
-        builder.midrule_action_rules.each do |rule|
-          add_nterm(id: rule._lhs)
-          @rules << rule
-        end
-
         builder.rules.each do |rule|
-          add_nterm(id: rule._lhs)
-          @rules << rule
-        end
-
-        builder.parameterizing_rules.each do |rule|
           add_nterm(id: rule._lhs, tag: rule.lhs_tag)
           @rules << rule
         end
