@@ -3,16 +3,16 @@ module Lrama
     class Code
       extend Forwardable
 
-      attr_accessor type: untyped
-      attr_accessor token_code: untyped
+      attr_accessor type: Symbol
+      attr_accessor token_code: Lexer::Token::UserCode
 
       # delegated
       def s_value: -> String
       def line: -> Integer
-      def column: -> untyped
-      def references: -> untyped
+      def column: -> Integer
+      def references: -> Array[Lrama::Grammar::Reference]
 
-      def initialize: (type: untyped, token_code: untyped) -> void
+      def initialize: (type: Symbol, token_code: Lexer::Token::UserCode) -> void
 
       def translated_code: () -> String
 
