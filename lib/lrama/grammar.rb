@@ -74,7 +74,7 @@ module Lrama
         return sym
       end
 
-      if sym = @symbols.find {|s| s.id == id }
+      if (sym = @symbols.find {|s| s.id == id })
         return sym
       end
 

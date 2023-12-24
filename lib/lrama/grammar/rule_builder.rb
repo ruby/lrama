@@ -156,7 +156,7 @@ module Lrama
                   raise location.generate_error_message("Referring symbol `#{ref_name}` is duplicated.")
                 end
 
-                unless referring_symbol = candidates.first
+                unless (referring_symbol = candidates.first)
                   location = token.location.partial_location(ref.first_column, ref.last_column)
                   raise location.generate_error_message("Referring symbol `#{ref_name}` is not found.")
                 end
@@ -179,7 +179,7 @@ module Lrama
       end
 
       def flush_user_code
-        if c = @user_code
+        if (c = @user_code)
           @rhs << c
           @user_code = nil
         end
