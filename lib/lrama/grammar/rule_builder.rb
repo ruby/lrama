@@ -57,16 +57,8 @@ module Lrama
         build_rules
       end
 
-      def parameterizing_rules
-        @parameterizing_rules
-      end
-
-      def midrule_action_rules
-        @midrule_action_rules
-      end
-
       def rules
-        @rules
+        @parameterizing_rules + @midrule_action_rules + @rules
       end
 
       private

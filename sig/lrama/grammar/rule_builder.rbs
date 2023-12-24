@@ -25,8 +25,6 @@ module Lrama
       def precedence_sym=: (Lexer::Token user_code) -> void
       def complete_input: () -> void
       def setup_rules: (Grammar::ParameterizingRuleResolver parameterizing_resolver) -> void
-      def parameterizing_rules: () -> Array[Rule]
-      def midrule_action_rules: () -> Array[Rule]
       def rules: () -> Array[Rule]
 
       private

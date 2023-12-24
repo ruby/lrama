@@ -359,29 +359,8 @@ module Lrama
       @accept_symbol = term
     end
 
-    # 1. Add $accept rule to the top of rules
-    # 2. Extract action in the middle of RHS into new Empty rule
-    # 3. Append id and extract action then create Rule
-    #
-    # Bison 3.8.2 uses different orders for symbol number and rule number
-    # when a rule has actions in the middle of a rule.
-    #
-    # For example,
-    #
-    # `program: $@1 top_compstmt`
-    #
-    # Rules are ordered like below,
-    #
-    # 1 $@1: ε
-    # 2 program: $@1 top_compstmt
-    #
-    # Symbols are ordered like below,
-    #
-    # 164 program
-    # 165 $@1
-    #
     def normalize_rules
-      # 1. Add $accept rule to the top of rules
+      # Add $accept rule to the top of rules
       accept = @accept_symbol
       eof = @eof_symbol
       lineno = @rule_builders.first ? @rule_builders.first.line : 0
@@ -390,23 +369,9 @@ module Lrama
       setup_rules
 
       @rule_builders.each do |builder|
-        # Extract actions in the middle of RHS into new rules.
-        builder.midrule_action_rules.each do |rule|
-          @rules << rule
-        end
-
         builder.rules.each do |rule|
-          add_nterm(id: rule._lhs)
-          @rules << rule
-        end
-
-        builder.parameterizing_rules.each do |rule|
           add_nterm(id: rule._lhs, tag: rule.lhs_tag)
           @rules << rule
-        end
-
-        builder.midrule_action_rules.each do |rule|
-          add_nterm(id: rule._lhs)
         end
       end
 
