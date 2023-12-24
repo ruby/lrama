@@ -102,7 +102,7 @@ module Lrama
           when Lrama::Lexer::Token::Ident
             @replaced_rhs << token
           when Lrama::Lexer::Token::InstantiateRule
-            if parameterizing_resolver.defined?(token.s_value)
+            if parameterizing_resolver.defined?(token.rule_name)
               parameterizing = parameterizing_resolver.build_rules(token, @rule_counter, @lhs_tag, line)
               @parameterizing_rules = @parameterizing_rules + parameterizing.map(&:rules).flatten
               @replaced_rhs = @replaced_rhs + parameterizing.map(&:token).flatten.uniq

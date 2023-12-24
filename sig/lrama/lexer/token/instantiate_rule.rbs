@@ -5,6 +5,7 @@ module Lrama
         attr_accessor args: Array[Lexer::Token]
 
         def initialize: (s_value: String, ?alias_name: String, ?location: Location, ?args: Array[Lexer::Token]) -> void
+        def rule_name: () -> String
       end
     end
   end
