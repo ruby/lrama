@@ -1,10 +1,10 @@
 module Lrama
   class Lexer
     class Location
-      attr_reader :grammar_file_path, :first_line, :first_column, :last_line, :last_column
+      attr_reader :grammar_file, :first_line, :first_column, :last_line, :last_column
 
-      def initialize(grammar_file_path:, first_line:, first_column:, last_line:, last_column:)
-        @grammar_file_path = grammar_file_path
+      def initialize(grammar_file:, first_line:, first_column:, last_line:, last_column:)
+        @grammar_file = grammar_file
         @first_line = first_line
         @first_column = first_column
         @last_line = last_line
@@ -13,7 +13,7 @@ module Lrama
 
       def ==(other)
         self.class == other.class &&
-        self.grammar_file_path == other.grammar_file_path &&
+        self.grammar_file == other.grammar_file &&
         self.first_line == other.first_line &&
         self.first_column == other.first_column &&
         self.last_line == other.last_line &&
@@ -44,19 +44,19 @@ module Lrama
         end
 
         Location.new(
-          grammar_file_path: grammar_file_path,
+          grammar_file: grammar_file,
           first_line: new_first_line, first_column: new_first_column,
           last_line: new_last_line, last_column: new_last_column
         )
       end
 
       def to_s
-        "#{grammar_file_path} (#{first_line},#{first_column})-(#{last_line},#{last_column})"
+        "#{path} (#{first_line},#{first_column})-(#{last_line},#{last_column})"
       end
 
       def generate_error_message(error_message)
         <<~ERROR.chomp
-          #{grammar_file_path}:#{first_line}:#{first_column}: #{error_message}
+          #{path}:#{first_line}:#{first_column}: #{error_message}
           #{line_with_carrets}
         ERROR
       end
@@ -70,6 +70,10 @@ module Lrama
 
       private
 
+      def path
+        grammar_file.path
+      end
+
       def blanks
         (text[0...first_column] or raise "#{first_column} is invalid").gsub(/[^\t]/, ' ')
       end
@@ -79,14 +83,14 @@ module Lrama
       end
 
       def text
-        _text.join("\n")
+        @text ||= _text.join("\n")
       end
 
       def _text
-        return @_text if @_text
-
-        @_text = File.read(grammar_file_path).split("\n")[(first_line - 1)...last_line]
-        @_text
+        @_text ||=begin
+          range = (first_line - 1)...last_line
+          grammar_file.lines[range] or raise "#{range} is invalid"
+        end
       end
     end
   end

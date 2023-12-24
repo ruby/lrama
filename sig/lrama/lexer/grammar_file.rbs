@@ -1,0 +1,13 @@
+module Lrama
+  class Lexer
+    class GrammarFile
+      attr_reader path: String
+      attr_reader text: String
+
+      def initialize: (String path, String text) -> void
+
+      def ==: (GrammarFile other) -> bool
+      def lines: () -> Array[String]
+    end
+  end
+end

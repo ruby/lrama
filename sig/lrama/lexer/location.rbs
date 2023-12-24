@@ -1,13 +1,13 @@
 module Lrama
   class Lexer
     class Location
-      attr_reader grammar_file_path: String
+      attr_reader grammar_file: GrammarFile
       attr_reader first_line: Integer
       attr_reader first_column: Integer
       attr_reader last_line: Integer
       attr_reader last_column: Integer
 
-      def initialize: (grammar_file_path: String, first_line: Integer, first_column: Integer, last_line: Integer, last_column: Integer) -> void
+      def initialize: (grammar_file: GrammarFile, first_line: Integer, first_column: Integer, last_line: Integer, last_column: Integer) -> void
 
       def ==: (Location other) -> bool
       def partial_location: (Integer, Integer) -> Location
@@ -16,6 +16,7 @@ module Lrama
 
       private
 
+      def path: () -> String
       def blanks: () -> String
       def carrets: () -> String
       def text: () -> String

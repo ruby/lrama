@@ -9,21 +9,6 @@ RSpec.describe Lrama::Parser do
   Printer = Lrama::Grammar::Printer
   Code = Lrama::Grammar::Code
 
-  module ParserSpecHelper
-    private
-
-    def create_grammar_file(file_name, content)
-      Tempfile.create(file_name) do |f|
-        f << content
-        f.close
-
-        yield f, content if block_given?
-      end
-    end
-  end
-
-  include ParserSpecHelper
-
   let(:header) do
     <<~HEADER
 %{
@@ -1810,15 +1795,13 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
 
         INPUT
 
-        create_grammar_file("parse.y", y) do |file, content|
-          parser = Lrama::Parser.new(content, file.path)
+        parser = Lrama::Parser.new(y, "parse.y")
 
-          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-            #{file.path}:31:42: ident after %prec
-            class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
-                                                      ^^^^^^^^^^^
-          ERROR
-        end
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31:42: ident after %prec
+          class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
+                                                    ^^^^^^^^^^^
+        ERROR
       end
 
       it "raises error if char exists after %prec" do
@@ -1834,15 +1817,13 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
 
         INPUT
 
-        create_grammar_file("parse.y", y) do |file, content|
-          parser = Lrama::Parser.new(content, file.path)
+        parser = Lrama::Parser.new(y, "parse.y")
 
-          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-            #{file.path}:31:51: char after %prec
-            class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
-                                                               ^^^
-          ERROR
-        end
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31:51: char after %prec
+          class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
+                                                             ^^^
+        ERROR
       end
 
       it "raises error if code exists after %prec" do
@@ -1858,15 +1839,13 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
 
         INPUT
 
-        create_grammar_file("parse.y", y) do |file, content|
-          parser = Lrama::Parser.new(content, file.path)
+        parser = Lrama::Parser.new(y, "parse.y")
 
-          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-            #{file.path}:31:78: multiple User_code after %prec
-            class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
-                                                                                          ^
-          ERROR
-        end
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31:78: multiple User_code after %prec
+          class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
+                                                                                        ^
+        ERROR
       end
     end
 
@@ -2393,15 +2372,13 @@ expr[result]: NUM
 ;
             INPUT
 
-            create_grammar_file("parse.y", y) do |file, content|
-              expected = <<-ERROR
-#{file.path}:27:18: Referring symbol `results` is not found.
+            expected = <<-ERROR
+parse.y:27:18: Referring symbol `results` is not found.
                   $results = $left + $right;
                   ^^^^^^^^
-              ERROR
+            ERROR
 
-              expect { Lrama::Parser.new(content, file.path).parse }.to raise_error(expected)
-            end
+            expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
           end
         end
       end
@@ -2423,15 +2400,13 @@ program: /* empty */
        ;
           INPUT
 
-          create_grammar_file("error_messages/parse.y", y) do |file, content|
-            parser = Lrama::Parser.new(content, file.path)
+          parser = Lrama::Parser.new(y, "error_messages/parse.y")
 
-            expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-              #{file.path}:5:8: parse error on value 'invalid' (IDENTIFIER)
-              %expect invalid
-                      ^^^^^^^
-            ERROR
-          end
+          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+            error_messages/parse.y:5:8: parse error on value 'invalid' (IDENTIFIER)
+            %expect invalid
+                    ^^^^^^^
+          ERROR
         end
       end
 
@@ -2450,15 +2425,13 @@ program: /* empty */
        ;
           INPUT
 
-          create_grammar_file("error_messages/parse.y", y) do |file, content|
-            parser = Lrama::Parser.new(content, file.path)
+          parser = Lrama::Parser.new(y, "error_messages/parse.y")
 
-            expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-              #{file.path}:5:10: parse error on value 10 (INTEGER)
-              %expect 0 10
-                        ^^
-            ERROR
-          end
+          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+            error_messages/parse.y:5:10: parse error on value 10 (INTEGER)
+            %expect 0 10
+                      ^^
+          ERROR
         end
       end
 
@@ -2477,15 +2450,13 @@ program: /* empty */
        ;
           INPUT
 
-          create_grammar_file("error_messages/parse.y", y) do |file, content|
-            parser = Lrama::Parser.new(content, file.path)
+          parser = Lrama::Parser.new(y, "error_messages/parse.y")
 
-            expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-              #{file.path}:5:9: parse error on value 'invalid' (IDENTIFIER)
-              %expect\t\tinvalid
-                     \t\t^^^^^^^
-            ERROR
-          end
+          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+            error_messages/parse.y:5:9: parse error on value 'invalid' (IDENTIFIER)
+            %expect\t\tinvalid
+                   \t\t^^^^^^^
+          ERROR
         end
       end
     end
