@@ -8,6 +8,10 @@ module Lrama
           super s_value: s_value, alias_name: alias_name, location: location
           @args = args
         end
+
+        def rule_name
+          s_value
+        end
       end
     end
   end
