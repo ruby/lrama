@@ -107,7 +107,7 @@ jobs:
         # '3.0' is the oldest living ruby version
         # '2.5' is for BASERUBY
         baseruby: ['head', '3.0', '2.5']
-        ruby_branch: ['master']
+        ruby_branch: ['ruby_3_3']
     defaults:
       run:
         working-directory: ../ruby/build
