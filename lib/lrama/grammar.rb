@@ -52,7 +52,7 @@ module Lrama
     end
 
     def add_percent_code(id:, code:)
-      @percent_codes << PercentCode.new(id, code)
+      @percent_codes << PercentCode.new(id.s_value, code.s_value)
     end
 
     def add_printer(ident_or_tags:, token_code:, lineno:)
