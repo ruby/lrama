@@ -12,13 +12,13 @@ module Lrama
       def ==: (Location other) -> bool
       def partial_location: (Integer, Integer) -> Location
       def generate_error_message: (String) -> String
-      def line_with_carrets: () -> String
+      def line_with_carets: () -> String
 
       private
 
       def path: () -> String
       def blanks: () -> String
-      def carrets: () -> String
+      def carets: () -> String
       def text: () -> String
       def _text: () -> Array[String]
     end

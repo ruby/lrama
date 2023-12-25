@@ -57,14 +57,14 @@ module Lrama
       def generate_error_message(error_message)
         <<~ERROR.chomp
           #{path}:#{first_line}:#{first_column}: #{error_message}
-          #{line_with_carrets}
+          #{line_with_carets}
         ERROR
       end
 
-      def line_with_carrets
+      def line_with_carets
         <<~TEXT
           #{text}
-          #{carrets}
+          #{carets}
         TEXT
       end
 
@@ -78,7 +78,7 @@ module Lrama
         (text[0...first_column] or raise "#{first_column} is invalid").gsub(/[^\t]/, ' ')
       end
 
-      def carrets
+      def carets
         blanks + '^' * (last_column - first_column)
       end
 

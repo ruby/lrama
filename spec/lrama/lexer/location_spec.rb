@@ -32,8 +32,8 @@ RSpec.describe Lrama::Lexer::Location do
     end
   end
 
-  describe "#line_with_carrets" do
-    it "returns line text with carrets" do
+  describe "#line_with_carets" do
+    it "returns line text with carets" do
       path = fixture_path("lexer/location.y")
       grammar_file = Lrama::Lexer::GrammarFile.new(path, File.read(path))
       location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 33, first_column: 12, last_line: 33, last_column: 15)
@@ -42,7 +42,7 @@ RSpec.describe Lrama::Lexer::Location do
             ^^^
       TEXT
 
-      expect(location.line_with_carrets).to eq expected
+      expect(location.line_with_carets).to eq expected
     end
   end
 end
