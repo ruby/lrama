@@ -352,7 +352,7 @@ module Lrama
     # b4_percent_code_get
     def percent_code(name)
       @grammar.percent_codes.select do |percent_code|
-        percent_code.id.s_value == name
+        percent_code.name == name
       end.map do |percent_code|
         percent_code.code.s_value
       end.join
