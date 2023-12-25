@@ -95,6 +95,13 @@ $ bundle exec rbs collection install
 $ bundle exec steep check
 ```
 
+Running both of them:
+
+```shell
+$ bundle install
+$ bundle exec rake
+```
+
 ### Profiling Lrama
 
 #### 1. Create parse.tmp.y in ruby/ruby
