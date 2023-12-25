@@ -1,6 +1,6 @@
 # NEWS for Lrama
 
-## Lrama 0.6.0 (202X-XX-XX)
+## Lrama 0.6.0 (2023-12-25)
 
 ### User defined parameterizing rules
 
