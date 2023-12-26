@@ -408,19 +408,17 @@ rule
          }
      | rhs symbol parameterizing_suffix tag_opt
          {
-           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
+           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]], lhs_tag: val[3])
            builder = val[0]
            builder.add_rhs(token)
-           builder.lhs_tag = val[3]
            builder.line = val[1].first_line
            result = builder
          }
      | rhs IDENTIFIER "(" parameterizing_args ")" tag_opt
          {
-           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3])
+           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
            builder = val[0]
            builder.add_rhs(token)
-           builder.lhs_tag = val[5]
            builder.line = val[1].first_line
            result = builder
          }

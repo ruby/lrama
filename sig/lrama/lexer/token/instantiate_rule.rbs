@@ -3,8 +3,9 @@ module Lrama
     class Token
       class InstantiateRule < Token
         attr_accessor args: Array[Lexer::Token]
+        attr_reader lhs_tag: Lexer::Token::Tag?
 
-        def initialize: (s_value: String, ?alias_name: String, ?location: Location, ?args: Array[Lexer::Token]) -> void
+        def initialize: (s_value: String, ?alias_name: String, ?location: Location, ?args: Array[Lexer::Token], ?lhs_tag: Lexer::Token::Tag?) -> void
         def rule_name: () -> String
       end
     end

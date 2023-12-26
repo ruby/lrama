@@ -2,8 +2,8 @@ module Lrama
   class Grammar
     class RuleBuilder
       attr_accessor lhs: Lexer::Token
-      attr_accessor lhs_tag: untyped
       attr_accessor line: Integer?
+      attr_reader lhs_tag: Lexer::Token::Tag?
       attr_reader rhs: Array[Lexer::Token]
       attr_reader user_code: Lexer::Token::UserCode?
       attr_reader precedence_sym: Lexer::Token?
@@ -19,7 +19,7 @@ module Lrama
       @parameterizing_rules: Array[Rule]
       @midrule_action_rules: Array[Rule]
 
-      def initialize: (Counter rule_counter, Counter midrule_action_counter, ?Integer position_in_original_rule_rhs, ?skip_preprocess_references: bool) -> void
+      def initialize: (Counter rule_counter, Counter midrule_action_counter, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
       def add_rhs: (Lexer::Token rhs) -> void
       def user_code=: (Lexer::Token::UserCode user_code) -> void
       def precedence_sym=: (Lexer::Token user_code) -> void

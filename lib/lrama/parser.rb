@@ -658,7 +658,7 @@ end
 module Lrama
   class Parser < Racc::Parser
 
-module_eval(<<'...end parser.y/module_eval...', 'parser.y', 500)
+module_eval(<<'...end parser.y/module_eval...', 'parser.y', 498)
 
 include Lrama::Report::Duration
 
@@ -1933,10 +1933,9 @@ module_eval(<<'.,.,', 'parser.y', 402)
 
 module_eval(<<'.,.,', 'parser.y', 410)
   def _reduce_99(val, _values, result)
-               token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
+               token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]], lhs_tag: val[3])
            builder = val[0]
            builder.add_rhs(token)
-           builder.lhs_tag = val[3]
            builder.line = val[1].first_line
            result = builder
 
@@ -1944,12 +1943,11 @@ module_eval(<<'.,.,', 'parser.y', 410)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 419)
+module_eval(<<'.,.,', 'parser.y', 418)
   def _reduce_100(val, _values, result)
-               token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3])
+               token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
            builder = val[0]
            builder.add_rhs(token)
-           builder.lhs_tag = val[5]
            builder.line = val[1].first_line
            result = builder
 
@@ -1957,7 +1955,7 @@ module_eval(<<'.,.,', 'parser.y', 419)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 428)
+module_eval(<<'.,.,', 'parser.y', 426)
   def _reduce_101(val, _values, result)
                if @prec_seen
              on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
@@ -1969,7 +1967,7 @@ module_eval(<<'.,.,', 'parser.y', 428)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 436)
+module_eval(<<'.,.,', 'parser.y', 434)
   def _reduce_102(val, _values, result)
                end_c_declaration
 
@@ -1977,7 +1975,7 @@ module_eval(<<'.,.,', 'parser.y', 436)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 440)
+module_eval(<<'.,.,', 'parser.y', 438)
   def _reduce_103(val, _values, result)
                user_code = val[3]
            user_code.alias_name = val[6]
@@ -1989,7 +1987,7 @@ module_eval(<<'.,.,', 'parser.y', 440)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 448)
+module_eval(<<'.,.,', 'parser.y', 446)
   def _reduce_104(val, _values, result)
                sym = @grammar.find_symbol_by_id!(val[2])
            @prec_seen = true
@@ -2007,14 +2005,14 @@ module_eval(<<'.,.,', 'parser.y', 448)
 
 # reduce 107 omitted
 
-module_eval(<<'.,.,', 'parser.y', 459)
+module_eval(<<'.,.,', 'parser.y', 457)
   def _reduce_108(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 460)
+module_eval(<<'.,.,', 'parser.y', 458)
   def _reduce_109(val, _values, result)
      result = val[0].append(val[2])
     result
@@ -2023,7 +2021,7 @@ module_eval(<<'.,.,', 'parser.y', 460)
 
 # reduce 110 omitted
 
-module_eval(<<'.,.,', 'parser.y', 463)
+module_eval(<<'.,.,', 'parser.y', 461)
   def _reduce_111(val, _values, result)
      result = val[1].s_value
     result
@@ -2034,7 +2032,7 @@ module_eval(<<'.,.,', 'parser.y', 463)
 
 # reduce 113 omitted
 
-module_eval(<<'.,.,', 'parser.y', 470)
+module_eval(<<'.,.,', 'parser.y', 468)
   def _reduce_114(val, _values, result)
                         begin_c_declaration('\Z')
                     @grammar.epilogue_first_lineno = @lexer.line + 1
@@ -2043,7 +2041,7 @@ module_eval(<<'.,.,', 'parser.y', 470)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 475)
+module_eval(<<'.,.,', 'parser.y', 473)
   def _reduce_115(val, _values, result)
                         end_c_declaration
                     @grammar.epilogue = val[2].s_value
@@ -2062,14 +2060,14 @@ module_eval(<<'.,.,', 'parser.y', 475)
 
 # reduce 120 omitted
 
-module_eval(<<'.,.,', 'parser.y', 486)
+module_eval(<<'.,.,', 'parser.y', 484)
   def _reduce_121(val, _values, result)
      result = [val[0]]
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 487)
+module_eval(<<'.,.,', 'parser.y', 485)
   def _reduce_122(val, _values, result)
      result = val[0].append(val[1])
     result
@@ -2080,7 +2078,7 @@ module_eval(<<'.,.,', 'parser.y', 487)
 
 # reduce 124 omitted
 
-module_eval(<<'.,.,', 'parser.y', 492)
+module_eval(<<'.,.,', 'parser.y', 490)
   def _reduce_125(val, _values, result)
      result = Lrama::Lexer::Token::Ident.new(s_value: val[0])
     result
