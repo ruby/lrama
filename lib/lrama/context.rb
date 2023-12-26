@@ -41,7 +41,7 @@ module Lrama
     def yyfinal
       @states.states.find do |state|
         state.items.find do |item|
-          item.rule.lhs.id.s_value == "$accept" && item.end_of_rule?
+          item.rule.lhs.accept_symbol? && item.end_of_rule?
         end
       end.id
     end
