@@ -3,10 +3,12 @@ module Lrama
     class Token
       class InstantiateRule < Token
         attr_accessor :args
+        attr_reader :lhs_tag
 
-        def initialize(s_value:, alias_name: nil, location: nil, args: [])
+        def initialize(s_value:, alias_name: nil, location: nil, args: [], lhs_tag: nil)
           super s_value: s_value, alias_name: alias_name, location: location
           @args = args
+          @lhs_tag = lhs_tag
         end
 
         def rule_name

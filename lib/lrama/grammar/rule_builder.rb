@@ -3,18 +3,18 @@ require 'lrama/grammar/parameterizing_rules/builder'
 module Lrama
   class Grammar
     class RuleBuilder
-      attr_accessor :lhs, :lhs_tag, :line
-      attr_reader :rhs, :user_code, :precedence_sym
+      attr_accessor :lhs, :line
+      attr_reader :lhs_tag, :rhs, :user_code, :precedence_sym
 
-      def initialize(rule_counter, midrule_action_counter, position_in_original_rule_rhs = nil, skip_preprocess_references: false)
+      def initialize(rule_counter, midrule_action_counter, position_in_original_rule_rhs = nil, lhs_tag: nil, skip_preprocess_references: false)
         @rule_counter = rule_counter
         @midrule_action_counter = midrule_action_counter
         @position_in_original_rule_rhs = position_in_original_rule_rhs
         @skip_preprocess_references = skip_preprocess_references
 
         @lhs = nil
+        @lhs_tag = lhs_tag
         @rhs = []
-        @lhs_tag = nil
         @user_code = nil
         @precedence_sym = nil
         @line = nil
@@ -103,12 +103,12 @@ module Lrama
             @replaced_rhs << token
           when Lrama::Lexer::Token::InstantiateRule
             if parameterizing_resolver.defined?(token.rule_name)
-              parameterizing = parameterizing_resolver.build_rules(token, @rule_counter, @lhs_tag, line)
+              parameterizing = parameterizing_resolver.build_rules(token, @rule_counter, token.lhs_tag, line)
               @parameterizing_rules = @parameterizing_rules + parameterizing.map(&:rules).flatten
               @replaced_rhs = @replaced_rhs + parameterizing.map(&:token).flatten.uniq
             else
               # TODO: Delete when the standard library will defined as a grammar file.
-              parameterizing = ParameterizingRules::Builder.new(token, @rule_counter, @lhs_tag, user_code, precedence_sym, line)
+              parameterizing = ParameterizingRules::Builder.new(token, @rule_counter, token.lhs_tag, user_code, precedence_sym, line)
               @parameterizing_rules = @parameterizing_rules + parameterizing.build
               @replaced_rhs << parameterizing.build_token
             end
