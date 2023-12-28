@@ -18,6 +18,7 @@ module Lrama
         @user_code = nil
         @precedence_sym = nil
         @line = nil
+        @rule_builders_for_parameterizing_rules = []
         @rule_builders_for_derived_rules = []
       end
 
@@ -33,7 +34,7 @@ module Lrama
 
       def user_code=(user_code)
         if !@line
-          @line = user_code.line
+          @line = user_code&.line
         end
 
         flush_user_code
@@ -51,14 +52,14 @@ module Lrama
         freeze_rhs
       end
 
-      def setup_rules(parameterizing_resolver)
+      def setup_rules(parameterizing_rule_resolver)
         preprocess_references unless @skip_preprocess_references
-        process_rhs(parameterizing_resolver)
+        process_rhs(parameterizing_rule_resolver)
         build_rules
       end
 
       def rules
-        @parameterizing_rules + @midrule_action_rules + @rules
+        @parameterizing_rules + @old_parameterizing_rules + @midrule_action_rules + @rules
       end
 
       private
@@ -75,10 +76,13 @@ module Lrama
         tokens = @replaced_rhs
 
         rule = Rule.new(
-          id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, token_code: user_code,
+          id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
           position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
         )
         @rules = [rule]
+        @parameterizing_rules = @rule_builders_for_parameterizing_rules.map do |rule_builder|
+          rule_builder.rules
+        end.flatten
         @midrule_action_rules = @rule_builders_for_derived_rules.map do |rule_builder|
           rule_builder.rules
         end.flatten
@@ -89,11 +93,11 @@ module Lrama
 
       # rhs is a mixture of variety type of tokens like `Ident`, `InstantiateRule`, `UserCode` and so on.
       # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
-      def process_rhs(parameterizing_resolver)
+      def process_rhs(parameterizing_rule_resolver)
         return if @replaced_rhs
 
         @replaced_rhs = []
-        @parameterizing_rules = []
+        @old_parameterizing_rules = []
 
         rhs.each_with_index do |token, i|
           case token
@@ -102,26 +106,42 @@ module Lrama
           when Lrama::Lexer::Token::Ident
             @replaced_rhs << token
           when Lrama::Lexer::Token::InstantiateRule
-            if parameterizing_resolver.defined?(token.rule_name)
-              parameterizing = parameterizing_resolver.build_rules(token, @rule_counter, token.lhs_tag, line)
-              @parameterizing_rules = @parameterizing_rules + parameterizing.map(&:rules).flatten
-              @replaced_rhs = @replaced_rhs + parameterizing.map(&:token).flatten.uniq
+            if parameterizing_rule_resolver.defined?(token)
+              parameterizing_rule = parameterizing_rule_resolver.find(token)
+              raise "Unexpected token. #{token}" unless parameterizing_rule
+
+              binding = Binding.new(parameterizing_rule.parameters, token.args)
+              actual_args = token.args.map { |arg| binding.resolve_symbol(arg).s_value }
+              new_token = Lrama::Lexer::Token::Ident.new(s_value: "#{token.rule_name}_#{actual_args.join('_')}")
+              @replaced_rhs << new_token
+
+              parameterizing_rule.rhs_list.each do |r|
+                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
+                rule_builder.lhs = new_token
+                r.symbols.map { |sym| rule_builder.add_rhs(binding.resolve_symbol(sym)) }
+                rule_builder.line = line
+                rule_builder.user_code = r.user_code
+                rule_builder.precedence_sym = r.precedence_sym
+                rule_builder.complete_input
+                rule_builder.setup_rules(parameterizing_rule_resolver)
+                @rule_builders_for_parameterizing_rules << rule_builder
+              end
             else
               # TODO: Delete when the standard library will defined as a grammar file.
-              parameterizing = ParameterizingRules::Builder.new(token, @rule_counter, token.lhs_tag, user_code, precedence_sym, line)
-              @parameterizing_rules = @parameterizing_rules + parameterizing.build
-              @replaced_rhs << parameterizing.build_token
+              parameterizing_rule = ParameterizingRules::Builder.new(token, @rule_counter, token.lhs_tag, user_code, precedence_sym, line)
+              @old_parameterizing_rules = @old_parameterizing_rules + parameterizing_rule.build
+              @replaced_rhs << parameterizing_rule.build_token
             end
           when Lrama::Lexer::Token::UserCode
             prefix = token.referred ? "@" : "$@"
             new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
             @replaced_rhs << new_token
 
-            rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, skip_preprocess_references: true)
+            rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, lhs_tag: lhs_tag, skip_preprocess_references: true)
             rule_builder.lhs = new_token
             rule_builder.user_code = token
             rule_builder.complete_input
-            rule_builder.setup_rules(parameterizing_resolver)
+            rule_builder.setup_rules(parameterizing_rule_resolver)
 
             @rule_builders_for_derived_rules << rule_builder
           else

@@ -14,6 +14,10 @@ module Lrama
         def rule_name
           s_value
         end
+
+        def args_count
+          args.count
+        end
       end
     end
   end

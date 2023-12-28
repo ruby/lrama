@@ -1,0 +1,18 @@
+module Lrama
+  class Grammar
+    class ParameterizingRule
+      class Resolver
+        @rules: Array[Grammar::ParameterizingRule::Rule]
+
+        def initialize: () -> void
+        def add_parameterizing_rule: (Grammar::ParameterizingRule::Rule rule) -> void
+        def defined?: (Lexer::Token::InstantiateRule token) -> bool
+        def find: (Lexer::Token::InstantiateRule token) -> Grammar::ParameterizingRule::Rule?
+
+        private
+
+        def select_rules: (Lexer::Token::InstantiateRule token) -> Array[Grammar::ParameterizingRule::Rule]
+      end
+    end
+  end
+end

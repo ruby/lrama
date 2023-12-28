@@ -40,7 +40,7 @@ module Lrama
       @rule_builders = []
       @rules = []
       @sym_to_rules = {}
-      @parameterizing_resolver = ParameterizingRuleResolver.new
+      @parameterizing_rule_resolver = ParameterizingRule::Resolver.new
       @empty_symbol = nil
       @eof_symbol = nil
       @error_symbol = nil
@@ -134,8 +134,8 @@ module Lrama
       @rule_builders << builder
     end
 
-    def add_parameterizing_rule_builder(builder)
-      @parameterizing_resolver.add_parameterizing_rule_builder(builder)
+    def add_parameterizing_rule(rule)
+      @parameterizing_rule_resolver.add_parameterizing_rule(rule)
     end
 
     def prologue_first_lineno=(prologue_first_lineno)
@@ -319,7 +319,7 @@ module Lrama
 
     def setup_rules
       @rule_builders.each do |builder|
-        builder.setup_rules(@parameterizing_resolver)
+        builder.setup_rules(@parameterizing_rule_resolver)
       end
     end
 

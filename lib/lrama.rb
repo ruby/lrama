@@ -1,4 +1,5 @@
 require "lrama/bitmap"
+require "lrama/binding"
 require "lrama/command"
 require "lrama/context"
 require "lrama/counterexamples"
