@@ -14,8 +14,8 @@ module Lrama
 
       def resolve_symbol(symbol)
         if symbol.is_a?(Lexer::Token::InstantiateRule)
-          symbol.args.map! { |arg| resolve_symbol(arg) }
-          symbol
+          resolved_args = symbol.args.map { |arg| resolve_symbol(arg) }
+          Lrama::Lexer::Token::InstantiateRule.new(s_value: symbol.s_value, location: symbol.location, args: resolved_args, lhs_tag: symbol.lhs_tag)
         else
           @parameter_to_arg[symbol.s_value] || symbol
         end
