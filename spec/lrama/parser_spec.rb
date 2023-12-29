@@ -1404,7 +1404,6 @@ RSpec.describe Lrama::Parser do
         y = File.read(fixture_path(path))
         grammar = Lrama::Parser.new(y, path).parse
 
-
         expect(grammar.nterms.sort_by(&:number)).to match_symbols([
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
           Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
