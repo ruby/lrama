@@ -168,10 +168,10 @@ RSpec.describe Lrama::Output do
         o = out.read
         h = header_out.read
 
-        expect(o).not_to match /\[@oline@\]/
-        expect(o).not_to match /\[@ofile@\]/
-        expect(h).not_to match /\[@oline@\]/
-        expect(h).not_to match /\[@ofile@\]/
+        expect(o).not_to match(/\[@oline@\]/)
+        expect(o).not_to match(/\[@ofile@\]/)
+        expect(h).not_to match(/\[@oline@\]/)
+        expect(h).not_to match(/\[@ofile@\]/)
       end
     end
 
@@ -192,8 +192,8 @@ RSpec.describe Lrama::Output do
       it "doesn't include [@oline@] and [@ofile@] in a file" do
         o = out.read
 
-        expect(o).not_to match /\[@oline@\]/
-        expect(o).not_to match /\[@ofile@\]/
+        expect(o).not_to match(/\[@oline@\]/)
+        expect(o).not_to match(/\[@ofile@\]/)
       end
     end
   end
