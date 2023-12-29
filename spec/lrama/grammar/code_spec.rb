@@ -81,7 +81,7 @@ RSpec.describe Lrama::Grammar::Code do
 
   describe Lrama::Grammar::Code::RuleAction do
     let(:y) do
-      <<~Grammar
+      <<~GRAMMAR
 %union {
     int i;
     int str;
@@ -147,7 +147,7 @@ rule8: expr { $$ = $1 } '+' expr { $2; }
      ;
 
 %%
-      Grammar
+      GRAMMAR
     end
     let(:grammar) { Lrama::Parser.new(y, "parse.y").parse }
 
