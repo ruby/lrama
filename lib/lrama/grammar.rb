@@ -1,4 +1,5 @@
 require "lrama/grammar/auxiliary"
+require "lrama/grammar/binding"
 require "lrama/grammar/code"
 require "lrama/grammar/counter"
 require "lrama/grammar/error_token"

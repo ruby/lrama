@@ -4,6 +4,7 @@ target :lib do
   repo_path '.gem_rbs_collection/'
   signature "sig"
 
+  check "lib/lrama/grammar/binding.rb"
   check "lib/lrama/grammar/code/printer_code.rb"
   check "lib/lrama/grammar/code.rb"
   check "lib/lrama/grammar/counter.rb"
@@ -18,7 +19,6 @@ target :lib do
   check "lib/lrama/grammar/symbol.rb"
   check "lib/lrama/lexer"
   check "lib/lrama/report"
-  check "lib/lrama/binding.rb"
   check "lib/lrama/bitmap.rb"
   check "lib/lrama/digraph.rb"
   check "lib/lrama/warning.rb"
