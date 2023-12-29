@@ -1,0 +1,14 @@
+module Lrama
+  class Grammar
+    class ParameterizingRule
+      class Rule
+        attr_reader name: String
+        attr_reader parameters: Array[Lexer::Token]
+        attr_reader rhs_list: Array[Grammar::ParameterizingRule::Rhs]
+        attr_reader required_parameters_count: Integer
+
+        def initialize: (String name, Array[Lexer::Token] parameters, Array[Grammar::ParameterizingRule::Rhs] rhs_list) -> void
+      end
+    end
+  end
+end

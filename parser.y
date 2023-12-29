@@ -205,8 +205,8 @@ rule
 
   rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
                       {
-                        builder = Grammar::ParameterizingRuleBuilder.new(val[1].s_value, val[3], val[6])
-                        @grammar.add_parameterizing_rule_builder(builder)
+                        rule = Grammar::ParameterizingRule::Rule.new(val[1].s_value, val[3], val[6])
+                        @grammar.add_parameterizing_rule(rule)
                       }
 
   rule_args: IDENTIFIER { result = [val[0]] }
@@ -226,12 +226,12 @@ rule
   rule_rhs: /* empty */
             {
               reset_precs
-              result = Grammar::ParameterizingRuleRhsBuilder.new
+              result = Grammar::ParameterizingRule::Rhs.new
             }
           | "%empty"
             {
               reset_precs
-              result = Grammar::ParameterizingRuleRhsBuilder.new
+              result = Grammar::ParameterizingRule::Rhs.new
             }
           | rule_rhs symbol named_ref_opt
             {

@@ -1568,8 +1568,8 @@ module_eval(<<'.,.,', 'parser.y', 203)
 
 module_eval(<<'.,.,', 'parser.y', 207)
   def _reduce_49(val, _values, result)
-                            builder = Grammar::ParameterizingRuleBuilder.new(val[1].s_value, val[3], val[6])
-                        @grammar.add_parameterizing_rule_builder(builder)
+                            rule = Grammar::ParameterizingRule::Rule.new(val[1].s_value, val[3], val[6])
+                        @grammar.add_parameterizing_rule(rule)
 
     result
   end
@@ -1610,7 +1610,7 @@ module_eval(<<'.,.,', 'parser.y', 221)
 module_eval(<<'.,.,', 'parser.y', 227)
   def _reduce_54(val, _values, result)
                   reset_precs
-              result = Grammar::ParameterizingRuleRhsBuilder.new
+              result = Grammar::ParameterizingRule::Rhs.new
 
     result
   end
@@ -1619,7 +1619,7 @@ module_eval(<<'.,.,', 'parser.y', 227)
 module_eval(<<'.,.,', 'parser.y', 232)
   def _reduce_55(val, _values, result)
                   reset_precs
-              result = Grammar::ParameterizingRuleRhsBuilder.new
+              result = Grammar::ParameterizingRule::Rhs.new
 
     result
   end

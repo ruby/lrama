@@ -345,7 +345,7 @@ class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
       rule_builder.add_rhs(token_6)
       rule_builder.user_code = token_7
       rule_builder.complete_input
-      rule_builder.setup_rules(Lrama::Grammar::ParameterizingRuleResolver.new)
+      rule_builder.setup_rules(Lrama::Grammar::ParameterizingRule::Resolver.new)
 
       rules = rule_builder.rules
       midrule_1 = rules.find {|rule| rule._lhs.s_value == "@1"}
@@ -382,7 +382,7 @@ class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
       rule_builder.add_rhs(token_6)
       rule_builder.user_code = token_7
       rule_builder.complete_input
-      rule_builder.setup_rules(Lrama::Grammar::ParameterizingRuleResolver.new)
+      rule_builder.setup_rules(Lrama::Grammar::ParameterizingRule::Resolver.new)
 
       tokens = rule_builder.instance_variable_get(:@replaced_rhs)
 

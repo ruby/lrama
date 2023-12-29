@@ -1,10 +1,6 @@
 module Lrama
   class Grammar
     class ParameterizingRule
-      attr_accessor rules: Array[Rule]
-      attr_accessor token: Lexer::Token
-
-      def initialize: (?untyped rules, Lexer::Token token) -> void
     end
   end
 end

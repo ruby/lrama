@@ -7,6 +7,7 @@ module Lrama
 
         def initialize: (s_value: String, ?alias_name: String, ?location: Location, ?args: Array[Lexer::Token], ?lhs_tag: Lexer::Token::Tag?) -> void
         def rule_name: () -> String
+        def args_count: () -> Integer
       end
     end
   end
