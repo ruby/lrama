@@ -2,8 +2,7 @@ module Lrama
   class Lexer
     class Token
       class InstantiateRule < Token
-        attr_accessor :args
-        attr_reader :lhs_tag
+        attr_reader :args, :lhs_tag
 
         def initialize(s_value:, alias_name: nil, location: nil, args: [], lhs_tag: nil)
           super s_value: s_value, alias_name: alias_name, location: location
