@@ -217,13 +217,13 @@ module Lrama
       # Trace
       trace_state do |out|
         out << "Closure: input\n"
-        state.kernels.each do |item|
-          out << "  #{item.display_rest}\n"
+        state.kernels.each do |si|
+          out << "  #{si.display_rest}\n"
         end
         out << "\n\n"
         out << "Closure: output\n"
-        state.items.each do |item|
-          out << "  #{item.display_rest}\n"
+        state.items.each do |si|
+          out << "  #{si.display_rest}\n"
         end
         out << "\n\n"
       end
@@ -289,8 +289,8 @@ module Lrama
         state.nterm_transitions.each do |shift, next_state|
           nterm = shift.next_sym
 
-          ary = next_state.term_transitions.map do |shift, _|
-            shift.next_sym.number
+          ary = next_state.term_transitions.map do |ts, _|
+            ts.next_sym.number
           end
 
           key = [state.id, nterm.token_id]

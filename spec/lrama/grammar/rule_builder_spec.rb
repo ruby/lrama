@@ -374,15 +374,15 @@ class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
       rules = rule_builder.rules
       midrule_1 = rules.find {|rule| rule._lhs.s_value == "@1"}
       midrule_2 = rules.find {|rule| rule._lhs.s_value == "$@2"}
-      rule = rules.find {|rule| rule._lhs.s_value == "class"}
+      original_rule = rules.find {|rule| rule._lhs.s_value == "class"}
 
       expect(rules.count).to eq 3
       expect(midrule_1._lhs.s_value).to eq '@1'
       expect(midrule_1.token_code.s_value).to eq '$1'
-      expect(midrule_1.original_rule).to eq rule
+      expect(midrule_1.original_rule).to eq original_rule
       expect(midrule_2._lhs.s_value).to eq '$@2'
       expect(midrule_2.token_code.s_value).to eq '$2 + $3'
-      expect(midrule_2.original_rule).to eq rule
+      expect(midrule_2.original_rule).to eq original_rule
     end
   end
 

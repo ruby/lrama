@@ -97,8 +97,8 @@ module Lrama
           if next_sym == sym
             derivation = nil
 
-            sis.reverse.each do |si|
-              derivation = Derivation.new(si.item, derivation)
+            sis.reverse.each do |rsi|
+              derivation = Derivation.new(rsi.item, derivation)
             end
 
             return derivation
