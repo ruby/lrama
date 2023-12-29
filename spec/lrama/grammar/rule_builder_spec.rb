@@ -214,15 +214,21 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
 
     context "variables refer to wrong position" do
-      let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
-      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
-      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
-      let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
-      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
-      let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $10;", location: location) }
+      let(:text) { "class : keyword_class tSTRING keyword_end { $class = $10; }" }
+      let(:grammar_file) { Lrama::Lexer::GrammarFile.new(path, text) }
+      let(:location_1) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 5) }
+      let(:location_2) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 8, last_line: 1, last_column: 21) }
+      let(:location_3) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 22, last_line: 1, last_column: 29) }
+      let(:location_4) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 30, last_line: 1, last_column: 41) }
+      let(:location_5) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 43, last_line: 1, last_column: 58) }
+
+      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location_1) }
+      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location_2) }
+      let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location_3) }
+      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location_4) }
+      let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: " $class = $10; ", location: location_5) }
 
       it "raises error" do
-        # class : keyword_class tSTRING keyword_end { $class = $10; }
         rule_builder.lhs = token_1
         rule_builder.add_rhs(token_2)
         rule_builder.add_rhs(token_3)
@@ -230,21 +236,33 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
-        expect { rule_builder.send(:preprocess_references) }.to raise_error(/Can not refer following component\. 10 >= 4\./)
+        expected = <<-TEXT
+parse.y:1:53: Can not refer following component. 10 >= 4.
+class : keyword_class tSTRING keyword_end { $class = $10; }
+                                                     ^^^
+        TEXT
+
+        expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
       end
     end
 
     context "variables in mid action rule refer to following component" do
-      let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
-      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
-      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location) }
-      let(:token_3) { Lrama::Lexer::Token::UserCode.new(s_value: "$3;", location: location) }
-      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location) }
-      let(:token_5) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
-      let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1;", location: location) }
+      let(:text) { "class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }" }
+      let(:grammar_file) { Lrama::Lexer::GrammarFile.new(path, text) }
+      let(:location_1) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 5) }
+      let(:location_2) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 8, last_line: 1, last_column: 21) }
+      let(:location_3) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 23, last_line: 1, last_column: 28) }
+      let(:location_4) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 30, last_line: 1, last_column: 37) }
+      let(:location_5) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 38, last_line: 1, last_column: 49) }
+      let(:location_6) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 51, last_line: 1, last_column: 65) }
+      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location_1) }
+      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location_2) }
+      let(:token_3) { Lrama::Lexer::Token::UserCode.new(s_value: " $3; ", location: location_3) }
+      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location_4) }
+      let(:token_5) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location_5) }
+      let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: " $class = $1; ", location: location_6) }
 
       it "raises error" do
-        # class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }
         rule_builder.lhs = token_1
         rule_builder.add_rhs(token_2)
         rule_builder.user_code = token_3
@@ -253,7 +271,13 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.user_code = token_6
         rule_builder.complete_input
 
-        expect { rule_builder.send(:preprocess_references) }.to raise_error(/Can not refer following component\. 3 >= 2\./)
+        expected = <<-TEXT
+parse.y:1:24: Can not refer following component. 3 >= 2.
+class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }
+                        ^^
+        TEXT
+
+        expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
       end
     end
 

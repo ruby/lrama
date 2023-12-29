@@ -17,6 +17,7 @@ module Lrama
       def last_column: () -> Integer
       alias line first_line
       alias column first_column
+      def invalid_ref: (Lrama::Grammar::Reference ref, String message) -> bot
     end
   end
 end

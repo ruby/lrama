@@ -164,13 +164,11 @@ module Lrama
                 candidates = rhs.each_with_index.select {|token, i| token.referred_by?(ref_name) }
 
                 if candidates.size >= 2
-                  location = token.location.partial_location(ref.first_column, ref.last_column)
-                  raise location.generate_error_message("Referring symbol `#{ref_name}` is duplicated.")
+                  token.invalid_ref(ref, "Referring symbol `#{ref_name}` is duplicated.")
                 end
 
                 unless (referring_symbol = candidates.first)
-                  location = token.location.partial_location(ref.first_column, ref.last_column)
-                  raise location.generate_error_message("Referring symbol `#{ref_name}` is not found.")
+                  token.invalid_ref(ref, "Referring symbol `#{ref_name}` is not found.")
                 end
 
                 ref.index = referring_symbol[1] + 1
@@ -183,7 +181,7 @@ module Lrama
             if ref.index
               # TODO: Prohibit $0 even so Bison allows it?
               # See: https://www.gnu.org/software/bison/manual/html_node/Actions.html
-              raise "Can not refer following component. #{ref.index} >= #{i}. #{token}" if ref.index >= i
+              token.invalid_ref(ref, "Can not refer following component. #{ref.index} >= #{i}.") if ref.index >= i
               rhs[ref.index - 1].referred = true
             end
           end
