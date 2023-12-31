@@ -1669,6 +1669,79 @@ RSpec.describe Lrama::Parser do
         ])
       end
 
+
+      it "user defined with recursive" do
+        path = "parameterizing_rules/user_defined_with_recursive.y"
+        y = File.read(fixture_path(path))
+        grammar = Lrama::Parser.new(y, path).parse
+
+        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: true),
+        ])
+
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("YYEOF"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("list_number"),
+            rhs: [],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            position_in_original_rule_rhs: 0,
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("list_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("number"),
+            position_in_original_rule_rhs: 0,
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("list_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("list_number"),
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            position_in_original_rule_rhs: 0,
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("list_number"),
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 24,
+          ),
+        ])
+      end
+
       context 'when error case' do
         context "when invalid argument number" do
           it "raise an error" do

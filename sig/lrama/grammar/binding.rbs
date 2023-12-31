@@ -4,11 +4,13 @@ module Lrama
       attr_reader actual_args: Array[Lexer::Token]
       attr_reader count: Integer
 
+      @rule_name: String
+      @required_parameters_count: Integer
       @parameters: Array[Lexer::Token]
       @parameter_to_arg: untyped
 
-      def initialize: (Array[Lexer::Token] parameters, Array[Lexer::Token] actual_args) -> void
-      def resolve_symbol: (Lexer::Token symbol) -> Lexer::Token
+      def initialize: (Grammar::ParameterizingRule::Rule parameterizing_rule, Array[Lexer::Token] actual_args) -> void
+      def resolve_symbol: (Lexer::Token symbol, ?Lexer::Token lhs_token) -> Lexer::Token
     end
   end
 end

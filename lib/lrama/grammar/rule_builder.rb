@@ -110,7 +110,7 @@ module Lrama
               parameterizing_rule = parameterizing_rule_resolver.find(token)
               raise "Unexpected token. #{token}" unless parameterizing_rule
 
-              bindings = Binding.new(parameterizing_rule.parameters, token.args)
+              bindings = Binding.new(parameterizing_rule, token.args)
               actual_args = token.args.map do |arg|
                 resolved = bindings.resolve_symbol(arg)
                 if resolved.is_a?(Lexer::Token::InstantiateRule)
@@ -119,13 +119,13 @@ module Lrama
                   resolved.s_value
                 end
               end
-              new_token = Lrama::Lexer::Token::Ident.new(s_value: "#{token.rule_name}_#{actual_args.join('_')}")
+              new_token = Lrama::Lexer::Token::Ident.new(s_value: "#{token.rule_name}_#{actual_args.join('_')}", location: token.location)
               @replaced_rhs << new_token
 
               parameterizing_rule.rhs_list.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
                 rule_builder.lhs = new_token
-                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
+                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym, new_token)) }
                 rule_builder.line = line
                 rule_builder.user_code = r.user_code
                 rule_builder.precedence_sym = r.precedence_sym
