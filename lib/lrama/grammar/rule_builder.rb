@@ -111,7 +111,14 @@ module Lrama
               raise "Unexpected token. #{token}" unless parameterizing_rule
 
               binding = Binding.new(parameterizing_rule.parameters, token.args)
-              actual_args = token.args.map { |arg| binding.resolve_symbol(arg).s_value }
+              actual_args = token.args.map do |arg|
+                resolved = binding.resolve_symbol(arg)
+                if resolved.is_a?(Lexer::Token::InstantiateRule)
+                  [resolved.s_value, resolved.args.map(&:s_value)]
+                else
+                  resolved.s_value
+                end
+              end
               new_token = Lrama::Lexer::Token::Ident.new(s_value: "#{token.rule_name}_#{actual_args.join('_')}")
               @replaced_rhs << new_token
 
