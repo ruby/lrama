@@ -29,14 +29,22 @@ jobs:
       fail-fast: false
       matrix:
         ruby: ['head']
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - run: choco install winflexbison || choco install winflexbison
-      - run: win_flex --help
+      - uses: msys2/setup-msys2@v2
+        id: setup-msys2
+        with:
+          update: true
+          install: >-
+            flex
+      - run: flex --help
       - run: bundle install
       - run: bundle exec rspec
   test-memory:
