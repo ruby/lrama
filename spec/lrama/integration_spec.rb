@@ -19,7 +19,7 @@ RSpec.describe "integration" do
       lexer_h_path = tmpdir + "/#{parser_name}-lexer.h"
       obj_path = tmpdir + "/#{parser_name}"
 
-      flex = windows? ? "win_flex" : "flex"
+      flex = windows? ? "flex" : "flex"
       command = [obj_path, input]
       if ENV['ENABEL_VALGRIND']
         command = ["valgrind", "--leak-check=full", "--show-leak-kinds=all", "--leak-resolution=high"] + command
