@@ -125,7 +125,7 @@ module Lrama
               parameterizing_rule.rhs_list.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
                 rule_builder.lhs = new_token
-                r.symbols.map { |sym| rule_builder.add_rhs(binding.resolve_symbol(sym)) }
+                r.symbols.each { |sym| rule_builder.add_rhs(binding.resolve_symbol(sym)) }
                 rule_builder.line = line
                 rule_builder.user_code = r.user_code
                 rule_builder.precedence_sym = r.precedence_sym
