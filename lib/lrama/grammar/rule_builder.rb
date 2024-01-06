@@ -110,9 +110,9 @@ module Lrama
               parameterizing_rule = parameterizing_rule_resolver.find(token)
               raise "Unexpected token. #{token}" unless parameterizing_rule
 
-              binding = Binding.new(parameterizing_rule.parameters, token.args)
+              bindings = Binding.new(parameterizing_rule.parameters, token.args)
               actual_args = token.args.map do |arg|
-                resolved = binding.resolve_symbol(arg)
+                resolved = bindings.resolve_symbol(arg)
                 if resolved.is_a?(Lexer::Token::InstantiateRule)
                   [resolved.s_value, resolved.args.map(&:s_value)]
                 else
@@ -125,7 +125,7 @@ module Lrama
               parameterizing_rule.rhs_list.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
                 rule_builder.lhs = new_token
-                r.symbols.each { |sym| rule_builder.add_rhs(binding.resolve_symbol(sym)) }
+                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
                 rule_builder.user_code = r.user_code
                 rule_builder.precedence_sym = r.precedence_sym
