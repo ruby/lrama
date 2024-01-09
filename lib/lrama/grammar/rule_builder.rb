@@ -111,21 +111,13 @@ module Lrama
               raise "Unexpected token. #{token}" unless parameterizing_rule
 
               bindings = Binding.new(parameterizing_rule, token.args)
-              actual_args = token.args.map do |arg|
-                resolved = bindings.resolve_symbol(arg)
-                if resolved.is_a?(Lexer::Token::InstantiateRule)
-                  [resolved.s_value, resolved.args.map(&:s_value)]
-                else
-                  resolved.s_value
-                end
-              end
-              new_token = Lrama::Lexer::Token::Ident.new(s_value: "#{token.rule_name}_#{actual_args.join('_')}", location: token.location)
-              @replaced_rhs << new_token
+              lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value(token, bindings), location: token.location)
+              @replaced_rhs << lhs_token
 
               parameterizing_rule.rhs_list.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
-                rule_builder.lhs = new_token
-                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym, new_token)) }
+                rule_builder.lhs = lhs_token
+                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym, lhs_token)) }
                 rule_builder.line = line
                 rule_builder.user_code = r.user_code
                 rule_builder.precedence_sym = r.precedence_sym
@@ -155,6 +147,18 @@ module Lrama
             raise "Unexpected token. #{token}"
           end
         end
+      end
+
+      def lhs_s_value(token, bindings)
+        s_values = token.args.map do |arg|
+          resolved = bindings.resolve_symbol(arg)
+          if resolved.is_a?(Lexer::Token::InstantiateRule)
+            [resolved.s_value, resolved.args.map(&:s_value)]
+          else
+            resolved.s_value
+          end
+        end
+        "#{token.rule_name}_#{s_values.join('_')}"
       end
 
       def numberize_references
