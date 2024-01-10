@@ -111,19 +111,24 @@ module Lrama
               raise "Unexpected token. #{token}" unless parameterizing_rule
 
               bindings = Binding.new(parameterizing_rule, token.args)
-              lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value(token, bindings), location: token.location)
-              @replaced_rhs << lhs_token
-
-              parameterizing_rule.rhs_list.each do |r|
-                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
-                rule_builder.lhs = lhs_token
-                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym, lhs_token)) }
-                rule_builder.line = line
-                rule_builder.user_code = r.user_code
-                rule_builder.precedence_sym = r.precedence_sym
-                rule_builder.complete_input
-                rule_builder.setup_rules(parameterizing_rule_resolver)
-                @rule_builders_for_parameterizing_rules << rule_builder
+              lhs_s_value = lhs_s_value(token, bindings)
+              if (created_lhs = parameterizing_rule_resolver.created_lhs(lhs_s_value))
+                @replaced_rhs << created_lhs
+              else
+                lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: token.location)
+                @replaced_rhs << lhs_token
+                parameterizing_rule_resolver.created_lhs_list << lhs_token
+                parameterizing_rule.rhs_list.each do |r|
+                  rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, i, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
+                  rule_builder.lhs = lhs_token
+                  r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
+                  rule_builder.line = line
+                  rule_builder.user_code = r.user_code
+                  rule_builder.precedence_sym = r.precedence_sym
+                  rule_builder.complete_input
+                  rule_builder.setup_rules(parameterizing_rule_resolver)
+                  @rule_builders_for_parameterizing_rules << rule_builder
+                end
               end
             else
               # TODO: Delete when the standard library will defined as a grammar file.

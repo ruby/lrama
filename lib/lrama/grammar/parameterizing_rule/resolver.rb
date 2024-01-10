@@ -2,8 +2,11 @@ module Lrama
   class Grammar
     class ParameterizingRule
       class Resolver
+        attr_accessor :created_lhs_list
+
         def initialize
           @rules = []
+          @created_lhs_list = []
         end
 
         def add_parameterizing_rule(rule)
@@ -16,6 +19,10 @@ module Lrama
 
         def find(token)
           select_rules(token).last
+        end
+
+        def created_lhs(lhs_s_value)
+          @created_lhs_list.select { |created_lhs| created_lhs.s_value == lhs_s_value }.last
         end
 
         private
