@@ -169,7 +169,7 @@ module Lrama
 
     # TODO: More validation methods
     #
-    # * Validaiton for no_declared_type_reference
+    # * Validation for no_declared_type_reference
     def validate!
       validate_symbol_number_uniqueness!
       validate_symbol_alias_name_uniqueness!
