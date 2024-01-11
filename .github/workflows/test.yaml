@@ -133,12 +133,12 @@ jobs:
           ruby-version: ${{ matrix.baseruby }}
           bundler-cache: true
       - run: git clone --depth=1 https://github.com/ruby/ruby.git -b ${{ matrix.ruby_branch }} ../ruby
-        working-directory:
+        working-directory: .
       - run: mkdir -p tool/lrama
         working-directory: ../ruby
       - name: Copy Lrama to ruby/tool
         run: cp -r LEGAL.md NEWS.md MIT exe lib template ../ruby/tool/lrama
-        working-directory:
+        working-directory: .
       - run: tree tool/lrama
         working-directory: ../ruby
       # See also https://github.com/ruby/ruby/blob/master/.github/workflows/ubuntu.yml
