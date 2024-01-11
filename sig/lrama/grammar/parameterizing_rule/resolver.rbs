@@ -2,12 +2,15 @@ module Lrama
   class Grammar
     class ParameterizingRule
       class Resolver
+        attr_accessor created_lhs_list: Array[Lexer::Token]
+
         @rules: Array[Grammar::ParameterizingRule::Rule]
 
         def initialize: () -> void
         def add_parameterizing_rule: (Grammar::ParameterizingRule::Rule rule) -> void
         def defined?: (Lexer::Token::InstantiateRule token) -> bool
         def find: (Lexer::Token::InstantiateRule token) -> Grammar::ParameterizingRule::Rule?
+        def created_lhs: (String lhs_s_value) -> Lexer::Token?
 
         private
 

@@ -3,11 +3,10 @@ module Lrama
     class Binding
       attr_reader :actual_args, :count
 
-      def initialize(parameters, actual_args)
-        @parameters = parameters
+      def initialize(parameterizing_rule, actual_args)
+        @parameters = parameterizing_rule.parameters
         @actual_args = actual_args
-        @count = parameters.count
-        @parameter_to_arg = parameters.zip(actual_args).map do |param, arg|
+        @parameter_to_arg = @parameters.zip(actual_args).map do |param, arg|
           [param.s_value, arg]
         end.to_h
       end
