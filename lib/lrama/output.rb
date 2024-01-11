@@ -161,6 +161,61 @@ module Lrama
       STR
     end
 
+    def after_shift_function(comment = "")
+      return "" unless @grammar.after_shift
+
+      <<-STR
+        #{comment}
+#line #{@grammar.after_shift.line} "#{@grammar_file_path}"
+        {#{@grammar.after_shift.s_value}(#{parse_param_name});}
+#line [@oline@] [@ofile@]
+      STR
+    end
+
+    def before_reduce_function(comment = "")
+      return "" unless @grammar.before_reduce
+
+      <<-STR
+        #{comment}
+#line #{@grammar.before_reduce.line} "#{@grammar_file_path}"
+        {#{@grammar.before_reduce.s_value}(yylen#{user_args});}
+#line [@oline@] [@ofile@]
+      STR
+    end
+
+    def after_reduce_function(comment = "")
+      return "" unless @grammar.after_reduce
+
+      <<-STR
+        #{comment}
+#line #{@grammar.after_reduce.line} "#{@grammar_file_path}"
+        {#{@grammar.after_reduce.s_value}(yylen#{user_args});}
+#line [@oline@] [@ofile@]
+      STR
+    end
+
+    def after_shift_error_token_function(comment = "")
+      return "" unless @grammar.after_shift_error_token
+
+      <<-STR
+        #{comment}
+#line #{@grammar.after_shift_error_token.line} "#{@grammar_file_path}"
+        {#{@grammar.after_shift_error_token.s_value}(#{parse_param_name});}
+#line [@oline@] [@ofile@]
+      STR
+    end
+
+    def after_pop_stack_function(len, comment = "")
+      return "" unless @grammar.after_pop_stack
+
+      <<-STR
+        #{comment}
+#line #{@grammar.after_pop_stack.line} "#{@grammar_file_path}"
+        {#{@grammar.after_pop_stack.s_value}(#{len}#{user_args});}
+#line [@oline@] [@ofile@]
+      STR
+    end
+
     def symbol_actions_for_error_token
       str = ""
 

@@ -129,6 +129,26 @@ rule
                              lineno: val[3].line
                            )
                          }
+                     | "%after-shift" IDENTIFIER
+                         {
+                           @grammar.after_shift = val[1]
+                         }
+                     | "%before-reduce" IDENTIFIER
+                         {
+                           @grammar.before_reduce = val[1]
+                         }
+                     | "%after-reduce" IDENTIFIER
+                         {
+                           @grammar.after_reduce = val[1]
+                         }
+                     | "%after-shift-error-token" IDENTIFIER
+                         {
+                           @grammar.after_shift_error_token = val[1]
+                         }
+                     | "%after-pop-stack" IDENTIFIER
+                         {
+                           @grammar.after_pop_stack = val[1]
+                         }
 
   symbol_declaration: "%token" token_declarations
                     | "%type" symbol_declarations

@@ -143,6 +143,67 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "after_shift, before_reduce & after_reduce" do
+    it "returns 9 for '(1+2)*3'" do
+      expected = <<~STR
+        after-shift: 12
+        after-shift: 12
+        before-reduce: 18, 1
+        after-reduce: 24, 1
+        after-shift: 12
+        after-shift: 12
+        before-reduce: 18, 1
+        after-reduce: 24, 1
+        before-reduce: 18, 3
+        + (-3, -2, -1)
+        after-reduce: 24, 3
+        after-shift: 12
+        before-reduce: 18, 3
+        (...) (-3, -2, -1)
+        after-reduce: 24, 3
+        after-shift: 12
+        after-shift: 12
+        before-reduce: 18, 1
+        after-reduce: 24, 1
+        before-reduce: 18, 3
+        * (-3, -2, -1)
+        after-reduce: 24, 3
+        before-reduce: 18, 1
+        => 9
+        after-reduce: 24, 1
+        after-shift: 12
+      STR
+
+      test_parser("after_shift", "( 1 + 2 ) * 3", expected)
+
+      expected = <<~STR
+        after-shift: 12
+        before-reduce: 18, 1
+        after-reduce: 24, 1
+        after-shift: 12
+        after-pop-stack: 36, 1
+        after-pop-stack: 36, 1
+        after-shift-error-token: 30
+        before-reduce: 18, 1
+        error (-1)
+        after-reduce: 24, 1
+        after-pop-stack: 36, 1
+        after-shift-error-token: 30
+        before-reduce: 18, 1
+        error (-1)
+        after-reduce: 24, 1
+        after-pop-stack: 36, 1
+        after-shift-error-token: 30
+        before-reduce: 18, 1
+        error (-1)
+        after-reduce: 24, 1
+        after-shift: 12
+      STR
+
+      test_parser("after_shift", "1 * + 2", expected)
+    end
+  end
+
   # TODO: Add test case for "(1+2"
   describe "error_recovery" do
     it "returns 101 for '(1+)'" do

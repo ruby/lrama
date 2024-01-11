@@ -2,8 +2,10 @@ RSpec.describe Lrama::Grammar::Code do
   let(:token_class) { Lrama::Lexer::Token }
   let(:user_code_dollar_dollar) { token_class::UserCode.new(s_value: 'print($$);') }
   let(:user_code_at_dollar) { token_class::UserCode.new(s_value: 'print(@$);') }
+  let(:user_code_index_dollar) { token_class::UserCode.new(s_value: 'print($:$);') }
   let(:user_code_dollar_n) { token_class::UserCode.new(s_value: 'print($n);') }
   let(:user_code_at_n) { token_class::UserCode.new(s_value: 'print(@n);') }
+  let(:user_code_index_n) { token_class::UserCode.new(s_value: 'print($:1);') }
 
   describe Lrama::Grammar::Code::InitialActionCode do
     describe "#translated_code" do
@@ -17,6 +19,11 @@ RSpec.describe Lrama::Grammar::Code do
         expect(code.translated_code).to eq("print(yylloc);")
       end
 
+      it "raises error for '$:$'" do
+        code = described_class.new(type: :initial_action, token_code: user_code_index_dollar)
+        expect { code.translated_code }.to raise_error("$:$ can not be used in initial_action.")
+      end
+
       it "raises error for '$n'" do
         code = described_class.new(type: :initial_action, token_code: user_code_dollar_n)
         expect { code.translated_code }.to raise_error("$n can not be used in initial_action.")
@@ -25,6 +32,11 @@ RSpec.describe Lrama::Grammar::Code do
       it "raises error for '@n'" do
         code = described_class.new(type: :initial_action, token_code: user_code_at_n)
         expect { code.translated_code }.to raise_error("@n can not be used in initial_action.")
+      end
+
+      it "raises error for '$:n'" do
+        code = described_class.new(type: :initial_action, token_code: user_code_index_n)
+        expect { code.translated_code }.to raise_error("$:1 can not be used in initial_action.")
       end
     end
   end
@@ -41,6 +53,11 @@ RSpec.describe Lrama::Grammar::Code do
         expect { code.translated_code }.to raise_error("@$ can not be used in union.")
       end
 
+      it "raises error for '$:$'" do
+        code = described_class.new(type: :union, token_code: user_code_index_dollar)
+        expect { code.translated_code }.to raise_error("$:$ can not be used in union.")
+      end
+
       it "raises error for '$n'" do
         code = described_class.new(type: :union, token_code: user_code_dollar_n)
         expect { code.translated_code }.to raise_error("$n can not be used in union.")
@@ -49,6 +66,11 @@ RSpec.describe Lrama::Grammar::Code do
       it "raises error for '@n'" do
         code = described_class.new(type: :union, token_code: user_code_at_n)
         expect { code.translated_code }.to raise_error("@n can not be used in union.")
+      end
+
+      it "raises error for '$:n'" do
+        code = described_class.new(type: :union, token_code: user_code_index_n)
+        expect { code.translated_code }.to raise_error("$:1 can not be used in union.")
       end
     end
   end
@@ -67,6 +89,11 @@ RSpec.describe Lrama::Grammar::Code do
         expect(code.translated_code).to eq("print((*yylocationp));")
       end
 
+      it "raises error for '$:$'" do
+        code = described_class.new(type: :printer, token_code: user_code_index_dollar, tag: tag)
+        expect { code.translated_code }.to raise_error("$:$ can not be used in printer.")
+      end
+
       it "raises error for '$n'" do
         code = described_class.new(type: :printer, token_code: user_code_dollar_n, tag: tag)
         expect { code.translated_code }.to raise_error("$n can not be used in printer.")
@@ -75,6 +102,11 @@ RSpec.describe Lrama::Grammar::Code do
       it "raises error for '@n'" do
         code = described_class.new(type: :printer, token_code: user_code_at_n, tag: tag)
         expect { code.translated_code }.to raise_error("@n can not be used in printer.")
+      end
+
+      it "raises error for '$:n'" do
+        code = described_class.new(type: :printer, token_code: user_code_index_n, tag: tag)
+        expect { code.translated_code }.to raise_error("$:1 can not be used in printer.")
       end
     end
   end
@@ -120,6 +152,10 @@ RSpec.describe Lrama::Grammar::Code do
                | rule6
                | rule7
                | rule8
+               | rule9
+               | rule10
+               | rule11
+               | rule12
                ;
 
         rule1: expr '+' expr { $$ = 0; }
@@ -146,6 +182,17 @@ RSpec.describe Lrama::Grammar::Code do
         rule8: expr { $$ = $1 } '+' expr { $2; }
              ;
 
+        rule9: expr '+' expr { $:1; $:2; $:3; }
+             ;
+
+        rule10: expr '+' expr { $:$; }
+              ;
+
+        rule11: expr { $:1; } '+' expr { $:1; $:2; $:3; $:4; }
+              ;
+
+        rule12: expr '+' expr[expr-right] { $:1; $:2; $:[expr-right]; }
+              ;
         %%
       GRAMMAR
     end
@@ -210,6 +257,26 @@ RSpec.describe Lrama::Grammar::Code do
 
           code = grammar.rules.find {|r| r.lhs.id.s_value == "rule8" }
           expect { code.translated_code }.to raise_error("Tag is not specified for '$2' in 'rule8 -> expr, @3, '+', expr'")
+        end
+      end
+
+      context "$: is used" do
+        it "translats '$:$' to '-yylen' and '$:n' to index from the last of array" do
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule9" }
+          expect(code.translated_code).to eq(" (-2 - 1); (-1 - 1); (0 - 1); ")
+
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule10" }
+          expect { code.translated_code }.to raise_error("$:$ is not supported")
+
+          # midrule action in rule11
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "@4" }
+          expect(code.translated_code).to eq(" (0 - 1); ")
+
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule11" }
+          expect(code.translated_code).to eq(" (-3 - 1); (-2 - 1); (-1 - 1); (0 - 1); ")
+
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule12" }
+          expect(code.translated_code).to eq(" (-2 - 1); (-1 - 1); (0 - 1); ")
         end
       end
     end
