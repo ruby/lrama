@@ -13,10 +13,6 @@ module Lrama
           @rules << rule
         end
 
-        def defined?(token)
-          !select_rules(token).empty?
-        end
-
         def find(token)
           select_rules(token).last
         end
@@ -28,9 +24,21 @@ module Lrama
         private
 
         def select_rules(token)
-          @rules.select do |rule|
-            rule.name == token.rule_name &&
-              rule.required_parameters_count == token.args_count
+          rules = select_rules_by_name(token.rule_name)
+          rules = rules.select { |rule| rule.required_parameters_count == token.args_count }
+          if rules.empty?
+            raise "Invalid number of arguments. `#{token.rule_name}`"
+          else
+            rules
+          end
+        end
+
+        def select_rules_by_name(rule_name)
+          rules = @rules.select { |rule| rule.name == rule_name }
+          if rules.empty?
+            raise "Parameterizing rule does not exist. `#{rule_name}`"
+          else
+            rules
           end
         end
       end

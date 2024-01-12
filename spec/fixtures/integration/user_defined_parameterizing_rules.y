@@ -11,6 +11,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %}
 
+%include-stdlib
+
 %expect 0
 
 %union {

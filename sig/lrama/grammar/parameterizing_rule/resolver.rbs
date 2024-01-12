@@ -15,6 +15,7 @@ module Lrama
         private
 
         def select_rules: (Lexer::Token::InstantiateRule token) -> Array[Grammar::ParameterizingRule::Rule]
+        def select_rules_by_name: (String rule_name) -> Array[Grammar::ParameterizingRule::Rule]
       end
     end
   end

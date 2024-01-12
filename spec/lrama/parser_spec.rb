@@ -584,7 +584,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 1,
@@ -593,7 +593,8 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 2,
@@ -604,7 +605,8 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 3,
@@ -615,7 +617,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 4,
@@ -623,7 +625,8 @@ RSpec.describe Lrama::Parser do
             rhs: [],
             nullable: true,
             precedence_sym: nil,
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 5,
@@ -633,7 +636,8 @@ RSpec.describe Lrama::Parser do
             ],
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 6,
@@ -643,7 +647,7 @@ RSpec.describe Lrama::Parser do
             ],
             nullable: true,
             precedence_sym: nil,
-            lineno: 24,
+            lineno: 25,
           ),
         ])
       end
@@ -673,7 +677,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 1,
@@ -682,7 +686,8 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 2,
@@ -693,7 +698,8 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 3,
@@ -704,7 +710,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 4,
@@ -712,7 +718,8 @@ RSpec.describe Lrama::Parser do
             rhs: [],
             nullable: true,
             precedence_sym: nil,
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 5,
@@ -722,7 +729,8 @@ RSpec.describe Lrama::Parser do
             ],
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 6,
@@ -732,7 +740,7 @@ RSpec.describe Lrama::Parser do
             ],
             nullable: true,
             precedence_sym: nil,
-            lineno: 24,
+            lineno: 25,
           ),
         ])
       end
@@ -759,7 +767,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 22,
+            lineno: 23,
           ),
           Rule.new(
             id: 1,
@@ -768,7 +776,8 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 22,
+            position_in_original_rule_rhs: 1,
+            lineno: 23,
           ),
           Rule.new(
             id: 2,
@@ -779,7 +788,8 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("bar"),
-            lineno: 22,
+            position_in_original_rule_rhs: 1,
+            lineno: 23,
           ),
           Rule.new(
             id: 3,
@@ -792,7 +802,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("baz"),
-            lineno: 22,
+            lineno: 23,
           ),
         ])
       end
@@ -821,7 +831,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 1,
@@ -831,7 +841,8 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 2,
@@ -843,7 +854,8 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 3,
@@ -854,7 +866,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 4,
@@ -863,7 +875,8 @@ RSpec.describe Lrama::Parser do
             lhs_tag: T::Tag.new(s_value: "<i>"),
             nullable: true,
             precedence_sym: nil,
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 5,
@@ -874,7 +887,8 @@ RSpec.describe Lrama::Parser do
             lhs_tag: T::Tag.new(s_value: "<i>"),
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 6,
@@ -884,7 +898,7 @@ RSpec.describe Lrama::Parser do
             ],
             nullable: true,
             precedence_sym: nil,
-            lineno: 24,
+            lineno: 25,
           ),
         ])
       end
@@ -913,7 +927,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 1,
@@ -924,19 +938,21 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 2,
             lhs: grammar.find_symbol_by_s_value!("nonempty_list_number"),
             rhs: [
-              grammar.find_symbol_by_s_value!("nonempty_list_number"),
               grammar.find_symbol_by_s_value!("number"),
+              grammar.find_symbol_by_s_value!("nonempty_list_number"),
             ],
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 3,
@@ -947,7 +963,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: nil,
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 4,
@@ -957,18 +973,20 @@ RSpec.describe Lrama::Parser do
             ],
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 5,
             lhs: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
             rhs: [
-              grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
               grammar.find_symbol_by_s_value!("number_alias"),
+              grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
             ],
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 6,
@@ -978,7 +996,7 @@ RSpec.describe Lrama::Parser do
             ],
             nullable: false,
             precedence_sym: nil,
-            lineno: 24,
+            lineno: 25,
           ),
         ])
       end
@@ -1007,7 +1025,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 1,
@@ -1016,19 +1034,21 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 2,
             lhs: grammar.find_symbol_by_s_value!("list_number"),
             rhs: [
-              grammar.find_symbol_by_s_value!("list_number"),
               grammar.find_symbol_by_s_value!("number"),
+              grammar.find_symbol_by_s_value!("list_number"),
             ],
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 21,
+            position_in_original_rule_rhs: 0,
+            lineno: 22,
           ),
           Rule.new(
             id: 3,
@@ -1039,7 +1059,7 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 21,
+            lineno: 22,
           ),
           Rule.new(
             id: 4,
@@ -1047,18 +1067,20 @@ RSpec.describe Lrama::Parser do
             rhs: [],
             nullable: true,
             precedence_sym: nil,
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 5,
             lhs: grammar.find_symbol_by_s_value!("list_number_alias"),
             rhs: [
-              grammar.find_symbol_by_s_value!("list_number_alias"),
               grammar.find_symbol_by_s_value!("number_alias"),
+              grammar.find_symbol_by_s_value!("list_number_alias"),
             ],
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            lineno: 24,
+            position_in_original_rule_rhs: 0,
+            lineno: 25,
           ),
           Rule.new(
             id: 6,
@@ -1068,7 +1090,7 @@ RSpec.describe Lrama::Parser do
             ],
             nullable: true,
             precedence_sym: nil,
-            lineno: 24,
+            lineno: 25,
           ),
         ])
       end
@@ -1080,7 +1102,7 @@ RSpec.describe Lrama::Parser do
 
         expect(grammar.nterms.sort_by(&:number)).to match_symbols([
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
           Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
         ])
 
@@ -1095,42 +1117,44 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 20,
+            lineno: 21,
           ),
           Rule.new(
             id: 1,
-            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
+            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
             rhs: [
               grammar.find_symbol_by_s_value!("number"),
             ],
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 20,
+            position_in_original_rule_rhs: 0,
+            lineno: 21,
           ),
           Rule.new(
             id: 2,
-            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
+            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
             rhs: [
-              grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
-              grammar.find_symbol_by_number!(4),
               grammar.find_symbol_by_s_value!("number"),
+              grammar.find_symbol_by_number!(4),
+              grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
             ],
             token_code: nil,
             nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 20,
+            precedence_sym: grammar.find_symbol_by_number!(4),
+            position_in_original_rule_rhs: 0,
+            lineno: 21,
           ),
           Rule.new(
             id: 3,
             lhs: grammar.find_symbol_by_s_value!("program"),
             rhs: [
-              grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
+              grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
             ],
             token_code: nil,
             nullable: false,
             precedence_sym: nil,
-            lineno: 20,
+            lineno: 21,
           ),
         ])
       end
@@ -1142,9 +1166,10 @@ RSpec.describe Lrama::Parser do
 
         expect(grammar.nterms.sort_by(&:number)).to match_symbols([
           Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "separated_list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "option_separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "separated_list_','_number"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
         ])
 
         expect(grammar.rules).to eq([
@@ -1158,62 +1183,78 @@ RSpec.describe Lrama::Parser do
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 20,
+            lineno: 21,
           ),
           Rule.new(
             id: 1,
-            lhs: grammar.find_symbol_by_s_value!("separated_list_number"),
+            lhs: grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
             rhs: [],
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 20,
+            position_in_original_rule_rhs: 0,
+            lineno: 21,
           ),
           Rule.new(
             id: 2,
-            lhs: grammar.find_symbol_by_s_value!("separated_list_number"),
+            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
             rhs: [
-              grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: nil,
-            lineno: 20,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number")
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 20,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("separated_nonempty_list_number"),
-              grammar.find_symbol_by_number!(4),
               grammar.find_symbol_by_s_value!("number"),
             ],
             token_code: nil,
             nullable: false,
             precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            lineno: 20,
+            position_in_original_rule_rhs: 0,
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("number"),
+              grammar.find_symbol_by_number!(4),
+              grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_number!(4),
+            position_in_original_rule_rhs: 0,
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: nil,
+            position_in_original_rule_rhs: 0,
+            lineno: 21,
           ),
           Rule.new(
             id: 5,
-            lhs: grammar.find_symbol_by_s_value!("program"),
+            lhs: grammar.find_symbol_by_s_value!("separated_list_','_number"),
             rhs: [
-              grammar.find_symbol_by_s_value!("separated_list_number"),
+              grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
             ],
             token_code: nil,
             nullable: true,
             precedence_sym: nil,
-            lineno: 20,
+            position_in_original_rule_rhs: 0,
+            lineno: 21,
+          ),
+          Rule.new(
+            id: 6,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("separated_list_','_number"),
+            ],
+            token_code: nil,
+            nullable: true,
+            precedence_sym: nil,
+            lineno: 21,
           ),
         ])
       end
@@ -1747,7 +1788,7 @@ RSpec.describe Lrama::Parser do
           it "raise an error" do
             path = "parameterizing_rules/invalid_argument_number.y"
             y = File.read(fixture_path(path))
-            expect { Lrama::Parser.new(y, path).parse }.to raise_error(/Invalid number of arguments\. expect: 1 actual: 2/)
+            expect { Lrama::Parser.new(y, path).parse }.to raise_error(/Invalid number of arguments\. `list`/)
           end
         end
 
