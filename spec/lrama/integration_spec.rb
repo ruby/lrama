@@ -19,7 +19,6 @@ RSpec.describe "integration" do
       lexer_h_path = tmpdir + "/#{parser_name}-lexer.h"
       obj_path = tmpdir + "/#{parser_name}"
 
-      flex = windows? ? "flex" : "flex"
       command = [obj_path, input]
       if ENV['ENABEL_VALGRIND']
         command = ["valgrind", "--leak-check=full", "--show-leak-kinds=all", "--leak-resolution=high"] + command
@@ -27,7 +26,7 @@ RSpec.describe "integration" do
       end
 
       Lrama::Command.new.run(%W[-H#{parser_h_path} -o#{parser_c_path}] + lrama_command_args + %W[#{grammar_file_path}])
-      exec_command("#{flex} --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
+      exec_command("flex --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
       exec_command("gcc -Wall -ggdb3 -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
 
       out = err = status = nil
