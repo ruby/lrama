@@ -42,6 +42,8 @@ program         : double_opt(number)
 %%
 ```
 
+https://github.com/ruby/lrama/pull/337
+
 ## Lrama 0.6.0 (2023-12-25)
 
 ### User defined parameterizing rules
@@ -61,6 +63,8 @@ stmt: pair(ODD, EVEN) <num>
     | pair(EVEN, ODD) <num>
     ;
 ```
+
+https://github.com/ruby/lrama/pull/285
 
 ## Lrama 0.5.11 (2023-12-02)
 
