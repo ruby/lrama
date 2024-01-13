@@ -1,5 +1,47 @@
 # NEWS for Lrama
 
+## Lrama 0.6.1 (2024-xx-xx)
+
+### Nested parameterizing rules
+
+Allow to pass an instantiated rule to other parameterizing rules.
+
+```
+%rule constant(X) : X
+              ;
+
+%rule option(Y) : /* empty */
+                | Y
+                ;
+
+%%
+
+program         : option(constant(number)) // Nested rule
+                ;
+%%
+```
+
+Allow to use nested parameterizing rules when define parameterizing rules.
+
+```
+%rule option(x) : /* empty */
+                | X
+                ;
+
+%rule double(Y) : Y Y
+                ;
+
+%rule double_opt(A) : option(double(A)) // Nested rule
+                    ;
+
+%%
+
+program         : double_opt(number)
+                ;
+
+%%
+```
+
 ## Lrama 0.6.0 (2023-12-25)
 
 ### User defined parameterizing rules
