@@ -1,6 +1,6 @@
 # NEWS for Lrama
 
-## Lrama 0.6.1 (2024-xx-xx)
+## Lrama 0.6.1 (2024-01-13)
 
 ### Nested parameterizing rules
 
