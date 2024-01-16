@@ -1,6 +1,7 @@
 module Lrama
   class Command
-    STDLILB_FILE_PATH = "lib/lrama/grammar/stdlib.y"
+    LRAMA_LIB = File.realpath(File.join(File.dirname(__FILE__)))
+    STDLIB_FILE_PATH = File.join(LRAMA_LIB, 'grammar', 'stdlib.y')
 
     def run(argv)
       begin
@@ -19,7 +20,7 @@ module Lrama
       begin
         grammar = Lrama::Parser.new(text, options.grammar_file, options.debug).parse
         unless options.no_stdlib
-          stdlib_grammar = Lrama::Parser.new(File.read(STDLILB_FILE_PATH), STDLILB_FILE_PATH, options.debug).parse
+          stdlib_grammar = Lrama::Parser.new(File.read(STDLIB_FILE_PATH), STDLIB_FILE_PATH, options.debug).parse
           grammar.insert_before_parameterizing_rules(stdlib_grammar.parameterizing_rules)
         end
         grammar.prepare
