@@ -18,7 +18,7 @@ module Lrama
       options.y.close if options.y != STDIN
       begin
         grammar = Lrama::Parser.new(text, options.grammar_file, options.debug).parse
-        if true
+        unless options.no_stdlib
           stdlib_grammar = Lrama::Parser.new(File.read(STDLILB_FILE_PATH), STDLILB_FILE_PATH, options.debug).parse
           grammar.insert_before_parameterizing_rules(stdlib_grammar.parameterizing_rules)
         end
