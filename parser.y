@@ -5,7 +5,7 @@ class Lrama::Parser
 
 rule
 
-  input: prologue_declarations include_stdlib bison_declarations "%%" grammar epilogue_opt
+  input: prologue_declarations bison_declarations "%%" grammar epilogue_opt
 
   prologue_declarations: # empty
                        | prologue_declarations prologue_declaration
@@ -24,9 +24,6 @@ rule
                             @grammar.prologue = val[2].s_value
                           }
                       | "%require" STRING
-
-  include_stdlib: # empty
-                | "%include-stdlib" { load_standard_library }
 
   bison_declarations: /* empty */ { result = "" }
                     | bison_declarations bison_declaration
@@ -517,22 +514,12 @@ def parse
     @precedence_number = 0
     reset_precs
     do_parse
-    @grammar.prepare
-    @grammar.validate!
     @grammar
   end
 end
 
 def next_token
-  if @standard_library
-    if (token = @standard_library.next_token)
-      token
-    else
-      @lexer.next_token
-    end
-  else
-    @lexer.next_token
-  end
+  @lexer.next_token
 end
 
 def on_error(error_token_id, error_value, value_stack)
@@ -560,13 +547,6 @@ def on_action_error(error_message, error_value)
 end
 
 private
-
-def load_standard_library
-  @standard_library ||= begin
-    grammar_file = Lrama::Lexer::GrammarFile.new("./stdlib.y", File.read("./stdlib.y"))
-    Lrama::Lexer.new(grammar_file)
-  end
-end
 
 def reset_precs
   @prec_seen = false

@@ -2,7 +2,7 @@ module Lrama
   class Grammar
     class ParameterizingRule
       class Resolver
-        attr_accessor :created_lhs_list
+        attr_accessor :rules, :created_lhs_list
 
         def initialize
           @rules = []

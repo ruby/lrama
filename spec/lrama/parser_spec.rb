@@ -45,6 +45,8 @@ RSpec.describe Lrama::Parser do
       path = "common/basic.y"
       y = File.read(fixture_path(path))
       grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
 
       expect(grammar.union.code.s_value).to eq(<<-CODE.chomp)
 
@@ -418,6 +420,8 @@ RSpec.describe Lrama::Parser do
       path = "common/nullable.y"
       y = File.read(fixture_path(path))
       grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
 
       expect(grammar.nterms.sort_by(&:number)).to match_symbols([
         Sym.new(id: T::Ident.new(s_value: "$accept"),       alias_name: nil, number:  6, tag: nil, term: false, token_id: 0, nullable: false),
@@ -560,1243 +564,1255 @@ RSpec.describe Lrama::Parser do
     end
 
     context 'when parameterizing rules' do
-      it "option" do
-        path = "parameterizing_rules/option.y"
-        y = File.read(fixture_path(path))
+      let(:grammar) do
         grammar = Lrama::Parser.new(y, path).parse
+        stdlib_grammar = Lrama::Parser.new(File.read("lib/lrama/grammar/stdlib.y"), "lib/lrama/grammar/stdlib.y").parse
+        grammar.insert_before_parameterizing_rules(stdlib_grammar.parameterizing_rules)
+        grammar.prepare
+        grammar.validate!
+        grammar
+      end
+      let(:y) { File.read(fixture_path(path)) }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
-        ])
+      context "when option" do
+        let(:path) { "parameterizing_rules/option.y" }
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("option_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("option_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
-            rhs: [],
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 5,
-            lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number_alias"),
-            ],
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 6,
-            lhs: grammar.find_symbol_by_s_value!("alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_number_alias"),
-            ],
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 25,
-          ),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+          ])
+
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("option_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("option_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
+              rhs: [],
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number_alias"),
+              ],
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_number_alias"),
+              ],
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 23,
+            ),
+          ])
+        end
       end
 
-      it "option with whitespece before parentheses" do
-        path = "parameterizing_rules/option.y"
-        y = File.read(fixture_path(path))
-        y.sub!('option(', 'option  (')
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when option with whitespece before parentheses" do
+        let(:path) { "parameterizing_rules/option.y" }
+        let(:y) do
+          y = File.read(fixture_path(path))
+          y.sub('option(', 'option  (')
+        end
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("option_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("option_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
-            rhs: [],
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 5,
-            lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number_alias"),
-            ],
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 6,
-            lhs: grammar.find_symbol_by_s_value!("alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_number_alias"),
-            ],
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 25,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("option_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("option_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
+              rhs: [],
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number_alias"),
+              ],
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_number_alias"),
+              ],
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 23,
+            ),
+          ])
+        end
       end
 
-      it "option between rhs" do
-        path = "parameterizing_rules/between_rhs.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when option between rhs" do
+        let(:path) { "parameterizing_rules/between_rhs.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "option_bar"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: false),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "option_bar"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: false),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 23,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("option_bar"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 1,
-            lineno: 23,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("option_bar"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("bar")
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("bar"),
-            position_in_original_rule_rhs: 1,
-            lineno: 23,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("foo"),
-              grammar.find_symbol_by_s_value!("option_bar"),
-              grammar.find_symbol_by_s_value!("baz"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("baz"),
-            lineno: 23,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 21,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("option_bar"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 1,
+              lineno: 21,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("option_bar"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("bar")
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("bar"),
+              position_in_original_rule_rhs: 1,
+              lineno: 21,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("foo"),
+                grammar.find_symbol_by_s_value!("option_bar"),
+                grammar.find_symbol_by_s_value!("baz"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("baz"),
+              lineno: 21,
+            ),
+          ])
+        end
       end
 
-      it "option with tag" do
-        path = "parameterizing_rules/option_with_tag.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when option with tag" do
+        let(:path) { "parameterizing_rules/option_with_tag.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 8, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 3, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "option_number_alias"), alias_name: nil, number: 8, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 3, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("option_number"),
-            rhs: [],
-            lhs_tag: T::Tag.new(s_value: "<i>"),
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("option_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            lhs_tag: T::Tag.new(s_value: "<i>"),
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
-            rhs: [],
-            lhs_tag: T::Tag.new(s_value: "<i>"),
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 5,
-            lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number_alias"),
-            ],
-            lhs_tag: T::Tag.new(s_value: "<i>"),
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 6,
-            lhs: grammar.find_symbol_by_s_value!("alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_number_alias"),
-            ],
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 25,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("option_number"),
+              rhs: [],
+              lhs_tag: T::Tag.new(s_value: "<i>"),
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("option_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              lhs_tag: T::Tag.new(s_value: "<i>"),
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
+              rhs: [],
+              lhs_tag: T::Tag.new(s_value: "<i>"),
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("option_number_alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number_alias"),
+              ],
+              lhs_tag: T::Tag.new(s_value: "<i>"),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_number_alias"),
+              ],
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 23,
+            ),
+          ])
+        end
       end
 
-      it "nonempty list" do
-        path = "parameterizing_rules/nonempty_list.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when nonempty list" do
+        let(:path) { "parameterizing_rules/nonempty_list.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "nonempty_list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "nonempty_list_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: false),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "nonempty_list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "nonempty_list_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: false),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("nonempty_list_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("nonempty_list_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-              grammar.find_symbol_by_s_value!("nonempty_list_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("nonempty_list_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: nil,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number_alias"),
-            ],
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 5,
-            lhs: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number_alias"),
-              grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
-            ],
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 6,
-            lhs: grammar.find_symbol_by_s_value!("alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
-            ],
-            nullable: false,
-            precedence_sym: nil,
-            lineno: 25,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("nonempty_list_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("nonempty_list_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+                grammar.find_symbol_by_s_value!("nonempty_list_number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("nonempty_list_number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: nil,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number_alias"),
+              ],
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number_alias"),
+                grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+              ],
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("nonempty_list_number_alias"),
+              ],
+              nullable: false,
+              precedence_sym: nil,
+              lineno: 23,
+            ),
+          ])
+        end
       end
 
-      it "list" do
-        path = "parameterizing_rules/list.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when list" do
+        let(:path) { "parameterizing_rules/list.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "list_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "list_number_alias"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "alias"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("list_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("list_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-              grammar.find_symbol_by_s_value!("list_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("list_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 22,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("list_number_alias"),
-            rhs: [],
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 5,
-            lhs: grammar.find_symbol_by_s_value!("list_number_alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number_alias"),
-              grammar.find_symbol_by_s_value!("list_number_alias"),
-            ],
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 6,
-            lhs: grammar.find_symbol_by_s_value!("alias"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("list_number_alias"),
-            ],
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 25,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("list_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("list_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+                grammar.find_symbol_by_s_value!("list_number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("list_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 20,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("list_number_alias"),
+              rhs: [],
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("list_number_alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number_alias"),
+                grammar.find_symbol_by_s_value!("list_number_alias"),
+              ],
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number_alias"),
+              position_in_original_rule_rhs: 0,
+              lineno: 23,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("alias"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("list_number_alias"),
+              ],
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 23,
+            ),
+          ])
+        end
       end
 
-      it "separated_nonempty_list" do
-        path = "parameterizing_rules/separated_nonempty_list.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when separated_nonempty_list" do
+        let(:path) { "parameterizing_rules/separated_nonempty_list.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-              grammar.find_symbol_by_number!(4),
-              grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_number!(4),
-            position_in_original_rule_rhs: 0,
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: nil,
-            lineno: 21,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+                grammar.find_symbol_by_number!(4),
+                grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_number!(4),
+              position_in_original_rule_rhs: 0,
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: nil,
+              lineno: 19,
+            ),
+          ])
+        end
       end
 
-      it "separated_list" do
-        path = "parameterizing_rules/separated_list.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when separated_list" do
+        let(:path) { "parameterizing_rules/separated_list.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "option_separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "separated_list_','_number"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "option_separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "separated_list_','_number"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-              grammar.find_symbol_by_number!(4),
-              grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_number!(4),
-            position_in_original_rule_rhs: 0,
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 5,
-            lhs: grammar.find_symbol_by_s_value!("separated_list_','_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 21,
-          ),
-          Rule.new(
-            id: 6,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("separated_list_','_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 21,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+                grammar.find_symbol_by_number!(4),
+                grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_number!(4),
+              position_in_original_rule_rhs: 0,
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("separated_nonempty_list_','_number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("separated_list_','_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_separated_nonempty_list_','_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 19,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("separated_list_','_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 19,
+            ),
+          ])
+        end
       end
 
-      it "nested" do
-        path = "parameterizing_rules/nested.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when nested" do
+        let(:path) { "parameterizing_rules/nested.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "option_constant_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "constant_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 3, nullable: true),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "option_constant_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "constant_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 3, nullable: true),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("option_constant_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("constant_number"),
-            rhs: [grammar.find_symbol_by_s_value!("number")],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("option_constant_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("constant_number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 25,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_constant_number")
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 25,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 25,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("option_constant_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 25,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("constant_number"),
+              rhs: [grammar.find_symbol_by_s_value!("number")],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 25,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("option_constant_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("constant_number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 25,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_constant_number")
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 25,
+            ),
+          ])
+        end
       end
 
-      it "user defined" do
-        path = "parameterizing_rules/user_defined.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when user defined" do
+        let(:path) { "parameterizing_rules/user_defined.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "defined_option_number"), alias_name: nil, number: 7, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "multi_args_number_string"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 3, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "multi_args_number_number"), alias_name: nil, number: 10, tag: nil, term: false, token_id: 4, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "$@1"), alias_name: nil, number: 11, tag: nil, term: false, token_id: 5, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "pair_number_string"), alias_name: nil, number: 12, tag: nil, term: false, token_id: 6, nullable: false),
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "defined_option_number"), alias_name: nil, number: 7, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "multi_args_number_string"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 3, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "multi_args_number_number"), alias_name: nil, number: 10, tag: nil, term: false, token_id: 4, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "$@1"), alias_name: nil, number: 11, tag: nil, term: false, token_id: 5, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "pair_number_string"), alias_name: nil, number: 12, tag: nil, term: false, token_id: 6, nullable: false),
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 36,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("defined_option_number"),
-            rhs: [],
-            lhs_tag: T::Tag.new(s_value: "<i>"),
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 36,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("defined_option_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            lhs_tag: T::Tag.new(s_value: "<i>"),
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 36,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("defined_option_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 36,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("multi_args_number_string"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            lhs_tag: nil,
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 37,
-          ),
-          Rule.new(
-            id: 5,
-            lhs: grammar.find_symbol_by_s_value!("multi_args_number_string"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("string"),
-            ],
-            lhs_tag: nil,
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("string"),
-            position_in_original_rule_rhs: 0,
-            lineno: 37,
-          ),
-          Rule.new(
-            id: 6,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("multi_args_number_string"),
-            ],
-            lhs_tag: nil,
-            token_code: nil,
-            nullable: false,
-            precedence_sym: nil,
-            lineno: 37,
-          ),
-          Rule.new(
-            id: 7,
-            lhs: grammar.find_symbol_by_s_value!("multi_args_number_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            lhs_tag: nil,
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 38,
-          ),
-          Rule.new(
-            id: 8,
-            lhs: grammar.find_symbol_by_s_value!("multi_args_number_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            lhs_tag: nil,
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 38,
-          ),
-          Rule.new(
-            id: 9,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("multi_args_number_number"),
-            ],
-            lhs_tag: nil,
-            token_code: nil,
-            nullable: false,
-            precedence_sym: nil,
-            lineno: 38,
-          ),
-          Rule.new(
-            id: 10,
-            lhs: grammar.find_symbol_by_s_value!("$@1"),
-            rhs: [],
-            lhs_tag: nil,
-            token_code: T::UserCode.new(s_value: " printf(\"(%d, %d)\\n\", $1, $2); "),
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 3,
-            lineno: 31,
-          ),
-          Rule.new(
-            id: 11,
-            lhs: grammar.find_symbol_by_s_value!("pair_number_string"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-              grammar.find_symbol_by_number!(5),
-              grammar.find_symbol_by_s_value!("string"),
-              grammar.find_symbol_by_s_value!("$@1")
-            ],
-            lhs_tag: nil,
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("string"),
-            position_in_original_rule_rhs: 0,
-            lineno: 39,
-          ),
-          Rule.new(
-            id: 12,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("pair_number_string"),
-            ],
-            lhs_tag: nil,
-            token_code: T::UserCode.new(s_value: " printf(\"pair odd even\\n\"); "),
-            nullable: false,
-            precedence_sym: nil,
-            lineno: 39,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 36,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("defined_option_number"),
+              rhs: [],
+              lhs_tag: T::Tag.new(s_value: "<i>"),
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 36,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("defined_option_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              lhs_tag: T::Tag.new(s_value: "<i>"),
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 36,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("defined_option_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 36,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("multi_args_number_string"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              lhs_tag: nil,
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 37,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("multi_args_number_string"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("string"),
+              ],
+              lhs_tag: nil,
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("string"),
+              position_in_original_rule_rhs: 0,
+              lineno: 37,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("multi_args_number_string"),
+              ],
+              lhs_tag: nil,
+              token_code: nil,
+              nullable: false,
+              precedence_sym: nil,
+              lineno: 37,
+            ),
+            Rule.new(
+              id: 7,
+              lhs: grammar.find_symbol_by_s_value!("multi_args_number_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              lhs_tag: nil,
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 38,
+            ),
+            Rule.new(
+              id: 8,
+              lhs: grammar.find_symbol_by_s_value!("multi_args_number_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              lhs_tag: nil,
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 38,
+            ),
+            Rule.new(
+              id: 9,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("multi_args_number_number"),
+              ],
+              lhs_tag: nil,
+              token_code: nil,
+              nullable: false,
+              precedence_sym: nil,
+              lineno: 38,
+            ),
+            Rule.new(
+              id: 10,
+              lhs: grammar.find_symbol_by_s_value!("$@1"),
+              rhs: [],
+              lhs_tag: nil,
+              token_code: T::UserCode.new(s_value: " printf(\"(%d, %d)\\n\", $1, $2); "),
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 3,
+              lineno: 31,
+            ),
+            Rule.new(
+              id: 11,
+              lhs: grammar.find_symbol_by_s_value!("pair_number_string"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+                grammar.find_symbol_by_number!(5),
+                grammar.find_symbol_by_s_value!("string"),
+                grammar.find_symbol_by_s_value!("$@1")
+              ],
+              lhs_tag: nil,
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("string"),
+              position_in_original_rule_rhs: 0,
+              lineno: 39,
+            ),
+            Rule.new(
+              id: 12,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("pair_number_string"),
+              ],
+              lhs_tag: nil,
+              token_code: T::UserCode.new(s_value: " printf(\"pair odd even\\n\"); "),
+              nullable: false,
+              precedence_sym: nil,
+              lineno: 39,
+            ),
+          ])
+        end
       end
 
-      it "user defined with nest" do
-        path = "parameterizing_rules/user_defined_with_nest.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+      context "when user defined with nest" do
+        let(:path) { "parameterizing_rules/user_defined_with_nest.y" }
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "nested_option_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "nested_nested_option_number"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "multi_option_number_string"), alias_name: nil, number: 10, tag: nil, term: false, token_id: 5, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "nested_multi_option_number"), alias_name: nil, number: 11, tag: nil, term: false, token_id: 6, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "nested_multi_option_string"), alias_name: nil, number: 12, tag: nil, term: false, token_id: 7, nullable: true)
-        ])
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "nested_option_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "nested_nested_option_number"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "multi_option_number_string"), alias_name: nil, number: 10, tag: nil, term: false, token_id: 5, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "nested_multi_option_number"), alias_name: nil, number: 11, tag: nil, term: false, token_id: 6, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "nested_multi_option_string"), alias_name: nil, number: 12, tag: nil, term: false, token_id: 7, nullable: true)
+          ])
 
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 42,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("option_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 42,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("nested_option_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 42,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("nested_nested_option_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 42,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("nested_nested_option_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number")
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 42,
-          ),
-          Rule.new(
-            id: 5,
-            lhs: grammar.find_symbol_by_s_value!("nested_option_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("nested_nested_option_number")
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 42,
-          ),
-          Rule.new(
-            id: 6,
-            lhs: grammar.find_symbol_by_s_value!("option_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("nested_option_number")
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 42,
-          ),
-          Rule.new(
-            id: 7,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("option_number")
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 42,
-          ),
-          Rule.new(
-            id: 8,
-            lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 43,
-          ),
-          Rule.new(
-            id: 9,
-            lhs: grammar.find_symbol_by_s_value!("nested_multi_option_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 43,
-          ),
-          Rule.new(
-            id: 10,
-            lhs: grammar.find_symbol_by_s_value!("nested_multi_option_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number")
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 43,
-          ),
-          Rule.new(
-            id: 11,
-            lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("nested_multi_option_number")
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 43,
-          ),
-          Rule.new(
-            id: 12,
-            lhs: grammar.find_symbol_by_s_value!("nested_multi_option_string"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 43,
-          ),
-          Rule.new(
-            id: 13,
-            lhs: grammar.find_symbol_by_s_value!("nested_multi_option_string"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("string")
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("string"),
-            position_in_original_rule_rhs: 0,
-            lineno: 43,
-          ),
-          Rule.new(
-            id: 14,
-            lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("nested_multi_option_string"),
-              grammar.find_symbol_by_s_value!("number")
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 43,
-          ),
-          Rule.new(
-            id: 15,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("multi_option_number_string")
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 43,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 42,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("option_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 42,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("nested_option_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 42,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("nested_nested_option_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 42,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("nested_nested_option_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number")
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 42,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("nested_option_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("nested_nested_option_number")
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 42,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("option_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("nested_option_number")
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 42,
+            ),
+            Rule.new(
+              id: 7,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("option_number")
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 42,
+            ),
+            Rule.new(
+              id: 8,
+              lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 43,
+            ),
+            Rule.new(
+              id: 9,
+              lhs: grammar.find_symbol_by_s_value!("nested_multi_option_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 43,
+            ),
+            Rule.new(
+              id: 10,
+              lhs: grammar.find_symbol_by_s_value!("nested_multi_option_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number")
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 43,
+            ),
+            Rule.new(
+              id: 11,
+              lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("nested_multi_option_number")
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 43,
+            ),
+            Rule.new(
+              id: 12,
+              lhs: grammar.find_symbol_by_s_value!("nested_multi_option_string"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 43,
+            ),
+            Rule.new(
+              id: 13,
+              lhs: grammar.find_symbol_by_s_value!("nested_multi_option_string"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("string")
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("string"),
+              position_in_original_rule_rhs: 0,
+              lineno: 43,
+            ),
+            Rule.new(
+              id: 14,
+              lhs: grammar.find_symbol_by_s_value!("multi_option_number_string"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("nested_multi_option_string"),
+                grammar.find_symbol_by_s_value!("number")
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 43,
+            ),
+            Rule.new(
+              id: 15,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("multi_option_number_string")
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 43,
+            ),
+          ])
+        end
       end
 
+      context "when user defined with recursive" do
+        let(:path) { "parameterizing_rules/user_defined_with_recursive.y" }
 
-      it "user defined with recursive" do
-        path = "parameterizing_rules/user_defined_with_recursive.y"
-        y = File.read(fixture_path(path))
-        grammar = Lrama::Parser.new(y, path).parse
+        it "expands parameterizing rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
+            Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: true),
+          ])
 
-        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
-          Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
-          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: true),
-        ])
-
-        expect(grammar.rules).to eq([
-          Rule.new(
-            id: 0,
-            lhs: grammar.find_symbol_by_s_value!("$accept"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("program"),
-              grammar.find_symbol_by_s_value!("YYEOF"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-            lineno: 24,
-          ),
-          Rule.new(
-            id: 1,
-            lhs: grammar.find_symbol_by_s_value!("list_number"),
-            rhs: [],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 24,
-          ),
-          Rule.new(
-            id: 2,
-            lhs: grammar.find_symbol_by_s_value!("list_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("number"),
-            ],
-            token_code: nil,
-            nullable: false,
-            precedence_sym: grammar.find_symbol_by_s_value!("number"),
-            position_in_original_rule_rhs: 0,
-            lineno: 24,
-          ),
-          Rule.new(
-            id: 3,
-            lhs: grammar.find_symbol_by_s_value!("list_number"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("list_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            position_in_original_rule_rhs: 0,
-            lineno: 24,
-          ),
-          Rule.new(
-            id: 4,
-            lhs: grammar.find_symbol_by_s_value!("program"),
-            rhs: [
-              grammar.find_symbol_by_s_value!("list_number"),
-            ],
-            token_code: nil,
-            nullable: true,
-            precedence_sym: nil,
-            lineno: 24,
-          ),
-        ])
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("program"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 24,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("list_number"),
+              rhs: [],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 24,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("list_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("number"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("number"),
+              position_in_original_rule_rhs: 0,
+              lineno: 24,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("list_number"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("list_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              position_in_original_rule_rhs: 0,
+              lineno: 24,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("program"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("list_number"),
+              ],
+              token_code: nil,
+              nullable: true,
+              precedence_sym: nil,
+              lineno: 24,
+            ),
+          ])
+        end
       end
 
       context 'when error case' do
         context "when invalid argument number" do
+          let(:path) { "parameterizing_rules/invalid_argument_number.y" }
+
           it "raise an error" do
-            path = "parameterizing_rules/invalid_argument_number.y"
-            y = File.read(fixture_path(path))
-            expect { Lrama::Parser.new(y, path).parse }.to raise_error(/Invalid number of arguments\. `list`/)
+            expect {grammar}.to raise_error(/Invalid number of arguments\. `list`/)
           end
         end
 
         context "when invalid rule name" do
+          let(:path) { "parameterizing_rules/invalid_rule_name.y" }
+
           it "raise an error" do
-            path = "parameterizing_rules/invalid_rule_name.y"
-            y = File.read(fixture_path(path))
-            expect { Lrama::Parser.new(y, path).parse }.to raise_error(/Parameterizing rule does not exist\. `invalid`/)
+            expect {grammar}.to raise_error(/Parameterizing rule does not exist\. `invalid`/)
           end
         end
       end
@@ -1815,6 +1831,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
       INPUT
 
       grammar = Lrama::Parser.new(y, "parse.y").parse
+      grammar.prepare
+      grammar.validate!
 
       _rules = grammar.rule_builders.map {|b| [b.lhs, (b.rhs + [b.precedence_sym, b.user_code]).compact, b.line] }
       expect(_rules).to eq([
@@ -1859,6 +1877,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
       INPUT
       grammar = Lrama::Parser.new(y, "parse.y").parse
+      grammar.prepare
+      grammar.validate!
 
       expect(grammar.terms.sort_by(&:number)).to match_symbols([
         Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
@@ -1916,6 +1936,8 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
 
       INPUT
       grammar = Lrama::Parser.new(y, "parse.y").parse
+      grammar.prepare
+      grammar.validate!
 
       expect(grammar.nterms.sort_by(&:number)).to match_symbols([
         Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 11, tag: nil,                        term: false, token_id: 0, nullable: false),
@@ -2083,6 +2105,8 @@ class : keyword_class
 %%
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        grammar.validate!
         codes = grammar.rules.map(&:token_code).compact
 
         expect(codes.count).to eq(1)
@@ -2110,6 +2134,8 @@ class : keyword_class
 %%
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        grammar.validate!
         codes = grammar.rules.map(&:token_code).compact
 
         expect(codes.count).to eq(1)
@@ -2155,6 +2181,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        grammar.validate!
 
         expect(grammar.terms.sort_by(&:number)).to match_symbols([
           Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false),
@@ -2204,6 +2232,8 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        grammar.validate!
 
         expect(grammar.terms.sort_by(&:number)).to match_symbols([
           Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number: 0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
@@ -2250,6 +2280,8 @@ lambda: tLAMBDA
 %%
           INPUT
           grammar = Lrama::Parser.new(y, "parse.y").parse
+          grammar.prepare
+          grammar.validate!
 
           expect(grammar.rules).to eq([
             Rule.new(
@@ -2362,6 +2394,8 @@ emp: /* none */
 %%
           INPUT
           grammar = Lrama::Parser.new(y, "parse.y").parse
+          grammar.prepare
+          grammar.validate!
 
           expect(grammar.rules).to eq([
             Rule.new(
@@ -2453,6 +2487,8 @@ expr[result]: NUM
 ;
             INPUT
             grammar = Lrama::Parser.new(y, "parse.y").parse
+            grammar.prepare
+            grammar.validate!
 
             expect(grammar.rules).to eq([
               Rule.new(
@@ -2596,7 +2632,11 @@ parse.y:27:18: Referring symbol `results` is not found.
                   ^^^^^^^^
             ERROR
 
-            expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+            expect do
+              grammar = Lrama::Parser.new(y, "parse.y").parse
+              grammar.prepare
+              grammar.validate!
+            end.to raise_error(expected)
           end
         end
       end
@@ -2711,6 +2751,8 @@ class : keyword_class tSTRING keyword_end ;
 %%
       INPUT
       grammar = Lrama::Parser.new(y, "parse.y").parse
+      grammar.prepare
+      grammar.validate!
       terms = grammar.terms.sort_by(&:number).map do |term|
         [term.id.s_value, term.token_id]
       end
@@ -2760,6 +2802,8 @@ class : keyword_class tSTRING keyword_end
 %%
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        grammar.validate!
         codes = grammar.rules.map(&:token_code)
 
         expect(codes.count).to eq(3)

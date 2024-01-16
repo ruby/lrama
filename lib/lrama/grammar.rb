@@ -136,6 +136,14 @@ module Lrama
       @parameterizing_rule_resolver.add_parameterizing_rule(rule)
     end
 
+    def parameterizing_rules
+      @parameterizing_rule_resolver.rules
+    end
+
+    def insert_before_parameterizing_rules(rules)
+      @parameterizing_rule_resolver.rules = rules + @parameterizing_rule_resolver.rules
+    end
+
     def prologue_first_lineno=(prologue_first_lineno)
       @aux.prologue_first_lineno = prologue_first_lineno
     end

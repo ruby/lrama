@@ -149,7 +149,12 @@ rule8: expr { $$ = $1 } '+' expr { $2; }
 %%
       GRAMMAR
     end
-    let(:grammar) { Lrama::Parser.new(y, "parse.y").parse }
+    let(:grammar) do
+      grammar = Lrama::Parser.new(y, "parse.y").parse
+      grammar.prepare
+      grammar.validate!
+      grammar
+    end
 
     describe "#translated_code" do
       it "translats '$$' to '(yyval)' with member" do
