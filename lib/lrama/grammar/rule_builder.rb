@@ -173,11 +173,12 @@ module Lrama
 
           token.references.each do |ref|
             ref_name = ref.name
-            if ref_name && ref_name != '$'
-              if lhs.referred_by?(ref_name)
+
+            if ref_name
+              if ref_name == '$'
                 ref.name = '$'
               else
-                candidates = rhs.each_with_index.select {|token, i| token.referred_by?(ref_name) }
+                candidates = ([lhs] + rhs).each_with_index.select {|token, _i| token.referred_by?(ref_name) }
 
                 if candidates.size >= 2
                   token.invalid_ref(ref, "Referring symbol `#{ref_name}` is duplicated.")
@@ -187,7 +188,11 @@ module Lrama
                   token.invalid_ref(ref, "Referring symbol `#{ref_name}` is not found.")
                 end
 
-                ref.index = referring_symbol[1] + 1
+                if referring_symbol[1] == 0 # Refers to LHS
+                  ref.name = '$'
+                else
+                  ref.index = referring_symbol[1]
+                end
               end
             end
 
