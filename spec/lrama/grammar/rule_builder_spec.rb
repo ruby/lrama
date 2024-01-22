@@ -314,37 +314,116 @@ class : keyword_class tSTRING keyword_end { $classes = $1; }
     end
 
     context "component name is duplicated" do
-      let(:text) { "class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }" }
-      let(:grammar_file) { Lrama::Lexer::GrammarFile.new(path, text) }
-      let(:location_1) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 5) }
-      let(:location_2) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 8, last_line: 1, last_column: 21) }
-      let(:location_3) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 22, last_line: 1, last_column: 29) }
-      let(:location_4) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 30, last_line: 1, last_column: 37) }
-      let(:location_5) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 38, last_line: 1, last_column: 49) }
-      let(:location_6) { Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 51, last_line: 1, last_column: 71) }
-      let(:token_1) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location_1) }
-      let(:token_2) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_class", location: location_2) }
-      let(:token_3) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location_3) }
-      let(:token_4) { Lrama::Lexer::Token::Ident.new(s_value: "tSTRING", location: location_4) }
-      let(:token_5) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location_5) }
-      let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: " $class = $tSTRING; ", location: location_6) }
+      context "components in RHS are duplicated" do
+        let(:y) do
+          <<-GRAMMAR
+%token keyword_class
+%token tSTRING
+%token keyword_end
 
-      it "raises error" do
-        rule_builder.lhs = token_1
-        rule_builder.add_rhs(token_2)
-        rule_builder.add_rhs(token_3)
-        rule_builder.add_rhs(token_4)
-        rule_builder.add_rhs(token_5)
-        rule_builder.user_code = token_6
-        rule_builder.complete_input
+%%
 
-        expected = <<-TEXT
-parse.y:1:61: Referring symbol `tSTRING` is duplicated.
-class : keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
-                                                             ^^^^^^^^
-        TEXT
+program: class
+       ;
 
-        expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
+class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
+     ;
+
+          GRAMMAR
+        end
+
+        it "raises error" do
+          expected = <<-TEXT
+parse.y:10:60: Referring symbol `tSTRING` is duplicated.
+class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
+                                                            ^^^^^^^^
+          TEXT
+          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+        end
+      end
+
+      context "components in LHS and RHS are duplicated" do
+        let(:y) do
+          <<-GRAMMAR
+%token keyword_class
+%token tSTRING
+%token keyword_end
+
+%%
+
+program: class
+       ;
+
+class: class tSTRING keyword_end { $class = $tSTRING; }
+     ;
+
+          GRAMMAR
+        end
+
+        it "raises error" do
+          expected = <<-TEXT
+parse.y:10:35: Referring symbol `class` is duplicated.
+class: class tSTRING keyword_end { $class = $tSTRING; }
+                                   ^^^^^^
+          TEXT
+          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+        end
+      end
+
+      context "components in LHS and RHS are duplicated by alias name" do
+        let(:y) do
+          <<-GRAMMAR
+%token keyword_class
+%token tSTRING
+%token keyword_end
+
+%%
+
+program: klass
+       ;
+
+klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
+            ;
+
+          GRAMMAR
+        end
+
+        it "raises error" do
+          expected = <<-TEXT
+parse.y:10:42: Referring symbol `class` is duplicated.
+klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
+                                          ^^^^^^
+          TEXT
+          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+        end
+      end
+
+      context "components in LHS and RHS are duplicated by alias name" do
+        let(:y) do
+          <<-GRAMMAR
+%token keyword_class
+%token tSTRING
+%token keyword_end
+
+%%
+
+program: klass
+       ;
+
+klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
+            ;
+
+          GRAMMAR
+        end
+
+        it "raises error" do
+          expected = <<-TEXT
+parse.y:10:49: Referring symbol `class` is duplicated.
+klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
+                                                 ^^^^^^
+          TEXT
+          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+        end
       end
     end
   end
