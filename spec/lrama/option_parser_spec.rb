@@ -48,7 +48,6 @@ RSpec.describe Lrama::OptionParser do
               -S, --skeleton=FILE              specify the skeleton to use
               -t                               reserved, do nothing
                   --debug                      display debugging outputs of internal parser
-                  --no-stdlib                  do not include standard library
 
           Output:
               -H, --header=[FILE]              also produce a header file named FILE
@@ -195,26 +194,6 @@ RSpec.describe Lrama::OptionParser do
         option_parser.send(:parse, ["--report-file=report.output", "-", "test.y"])
         options = option_parser.instance_variable_get(:@options)
         expect(options.report_file).to eq "report.output"
-      end
-    end
-  end
-
-  describe "@no_stdlib" do
-    context "--no-stdlib option is not passed" do
-      it "@no_stdlib is false" do
-        option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["-", "test.y"])
-        options = option_parser.instance_variable_get(:@options)
-        expect(options.no_stdlib).to eq false
-      end
-    end
-
-    context "--no-stdlib option is passed" do
-      it "@no_stdlib is true" do
-        option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["--no-stdlib", "-", "test.y"])
-        options = option_parser.instance_variable_get(:@options)
-        expect(options.no_stdlib).to eq true
       end
     end
   end

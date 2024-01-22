@@ -24,7 +24,7 @@ module Lrama
                   :lex_param, :parse_param, :initial_action,
                   :symbols, :types,
                   :rules, :rule_builders,
-                  :sym_to_rules
+                  :sym_to_rules, :no_stdlib
 
     def initialize(rule_counter)
       @rule_counter = rule_counter
@@ -45,6 +45,7 @@ module Lrama
       @undef_symbol = nil
       @accept_symbol = nil
       @aux = Auxiliary.new
+      @no_stdlib = false
 
       append_special_symbols
     end

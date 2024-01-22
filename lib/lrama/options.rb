@@ -5,7 +5,7 @@ module Lrama
                   :report_file, :outfile,
                   :error_recovery, :grammar_file,
                   :trace_opts, :report_opts, :y,
-                  :debug, :no_stdlib
+                  :debug
 
     def initialize
       @skeleton = "bison/yacc.c"
@@ -18,7 +18,6 @@ module Lrama
       @trace_opts = nil
       @report_opts = nil
       @y = STDIN
-      @no_stdlib = false
     end
   end
 end
