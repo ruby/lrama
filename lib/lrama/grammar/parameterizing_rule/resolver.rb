@@ -22,7 +22,7 @@ module Lrama
         end
 
         def created_lhs(lhs_s_value)
-          @created_lhs_list.select { |created_lhs| created_lhs.s_value == lhs_s_value }.last
+          @created_lhs_list.reverse.find { |created_lhs| created_lhs.s_value == lhs_s_value }
         end
 
         private
