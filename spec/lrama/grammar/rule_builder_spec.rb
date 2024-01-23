@@ -338,7 +338,11 @@ parse.y:10:60: Referring symbol `tSTRING` is duplicated.
 class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
                                                             ^^^^^^^^
           TEXT
-          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+          expect {
+            grammar = Lrama::Parser.new(y, "parse.y").parse
+            grammar.prepare
+            grammar.validate!
+          }.to raise_error(expected)
         end
       end
 
@@ -366,7 +370,11 @@ parse.y:10:35: Referring symbol `class` is duplicated.
 class: class tSTRING keyword_end { $class = $tSTRING; }
                                    ^^^^^^
           TEXT
-          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+          expect {
+            grammar = Lrama::Parser.new(y, "parse.y").parse
+            grammar.prepare
+            grammar.validate!
+          }.to raise_error(expected)
         end
       end
 
@@ -394,7 +402,11 @@ parse.y:10:42: Referring symbol `class` is duplicated.
 klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
                                           ^^^^^^
           TEXT
-          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+          expect {
+            grammar = Lrama::Parser.new(y, "parse.y").parse
+            grammar.prepare
+            grammar.validate!
+          }.to raise_error(expected)
         end
       end
 
@@ -422,7 +434,11 @@ parse.y:10:49: Referring symbol `class` is duplicated.
 klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
                                                  ^^^^^^
           TEXT
-          expect { Lrama::Parser.new(y, "parse.y").parse }.to raise_error(expected)
+          expect {
+            grammar = Lrama::Parser.new(y, "parse.y").parse
+            grammar.prepare
+            grammar.validate!
+          }.to raise_error(expected)
         end
       end
     end
