@@ -84,21 +84,15 @@ module Lrama
         last_lhs = nil
         list = itemsets ? state.items : state.kernels
         list.sort_by {|i| [i.rule_id, i.position] }.each do |item|
-<<<<<<< Updated upstream
-          rule = item.rule
-          position = item.position
-          if rule.rhs.empty?
-=======
           if item.empty_rule?
->>>>>>> Stashed changes
             r = "ε •"
           else
-            r = rule.rhs.map(&:display_name).insert(position, "•").join(" ")
+            r = item.rhs.map(&:display_name).insert(item.position, "•").join(" ")
           end
-          if rule.lhs == last_lhs
-            l = " " * rule.lhs.id.s_value.length + "|"
+          if item.lhs == last_lhs
+            l = " " * item.lhs.id.s_value.length + "|"
           else
-            l = rule.lhs.id.s_value + ":"
+            l = item.lhs.id.s_value + ":"
           end
           la = ""
           if lookaheads && item.end_of_rule?
@@ -108,9 +102,9 @@ module Lrama
               la = "  [#{look_ahead.map(&:display_name).join(", ")}]"
             end
           end
-          last_lhs = rule.lhs
+          last_lhs = item.lhs
 
-          io << sprintf("%5i %s %s%s\n", rule.id, l, r, la)
+          io << sprintf("%5i %s %s%s\n", item.rule_id, l, r, la)
         end
         io << "\n"
 
