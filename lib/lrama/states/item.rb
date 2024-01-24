@@ -5,7 +5,7 @@ module Lrama
     class Item < Struct.new(:rule, :position, keyword_init: true)
       # Optimization for States#setup_state
       def hash
-        [rule.id, position].hash
+        [rule_id, position].hash
       end
 
       def rule_id
@@ -66,13 +66,13 @@ module Lrama
 
       def display_name
         r = rule.rhs.map(&:display_name).insert(position, "•").join(" ")
-        "#{r}  (rule #{rule.id})"
+        "#{r}  (rule #{rule_id})"
       end
 
       # Right after position
       def display_rest
         r = rule.rhs[position..-1].map(&:display_name).join(" ")
-        ". #{r}  (rule #{rule.id})"
+        ". #{r}  (rule #{rule_id})"
       end
     end
   end
