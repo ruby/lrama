@@ -45,7 +45,7 @@ module Lrama
       end
 
       def start_item?
-        rule.initial_rule? && position == 0
+        rule.initial_rule? && beginning_of_rule?
       end
 
       def new_by_next_position
