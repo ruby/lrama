@@ -6,7 +6,6 @@
 // Prologue
 static int yylex(YYSTYPE *val, YYLTYPE *loc);
 static int yyerror(YYLTYPE *loc, const char *str);
-
 %}
 
 %union {

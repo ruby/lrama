@@ -69,6 +69,7 @@ rule
                        {
                          @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[3])
                        }
+                   | "%no-stdlib" { @grammar.no_stdlib = true }
                    | ";"
 
   grammar_declaration: "%union" "{"
@@ -451,9 +452,9 @@ rule
            result = builder
          }
 
-  parameterizing_suffix: "?"
-                       | "+"
-                       | "*"
+  parameterizing_suffix: "?" { result = "option" }
+                       | "+" { result = "nonempty_list" }
+                       | "*" { result = "list" }
 
   parameterizing_args: symbol { result = [val[0]] }
                      | parameterizing_args ',' symbol { result = val[0].append(val[2]) }
@@ -514,8 +515,6 @@ def parse
     @precedence_number = 0
     reset_precs
     do_parse
-    @grammar.prepare
-    @grammar.validate!
     @grammar
   end
 end

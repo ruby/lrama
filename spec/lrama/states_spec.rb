@@ -7,6 +7,8 @@ RSpec.describe Lrama::States do
       path = "common/basic.y"
       y = File.read(fixture_path(path))
       grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
       states = Lrama::States.new(grammar, warning)
       states.compute
 
@@ -301,6 +303,8 @@ State 27
       path = "common/basic.y"
       y = File.read(fixture_path(path))
       grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
       states = Lrama::States.new(grammar, warning)
       states.compute
 
@@ -342,6 +346,8 @@ State 27
       path = "states/reads_relation.y"
       y = File.read(fixture_path(path))
       grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
       states = Lrama::States.new(grammar, warning)
       states.compute
 
@@ -610,6 +616,8 @@ State 8
       path = "states/includes_relation.y"
       y = File.read(fixture_path(path))
       grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
       states = Lrama::States.new(grammar, warning)
       states.compute
 
@@ -909,6 +917,8 @@ expr: tNUMBER
 %%
         INPUT
         grammar = Lrama::Parser.new(y, "states/compute_look_ahead_sets.y").parse
+        grammar.prepare
+        grammar.validate!
         states = Lrama::States.new(grammar, warning)
         states.compute
 
@@ -978,6 +988,8 @@ expr: tNUMBER
 %%
         INPUT
         grammar = Lrama::Parser.new(y, "states/compute_look_ahead_sets.y").parse
+        grammar.prepare
+        grammar.validate!
         states = Lrama::States.new(grammar, warning)
         states.compute
 
@@ -1068,6 +1080,8 @@ expr: tUPLUS expr
 %%
         INPUT
         grammar = Lrama::Parser.new(y, "states/compute_conflicts.y").parse
+        grammar.prepare
+        grammar.validate!
         states = Lrama::States.new(grammar, warning)
         states.compute
 
@@ -1185,6 +1199,8 @@ expr: expr tEQ expr
 %%
         INPUT
         grammar = Lrama::Parser.new(y, "states/compute_conflicts.y").parse
+        grammar.prepare
+        grammar.validate!
         states = Lrama::States.new(grammar, warning)
         states.compute
 
@@ -1282,6 +1298,8 @@ expr: expr '+' expr
 %%
         INPUT
         grammar = Lrama::Parser.new(y, "states/compute_conflicts.y").parse
+        grammar.prepare
+        grammar.validate!
         states = Lrama::States.new(grammar, warning)
         states.compute
 
@@ -1431,6 +1449,8 @@ ident: tID ;
 %%
       INPUT
       grammar = Lrama::Parser.new(y, "states/compute_default_reduction.y").parse
+      grammar.prepare
+      grammar.validate!
       states = Lrama::States.new(grammar, warning)
       states.compute
 
@@ -1603,6 +1623,8 @@ ident: tID ;
 %%
       INPUT
       grammar = Lrama::Parser.new(y, "states/compute_default_reduction.y").parse
+      grammar.prepare
+      grammar.validate!
       states = Lrama::States.new(grammar, warning)
       states.compute
 
@@ -1821,6 +1843,8 @@ string: tSTRING
 
           it "has errors for r/r conflicts" do
             grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
+            grammar.prepare
+            grammar.validate!
             states = Lrama::States.new(grammar, warning)
             states.compute
 
@@ -1845,6 +1869,8 @@ string: tSTRING
 
           it "has errors for s/r conflicts and r/r conflicts" do
             grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
+            grammar.prepare
+            grammar.validate!
             states = Lrama::States.new(grammar, warning)
             states.compute
 
@@ -1869,6 +1895,8 @@ string: tSTRING
 
         it "has warns for s/r conflicts and r/r conflicts" do
           grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
+          grammar.prepare
+          grammar.validate!
           states = Lrama::States.new(grammar, warning)
           states.compute
 
