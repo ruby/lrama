@@ -53,7 +53,7 @@ module Lrama
       last_lhs = nil
 
       @states.rules.each do |rule|
-        if rule.rhs.empty?
+        if rule.empty_rule?
           r = "ε"
         else
           r = rule.rhs.map(&:display_name).join(" ")
@@ -84,9 +84,13 @@ module Lrama
         last_lhs = nil
         list = itemsets ? state.items : state.kernels
         list.sort_by {|i| [i.rule_id, i.position] }.each do |item|
+<<<<<<< Updated upstream
           rule = item.rule
           position = item.position
           if rule.rhs.empty?
+=======
+          if item.empty_rule?
+>>>>>>> Stashed changes
             r = "ε •"
           else
             r = rule.rhs.map(&:display_name).insert(position, "•").join(" ")

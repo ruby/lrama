@@ -243,7 +243,7 @@ module Lrama
     def compute_nullable
       @rules.each do |rule|
         case
-        when rule.rhs.empty?
+        when rule.empty_rule?
           rule.nullable = true
         when rule.rhs.any?(&:term)
           rule.nullable = false
