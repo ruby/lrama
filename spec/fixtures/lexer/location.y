@@ -1,5 +1,5 @@
 /*
- * This is a valid　sample grammar file.
+ * This is a valid sample grammar file.
  * It works as simple calculator.
  */
 
