@@ -14,7 +14,7 @@
  * =>
  *
  * program: option_number
- * option_number: ε
+ * option_number: %empty
  * option_number: number
  */
 %rule option(X): /* empty */
@@ -27,7 +27,7 @@
  * =>
  *
  * program: list_number
- * list_number: ε
+ * list_number: %empty
  * list_number: list_number number
  */
 %rule list(X): /* empty */
@@ -67,7 +67,7 @@
  *
  * program: separated_list_comma_number
  * separated_list_comma_number: option_separated_nonempty_list_comma_number
- * option_separated_nonempty_list_comma_number: ε
+ * option_separated_nonempty_list_comma_number: %empty
  * option_separated_nonempty_list_comma_number: separated_nonempty_list_comma_number
  * separated_nonempty_list_comma_number: number
  * separated_nonempty_list_comma_number: comma separated_nonempty_list_comma_number number
