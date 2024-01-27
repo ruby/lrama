@@ -1,6 +1,6 @@
 # NEWS for Lrama
 
-## Lrama 0.6.2 (2024-01-xx)
+## Lrama 0.6.2 (2024-01-27)
 
 ### %no-stdlib directive
 
