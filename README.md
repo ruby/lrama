@@ -1,5 +1,8 @@
 # Lrama
 
+[![Gem Version](https://badge.fury.io/rb/lrama.svg)](https://badge.fury.io/rb/lrama)
+[![build](https://github.com/ruby/lrama/actions/workflows/test.yaml/badge.svg)](https://github.com/ruby/lrama/actions/workflows/test.yaml)
+
 Lrama is LALR (1) parser generator written by Ruby. The first goal of this project is providing error tolerant parser for CRuby with minimal changes on CRuby parse.y file.
 
 ## Features
