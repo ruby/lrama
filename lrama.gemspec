@@ -17,6 +17,8 @@ Gem::Specification.new do |spec|
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{\A(?:test|spec|features)/}) }
   end
   spec.metadata = {
+    "homepage_uri"      => "https://github.com/ruby/lrama",
+    "documentation_uri" => "https://github.com/ruby/lrama",
     "bug_tracker_uri"   => "https://github.com/ruby/lrama/issues",
     "changelog_uri"     => "https://github.com/ruby/lrama/releases",
     "source_code_uri"   => "https://github.com/ruby/lrama"
