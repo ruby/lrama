@@ -87,6 +87,11 @@ jobs:
           bundler-cache: true
       - run: bundle install
 
+      # Copy from https://github.com/ruby/ruby/blob/cb9a47f2acd6e373ef868b890a9d07da6f565dd4/.github/workflows/check_misc.yml#L31
+      - name: Check if C-sources are US-ASCII
+        run: |
+          grep -r -n --include='*.[chyS]' --include='*.asm' $'[^\t-~]' -- . && exit 1 || :
+
       # Copy from https://github.com/ruby/ruby/blob/089227e94823542acfdafa68541d330eee42ffea/.github/workflows/check_misc.yml#L27
       - name: Check for trailing spaces
         run: |
