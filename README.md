@@ -5,6 +5,19 @@
 
 Lrama is LALR (1) parser generator written by Ruby. The first goal of this project is providing error tolerant parser for CRuby with minimal changes on CRuby parse.y file.
 
+* [Features](#features)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Versions and Branches](#versions-and-branches)
+* [Supported Ruby version](#supported-ruby-version)
+* [Development](#development)
+  * [How to generate parser.rb](#how-to-generate-parserrb)
+  * [Test](#test)
+  * [Profiling Lrama](#profiling-lrama)
+  * [Build Ruby](#build-ruby)
+* [Release flow](#release-flow)
+* [License](#license)
+
 ## Features
 
 * Bison style grammar file is supported with some assumptions
