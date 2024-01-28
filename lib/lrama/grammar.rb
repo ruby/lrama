@@ -413,8 +413,8 @@ module Lrama
       nterm_token_id = 0
       used_numbers = {}
 
-      @symbols.map(&:number).each do |n|
-        used_numbers[n] = true
+      @symbols.each do |symbol|
+        used_numbers[symbol.number] = true
       end
 
       (@symbols.select(&:term?) + @symbols.select(&:nterm?)).each do |sym|
