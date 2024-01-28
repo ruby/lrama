@@ -16,11 +16,13 @@ Gem::Specification.new do |spec|
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{\A(?:test|spec|features)/}) }
   end
-  spec.metadata = {
-    "bug_tracker_uri"   => "https://github.com/ruby/lrama/issues",
-    "changelog_uri"     => "https://github.com/ruby/lrama/releases",
-    "source_code_uri"   => "https://github.com/ruby/lrama"
-  }
+
+  spec.metadata["homepage_uri"]      = spec.homepage
+  spec.metadata["source_code_uri"]   = spec.homepage
+  spec.metadata["documentation_uri"] = spec.homepage
+  spec.metadata["changelog_uri"]     = "#{spec.homepage}/releases"
+  spec.metadata["bug_tracker_uri"]   = "#{spec.homepage}/issues"
+
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
