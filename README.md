@@ -27,6 +27,9 @@ Lrama is LALR (1) parser generator written by Ruby. The first goal of this proje
   * b4_lac_if is always false
 * Error Tolerance parser
   * Subset of [Repairing Syntax Errors in LR Parsers (Corchuelo et al.)](https://idus.us.es/bitstream/handle/11441/65631/Repairing%20syntax%20errors.pdf) algorithm is supported
+* Parameterizing rules
+  * The definition of a non-terminal symbol can be parameterized with other (terminal or non-terminal) symbols.
+  * Providing a generic definition of parameterizing rules as a [standard library](lib/lrama/grammar/stdlib.y).
 
 ## Installation
 
