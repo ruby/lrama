@@ -104,6 +104,8 @@ Running tests:
 ```shell
 $ bundle install
 $ bundle exec rspec
+# or
+$ bundle exec rake spec
 ```
 
 Running type check:
@@ -112,6 +114,8 @@ Running type check:
 $ bundle install
 $ bundle exec rbs collection install
 $ bundle exec steep check
+# or
+$ bundle exec rake steep
 ```
 
 Running both of them:
