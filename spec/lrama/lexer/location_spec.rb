@@ -22,10 +22,10 @@ RSpec.describe Lrama::Lexer::Location do
       path = fixture_path("lexer/location.y")
       grammar_file = Lrama::Lexer::GrammarFile.new(path, File.read(path))
       location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 33, first_column: 12, last_line: 33, last_column: 15)
-      expected = <<-TEXT
-#{path}:33:12: ERROR
-     | expr '+' expr { $$ = $1 + $3; }
-            ^^^
+      expected = <<~TEXT
+        #{path}:33:12: ERROR
+             | expr '+' expr { $$ = $1 + $3; }
+                    ^^^
       TEXT
 
       expect(location.generate_error_message("ERROR")).to eq expected

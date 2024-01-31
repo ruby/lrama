@@ -82,71 +82,71 @@ RSpec.describe Lrama::Grammar::Code do
   describe Lrama::Grammar::Code::RuleAction do
     let(:y) do
       <<~GRAMMAR
-%union {
-    int i;
-    int str;
-    int l;
-    int expr;
-    int integer;
-    int rule1;
-    int rule2;
-    int rule3;
-    int rule4;
-    int rule5;
-    int rule6;
-    int rule7;
-}
+        %union {
+            int i;
+            int str;
+            int l;
+            int expr;
+            int integer;
+            int rule1;
+            int rule2;
+            int rule3;
+            int rule4;
+            int rule5;
+            int rule6;
+            int rule7;
+        }
 
-%token <i> keyword_class
-%token <str> tSTRING
-%token <l> keyword_end
-%token <expr> expr
+        %token <i> keyword_class
+        %token <str> tSTRING
+        %token <l> keyword_end
+        %token <expr> expr
 
-%type <rule1> rule1
-%type <rule2> rule2
-%type <rule3> rule3
-%type <rule4> rule4
-%type <rule5> rule5
-%type <rule6> rule6
-%type <rule7> rule7
+        %type <rule1> rule1
+        %type <rule2> rule2
+        %type <rule3> rule3
+        %type <rule4> rule4
+        %type <rule5> rule5
+        %type <rule6> rule6
+        %type <rule7> rule7
 
-%%
+        %%
 
-program: rule1
-       | rule2
-       | rule3
-       | rule4
-       | rule5
-       | rule6
-       | rule7
-       | rule8
-       ;
+        program: rule1
+               | rule2
+               | rule3
+               | rule4
+               | rule5
+               | rule6
+               | rule7
+               | rule8
+               ;
 
-rule1: expr '+' expr { $$ = 0; }
-     ;
+        rule1: expr '+' expr { $$ = 0; }
+             ;
 
-rule2: expr '+' expr { @$ = 0; }
-     ;
+        rule2: expr '+' expr { @$ = 0; }
+             ;
 
-rule3: expr '+' expr[expr-right] { $1 + $[expr-right]; }
-     ;
+        rule3: expr '+' expr[expr-right] { $1 + $[expr-right]; }
+             ;
 
-rule4: expr '+' expr[expr-right] { @1 + @[expr-right]; @0; }
-     ;
+        rule4: expr '+' expr[expr-right] { @1 + @[expr-right]; @0; }
+             ;
 
-rule5: expr '+' expr { $1 + $<integer>3; }
-     ;
+        rule5: expr '+' expr { $1 + $<integer>3; }
+             ;
 
-rule6: expr '+' { $<integer>$ = $1; @$ = @1; } expr { $1 + $<integer>4; }
-     ;
+        rule6: expr '+' { $<integer>$ = $1; @$ = @1; } expr { $1 + $<integer>4; }
+             ;
 
-rule7: expr { $$ = $1 } '+' expr { $2; }
-     ;
+        rule7: expr { $$ = $1 } '+' expr { $2; }
+             ;
 
-rule8: expr { $$ = $1 } '+' expr { $2; }
-     ;
+        rule8: expr { $$ = $1 } '+' expr { $2; }
+             ;
 
-%%
+        %%
       GRAMMAR
     end
     let(:grammar) do

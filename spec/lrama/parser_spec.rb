@@ -11,32 +11,32 @@ RSpec.describe Lrama::Parser do
 
   let(:header) do
     <<~HEADER
-%{
-// Prologue
-%}
-
-%union {
-    int i;
-    long l;
-    char *str;
-}
-
-%token EOI 0 "EOI"
-%token <i> keyword_class
-%token <l> tNUMBER
-%token <str> tSTRING
-%token <i> keyword_end "end"
-%token tPLUS  "+"
-%token tMINUS "-"
-%token tEQ    "="
-%token tEQEQ  "=="
-
-%type <i> class /* comment for class */
-
-%nonassoc tEQEQ
-%left  tPLUS tMINUS
-%right tEQ
-
+      %{
+      // Prologue
+      %}
+      
+      %union {
+          int i;
+          long l;
+          char *str;
+      }
+      
+      %token EOI 0 "EOI"
+      %token <i> keyword_class
+      %token <l> tNUMBER
+      %token <str> tSTRING
+      %token <i> keyword_end "end"
+      %token tPLUS  "+"
+      %token tMINUS "-"
+      %token tEQ    "="
+      %token tEQEQ  "=="
+      
+      %type <i> class /* comment for class */
+      
+      %nonassoc tEQEQ
+      %left  tPLUS tMINUS
+      %right tEQ
+      
     HEADER
   end
 
@@ -1820,14 +1820,14 @@ RSpec.describe Lrama::Parser do
 
     it "; for rules is optional" do
       y = header + <<~INPUT
-%%
-
-program: class
-
-class : keyword_class tSTRING keyword_end { code 1 }
-      | error
-
-%%
+        %%
+        
+        program: class
+        
+        class : keyword_class tSTRING keyword_end { code 1 }
+              | error
+        
+        %%
       INPUT
 
       grammar = Lrama::Parser.new(y, "parse.y").parse
@@ -1865,16 +1865,16 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
     it "error token" do
       y = header + <<~INPUT
-%%
-
-program: class ;
-
-class : keyword_class tSTRING keyword_end { code 1 }
-      | error
-      ;
-
-%%
-
+        %%
+        
+        program: class ;
+        
+        class : keyword_class tSTRING keyword_end { code 1 }
+              | error
+              ;
+        
+        %%
+        
       INPUT
       grammar = Lrama::Parser.new(y, "parse.y").parse
       grammar.prepare
@@ -1924,16 +1924,16 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
     it "action in the middle of RHS" do
       y = header + <<~INPUT
-%%
-
-program: class ;
-
-class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
-      | keyword_class tSTRING keyword_end { code 4 }
-      ;
-
-%%
-
+        %%
+        
+        program: class ;
+        
+        class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
+              | keyword_class tSTRING keyword_end { code 4 }
+              ;
+        
+        %%
+        
       INPUT
       grammar = Lrama::Parser.new(y, "parse.y").parse
       grammar.prepare
@@ -2024,15 +2024,15 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
     describe "invalid_prec" do
       it "raises error if ident exists after %prec" do
         y = header + <<~INPUT
-%%
-
-program: class ;
-
-class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
-      ;
-
-%%
-
+          %%
+          
+          program: class ;
+          
+          class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
+                ;
+          
+          %%
+          
         INPUT
 
         parser = Lrama::Parser.new(y, "parse.y")
@@ -2046,15 +2046,15 @@ class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
 
       it "raises error if char exists after %prec" do
         y = header + <<~INPUT
-%%
-
-program: class ;
-
-class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
-      ;
-
-%%
-
+          %%
+          
+          program: class ;
+          
+          class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
+                ;
+          
+          %%
+          
         INPUT
 
         parser = Lrama::Parser.new(y, "parse.y")
@@ -2068,15 +2068,15 @@ class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
 
       it "raises error if code exists after %prec" do
         y = header + <<~INPUT
-%%
-
-program: class ;
-
-class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
-      ;
-
-%%
-
+          %%
+          
+          program: class ;
+          
+          class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
+                ;
+          
+          %%
+          
         INPUT
 
         parser = Lrama::Parser.new(y, "parse.y")
@@ -2092,17 +2092,17 @@ class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { 
     describe "\" in user code" do
       it do
         y = header + <<~INPUT
-%%
-
-program: class ;
-
-class : keyword_class
-        {
-            func("}");
-        }
-      ;
-
-%%
+          %%
+          
+          program: class ;
+          
+          class : keyword_class
+                  {
+                      func("}");
+                  }
+                ;
+          
+          %%
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
@@ -2121,17 +2121,17 @@ class : keyword_class
     describe "' in user code" do
       it do
         y = header + <<~INPUT
-%%
-
-program: class ;
-
-class : keyword_class
-        {
-            func('}');
-        }
-      ;
-
-%%
+          %%
+          
+          program: class ;
+          
+          class : keyword_class
+                  {
+                      func('}');
+                  }
+                ;
+          
+          %%
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
@@ -2150,35 +2150,35 @@ class : keyword_class
     describe "symbol number" do
       it "is not duplicated" do
         y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-    int i;
-    long l;
-    char *str;
-}
-
-%token EOI 0 "EOI"
-%token <i> keyword_class
-%token <l> tNUMBER 6
-%token <str> tSTRING
-%token <i> keyword_end "end"
-%token tPLUS  "+"
-%token tMINUS "-"
-%token tEQ    "="
-%token tEQEQ  "=="
-
-%%
-
-program: class ;
-
-class : keyword_class tSTRING keyword_end { code 1 }
-      ;
-
-%%
-
+          %{
+          // Prologue
+          %}
+          
+          %union {
+              int i;
+              long l;
+              char *str;
+          }
+          
+          %token EOI 0 "EOI"
+          %token <i> keyword_class
+          %token <l> tNUMBER 6
+          %token <str> tSTRING
+          %token <i> keyword_end "end"
+          %token tPLUS  "+"
+          %token tMINUS "-"
+          %token tEQ    "="
+          %token tEQEQ  "=="
+          
+          %%
+          
+          program: class ;
+          
+          class : keyword_class tSTRING keyword_end { code 1 }
+                ;
+          
+          %%
+          
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
@@ -2201,35 +2201,35 @@ class : keyword_class tSTRING keyword_end { code 1 }
 
       it "tokens after precedence declarations have greater number than tokens defined by precedence declarations" do
         y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-    int i;
-    long l;
-    char *str;
-}
-
-%token EOI 0 "EOI"
-%token <i> keyword_class
-%token <str> tSTRING
-%token <i> keyword_end "end"
-%token tEQ    "="
-
-%left '&'
-
-%token tEQEQ  "=="
-
-%%
-
-program: class ;
-
-class : keyword_class tSTRING keyword_end { code 1 }
-      ;
-
-%%
-
+          %{
+          // Prologue
+          %}
+          
+          %union {
+              int i;
+              long l;
+              char *str;
+          }
+          
+          %token EOI 0 "EOI"
+          %token <i> keyword_class
+          %token <str> tSTRING
+          %token <i> keyword_end "end"
+          %token tEQ    "="
+          
+          %left '&'
+          
+          %token tEQEQ  "=="
+          
+          %%
+          
+          program: class ;
+          
+          class : keyword_class tSTRING keyword_end { code 1 }
+                ;
+          
+          %%
+          
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
@@ -2253,31 +2253,31 @@ class : keyword_class tSTRING keyword_end { code 1 }
       describe "" do
         it "is not duplicated" do
           y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-    int i;
-}
-
-%token EOI 0 "EOI"
-%token tLAMBDA tARGS tBODY
-
-%%
-
-program: lambda ;
-
-lambda: tLAMBDA
-          { $<i>1 = 1; $<i>$ = 2; }
-          { $<i>$ = 3; }
-          { $<i>$ = 4; }
-        tARGS
-          { 5; }
-        tBODY
-          { $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; }
-        ;
-%%
+            %{
+            // Prologue
+            %}
+            
+            %union {
+                int i;
+            }
+            
+            %token EOI 0 "EOI"
+            %token tLAMBDA tARGS tBODY
+            
+            %%
+            
+            program: lambda ;
+            
+            lambda: tLAMBDA
+                      { $<i>1 = 1; $<i>$ = 2; }
+                      { $<i>$ = 3; }
+                      { $<i>$ = 4; }
+                    tARGS
+                      { 5; }
+                    tBODY
+                      { $<i>2; $<i>3; $<i>5; $<i>7; $<i>$ = 1; }
+                    ;
+            %%
           INPUT
           grammar = Lrama::Parser.new(y, "parse.y").parse
           grammar.prepare
@@ -2369,29 +2369,29 @@ lambda: tLAMBDA
 
         it "can parse action with %empty" do
           y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-    int i;
-}
-
-%token EOI 0 "EOI"
-%type <int> emp
-
-%%
-
-program: emp ;
-
-emp: /* none */
-      { $$; }
-   | %empty
-      { @$; }
-   | %empty
-      { @0; }
-   ;
-%%
+            %{
+            // Prologue
+            %}
+            
+            %union {
+                int i;
+            }
+            
+            %token EOI 0 "EOI"
+            %type <int> emp
+            
+            %%
+            
+            program: emp ;
+            
+            emp: /* none */
+                  { $$; }
+               | %empty
+                  { @$; }
+               | %empty
+                  { @0; }
+               ;
+            %%
           INPUT
           grammar = Lrama::Parser.new(y, "parse.y").parse
           grammar.prepare
@@ -2457,34 +2457,34 @@ emp: /* none */
         context "includes named references" do
           it "can parse" do
             y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-  int i;
-}
-
-%token NUM
-%type <val> expr
-
-%%
-
-input       : /* empty */
-            | input line
-;
-
-line        : '\\n'
-            | expr '\\n'
-                { printf("\\t%.10g\\n", $expr); }
-;
-
-expr[result]: NUM
-            | expr[left] expr[right] '+'
-                { $result = $left + $right; }
-            | expr expr '-'
-                { $$ = $1 - $2; }
-;
+              %{
+              // Prologue
+              %}
+              
+              %union {
+                int i;
+              }
+              
+              %token NUM
+              %type <val> expr
+              
+              %%
+              
+              input       : /* empty */
+                          | input line
+              ;
+              
+              line        : '\\n'
+                          | expr '\\n'
+                              { printf("\\t%.10g\\n", $expr); }
+              ;
+              
+              expr[result]: NUM
+                          | expr[left] expr[right] '+'
+                              { $result = $left + $right; }
+                          | expr expr '-'
+                              { $$ = $1 - $2; }
+              ;
             INPUT
             grammar = Lrama::Parser.new(y, "parse.y").parse
             grammar.prepare
@@ -2592,44 +2592,44 @@ expr[result]: NUM
         context "includes invalid named references" do
           it "raise an error" do
             y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-  int i;
-}
-
-%token NUM
-%type <val> expr
-
-%%
-
-input       : /* empty */
-            | input line
-;
-
-line        : '\\n'
-            | expr '\\n'
-                { printf("\\t%.10g\\n", $expr); }
-;
-
-expr[result]: NUM
-            | expr[left] expr[right] '+'
-                {
-                  // comment
-                  $results = $left + $right;
-                  // comment
-                }
-            | expr expr '-'
-                { $$ = $1 - $2; }
-;
+              %{
+              // Prologue
+              %}
+              
+              %union {
+                int i;
+              }
+              
+              %token NUM
+              %type <val> expr
+              
+              %%
+              
+              input       : /* empty */
+                          | input line
+              ;
+              
+              line        : '\\n'
+                          | expr '\\n'
+                              { printf("\\t%.10g\\n", $expr); }
+              ;
+              
+              expr[result]: NUM
+                          | expr[left] expr[right] '+'
+                              {
+                                // comment
+                                $results = $left + $right;
+                                // comment
+                              }
+                          | expr expr '-'
+                              { $$ = $1 - $2; }
+              ;
             INPUT
 
-            expected = <<-ERROR
-parse.y:27:18: Referring symbol `results` is not found.
-                  $results = $left + $right;
-                  ^^^^^^^^
+            expected = <<~ERROR
+              parse.y:27:18: Referring symbol `results` is not found.
+                                $results = $left + $right;
+                                ^^^^^^^^
             ERROR
 
             expect do
@@ -2646,16 +2646,16 @@ parse.y:27:18: Referring symbol `results` is not found.
       context "error_value has line number and column" do
         it "contains line number and column" do
           y = <<~INPUT
-%{
-// Prologue
-%}
-
-%expect invalid
-
-%%
-
-program: /* empty */
-       ;
+            %{
+            // Prologue
+            %}
+            
+            %expect invalid
+            
+            %%
+            
+            program: /* empty */
+                   ;
           INPUT
 
           parser = Lrama::Parser.new(y, "error_messages/parse.y")
@@ -2671,16 +2671,16 @@ program: /* empty */
       context "error_value doesn't have line number and column" do
         it "contains line number and column" do
           y = <<~INPUT
-%{
-// Prologue
-%}
-
-%expect 0 10
-
-%%
-
-program: /* empty */
-       ;
+            %{
+            // Prologue
+            %}
+            
+            %expect 0 10
+            
+            %%
+            
+            program: /* empty */
+                   ;
           INPUT
 
           parser = Lrama::Parser.new(y, "error_messages/parse.y")
@@ -2696,16 +2696,16 @@ program: /* empty */
       context "line of invalid syntax contains tab" do
         it "correctly mark the location of an error" do
           y = <<~INPUT
-%{
-// Prologue
-%}
-
-%expect\t\tinvalid
-
-%%
-
-program: /* empty */
-       ;
+            %{
+            // Prologue
+            %}
+            
+            %expect\t\tinvalid
+            
+            %%
+            
+            program: /* empty */
+                   ;
           INPUT
 
           parser = Lrama::Parser.new(y, "error_messages/parse.y")
@@ -2723,32 +2723,32 @@ program: /* empty */
   describe "#fill_symbol_number" do
     it "fills token_id of Token::Char" do
       y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-  int i;
-}
-
-%token '\\b' "BS"
-%token '\\f' "FF"
-%token '\\n' "LF"
-%token '\\r' "CR"
-%token '\\t' "HT"
-%token '\\v' "VT"
-
-%token <i> keyword_class
-%token <i> tSTRING
-%token <i> keyword_end
-
-%%
-
-program: class ;
-
-class : keyword_class tSTRING keyword_end ;
-
-%%
+        %{
+        // Prologue
+        %}
+        
+        %union {
+          int i;
+        }
+        
+        %token '\\b' "BS"
+        %token '\\f' "FF"
+        %token '\\n' "LF"
+        %token '\\r' "CR"
+        %token '\\t' "HT"
+        %token '\\v' "VT"
+        
+        %token <i> keyword_class
+        %token <i> tSTRING
+        %token <i> keyword_end
+        
+        %%
+        
+        program: class ;
+        
+        class : keyword_class tSTRING keyword_end ;
+        
+        %%
       INPUT
       grammar = Lrama::Parser.new(y, "parse.y").parse
       grammar.prepare
@@ -2778,28 +2778,28 @@ class : keyword_class tSTRING keyword_end ;
     describe "referring_symbol" do
       it "uses a tag specified in code" do
         y = <<~INPUT
-%{
-// Prologue
-%}
-
-%union {
-  int i;
-  long l;
-}
-
-%token <i> keyword_class
-%token <i> tSTRING
-%token <i> keyword_end
-
-%%
-
-program: class ;
-
-class : keyword_class tSTRING keyword_end
-        { $<l>$; }
-      ;
-
-%%
+          %{
+          // Prologue
+          %}
+          
+          %union {
+            int i;
+            long l;
+          }
+          
+          %token <i> keyword_class
+          %token <i> tSTRING
+          %token <i> keyword_end
+          
+          %%
+          
+          program: class ;
+          
+          class : keyword_class tSTRING keyword_end
+                  { $<l>$; }
+                ;
+          
+          %%
         INPUT
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
