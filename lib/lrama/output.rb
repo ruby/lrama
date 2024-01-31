@@ -16,8 +16,7 @@ module Lrama
 
     def initialize(
       out:, output_file_path:, template_name:, grammar_file_path:,
-      header_out: nil, header_file_path: nil,
-      context:, grammar:, error_recovery: false
+      context:, grammar:, header_out: nil, header_file_path: nil, error_recovery: false
     )
       @out = out
       @output_file_path = output_file_path
