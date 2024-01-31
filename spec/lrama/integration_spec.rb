@@ -1,6 +1,6 @@
-require "tmpdir"
-require "tempfile"
 require "open3"
+require "tempfile"
+require "tmpdir"
 
 RSpec.describe "integration" do
   module IntegrationHelper

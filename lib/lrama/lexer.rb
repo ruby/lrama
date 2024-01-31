@@ -1,4 +1,5 @@
 require "strscan"
+
 require "lrama/lexer/grammar_file"
 require "lrama/lexer/location"
 require "lrama/lexer/token"
