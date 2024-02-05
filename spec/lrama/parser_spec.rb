@@ -423,7 +423,7 @@ RSpec.describe Lrama::Parser do
       grammar.prepare
       grammar.validate!
 
-      expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+      expect(grammar.nterms.sort_by(&:number)).to match_symbols([
         Sym.new(id: T::Ident.new(s_value: "$accept"),       alias_name: nil, number:  6, tag: nil, term: false, token_id: 0, nullable: false),
         Sym.new(id: T::Ident.new(s_value: "program"),       alias_name: nil, number:  7, tag: nil, term: false, token_id: 1, nullable: true),
         Sym.new(id: T::Ident.new(s_value: "stmt"),          alias_name: nil, number:  8, tag: nil, term: false, token_id: 2, nullable: true),
@@ -578,7 +578,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/option.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
@@ -674,7 +674,7 @@ RSpec.describe Lrama::Parser do
         end
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
@@ -766,7 +766,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/between_rhs.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "option_bar"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: false),
@@ -828,7 +828,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/option_with_tag.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
@@ -924,7 +924,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/nonempty_list.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "nonempty_list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
@@ -1022,7 +1022,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/list.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
@@ -1116,7 +1116,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/separated_nonempty_list.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
@@ -1180,7 +1180,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/separated_list.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "option_separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
@@ -1280,7 +1280,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/nested.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "option_constant_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "constant_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: false),
@@ -1351,7 +1351,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/user_defined.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "defined_option_number"), alias_name: nil, number: 7, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: true),
@@ -1532,7 +1532,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/user_defined_with_nest.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "nested_option_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
@@ -1731,7 +1731,7 @@ RSpec.describe Lrama::Parser do
         let(:path) { "parameterizing_rules/user_defined_with_recursive.y" }
 
         it "expands parameterizing rules" do
-          expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
             Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
             Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
             Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: true),
@@ -1880,7 +1880,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
       grammar.prepare
       grammar.validate!
 
-      expect(grammar.terms.symbols.sort_by(&:number)).to match_symbols([
+      expect(grammar.terms.sort_by(&:number)).to match_symbols([
         Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
         Sym.new(id: T::Ident.new(s_value: "YYerror"),       alias_name: "error",             number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil),
         Sym.new(id: T::Ident.new(s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number:  2, tag: nil,                                   term: true, token_id: 257, nullable: false, precedence: nil),
@@ -1939,7 +1939,7 @@ class : keyword_class { code 1 } tSTRING { code 2 } keyword_end { code 3 }
       grammar.prepare
       grammar.validate!
 
-      expect(grammar.nterms.symbols.sort_by(&:number)).to match_symbols([
+      expect(grammar.nterms.sort_by(&:number)).to match_symbols([
         Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 11, tag: nil,                        term: false, token_id: 0, nullable: false),
         Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 12, tag: nil,                        term: false, token_id: 1, nullable: false),
         Sym.new(id: T::Ident.new(s_value: "$@1"),     alias_name: nil, number: 13, tag: nil,                        term: false, token_id: 2, nullable: true),
@@ -2184,7 +2184,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
         grammar.prepare
         grammar.validate!
 
-        expect(grammar.terms.symbols.sort_by(&:number)).to match_symbols([
+        expect(grammar.terms.sort_by(&:number)).to match_symbols([
           Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false),
           Sym.new(id: T::Ident.new(s_value: "YYerror"),       alias_name: "error",             number:  1, tag: nil,                                   term: true, token_id: 256, nullable: false),
           Sym.new(id: T::Ident.new(s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number:  2, tag: nil,                                   term: true, token_id: 257, nullable: false),
@@ -2235,7 +2235,7 @@ class : keyword_class tSTRING keyword_end { code 1 }
         grammar.prepare
         grammar.validate!
 
-        expect(grammar.terms.symbols.sort_by(&:number)).to match_symbols([
+        expect(grammar.terms.sort_by(&:number)).to match_symbols([
           Sym.new(id: T::Ident.new(s_value: "EOI"),           alias_name: "\"EOI\"",           number: 0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil),
           Sym.new(id: T::Ident.new(s_value: "YYerror"),       alias_name: "error",             number: 1, tag: nil,                                   term: true, token_id: 256, nullable: false, precedence: nil),
           Sym.new(id: T::Ident.new(s_value: "YYUNDEF"),       alias_name: "\"invalid token\"", number: 2, tag: nil,                                   term: true, token_id: 257, nullable: false, precedence: nil),
@@ -2753,7 +2753,7 @@ class : keyword_class tSTRING keyword_end ;
       grammar = Lrama::Parser.new(y, "parse.y").parse
       grammar.prepare
       grammar.validate!
-      terms = grammar.terms.symbols.sort_by(&:number).map do |term|
+      terms = grammar.terms.sort_by(&:number).map do |term|
         [term.id.s_value, term.token_id]
       end
 

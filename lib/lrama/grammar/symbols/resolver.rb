@@ -5,12 +5,12 @@ module Lrama
         attr_reader :terms, :nterms
 
         def initialize
-          @terms = Terms.new
-          @nterms = Nterms.new
+          @terms = []
+          @nterms = []
         end
 
         def symbols
-          @symbols ||= (@terms.symbols + @nterms.symbols)
+          @symbols ||= (@terms + @nterms)
         end
 
         def sort_by_number!
@@ -33,14 +33,24 @@ module Lrama
           end
 
           @symbols = nil
-          @terms.add(id: id, alias_name: alias_name, tag: tag, token_id: token_id).last
+          term = Symbol.new(
+            id: id, alias_name: alias_name, number: nil, tag: tag,
+            term: true, token_id: token_id, nullable: false
+          )
+          @terms << term
+          term
         end
 
         def add_nterm(id:, alias_name: nil, tag: nil)
           return if find_symbol_by_id(id)
 
           @symbols = nil
-          @nterms.add(id: id, alias_name: alias_name, tag: tag).last
+          nterm = Symbol.new(
+            id: id, alias_name: alias_name, number: nil, tag: tag,
+            term: false, token_id: nil, nullable: nil,
+          )
+          @nterms << nterm
+          nterm
         end
 
         def find_symbol_by_s_value(s_value)
@@ -75,12 +85,20 @@ module Lrama
         end
 
         def fill_symbol_number
-          @terms.fill_symbol_number(used_numbers)
-          @nterms.fill_symbol_number(used_numbers)
+          # YYEMPTY = -2
+          # YYEOF   =  0
+          # YYerror =  1
+          # YYUNDEF =  2
+          @number = 3
+          fill_terms_number
+          fill_nterms_number
         end
 
         def fill_nterm_type(types)
-          @nterms.fill_type(types)
+          types.each do |type|
+            nterm = find_nterm_by_id!(type.id)
+            nterm.tag = type.tag
+          end
         end
 
         def fill_printer(printers)
@@ -132,6 +150,88 @@ module Lrama
         end
 
         private
+
+        def find_nterm_by_id!(id)
+          @nterms.find do |s|
+            s.id == id
+          end || (raise "Symbol not found: #{id}")
+        end
+
+        def fill_terms_number
+          # Character literal in grammar file has
+          # token id corresponding to ASCII code by default,
+          # so start token_id from 256.
+          token_id = 256
+
+          @terms.each do |sym|
+            while used_numbers[@number] do
+              @number += 1
+            end
+
+            if sym.number.nil?
+              sym.number = @number
+              used_numbers[@number] = true
+              @number += 1
+            end
+
+            # If id is Token::Char, it uses ASCII code
+            if sym.token_id.nil?
+              if sym.id.is_a?(Lrama::Lexer::Token::Char)
+                # Ignore ' on the both sides
+                case sym.id.s_value[1..-2]
+                when "\\b"
+                  sym.token_id = 8
+                when "\\f"
+                  sym.token_id = 12
+                when "\\n"
+                  sym.token_id = 10
+                when "\\r"
+                  sym.token_id = 13
+                when "\\t"
+                  sym.token_id = 9
+                when "\\v"
+                  sym.token_id = 11
+                when "\""
+                  sym.token_id = 34
+                when "'"
+                  sym.token_id = 39
+                when "\\\\"
+                  sym.token_id = 92
+                when /\A\\(\d+)\z/
+                  sym.token_id = Integer($1, 8)
+                when /\A(.)\z/
+                  sym.token_id = $1.bytes.first
+                else
+                  raise "Unknown Char s_value #{sym}"
+                end
+              else
+                sym.token_id = token_id
+                token_id += 1
+              end
+            end
+          end
+        end
+
+        def fill_nterms_number
+          token_id = 0
+
+          @nterms.each do |sym|
+            while used_numbers[@number] do
+              @number += 1
+            end
+
+            if sym.number.nil?
+              sym.number = @number
+              used_numbers[@number] = true
+              @number += 1
+            end
+
+            if sym.token_id.nil?
+              sym.token_id = token_id
+              token_id += 1
+            end
+          end
+        end
 
         def used_numbers
           return @used_numbers if defined?(@used_numbers)

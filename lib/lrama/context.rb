@@ -23,7 +23,7 @@ module Lrama
 
     # enum yytokentype
     def yytokentype
-      @states.terms.symbols.reject do |term|
+      @states.terms.reject do |term|
         0 < term.token_id && term.token_id < 128
       end.map do |term|
         [term.id.s_value, term.token_id, term.display_name]
@@ -68,7 +68,7 @@ module Lrama
 
     # Last token number
     def yymaxutok
-      @states.terms.symbols.map(&:token_id).max
+      @states.terms.map(&:token_id).max
     end
 
     # YYTRANSLATE
@@ -78,7 +78,7 @@ module Lrama
       # 2 is YYSYMBOL_YYUNDEF
       a = Array.new(yymaxutok, 2)
 
-      @states.terms.symbols.each do |term|
+      @states.terms.each do |term|
         a[term.token_id] = term.number
       end
 
@@ -88,7 +88,7 @@ module Lrama
     def yytranslate_inverted
       a = Array.new(@states.symbols.count, @states.undef_symbol.token_id)
 
-      @states.terms.symbols.each do |term|
+      @states.terms.each do |term|
         a[term.number] = term.token_id
       end
 
@@ -300,7 +300,7 @@ module Lrama
         end
       end
 
-      @states.nterms.symbols.each do |nterm|
+      @states.nterms.each do |nterm|
         if !(states = nterm_to_next_states[nterm])
           default_goto = 0
           not_default_gotos = []

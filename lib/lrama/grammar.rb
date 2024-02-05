@@ -176,7 +176,7 @@ module Lrama
 
       while true do
         rs  = @rules.select {|e| e.nullable.nil? }
-        nts = nterms.unset_nullable
+        nts = nterms.select {|e| e.nullable.nil? }
         rule_count_1  = rs.count
         nterm_count_1 = nts.count
 
@@ -195,7 +195,7 @@ module Lrama
         end
 
         rule_count_2  = @rules.count {|e| e.nullable.nil? }
-        nterm_count_2 = nterms.unset_nullable.count
+        nterm_count_2 = nterms.select {|e| e.nullable.nil? }.count
 
         if (rule_count_1 == rule_count_2) && (nterm_count_1 == nterm_count_2)
           break
@@ -206,18 +206,18 @@ module Lrama
         rule.nullable = false
       end
 
-      nterms.unset_nullable.each do |nterm|
+      nterms.select {|e| e.nullable.nil? }.each do |nterm|
         nterm.nullable = false
       end
     end
 
     def compute_first_set
-      terms.symbols.each do |term|
+      terms.each do |term|
         term.first_set = Set.new([term]).freeze
         term.first_set_bitmap = Lrama::Bitmap.from_array([term.number])
       end
 
-      nterms.symbols.each do |nterm|
+      nterms.each do |nterm|
         nterm.first_set = Set.new([]).freeze
         nterm.first_set_bitmap = Lrama::Bitmap.from_array([])
       end
@@ -239,7 +239,7 @@ module Lrama
         break unless changed
       end
 
-      nterms.symbols.each do |nterm|
+      nterms.each do |nterm|
         nterm.first_set = Lrama::Bitmap.to_array(nterm.first_set_bitmap).map do |number|
           find_symbol_by_number!(number)
         end.to_set

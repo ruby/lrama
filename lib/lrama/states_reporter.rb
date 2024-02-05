@@ -217,7 +217,7 @@ module Lrama
           # Report direct_read_sets
           io << "  [Direct Read sets]\n"
           direct_read_sets = @states.direct_read_sets
-          @states.nterms.symbols.each do |nterm|
+          @states.nterms.each do |nterm|
             terms = direct_read_sets[[state.id, nterm.token_id]]
             next if !terms
             next if terms.empty?
@@ -229,12 +229,12 @@ module Lrama
 
           # Report reads_relation
           io << "  [Reads Relation]\n"
-          @states.nterms.symbols.each do |nterm|
+          @states.nterms.each do |nterm|
             a = @states.reads_relation[[state.id, nterm.token_id]]
             next if !a
 
             a.each do |state_id2, nterm_id2|
-              n = @states.nterms.symbols.find {|n| n.token_id == nterm_id2 }
+              n = @states.nterms.find {|n| n.token_id == nterm_id2 }
               io << "    (State #{state_id2}, #{n.id.s_value})\n"
             end
           end
@@ -243,7 +243,7 @@ module Lrama
           # Report read_sets
           io << "  [Read sets]\n"
           read_sets = @states.read_sets
-          @states.nterms.symbols.each do |nterm|
+          @states.nterms.each do |nterm|
             terms = read_sets[[state.id, nterm.token_id]]
             next if !terms
             next if terms.empty?
@@ -256,12 +256,12 @@ module Lrama
 
           # Report includes_relation
           io << "  [Includes Relation]\n"
-          @states.nterms.symbols.each do |nterm|
+          @states.nterms.each do |nterm|
             a = @states.includes_relation[[state.id, nterm.token_id]]
             next if !a
 
             a.each do |state_id2, nterm_id2|
-              n = @states.nterms.symbols.find {|n| n.token_id == nterm_id2 }
+              n = @states.nterms.find {|n| n.token_id == nterm_id2 }
               io << "    (State #{state.id}, #{nterm.id.s_value}) -> (State #{state_id2}, #{n.id.s_value})\n"
             end
           end
@@ -274,7 +274,7 @@ module Lrama
             next if !a
 
             a.each do |state_id2, nterm_id2|
-              n = @states.nterms.symbols.find {|n| n.token_id == nterm_id2 }
+              n = @states.nterms.find {|n| n.token_id == nterm_id2 }
               io << "    (Rule: #{rule}) -> (State #{state_id2}, #{n.id.s_value})\n"
             end
           end
@@ -283,7 +283,7 @@ module Lrama
           # Report follow_sets
           io << "  [Follow sets]\n"
           follow_sets = @states.follow_sets
-          @states.nterms.symbols.each do |nterm|
+          @states.nterms.each do |nterm|
             terms = follow_sets[[state.id, nterm.token_id]]
 
             next if !terms
