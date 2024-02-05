@@ -137,12 +137,12 @@ module Lrama
       @grammar.symbols.each do |sym|
         next unless sym.printer
 
-        str << <<~STR
-              case #{sym.enum_name}: /* #{sym.comment}  */
-          #line #{sym.printer.lineno} "#{@grammar_file_path}"
-                   {#{sym.printer.translated_code(sym.tag)}}
-          #line [@oline@] [@ofile@]
-                  break;
+        str << <<-STR
+    case #{sym.enum_name}: /* #{sym.comment}  */
+#line #{sym.printer.lineno} "#{@grammar_file_path}"
+         {#{sym.printer.translated_code(sym.tag)}}
+#line [@oline@] [@ofile@]
+        break;
 
         STR
       end
@@ -154,10 +154,10 @@ module Lrama
     def user_initial_action(comment = "")
       return "" unless @grammar.initial_action
 
-      <<~STR
-                #{comment}
-        #line #{@grammar.initial_action.line} "#{@grammar_file_path}"
-                {#{@grammar.initial_action.translated_code}}
+      <<-STR
+        #{comment}
+#line #{@grammar.initial_action.line} "#{@grammar_file_path}"
+        {#{@grammar.initial_action.translated_code}}
       STR
     end
 
@@ -167,12 +167,12 @@ module Lrama
       @grammar.symbols.each do |sym|
         next unless sym.error_token
 
-        str << <<~STR
-              case #{sym.enum_name}: /* #{sym.comment}  */
-          #line #{sym.error_token.lineno} "#{@grammar_file_path}"
-                   {#{sym.error_token.translated_code(sym.tag)}}
-          #line [@oline@] [@ofile@]
-                  break;
+        str << <<-STR
+    case #{sym.enum_name}: /* #{sym.comment}  */
+#line #{sym.error_token.lineno} "#{@grammar_file_path}"
+         {#{sym.error_token.translated_code(sym.tag)}}
+#line [@oline@] [@ofile@]
+        break;
 
         STR
       end
@@ -190,19 +190,19 @@ module Lrama
         code = rule.token_code
         spaces = " " * (code.column - 1)
 
-        str << <<~STR
-            case #{rule.id + 1}: /* #{rule.as_comment}  */
-          #line #{code.line} "#{@grammar_file_path}"
-          #{spaces}{#{rule.translated_code}}
-          #line [@oline@] [@ofile@]
-              break;
+        str << <<-STR
+  case #{rule.id + 1}: /* #{rule.as_comment}  */
+#line #{code.line} "#{@grammar_file_path}"
+#{spaces}{#{rule.translated_code}}
+#line [@oline@] [@ofile@]
+    break;
 
         STR
       end
 
-      str << <<~STR
+      str << <<-STR
 
-        #line [@oline@] [@ofile@]
+#line [@oline@] [@ofile@]
       STR
 
       str
