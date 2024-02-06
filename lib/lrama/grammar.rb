@@ -195,7 +195,7 @@ module Lrama
         end
 
         rule_count_2  = @rules.count {|e| e.nullable.nil? }
-        nterm_count_2 = nterms.select {|e| e.nullable.nil? }.count
+        nterm_count_2 = nterms.count {|e| e.nullable.nil? }
 
         if (rule_count_1 == rule_count_2) && (nterm_count_1 == nterm_count_2)
           break
