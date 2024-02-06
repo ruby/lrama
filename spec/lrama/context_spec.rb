@@ -155,33 +155,33 @@ RSpec.describe Lrama::Context do
     describe "S/R conflicts are resolved to reduce" do
       it "does not include shift into actions" do
         y = <<~INPUT
-%{
-// Prologue
-%}
+          %{
+          // Prologue
+          %}
 
-%union {
-  int i;
-}
+          %union {
+            int i;
+          }
 
-%token unary "+@"
-%token tNUMBER
+          %token unary "+@"
+          %token tNUMBER
 
-%left  '+' '-'
-%right unary
+          %left  '+' '-'
+          %right unary
 
-%%
+          %%
 
-program: expr ;
+          program: expr ;
 
-expr: unary expr
-    | expr '+' expr
-    | expr '-' expr
-    | arg
-    ;
+          expr: unary expr
+              | expr '+' expr
+              | expr '-' expr
+              | arg
+              ;
 
-arg: tNUMBER ;
+          arg: tNUMBER ;
 
-%%
+          %%
         INPUT
 
         grammar = Lrama::Parser.new(y, "parse.y").parse
@@ -210,29 +210,29 @@ arg: tNUMBER ;
     describe "R/R conflicts are resolved by look ahead tokens" do
       it "includes reduce into actions" do
         y = <<~INPUT
-%{
-// Prologue
-%}
+          %{
+          // Prologue
+          %}
 
-%union {
-  int i;
-}
+          %union {
+            int i;
+          }
 
-%token tNUMBER
+          %token tNUMBER
 
-%%
+          %%
 
-program: stmt ;
+          program: stmt ;
 
-stmt: expr1 ';'
-    | expr2 '.'
-    ;
+          stmt: expr1 ';'
+              | expr2 '.'
+              ;
 
-expr1: tNUMBER ;
+          expr1: tNUMBER ;
 
-expr2: tNUMBER ;
+          expr2: tNUMBER ;
 
-%%
+          %%
         INPUT
 
         grammar = Lrama::Parser.new(y, "parse.y").parse

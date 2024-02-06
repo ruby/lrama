@@ -8,43 +8,43 @@ RSpec.describe Lrama::Counterexamples do
     describe "Example of 'Finding Counterexamples from Parsing Conflicts'" do
       let(:y) do
         <<~STR
-%{
-// Prologue
-%}
+          %{
+          // Prologue
+          %}
 
-%union {
-    int i;
-}
+          %union {
+              int i;
+          }
 
-%token <i> keyword_if
-%token <i> keyword_then
-%token <i> keyword_else
-%token <i> arr
-%token tEQ ":="
-%token <i> digit
+          %token <i> keyword_if
+          %token <i> keyword_then
+          %token <i> keyword_else
+          %token <i> arr
+          %token tEQ ":="
+          %token <i> digit
 
-%type <i> stmt
-%type <i> expr
-%type <i> num
+          %type <i> stmt
+          %type <i> expr
+          %type <i> num
 
-%%
+          %%
 
-stmt : keyword_if expr keyword_then stmt keyword_else stmt
-     | keyword_if expr keyword_then stmt
-     | expr '?' stmt stmt
-     | arr '[' expr ']' tEQ expr
-     ;
+          stmt : keyword_if expr keyword_then stmt keyword_else stmt
+               | keyword_if expr keyword_then stmt
+               | expr '?' stmt stmt
+               | arr '[' expr ']' tEQ expr
+               ;
 
-expr : num
-     | expr '+' expr
-     ;
+          expr : num
+               | expr '+' expr
+               ;
 
-num  : digit
-     | num digit
-     ;
+          num  : digit
+               | num digit
+               ;
 
 
-%%
+          %%
 
         STR
       end
@@ -158,10 +158,10 @@ num  : digit
           "expr: expr '+' expr •  (rule 6)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
-        0:  stmt                                                "end of file"
-            3:  expr                              '?' stmt stmt
-                6:  expr                 '+' expr
-                    6: expr '+' expr  •
+          0:  stmt                                                "end of file"
+              3:  expr                              '?' stmt stmt
+                  6:  expr                 '+' expr
+                      6: expr '+' expr  •
         STR
 
         # State 17
@@ -219,33 +219,33 @@ num  : digit
     describe "R/R conflicts" do
       let(:y) do
         <<~STR
-%{
-// Prologue
-%}
+          %{
+          // Prologue
+          %}
 
-%union {
-    int i;
-}
+          %union {
+              int i;
+          }
 
-%token <i> digit
+          %token <i> digit
 
-%type <i> stmt
-%type <i> expr1
-%type <i> expr2
+          %type <i> stmt
+          %type <i> expr1
+          %type <i> expr2
 
-%%
+          %%
 
-stmt : expr1
-     | expr2
-     ;
+          stmt : expr1
+               | expr2
+               ;
 
-expr1 : digit '+' digit
-      ;
+          expr1 : digit '+' digit
+                ;
 
-expr2 : digit '+' digit
-      ;
+          expr2 : digit '+' digit
+                ;
 
-%%
+          %%
 
         STR
       end
@@ -305,26 +305,26 @@ expr2 : digit '+' digit
     describe "target state item will be start item when finding shift conflict shortest state items" do
       let(:y) do
         <<~STR
-%{
-// Prologue
-%}
+          %{
+          // Prologue
+          %}
 
-%union {
-    int i;
-}
+          %union {
+              int i;
+          }
 
-%token digit
+          %token digit
 
-%%
+          %%
 
-stmt : expr '+'
-     ;
+          stmt : expr '+'
+               ;
 
-expr : digit '+' digit
-     | digit
-     ;
+          expr : digit '+' digit
+               | digit
+               ;
 
-%%
+          %%
 
         STR
       end
@@ -380,34 +380,34 @@ expr : digit '+' digit
     describe "derivation's next symbol is nullable" do
       let(:y) do
         <<~STR
-%{
-// Prologue
-%}
+          %{
+          // Prologue
+          %}
 
-%union {
-    int i;
-}
+          %union {
+              int i;
+          }
 
-%token <i> digit
+          %token <i> digit
 
-%%
+          %%
 
-stmt : expr
-     ;
+          stmt : expr
+               ;
 
-expr : num
-     | expr opt_nl '+' expr
-     ;
+          expr : num
+               | expr opt_nl '+' expr
+               ;
 
-num  : digit
-     | num digit
-     ;
+          num  : digit
+               | num digit
+               ;
 
-opt_nl : /* none */
-       | '\\n'
-       ;
+          opt_nl : /* none */
+                 | '\\n'
+                 ;
 
-%%
+          %%
 
         STR
       end

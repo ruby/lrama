@@ -236,10 +236,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
-        expected = <<-TEXT
-parse.y:1:53: Can not refer following component. 10 >= 4.
-class : keyword_class tSTRING keyword_end { $class = $10; }
-                                                     ^^^
+        expected = <<~TEXT
+          parse.y:1:53: Can not refer following component. 10 >= 4.
+          class : keyword_class tSTRING keyword_end { $class = $10; }
+                                                               ^^^
         TEXT
 
         expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
@@ -271,10 +271,10 @@ class : keyword_class tSTRING keyword_end { $class = $10; }
         rule_builder.user_code = token_6
         rule_builder.complete_input
 
-        expected = <<-TEXT
-parse.y:1:24: Can not refer following component. 3 >= 2.
-class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }
-                        ^^
+        expected = <<~TEXT
+          parse.y:1:24: Can not refer following component. 3 >= 2.
+          class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }
+                                  ^^
         TEXT
 
         expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
@@ -303,10 +303,10 @@ class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
-        expected = <<-TEXT
-parse.y:1:44: Referring symbol `classes` is not found.
-class : keyword_class tSTRING keyword_end { $classes = $1; }
-                                            ^^^^^^^^
+        expected = <<~TEXT
+          parse.y:1:44: Referring symbol `classes` is not found.
+          class : keyword_class tSTRING keyword_end { $classes = $1; }
+                                                      ^^^^^^^^
         TEXT
 
         expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
@@ -316,27 +316,27 @@ class : keyword_class tSTRING keyword_end { $classes = $1; }
     context "component name is duplicated" do
       context "components in RHS are duplicated" do
         let(:y) do
-          <<-GRAMMAR
-%token keyword_class
-%token tSTRING
-%token keyword_end
+          <<~GRAMMAR
+            %token keyword_class
+            %token tSTRING
+            %token keyword_end
 
-%%
+            %%
 
-program: class
-       ;
+            program: class
+                   ;
 
-class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
-     ;
+            class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
+                 ;
 
           GRAMMAR
         end
 
         it "raises error" do
-          expected = <<-TEXT
-parse.y:10:60: Referring symbol `tSTRING` is duplicated.
-class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
-                                                            ^^^^^^^^
+          expected = <<~TEXT
+            parse.y:10:60: Referring symbol `tSTRING` is duplicated.
+            class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
+                                                                        ^^^^^^^^
           TEXT
           expect {
             grammar = Lrama::Parser.new(y, "parse.y").parse
@@ -348,27 +348,27 @@ class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
 
       context "components in LHS and RHS are duplicated" do
         let(:y) do
-          <<-GRAMMAR
-%token keyword_class
-%token tSTRING
-%token keyword_end
+          <<~GRAMMAR
+            %token keyword_class
+            %token tSTRING
+            %token keyword_end
 
-%%
+            %%
 
-program: class
-       ;
+            program: class
+                   ;
 
-class: class tSTRING keyword_end { $class = $tSTRING; }
-     ;
+            class: class tSTRING keyword_end { $class = $tSTRING; }
+                 ;
 
           GRAMMAR
         end
 
         it "raises error" do
-          expected = <<-TEXT
-parse.y:10:35: Referring symbol `class` is duplicated.
-class: class tSTRING keyword_end { $class = $tSTRING; }
-                                   ^^^^^^
+          expected = <<~TEXT
+            parse.y:10:35: Referring symbol `class` is duplicated.
+            class: class tSTRING keyword_end { $class = $tSTRING; }
+                                               ^^^^^^
           TEXT
           expect {
             grammar = Lrama::Parser.new(y, "parse.y").parse
@@ -380,27 +380,27 @@ class: class tSTRING keyword_end { $class = $tSTRING; }
 
       context "components in LHS and RHS are duplicated by alias name" do
         let(:y) do
-          <<-GRAMMAR
-%token keyword_class
-%token tSTRING
-%token keyword_end
+          <<~GRAMMAR
+            %token keyword_class
+            %token tSTRING
+            %token keyword_end
 
-%%
+            %%
 
-program: klass
-       ;
+            program: klass
+                   ;
 
-klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
-            ;
+            klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
+                        ;
 
           GRAMMAR
         end
 
         it "raises error" do
-          expected = <<-TEXT
-parse.y:10:42: Referring symbol `class` is duplicated.
-klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
-                                          ^^^^^^
+          expected = <<~TEXT
+            parse.y:10:42: Referring symbol `class` is duplicated.
+            klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
+                                                      ^^^^^^
           TEXT
           expect {
             grammar = Lrama::Parser.new(y, "parse.y").parse
@@ -412,27 +412,27 @@ klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
 
       context "components in LHS and RHS are duplicated by alias name" do
         let(:y) do
-          <<-GRAMMAR
-%token keyword_class
-%token tSTRING
-%token keyword_end
+          <<~GRAMMAR
+            %token keyword_class
+            %token tSTRING
+            %token keyword_end
 
-%%
+            %%
 
-program: klass
-       ;
+            program: klass
+                   ;
 
-klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
-            ;
+            klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
+                        ;
 
           GRAMMAR
         end
 
         it "raises error" do
-          expected = <<-TEXT
-parse.y:10:49: Referring symbol `class` is duplicated.
-klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
-                                                 ^^^^^^
+          expected = <<~TEXT
+            parse.y:10:49: Referring symbol `class` is duplicated.
+            klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
+                                                             ^^^^^^
           TEXT
           expect {
             grammar = Lrama::Parser.new(y, "parse.y").parse
