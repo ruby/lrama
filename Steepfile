@@ -17,6 +17,7 @@ target :lib do
   check "lib/lrama/grammar/reference.rb"
   check "lib/lrama/grammar/rule_builder.rb"
   check "lib/lrama/grammar/symbol.rb"
+  check "lib/lrama/grammar/type.rb"
   check "lib/lrama/lexer"
   check "lib/lrama/report"
   check "lib/lrama/bitmap.rb"
