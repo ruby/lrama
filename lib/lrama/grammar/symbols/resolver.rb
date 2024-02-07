@@ -14,7 +14,7 @@ module Lrama
         end
 
         def sort_by_number!
-          @symbols.sort_by!(&:number)
+          symbols.sort_by!(&:number)
         end
 
         def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
@@ -237,7 +237,7 @@ module Lrama
           return @used_numbers if defined?(@used_numbers)
 
           @used_numbers = {}
-          @symbols.map(&:number).each do |n|
+          symbols.map(&:number).each do |n|
             @used_numbers[n] = true
           end
           @used_numbers
