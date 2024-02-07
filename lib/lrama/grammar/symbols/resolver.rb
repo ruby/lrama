@@ -198,9 +198,17 @@ module Lrama
                 when "\\\\"
                   sym.token_id = 92
                 when /\A\\(\d+)\z/
-                  sym.token_id = Integer($1, 8)
+                  unless (id = Integer($1, 8)).nil?
+                    sym.token_id = id
+                  else
+                    raise "Unknown Char s_value #{sym}"
+                  end
                 when /\A(.)\z/
-                  sym.token_id = $1.bytes.first
+                  unless (id = $1&.bytes&.first).nil?
+                    sym.token_id = id
+                  else
+                    raise "Unknown Char s_value #{sym}"
+                  end
                 else
                   raise "Unknown Char s_value #{sym}"
                 end
