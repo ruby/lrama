@@ -1,0 +1,41 @@
+module Lrama
+  class Grammar
+    class Symbols
+      class Resolver
+        attr_reader terms: Array[Grammar::Symbol]
+        attr_reader nterms: Array[Grammar::Symbol]
+
+        @symbols: Array[Grammar::Symbol]?
+        @number: Integer
+        @used_numbers: Hash[Integer, bool]
+
+        def initialize: () -> void
+        def symbols: () -> Array[Grammar::Symbol]
+        def sort_by_number!: () -> void
+        def add_term: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
+        def add_nterm: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token?) -> Grammar::Symbol?
+        def find_symbol_by_s_value: (Grammar::Symbol s_value) -> Grammar::Symbol?
+        def find_symbol_by_s_value!: (Grammar::Symbol s_value) -> Grammar::Symbol
+        def find_symbol_by_id: (Lexer::Token id) -> Grammar::Symbol?
+        def find_symbol_by_id!: (Lexer::Token id) -> Grammar::Symbol
+        def find_symbol_by_token_id: (Integer token_id) -> Grammar::Symbol?
+        def find_symbol_by_number!: (Integer number) -> Grammar::Symbol
+        def fill_symbol_number: () -> void
+        def fill_nterm_type: (Array[Grammar::Type] types) -> void
+        def fill_printer: (Array[Grammar::Printer] printers) -> void
+        def fill_error_token: (Array[Grammar::ErrorToken] error_tokens) -> void
+        def token_to_symbol: (Lexer::Token token) -> Grammar::Symbol
+        def validate!: () -> void
+
+        private
+
+        def find_nterm_by_id!: (Lexer::Token id) -> Grammar::Symbol
+        def fill_terms_number: () -> void
+        def fill_nterms_number: () -> void
+        def used_numbers: () -> Hash[Integer, bool]
+        def validate_number_uniqueness!: () -> void
+        def validate_alias_name_uniqueness!: () -> void
+      end
+    end
+  end
+end
