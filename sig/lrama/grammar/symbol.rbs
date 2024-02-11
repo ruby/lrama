@@ -2,7 +2,7 @@ module Lrama
   class Grammar
     class Symbol
       attr_accessor id: Lexer::Token
-      attr_accessor alias_name: String
+      attr_accessor alias_name: String?
       attr_accessor number: Integer
       attr_accessor tag: Lexer::Token?
       attr_accessor term: bool
@@ -20,8 +20,8 @@ module Lrama
       attr_writer accept_symbol: Symbol
 
       def initialize: (
-          id: Lexer::Token, alias_name: String?, number: Integer?, tag: Lexer::Token?,
-          term: bool, token_id: Integer?, nullable: bool?, precedence: Precedence?, printer: Printer?) -> void
+          id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?,
+          ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
 
       def term?: () -> bool
       def nterm?: () -> bool
@@ -31,7 +31,7 @@ module Lrama
       def accept_symbol?: () -> bool
       def display_name: () -> String
       def enum_name: () -> String
-      def comment: () -> String
+      def comment: () -> String?
     end
   end
 end
