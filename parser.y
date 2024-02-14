@@ -311,7 +311,7 @@ rule
               result = builder
             }
 
-  inline_declarations: "%inline" IDENTIFIER ":" inline_rhs_list
+  inline_declarations: "%inline" id_colon ":" inline_rhs_list
                         {
                           rule = Grammar::Inline::Rule.new(val[1].s_value, val[3])
                           @grammar.add_inline_rule(rule)
