@@ -15,10 +15,10 @@ RSpec.describe Lrama::Lexer::Token::UserCode do
       # $1
       references = Lrama::Lexer::Token::UserCode.new(s_value: " $1 ", location: location).references
       expect(references.count).to eq 1
-      expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :dollar, index: 1, ex_tag: nil, first_column: 1, last_column: 3)
+      expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :dollar, number: 1, index: 1, ex_tag: nil, first_column: 1, last_column: 3)
       references = Lrama::Lexer::Token::UserCode.new(s_value: " $<long>1 ", location: location).references
       expect(references.count).to eq 1
-      expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :dollar, index: 1, ex_tag: Lrama::Lexer::Token::Tag.new(s_value: "<long>"), first_column: 1, last_column: 9)
+      expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :dollar, number: 1, index: 1, ex_tag: Lrama::Lexer::Token::Tag.new(s_value: "<long>"), first_column: 1, last_column: 9)
 
       # $foo
       references = Lrama::Lexer::Token::UserCode.new(s_value: " $foo ", location: location).references
@@ -44,7 +44,7 @@ RSpec.describe Lrama::Lexer::Token::UserCode do
       # @1
       references = Lrama::Lexer::Token::UserCode.new(s_value: " @1 ", location: location).references
       expect(references.count).to eq 1
-      expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :at, index: 1, ex_tag: nil, first_column: 1, last_column: 3)
+      expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :at, number: 1, index: 1, ex_tag: nil, first_column: 1, last_column: 3)
 
       # @foo
       references = Lrama::Lexer::Token::UserCode.new(s_value: " @foo ", location: location).references

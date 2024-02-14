@@ -3,6 +3,7 @@ module Lrama
     class Reference
       attr_accessor type: ::Symbol
       attr_accessor name: String
+      attr_accessor number: Integer
       attr_accessor index: Integer
       attr_accessor ex_tag: Lexer::Token?
       attr_accessor first_column: Integer
@@ -10,7 +11,7 @@ module Lrama
       attr_accessor position_in_rhs: Integer?
 
       def initialize: (
-        type: ::Symbol, ?name: String, ?index: Integer, ?ex_tag: Lexer::Token?,
+        type: ::Symbol, ?name: String, ?number: Integer, ?index: Integer, ?ex_tag: Lexer::Token?,
         first_column: Integer, last_column: Integer,
         ?position_in_rhs: Integer?
       ) -> void
