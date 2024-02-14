@@ -17,7 +17,6 @@ module Lrama
       ) -> void
 
       def value: () -> (String|Integer)
-      def tag: () -> untyped
     end
   end
 end
