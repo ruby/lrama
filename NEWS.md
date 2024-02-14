@@ -1,6 +1,6 @@
 # NEWS for Lrama
 
-## Lrama 0.6.3 (2024-02-xx)
+## Lrama 0.6.3 (2024-02-15)
 
 ### Bring Your Own Stack
 
