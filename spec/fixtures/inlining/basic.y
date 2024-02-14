@@ -14,15 +14,16 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %token <i> number
 
-%inline op: '+' { (+) }
-          | '-' { (-) }
-          | '*' { (*) }
-          | '/' { (/) }
+%inline op      : '+' { (+) }
+                | '-' { (-) }
+                | '*' { (*) }
+                | '/' { (/) }
+                ;
 
 %%
 
 expression      : number
-                : expression op expression { $$ = $1 $2 $3; }
+                | expression op expression { $$ = $1 $2 $3; }
                 ;
 
 %%

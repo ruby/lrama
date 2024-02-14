@@ -5,6 +5,7 @@ require "lrama/grammar/code"
 require "lrama/grammar/counter"
 require "lrama/grammar/destructor"
 require "lrama/grammar/error_token"
+require "lrama/grammar/inline"
 require "lrama/grammar/parameterizing_rule"
 require "lrama/grammar/percent_code"
 require "lrama/grammar/precedence"
@@ -52,6 +53,7 @@ module Lrama
       @rules = []
       @sym_to_rules = {}
       @parameterizing_rule_resolver = ParameterizingRule::Resolver.new
+      @inline_resolver = Inline::Resolver.new
       @empty_symbol = nil
       @eof_symbol = nil
       @error_symbol = nil
@@ -122,6 +124,10 @@ module Lrama
 
     def insert_before_parameterizing_rules(rules)
       @parameterizing_rule_resolver.rules = rules + @parameterizing_rule_resolver.rules
+    end
+
+    def add_inline_rule(rule)
+      @inline_resolver.add_inline_rule(rule)
     end
 
     def prologue_first_lineno=(prologue_first_lineno)
