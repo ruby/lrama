@@ -61,7 +61,7 @@ module Lrama
           when scanner.scan(/\$:\$/) # $:$
             return Lrama::Grammar::Reference.new(type: :index, name: "$", first_column: start, last_column: scanner.pos)
           when scanner.scan(/\$:(\d+)/) # $:1
-            return Lrama::Grammar::Reference.new(type: :index, index: Integer(scanner[1]), first_column: start, last_column: scanner.pos)
+            return Lrama::Grammar::Reference.new(type: :index, number: Integer(scanner[1]), first_column: start, last_column: scanner.pos)
           when scanner.scan(/\$:([a-zA-Z_][a-zA-Z0-9_]*)/) # $:foo, $:expr (named reference without brackets)
             return Lrama::Grammar::Reference.new(type: :index, name: scanner[1], first_column: start, last_column: scanner.pos)
           when scanner.scan(/\$:\[([a-zA-Z_.][-a-zA-Z0-9_.]*)\]/) # $:[expr.right], $:[expr-right] (named reference with brackets)
