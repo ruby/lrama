@@ -26,6 +26,7 @@ module Lrama
     attr_accessor :union, :expect,
                   :printers, :error_tokens,
                   :lex_param, :parse_param, :initial_action,
+                  :after_shift, :before_reduce, :after_reduce, :after_shift_error_token, :after_pop_stack,
                   :symbols_resolver, :types,
                   :rules, :rule_builders,
                   :sym_to_rules, :no_stdlib

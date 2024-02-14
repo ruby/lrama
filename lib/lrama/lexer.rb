@@ -27,6 +27,11 @@ module Lrama
       %precedence
       %prec
       %error-token
+      %before-reduce
+      %after-reduce
+      %after-shift-error-token
+      %after-shift
+      %after-pop-stack
       %empty
       %code
       %rule
