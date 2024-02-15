@@ -4,7 +4,6 @@ module Lrama
       attr_reader actual_args: Array[Lexer::Token]
       attr_reader count: Integer
 
-      @rule_name: String
       @required_parameters_count: Integer
       @parameters: Array[Lexer::Token]
       @parameter_to_arg: untyped
