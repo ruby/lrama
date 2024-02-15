@@ -58,7 +58,7 @@ module Lrama
         end
 
         def find_symbol_by_s_value!(s_value)
-          find_symbol_by_s_value(s_value) || (raise "Symbol not found: #{s_value}")
+          find_symbol_by_s_value(s_value) || (raise "Symbol not found. value: `#{s_value}`")
         end
 
         def find_symbol_by_id(id)
@@ -68,7 +68,7 @@ module Lrama
         end
 
         def find_symbol_by_id!(id)
-          find_symbol_by_id(id) || (raise "Symbol not found: #{id}")
+          find_symbol_by_id(id) || (raise "Symbol not found. #{id}")
         end
 
         def find_symbol_by_token_id(token_id)
@@ -78,7 +78,7 @@ module Lrama
         def find_symbol_by_number!(number)
           sym = symbols[number]
 
-          raise "Symbol not found: #{number}" unless sym
+          raise "Symbol not found. number: `#{number}`" unless sym
           raise "[BUG] Symbol number mismatch. #{number}, #{sym}" if sym.number != number
 
           sym
@@ -154,7 +154,7 @@ module Lrama
         def find_nterm_by_id!(id)
           @nterms.find do |s|
             s.id == id
-          end || (raise "Symbol not found: #{id}")
+          end || (raise "Symbol not found. #{id}")
         end
 
         def fill_terms_number
