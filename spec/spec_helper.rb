@@ -4,12 +4,13 @@ SimpleCov.start do
   track_files "lib/**/*.rb"
 
   # Created Groups based on the folder structures
-  add_group "Grammar", "lib/lrama/grammar"
-  add_group "Lexer", "lib/lrama/lexer"
-  add_group "Parser", "lib/lrama/parser"
-  add_group "Report", "lib/lrama/report"
-  add_group "State", "lib/lrama/state/"
-  add_group "States", "lib/lrama/states/"
+  add_group "Counterexamples", "lib/lrama/counterexamples"
+  add_group "Grammar",         "lib/lrama/grammar"
+  add_group "Lexer",           "lib/lrama/lexer"
+  add_group "Parser",          "lib/lrama/parser"
+  add_group "Report",          "lib/lrama/report"
+  add_group "State",           "lib/lrama/state/"
+  add_group "States",          "lib/lrama/states/"
 
   add_filter "spec/"
 
@@ -18,7 +19,7 @@ end
 
 require "lrama"
 
-module RspecHelper
+module RSpecHelper
   def fixture_path(file_name)
     File.expand_path("../fixtures/#{file_name}", __FILE__)
   end
@@ -151,7 +152,7 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  config.include(RspecHelper)
+  config.include(RSpecHelper)
   config.include(LramaCustomMatchers)
 
   # Allow to limit the run of the specs
