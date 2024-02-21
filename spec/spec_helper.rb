@@ -18,7 +18,7 @@ end
 
 require "lrama"
 
-module RspecHelper
+module RSpecHelper
   def fixture_path(file_name)
     File.expand_path("../fixtures/#{file_name}", __FILE__)
   end
@@ -151,7 +151,7 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  config.include(RspecHelper)
+  config.include(RSpecHelper)
   config.include(LramaCustomMatchers)
 
   # Allow to limit the run of the specs
