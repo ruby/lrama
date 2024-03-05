@@ -49,6 +49,17 @@
 %rule terminated(X, closing): X closing { $$ = $1; }
                             ;
 
+/*
+ * program: delimited(opening, X, closing)
+ *
+ * =>
+ *
+ * program: delimited_opening_X_closing
+ * delimited_opening_X_closing: opening X closing
+ */
+%rule delimited(opening, X, closing): opening X closing { $$ = $2; }
+                                     ;
+
 // -------------------------------------------------------------------
 // Lists
 
