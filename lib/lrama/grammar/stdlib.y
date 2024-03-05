@@ -25,6 +25,20 @@
                ;
 
 // -------------------------------------------------------------------
+// Sequences
+
+/*
+ * program: preceded(opening, X)
+ *
+ * =>
+ *
+ * program: preceded_opening_X
+ * preceded_opening_X: opening X
+ */
+%rule preceded(opening, X): opening X { $$ = $2; }
+                          ;
+
+// -------------------------------------------------------------------
 // Lists
 
 /*
