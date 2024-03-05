@@ -21,12 +21,12 @@ program         : separated_list(',', number)
 
 %%
 
-static int yylex(YYSTYPE *yylval, YYLTYPE *loc) {
+static int yylex(YYSTYPE *yylval, YYLTYPE *loc)
 {
   return 0;
 }
 
-static int yyerror(YYLTYPE *loc, const char *str) {
+static int yyerror(YYLTYPE *loc, const char *str)
 {
   return 0;
 }
