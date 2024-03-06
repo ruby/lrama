@@ -12,28 +12,28 @@ static int yyerror(YYLTYPE *loc, const char *str);
     int i;
 }
 
-%token <i> number
+%token <i> NUM
 
-%inline op      : '+' { (+) }
-                | '-' { (-) }
-                | '*' { (*) }
-                | '/' { (/) }
+%inline op      : '+' { + }
+                | '-' { - }
+                | '*' { * }
+                | '/' { / }
                 ;
 
 %%
 
-expression      : number
+expression      : NUM
                 | expression op expression { $$ = $1 $2 $3; }
                 ;
 
 %%
 
-static int yylex(YYSTYPE *yylval, YYLTYPE *loc) {
+static int yylex(YYSTYPE *yylval, YYLTYPE *loc)
 {
   return 0;
 }
 
-static int yyerror(YYLTYPE *loc, const char *str) {
+static int yyerror(YYLTYPE *loc, const char *str)
 {
   return 0;
 }
