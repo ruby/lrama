@@ -180,6 +180,17 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
     end
   end
 
+  describe "#fill_destructor" do
+    it "fills destructor" do
+      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      destructor = Lrama::Grammar::Destructor.new(
+        ident_or_tags: [Lrama::Lexer::Token::Ident.new(s_value: "term")]
+      )
+      resolver.fill_destructor([destructor])
+      expect(term.destructor).to eq(destructor)
+    end
+  end
+
   describe "#fill_printer" do
     it "fills printer" do
       term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))

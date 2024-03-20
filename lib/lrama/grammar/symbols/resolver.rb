@@ -118,6 +118,23 @@ module Lrama
           end
         end
 
+        def fill_destructor(destructors)
+          symbols.each do |sym|
+            destructors.each do |destructor|
+              destructor.ident_or_tags.each do |ident_or_tag|
+                case ident_or_tag
+                when Lrama::Lexer::Token::Ident
+                  sym.destructor = destructor if sym.id == ident_or_tag
+                when Lrama::Lexer::Token::Tag
+                  sym.destructor = destructor if sym.tag == ident_or_tag
+                else
+                  raise "Unknown token type. #{destructor}"
+                end
+              end
+            end
+          end
+        end
+
         def fill_error_token(error_tokens)
           symbols.each do |sym|
             error_tokens.each do |token|

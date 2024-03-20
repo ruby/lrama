@@ -9,7 +9,7 @@ RSpec.describe "integration" do
       raise "#{command} failed." unless $?.success?
     end
 
-    def test_parser(parser_name, input, expected, lrama_command_args: [], debug: false)
+    def test_parser(parser_name, input, expected, expect_success: true, lrama_command_args: [], debug: false)
       tmpdir = Dir.tmpdir
       grammar_file_path = fixture_path("integration/#{parser_name}.y")
       lexer_file_path = fixture_path("integration/#{parser_name}.l")
@@ -41,7 +41,8 @@ RSpec.describe "integration" do
         STDERR.puts out
         STDERR.puts err
       end
-      expect(status.success?).to be(true), status.to_s
+
+      expect(status.success?).to be(expect_success), status.to_s
       expect(out).to eq(expected)
     end
 
@@ -127,6 +128,26 @@ RSpec.describe "integration" do
       STR
 
       test_parser("printers", "1 + 2 * 3", expected)
+    end
+  end
+
+  describe "%destructor" do
+    it "prints messages when symbol is discarded" do
+      expected = <<~STR
+        destructor for expr: 1
+      STR
+      test_parser("destructors", "1 +", expected, expect_success: false)
+
+      expected = <<~STR
+        destructor for val2: 1
+      STR
+      test_parser("destructors", "+ 1 -", expected, expect_success: false)
+
+      expected = <<~STR
+        => 3
+        destructor for val1: 3
+      STR
+      test_parser("destructors", "1 + 2 3", expected, expect_success: false)
     end
   end
 

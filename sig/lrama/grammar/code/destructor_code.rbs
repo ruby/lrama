@@ -1,0 +1,15 @@
+module Lrama
+  class Grammar
+    class Code
+      class DestructorCode < Code
+        @tag: untyped
+        def initialize: (type: untyped, token_code: untyped, tag: untyped) -> void
+
+        private
+
+        # ref: Lrama::Grammar::Code.token_code.references
+        def reference_to_c: (untyped ref) -> untyped
+      end
+    end
+  end
+end
