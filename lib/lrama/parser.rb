@@ -1880,7 +1880,7 @@ module_eval(<<'.,.,', 'parser.y', 342)
 module_eval(<<'.,.,', 'parser.y', 350)
   def _reduce_76(val, _values, result)
                   if @prec_seen
-                on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
+                on_action_error("multiple User_code after %prec", val[0]) if @code_after_prec
                 @code_after_prec = true
               end
               begin_c_declaration("}")

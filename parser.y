@@ -349,7 +349,7 @@ rule
           | inline_rhs "{"
             {
               if @prec_seen
-                on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
+                on_action_error("multiple User_code after %prec", val[0]) if @code_after_prec
                 @code_after_prec = true
               end
               begin_c_declaration("}")

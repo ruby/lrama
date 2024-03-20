@@ -1,8 +1,8 @@
 module Lrama
   class Grammar
     class RuleBuilder
-      attr_accessor :lhs, :line
-      attr_reader :lhs_tag, :rhs, :user_code, :precedence_sym
+      attr_accessor :lhs, :line, :rhs
+      attr_reader :lhs_tag, :user_code, :precedence_sym
 
       def initialize(rule_counter, midrule_action_counter, position_in_original_rule_rhs = nil, lhs_tag: nil, skip_preprocess_references: false)
         @rule_counter = rule_counter
@@ -16,8 +16,10 @@ module Lrama
         @user_code = nil
         @precedence_sym = nil
         @line = nil
+        @rules = []
         @rule_builders_for_parameterizing_rules = []
         @rule_builders_for_derived_rules = []
+        @rule_builders_for_inline_rules = []
       end
 
       def add_rhs(rhs)
@@ -50,14 +52,18 @@ module Lrama
         freeze_rhs
       end
 
-      def setup_rules(parameterizing_rule_resolver)
+      def setup_rules(parameterizing_rule_resolver, inline_resolver)
         preprocess_references unless @skip_preprocess_references
-        process_rhs(parameterizing_rule_resolver)
+        if rhs.any? { |token| inline_resolver.find(token) }
+          resolve_inline(parameterizing_rule_resolver, inline_resolver)
+        else
+          process_rhs(parameterizing_rule_resolver, inline_resolver)
+        end
         build_rules
       end
 
       def rules
-        @parameterizing_rules + @midrule_action_rules + @rules
+        @parameterizing_rules + @inline_rules + @midrule_action_rules + @rules
       end
 
       private
@@ -73,12 +79,17 @@ module Lrama
       def build_rules
         tokens = @replaced_rhs
 
-        rule = Rule.new(
-          id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
-          position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
-        )
-        @rules = [rule]
+        if tokens
+          rule = Rule.new(
+            id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
+            position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
+          )
+          @rules = [rule]
+        end
         @parameterizing_rules = @rule_builders_for_parameterizing_rules.map do |rule_builder|
+          rule_builder.rules
+        end.flatten
+        @inline_rules = @rule_builders_for_inline_rules.map do |rule_builder|
           rule_builder.rules
         end.flatten
         @midrule_action_rules = @rule_builders_for_derived_rules.map do |rule_builder|
@@ -91,7 +102,7 @@ module Lrama
 
       # rhs is a mixture of variety type of tokens like `Ident`, `InstantiateRule`, `UserCode` and so on.
       # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
-      def process_rhs(parameterizing_rule_resolver)
+      def process_rhs(parameterizing_rule_resolver, inline_resolver)
         return if @replaced_rhs
 
         @replaced_rhs = []
@@ -122,7 +133,7 @@ module Lrama
                 rule_builder.precedence_sym = r.precedence_sym
                 rule_builder.user_code = r.user_code
                 rule_builder.complete_input
-                rule_builder.setup_rules(parameterizing_rule_resolver)
+                rule_builder.setup_rules(parameterizing_rule_resolver, inline_resolver)
                 @rule_builders_for_parameterizing_rules << rule_builder
               end
             end
@@ -136,7 +147,7 @@ module Lrama
             rule_builder.lhs = new_token
             rule_builder.user_code = token
             rule_builder.complete_input
-            rule_builder.setup_rules(parameterizing_rule_resolver)
+            rule_builder.setup_rules(parameterizing_rule_resolver, inline_resolver)
 
             @rule_builders_for_derived_rules << rule_builder
           else
@@ -155,6 +166,39 @@ module Lrama
           end
         end
         "#{token.rule_name}_#{s_values.join('_')}"
+      end
+
+      def resolve_inline(parameterizing_rule_resolver, inline_resolver)
+        rhs.each_with_index do |token, i|
+          if inline_rule = inline_resolver.find(token)
+            inline_rule.rhs_list.each_with_index do |inline_rhs|
+              rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: lhs_tag, skip_preprocess_references: true)
+              resolve_inline_rhs(rule_builder, inline_rhs, i)
+              rule_builder.lhs = lhs
+              rule_builder.line = line
+              rule_builder.user_code = replace_inline_user_code(inline_rhs, i)
+              rule_builder.complete_input
+              rule_builder.setup_rules(parameterizing_rule_resolver, inline_resolver)
+              @rule_builders_for_inline_rules << rule_builder
+            end
+          end
+        end
+      end
+
+      def resolve_inline_rhs(rule_builder, inline_rhs, index)
+        rhs.each_with_index do |token, i|
+          if index == i
+            inline_rhs.symbols.each { |sym| rule_builder.add_rhs(sym) }
+          else
+            rule_builder.add_rhs(token)
+          end
+        end
+      end
+
+      def replace_inline_user_code(inline_rhs, index)
+        return user_code if inline_rhs.user_code.nil?
+        code = user_code.s_value.gsub(/\$#{index + 1}/, inline_rhs.user_code.s_value)
+        Lrama::Lexer::Token::UserCode.new(s_value: code, location: user_code.location)
       end
 
       def numberize_references

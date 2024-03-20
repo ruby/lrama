@@ -261,7 +261,7 @@ module Lrama
 
     def setup_rules
       @rule_builders.each do |builder|
-        builder.setup_rules(@parameterizing_rule_resolver)
+        builder.setup_rules(@parameterizing_rule_resolver, @inline_resolver)
       end
     end
 
