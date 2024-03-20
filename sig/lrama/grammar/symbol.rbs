@@ -10,6 +10,7 @@ module Lrama
       attr_accessor nullable: bool
       attr_accessor precedence: Precedence?
       attr_accessor printer: Printer?
+      attr_accessor destructor: Destructor?
       attr_accessor error_token: ErrorToken
 
       attr_accessor first_set: Set[Array[Symbol]]

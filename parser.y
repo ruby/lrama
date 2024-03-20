@@ -97,6 +97,13 @@ rule
                            end_c_declaration
                          }
                        "}" generic_symlist
+                         {
+                           @grammar.add_destructor(
+                             ident_or_tags: val[6],
+                             token_code: val[3],
+                             lineno: val[3].line
+                           )
+                         }
                      | "%printer" "{"
                          {
                            begin_c_declaration("}")

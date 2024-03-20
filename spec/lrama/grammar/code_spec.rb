@@ -75,6 +75,42 @@ RSpec.describe Lrama::Grammar::Code do
     end
   end
 
+  describe Lrama::Grammar::Code::DestructorCode do
+    describe "#translated_code" do
+      let(:tag) { token_class::Tag.new(s_value: '<val>') }
+
+      it "translats '$$' to '((*yyvaluep).val)'" do
+        code = described_class.new(type: :destructor, token_code: user_code_dollar_dollar, tag: tag)
+        expect(code.translated_code).to eq("print(((*yyvaluep).val));")
+      end
+
+      it "translats '@$' to '(*yylocationp)'" do
+        code = described_class.new(type: :destructor, token_code: user_code_at_dollar, tag: tag)
+        expect(code.translated_code).to eq("print((*yylocationp));")
+      end
+
+      it "raises error for '$:$'" do
+        code = described_class.new(type: :destructor, token_code: user_code_index_dollar, tag: tag)
+        expect { code.translated_code }.to raise_error("$:$ can not be used in destructor.")
+      end
+
+      it "raises error for '$n'" do
+        code = described_class.new(type: :destructor, token_code: user_code_dollar_n, tag: tag)
+        expect { code.translated_code }.to raise_error("$n can not be used in destructor.")
+      end
+
+      it "raises error for '@n'" do
+        code = described_class.new(type: :destructor, token_code: user_code_at_n, tag: tag)
+        expect { code.translated_code }.to raise_error("@n can not be used in destructor.")
+      end
+
+      it "raises error for '$:n'" do
+        code = described_class.new(type: :destructor, token_code: user_code_index_n, tag: tag)
+        expect { code.translated_code }.to raise_error("$:1 can not be used in destructor.")
+      end
+    end
+  end
+
   describe Lrama::Grammar::Code::PrinterCode do
     describe "#translated_code" do
       let(:tag) { token_class::Tag.new(s_value: '<val>') }
