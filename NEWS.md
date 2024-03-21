@@ -1,6 +1,6 @@
 # NEWS for Lrama
 
-## Lrama 0.6.4 (2024-03-xx)
+## Lrama 0.6.4 (2024-03-22)
 
 ### Parameterizing rules (preceded, terminated, delimited)
 
