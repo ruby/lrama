@@ -1,8 +1,8 @@
 module Lrama
   class Grammar
     class RuleBuilder
-      attr_accessor :lhs, :line, :rhs
-      attr_reader :lhs_tag, :user_code, :precedence_sym
+      attr_accessor :lhs, :line
+      attr_reader :lhs_tag, :rhs, :user_code, :precedence_sym
 
       def initialize(rule_counter, midrule_action_counter, position_in_original_rule_rhs = nil, lhs_tag: nil, skip_preprocess_references: false)
         @rule_counter = rule_counter
@@ -20,6 +20,9 @@ module Lrama
         @rule_builders_for_parameterizing_rules = []
         @rule_builders_for_derived_rules = []
         @rule_builders_for_inline_rules = []
+        @parameterizing_rules = []
+        @inline_rules = []
+        @midrule_action_rules = []
       end
 
       def add_rhs(rhs)
@@ -85,18 +88,19 @@ module Lrama
             position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
           )
           @rules = [rule]
-        end
-        @parameterizing_rules = @rule_builders_for_parameterizing_rules.map do |rule_builder|
-          rule_builder.rules
-        end.flatten
-        @inline_rules = @rule_builders_for_inline_rules.map do |rule_builder|
-          rule_builder.rules
-        end.flatten
-        @midrule_action_rules = @rule_builders_for_derived_rules.map do |rule_builder|
-          rule_builder.rules
-        end.flatten
-        @midrule_action_rules.each do |r|
-          r.original_rule = rule
+          @parameterizing_rules = @rule_builders_for_parameterizing_rules.map do |rule_builder|
+            rule_builder.rules
+          end.flatten
+          @midrule_action_rules = @rule_builders_for_derived_rules.map do |rule_builder|
+            rule_builder.rules
+          end.flatten
+          @midrule_action_rules.each do |r|
+            r.original_rule = rule
+          end
+        else
+          @inline_rules = @rule_builders_for_inline_rules.map do |rule_builder|
+            rule_builder.rules
+          end.flatten
         end
       end
 
@@ -197,6 +201,8 @@ module Lrama
 
       def replace_inline_user_code(inline_rhs, index)
         return user_code if inline_rhs.user_code.nil?
+        return user_code if user_code.nil?
+
         code = user_code.s_value.gsub(/\$#{index + 1}/, inline_rhs.user_code.s_value)
         Lrama::Lexer::Token::UserCode.new(s_value: code, location: user_code.location)
       end
