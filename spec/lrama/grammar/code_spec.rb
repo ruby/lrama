@@ -192,6 +192,7 @@ RSpec.describe Lrama::Grammar::Code do
                | rule10
                | rule11
                | rule12
+               | rule13
                ;
 
         rule1: expr '+' expr { $$ = 0; }
@@ -228,6 +229,9 @@ RSpec.describe Lrama::Grammar::Code do
               ;
 
         rule12: expr '+' expr[expr-right] { $:1; $:2; $:[expr-right]; }
+              ;
+
+        rule13: expr '+' { $$ = $1; @$ = @1; }<integer> expr { $1 + $3; }
               ;
         %%
       GRAMMAR
@@ -273,6 +277,15 @@ RSpec.describe Lrama::Grammar::Code do
 
           code = grammar.rules.find {|r| r.lhs.id.s_value == "rule6" }
           expect(code.translated_code).to eq(" (yyvsp[-3].expr) + (yyvsp[0].integer); ")
+        end
+
+        it "uses an explicit tag for type casting" do
+          # midrule action in rule13
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "@5" }
+          expect(code.translated_code).to eq(" (yyval.integer) = (yyvsp[-1].expr); (yyloc) = (yylsp[-1]); ")
+
+          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule13" }
+          expect(code.translated_code).to eq(" (yyvsp[-3].expr) + (yyvsp[-1].integer); ")
         end
       end
 
