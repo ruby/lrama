@@ -9,12 +9,15 @@ module Lrama
         def initialize: () -> void
         def add_parameterizing_rule: (Grammar::ParameterizingRule::Rule rule) -> void
         def find: (Lexer::Token::InstantiateRule token) -> Grammar::ParameterizingRule::Rule?
+        def find!: (Lexer::Token::InstantiateRule token) -> Grammar::ParameterizingRule::Rule?
         def created_lhs: (String lhs_s_value) -> Lexer::Token?
 
         private
 
-        def select_rules: (Lexer::Token::InstantiateRule token) -> Array[Grammar::ParameterizingRule::Rule]
         def select_rules_by_name: (String rule_name) -> Array[Grammar::ParameterizingRule::Rule]
+        def select_rules_by_name!: (String rule_name) -> Array[Grammar::ParameterizingRule::Rule]
+        def select_rules_by_parameters_count: (Array[Grammar::ParameterizingRule::Rule] rules, Lexer::Token::InstantiateRule token) -> Array[Grammar::ParameterizingRule::Rule]
+        def select_rules_by_parameters_count!: (Array[Grammar::ParameterizingRule::Rule] rules, Lexer::Token::InstantiateRule token) -> Array[Grammar::ParameterizingRule::Rule]
       end
     end
   end
