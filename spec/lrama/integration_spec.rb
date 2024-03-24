@@ -135,17 +135,20 @@ RSpec.describe "integration" do
     it "prints messages when symbol is discarded" do
       expected = <<~STR
         destructor for expr: 1
+        line for expr: 37
       STR
       test_parser("destructors", "1 +", expected, expect_success: false)
 
       expected = <<~STR
         destructor for val2: 1
+        line for val2: 32
       STR
       test_parser("destructors", "+ 1 -", expected, expect_success: false)
 
       expected = <<~STR
         => 3
         destructor for val1: 3
+        line for val1: 27
       STR
       test_parser("destructors", "1 + 2 3", expected, expect_success: false)
     end

@@ -24,14 +24,17 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %destructor {
     printf("destructor for val1: %d\n", $$);
+    printf("line for val1: %d\n", __LINE__);
 } <val1> // printer for TAG
 
 %destructor {
     printf("destructor for val2: %d\n", $$);
+    printf("line for val2: %d\n", __LINE__);
 } <val2>
 
 %destructor {
     printf("destructor for expr: %d\n", $$);
+    printf("line for expr: %d\n", __LINE__);
 } expr // printer for symbol
 
 %%
