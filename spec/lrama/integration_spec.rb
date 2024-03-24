@@ -76,6 +76,12 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "typed midrule actions" do
+    it "returns 4 for '1 2 +" do
+      test_parser("typed_midrule_actions", "1 2 +", "=> 4")
+    end
+  end
+
   describe "parameterizing rules" do
     it "returns " do
       expected = <<~STR

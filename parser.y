@@ -462,10 +462,11 @@ rule
          {
            end_c_declaration
          }
-       "}" named_ref_opt
+       "}" named_ref_opt tag_opt
          {
            user_code = val[3]
            user_code.alias_name = val[6]
+           user_code.tag = val[7]
            builder = val[0]
            builder.user_code = user_code
            result = builder
