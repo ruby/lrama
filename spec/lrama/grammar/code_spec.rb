@@ -279,7 +279,7 @@ RSpec.describe Lrama::Grammar::Code do
           expect(code.translated_code).to eq(" (yyvsp[-3].expr) + (yyvsp[0].integer); ")
         end
 
-        it "uses an explict tag for type casting" do
+        it "uses an explicit tag for type casting" do
           # midrule action in rule13
           code = grammar.rules.find {|r| r.lhs.id.s_value == "@5" }
           expect(code.translated_code).to eq(" (yyval.integer) = (yyvsp[-1].expr); (yyloc) = (yylsp[-1]); ")

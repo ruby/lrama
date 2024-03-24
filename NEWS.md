@@ -4,7 +4,7 @@
 
 ### Typed Midrule Actions
 
-User can specify the type of mid rule action by tag (`<bar>`) instead of specifing it with in an action.
+User can specify the type of mid rule action by tag (`<bar>`) instead of specifying it with in an action.
 
 ```
 primary: k_case expr_value terms?
