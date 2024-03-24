@@ -1,0 +1,12 @@
+module Lrama
+  class Grammar
+    class Inline
+      class Rule
+        attr_reader name: String
+        attr_reader rhs_list: Array[Grammar::Inline::Rhs]
+
+        def initialize: (String name, Array[Grammar::Inline::Rhs] rhs_list) -> void
+      end
+    end
+  end
+end

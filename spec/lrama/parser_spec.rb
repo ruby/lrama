@@ -1899,6 +1899,95 @@ RSpec.describe Lrama::Parser do
           end
         end
       end
+
+      context 'when inline' do
+        let(:path) { "inlining/basic.y" }
+
+        it "expands inlining rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "expression"), alias_name: nil, number: 9, tag:  T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: false),
+          ])
+
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 0,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 26,
+            ),
+            Rule.new(
+              id: 1,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("NUM"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("NUM"),
+              lineno: 26,
+            ),
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("'+'"),
+                grammar.find_symbol_by_s_value!("expression"),
+              ],
+              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
+              lineno: 27,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("'-'"),
+                grammar.find_symbol_by_s_value!("expression"),
+              ],
+              token_code: T::UserCode.new(s_value: " $$ = $1  -  $3; "),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
+              lineno: 27,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("'*'"),
+                grammar.find_symbol_by_s_value!("expression"),
+              ],
+              token_code: T::UserCode.new(s_value: " $$ = $1  *  $3; "),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'*'"),
+              lineno: 27,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("'/'"),
+                grammar.find_symbol_by_s_value!("expression"),
+              ],
+              token_code: T::UserCode.new(s_value: " $$ = $1  /  $3; "),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'/'"),
+              lineno: 27,
+            ),
+          ])
+        end
+      end
     end
 
     it "; for rules is optional" do
