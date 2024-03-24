@@ -35,6 +35,7 @@ module Lrama
       def preprocess_references: () -> void
       def build_rules: () -> void
       def process_rhs: (Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver) -> void
+      def resolve_parameterizing_rule: (Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver, Grammar::ParameterizingRule::Rule parameterizing_rule, Lexer::Token::InstantiateRule parameterizing_rule) -> void
       def lhs_s_value: (Lexer::Token::InstantiateRule token, Grammar::Binding bindings) -> String
       def numberize_references: () -> void
       def flush_user_code: () -> void

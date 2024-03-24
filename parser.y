@@ -231,7 +231,12 @@ rule
 
   token_declaration: id int_opt alias { result = val }
 
-  rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
+  rule_declaration: "%rule" id_colon ":" rule_rhs_list
+                      {
+                        rule = Grammar::ParameterizingRule::Rule.new(val[1].s_value, [], val[3])
+                        @grammar.add_parameterizing_rule(rule)
+                      }
+                  | "%rule" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
                       {
                         rule = Grammar::ParameterizingRule::Rule.new(val[1].s_value, val[3], val[6])
                         @grammar.add_parameterizing_rule(rule)

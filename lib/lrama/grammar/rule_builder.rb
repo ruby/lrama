@@ -101,31 +101,17 @@ module Lrama
           when Lrama::Lexer::Token::Char
             @replaced_rhs << token
           when Lrama::Lexer::Token::Ident
-            @replaced_rhs << token
+            instantiate_rule = Lrama::Lexer::Token::InstantiateRule.new(s_value: token.s_value, location: token.location, args: [])
+            if (parameterizing_rule = parameterizing_rule_resolver.find(instantiate_rule))
+              resolve_parameterizing_rule(parameterizing_rule_resolver, parameterizing_rule, instantiate_rule)
+            else
+              @replaced_rhs << token
+            end
           when Lrama::Lexer::Token::InstantiateRule
-            parameterizing_rule = parameterizing_rule_resolver.find(token)
+            parameterizing_rule = parameterizing_rule_resolver.find!(token)
             raise "Unexpected token. #{token}" unless parameterizing_rule
 
-            bindings = Binding.new(parameterizing_rule, token.args)
-            lhs_s_value = lhs_s_value(token, bindings)
-            if (created_lhs = parameterizing_rule_resolver.created_lhs(lhs_s_value))
-              @replaced_rhs << created_lhs
-            else
-              lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: token.location)
-              @replaced_rhs << lhs_token
-              parameterizing_rule_resolver.created_lhs_list << lhs_token
-              parameterizing_rule.rhs_list.each do |r|
-                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
-                rule_builder.lhs = lhs_token
-                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
-                rule_builder.line = line
-                rule_builder.precedence_sym = r.precedence_sym
-                rule_builder.user_code = r.user_code
-                rule_builder.complete_input
-                rule_builder.setup_rules(parameterizing_rule_resolver)
-                @rule_builders_for_parameterizing_rules << rule_builder
-              end
-            end
+            resolve_parameterizing_rule(parameterizing_rule_resolver, parameterizing_rule, token)
           when Lrama::Lexer::Token::UserCode
             prefix = token.referred ? "@" : "$@"
             tag = token.tag || lhs_tag
@@ -141,6 +127,29 @@ module Lrama
             @rule_builders_for_derived_rules << rule_builder
           else
             raise "Unexpected token. #{token}"
+          end
+        end
+      end
+
+      def resolve_parameterizing_rule(parameterizing_rule_resolver, parameterizing_rule, token)
+        bindings = Binding.new(parameterizing_rule, token.args)
+        lhs_s_value = lhs_s_value(token, bindings)
+        if (created_lhs = parameterizing_rule_resolver.created_lhs(lhs_s_value))
+          @replaced_rhs << created_lhs
+        else
+          lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: token.location)
+          @replaced_rhs << lhs_token
+          parameterizing_rule_resolver.created_lhs_list << lhs_token
+          parameterizing_rule.rhs_list.each do |r|
+            rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
+            rule_builder.lhs = lhs_token
+            r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
+            rule_builder.line = line
+            rule_builder.precedence_sym = r.precedence_sym
+            rule_builder.user_code = r.user_code
+            rule_builder.complete_input
+            rule_builder.setup_rules(parameterizing_rule_resolver)
+            @rule_builders_for_parameterizing_rules << rule_builder
           end
         end
       end
