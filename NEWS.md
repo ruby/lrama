@@ -34,6 +34,8 @@ primary: k_case expr_value terms?
            }
 ```
 
+`%destructor` for midrule action is invoked only when tag is specified by Typed Midrule Actions.
+
 Difference from Bison's Typed Midrule Actions is that tag is postposed in Lrama however it's preposed in Bison.
 
 Bison supports this feature from 3.1.
