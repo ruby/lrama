@@ -1,6 +1,6 @@
 # NEWS for Lrama
 
-## Lrama 0.6.5 (2024-03-xx)
+## Lrama 0.6.5 (2024-03-25)
 
 ### Typed Midrule Actions
 
