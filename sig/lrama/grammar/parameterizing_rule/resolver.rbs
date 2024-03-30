@@ -8,7 +8,8 @@ module Lrama
 
         def initialize: () -> void
         def add_parameterizing_rule: (Grammar::ParameterizingRule::Rule rule) -> void
-        def find: (Lexer::Token::InstantiateRule token) -> Grammar::ParameterizingRule::Rule?
+        def find_rule: (Lexer::Token::InstantiateRule token) -> Grammar::ParameterizingRule::Rule?
+        def find_inline: (Lexer::Token token) -> Grammar::ParameterizingRule::Rule?
         def created_lhs: (String lhs_s_value) -> Lexer::Token?
 
         private

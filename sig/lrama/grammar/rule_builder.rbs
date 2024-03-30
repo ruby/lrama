@@ -27,7 +27,7 @@ module Lrama
       def user_code=: (Lexer::Token::UserCode? user_code) -> void
       def precedence_sym=: (Lexer::Token? precedence_sym) -> void
       def complete_input: () -> void
-      def setup_rules: (Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver, Grammar::Inline::Resolver inline_resolver) -> void
+      def setup_rules: (Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver) -> void
       def rules: () -> Array[Rule]
 
       private
@@ -35,11 +35,11 @@ module Lrama
       def freeze_rhs: () -> void
       def preprocess_references: () -> void
       def build_rules: () -> void
-      def process_rhs: (Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver, Grammar::Inline::Resolver inline_resolver) -> void
+      def process_rhs: (Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver) -> void
       def lhs_s_value: (Lexer::Token::InstantiateRule token, Grammar::Binding bindings) -> String
-      def resolve_inline: (Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver, Grammar::Inline::Resolver inline_resolver) -> void
-      def resolve_inline_rhs: (RuleBuilder rule_builder, Grammar::Inline::Rhs inline_rhs, Integer index) -> void
-      def replace_inline_user_code: (Grammar::Inline::Rhs inline_rhs, Integer index) -> Lexer::Token::UserCode?
+      def resolve_inline: (Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver) -> void
+      def resolve_inline_rhs: (RuleBuilder rule_builder, Grammar::ParameterizingRule::Rhs inline_rhs, Integer index) -> void
+      def replace_inline_user_code: (Grammar::ParameterizingRule::Rhs inline_rhs, Integer index) -> Lexer::Token::UserCode?
       def numberize_references: () -> void
       def flush_user_code: () -> void
     end
