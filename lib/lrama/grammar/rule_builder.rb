@@ -55,12 +55,12 @@ module Lrama
         freeze_rhs
       end
 
-      def setup_rules(parameterizing_rule_resolver, inline_resolver)
+      def setup_rules(parameterizing_rule_resolver)
         preprocess_references unless @skip_preprocess_references
-        if rhs.any? { |token| inline_resolver.find(token) }
-          resolve_inline(parameterizing_rule_resolver, inline_resolver)
+        if rhs.any? { |token| parameterizing_rule_resolver.find_inline(token) }
+          resolve_inline(parameterizing_rule_resolver)
         else
-          process_rhs(parameterizing_rule_resolver, inline_resolver)
+          process_rhs(parameterizing_rule_resolver)
         end
         build_rules
       end
@@ -106,7 +106,7 @@ module Lrama
 
       # rhs is a mixture of variety type of tokens like `Ident`, `InstantiateRule`, `UserCode` and so on.
       # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
-      def process_rhs(parameterizing_rule_resolver, inline_resolver)
+      def process_rhs(parameterizing_rule_resolver)
         return if @replaced_rhs
 
         @replaced_rhs = []
@@ -118,7 +118,7 @@ module Lrama
           when Lrama::Lexer::Token::Ident
             @replaced_rhs << token
           when Lrama::Lexer::Token::InstantiateRule
-            parameterizing_rule = parameterizing_rule_resolver.find(token)
+            parameterizing_rule = parameterizing_rule_resolver.find_rule(token)
             raise "Unexpected token. #{token}" unless parameterizing_rule
 
             bindings = Binding.new(parameterizing_rule, token.args)
@@ -137,7 +137,7 @@ module Lrama
                 rule_builder.precedence_sym = r.precedence_sym
                 rule_builder.user_code = r.user_code
                 rule_builder.complete_input
-                rule_builder.setup_rules(parameterizing_rule_resolver, inline_resolver)
+                rule_builder.setup_rules(parameterizing_rule_resolver)
                 @rule_builders_for_parameterizing_rules << rule_builder
               end
             end
@@ -151,7 +151,7 @@ module Lrama
             rule_builder.lhs = new_token
             rule_builder.user_code = token
             rule_builder.complete_input
-            rule_builder.setup_rules(parameterizing_rule_resolver, inline_resolver)
+            rule_builder.setup_rules(parameterizing_rule_resolver)
 
             @rule_builders_for_derived_rules << rule_builder
           else
@@ -172,9 +172,9 @@ module Lrama
         "#{token.rule_name}_#{s_values.join('_')}"
       end
 
-      def resolve_inline(parameterizing_rule_resolver, inline_resolver)
+      def resolve_inline(parameterizing_rule_resolver)
         rhs.each_with_index do |token, i|
-          if inline_rule = inline_resolver.find(token)
+          if inline_rule = parameterizing_rule_resolver.find_inline(token)
             inline_rule.rhs_list.each_with_index do |inline_rhs|
               rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: lhs_tag, skip_preprocess_references: true)
               resolve_inline_rhs(rule_builder, inline_rhs, i)
@@ -182,7 +182,7 @@ module Lrama
               rule_builder.line = line
               rule_builder.user_code = replace_inline_user_code(inline_rhs, i)
               rule_builder.complete_input
-              rule_builder.setup_rules(parameterizing_rule_resolver, inline_resolver)
+              rule_builder.setup_rules(parameterizing_rule_resolver)
               @rule_builders_for_inline_rules << rule_builder
             end
           end

@@ -13,8 +13,14 @@ module Lrama
           @rules << rule
         end
 
-        def find(token)
-          select_rules(token).last
+        def find_rule(token)
+          if token.is_a?(Lexer::Token::InstantiateRule)
+            select_rules(token).last
+          end
+        end
+
+        def find_inline(token)
+          @rules.select { |rule| rule.name == token.s_value && rule.is_inline }.last
         end
 
         def created_lhs(lhs_s_value)
@@ -25,7 +31,7 @@ module Lrama
 
         def select_rules(token)
           rules = select_rules_by_name(token.rule_name)
-          rules = rules.select { |rule| rule.required_parameters_count == token.args_count }
+          rules = rules.select { |rule| rule.required_parameters_count == token.args_count && !rule.is_inline }
           if rules.empty?
             raise "Invalid number of arguments. `#{token.rule_name}`"
           else
@@ -34,7 +40,7 @@ module Lrama
         end
 
         def select_rules_by_name(rule_name)
-          rules = @rules.select { |rule| rule.name == rule_name }
+          rules = @rules.select { |rule| rule.name == rule_name && !rule.is_inline }
           if rules.empty?
             raise "Parameterizing rule does not exist. `#{rule_name}`"
           else

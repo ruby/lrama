@@ -30,7 +30,7 @@ rule
 
   bison_declaration: grammar_declaration
                    | rule_declaration
-                   | inline_declarations
+                   | inline_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
                    | "%param" params
@@ -238,6 +238,12 @@ rule
                         @grammar.add_parameterizing_rule(rule)
                       }
 
+  inline_declaration: "%rule" "%inline" id_colon ":" rule_rhs_list
+                      {
+                        rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, [], val[4], is_inline: true)
+                        @grammar.add_parameterizing_rule(rule)
+                      }
+
   rule_args: IDENTIFIER { result = [val[0]] }
            | rule_args "," IDENTIFIER { result = val[0].append(val[2]) }
 
@@ -303,70 +309,6 @@ rule
               result = builder
             }
           | rule_rhs "%prec" symbol
-            {
-              sym = @grammar.find_symbol_by_id!(val[2])
-              @prec_seen = true
-              builder = val[0]
-              builder.precedence_sym = sym
-              result = builder
-            }
-
-  inline_declarations: "%inline" id_colon ":" inline_rhs_list
-                        {
-                          rule = Grammar::Inline::Rule.new(val[1].s_value, val[3])
-                          @grammar.add_inline_rule(rule)
-                        }
-
-  inline_rhs_list: inline_rhs
-                  {
-                    builder = val[0]
-                    result = [builder]
-                  }
-              | inline_rhs_list "|" inline_rhs
-                  {
-                    builder = val[2]
-                    result = val[0].append(builder)
-                  }
-
-  inline_rhs: /* empty */
-            {
-              reset_precs
-              result = Grammar::Inline::Rhs.new
-            }
-          | "%empty"
-            {
-              reset_precs
-              result = Grammar::Inline::Rhs.new
-            }
-          | inline_rhs symbol named_ref_opt
-            {
-              token = val[1]
-              token.alias_name = val[2]
-              builder = val[0]
-              builder.symbols << token
-              result = builder
-            }
-          | inline_rhs "{"
-            {
-              if @prec_seen
-                on_action_error("multiple User_code after %prec", val[0]) if @code_after_prec
-                @code_after_prec = true
-              end
-              begin_c_declaration("}")
-            }
-          C_DECLARATION
-            {
-              end_c_declaration
-            }
-          "}" named_ref_opt
-            {
-              user_code = val[3]
-              user_code.alias_name = val[6]
-              builder = val[0]
-              builder.user_code = user_code
-              result = builder
-            }
-          | inline_rhs "%prec" symbol
             {
               sym = @grammar.find_symbol_by_id!(val[2])
               @prec_seen = true

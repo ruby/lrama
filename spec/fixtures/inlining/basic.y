@@ -15,11 +15,11 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %token <i> NUM
 %type <i> expression
 
-%inline op      : '+' { + }
-                | '-' { - }
-                | '*' { * }
-                | '/' { / }
-                ;
+%rule %inline op  : '+' { + }
+                  | '-' { - }
+                  | '*' { * }
+                  | '/' { / }
+                  ;
 
 %%
 

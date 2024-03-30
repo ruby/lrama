@@ -11,7 +11,6 @@ target :lib do
   check "lib/lrama/grammar/counter.rb"
   check "lib/lrama/grammar/error_token.rb"
   check "lib/lrama/grammar/parameterizing_rule"
-  check "lib/lrama/grammar/inline"
   check "lib/lrama/grammar/parameterizing_rules"
   check "lib/lrama/grammar/symbols"
   check "lib/lrama/grammar/percent_code.rb"

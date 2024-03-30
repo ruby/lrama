@@ -31,11 +31,11 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %left '+' '-'
 %left '*' '/'
 
-%inline op      : '+' { + }
-                | '-' { - }
-                | '*' { * }
-                | '/' { / }
-                ;
+%rule %inline op    : '+' { + }
+                    | '-' { - }
+                    | '*' { * }
+                    | '/' { / }
+                    ;
 
 %%
 
