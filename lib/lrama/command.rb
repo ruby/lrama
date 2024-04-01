@@ -34,6 +34,7 @@ module Lrama
       end
       states = Lrama::States.new(grammar, trace_state: (options.trace_opts[:automaton] || options.trace_opts[:closure]))
       states.compute
+      states.compute_ielr if grammar.ielr_defined?
       context = Lrama::Context.new(states)
 
       if options.report_file

@@ -172,6 +172,10 @@ module Lrama
       @sym_to_rules[sym.number]
     end
 
+    def ielr_defined?
+      @define.key?('lr.type') && @define['lr.type'] == 'ielr'
+    end
+
     private
 
     def compute_nullable
