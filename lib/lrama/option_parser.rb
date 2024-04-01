@@ -61,7 +61,7 @@ module Lrama
         o.on('-S', '--skeleton=FILE', 'specify the skeleton to use') {|v| @options.skeleton = v }
         o.on('-t', 'reserved, do nothing') { }
         o.on('--debug', 'display debugging outputs of internal parser') {|v| @options.debug = true }
-        o.on('-D', '--define=NAME[=VALUE]', "similar to '%define NAME VALUE'") {|v| @options.define = v }
+        o.on('-D', '--define=NAME[=VALUE]', Array, "similar to '%define NAME VALUE'") {|v| @options.define = v }
         o.separator ''
         o.separator 'Output:'
         o.on('-H', '--header=[FILE]', 'also produce a header file named FILE') {|v| @options.header = true; @options.header_file = v }
