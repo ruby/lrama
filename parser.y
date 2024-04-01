@@ -25,7 +25,7 @@ rule
 
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
-                   | "%define" variable value
+                   | "%define" variable value { @grammar.define[val[1].s_value] = val[2]&.s_value }
                    | "%param" param+
                    | "%lex-param" param+
                        {
