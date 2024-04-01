@@ -28,8 +28,9 @@ module Lrama
         private
 
         def select_rules(token)
+          rules = select_not_inline_rules
           rules = select_rules_by_name(token.rule_name)
-          rules = rules.select { |rule| rule.required_parameters_count == token.args_count && !rule.is_inline }
+          rules = rules.select { |rule| rule.required_parameters_count == token.args_count }
           if rules.empty?
             raise "Invalid number of arguments. `#{token.rule_name}`"
           else
@@ -37,8 +38,12 @@ module Lrama
           end
         end
 
+        def select_not_inline_rules
+          @rules.select { |rule| !rule.is_inline }
+        end
+
         def select_rules_by_name(rule_name)
-          rules = @rules.select { |rule| rule.name == rule_name && !rule.is_inline }
+          rules = @rules.select { |rule| rule.name == rule_name }
           if rules.empty?
             raise "Parameterizing rule does not exist. `#{rule_name}`"
           else
