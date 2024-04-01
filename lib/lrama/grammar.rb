@@ -30,7 +30,8 @@ module Lrama
                   :after_shift, :before_reduce, :after_reduce, :after_shift_error_token, :after_pop_stack,
                   :symbols_resolver, :types,
                   :rules, :rule_builders,
-                  :sym_to_rules, :no_stdlib
+                  :sym_to_rules, :no_stdlib,
+                  :define
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term,
                                         :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
@@ -59,6 +60,7 @@ module Lrama
       @accept_symbol = nil
       @aux = Auxiliary.new
       @no_stdlib = false
+      @define = {}
 
       append_special_symbols
     end
