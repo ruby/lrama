@@ -14,9 +14,7 @@ module Lrama
         end
 
         def find_rule(token)
-          if token.is_a?(Lexer::Token::InstantiateRule)
-            select_rules(token).last
-          end
+          select_rules(token).last
         end
 
         def find_inline(token)
