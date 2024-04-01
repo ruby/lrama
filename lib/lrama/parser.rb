@@ -914,7 +914,7 @@ racc_reduce_table = [
   2, 73, :_reduce_15,
   1, 60, :_reduce_none,
   2, 60, :_reduce_17,
-  3, 60, :_reduce_none,
+  3, 60, :_reduce_18,
   2, 60, :_reduce_none,
   2, 60, :_reduce_20,
   2, 60, :_reduce_21,
@@ -1328,7 +1328,12 @@ module_eval(<<'.,.,', 'parser.y', 26)
   end
 .,.,
 
-# reduce 18 omitted
+module_eval(<<'.,.,', 'parser.y', 27)
+  def _reduce_18(val, _values, result)
+     @grammar.define[val[1].s_value] = val[2]&.s_value
+    result
+  end
+.,.,
 
 # reduce 19 omitted
 
