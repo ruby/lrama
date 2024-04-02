@@ -30,6 +30,7 @@ rule
 
   bison_declaration: grammar_declaration
                    | rule_declaration
+                   | inline_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
                    | "%param" params
@@ -234,6 +235,12 @@ rule
   rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
                       {
                         rule = Grammar::ParameterizingRule::Rule.new(val[1].s_value, val[3], val[6])
+                        @grammar.add_parameterizing_rule(rule)
+                      }
+
+  inline_declaration: "%rule" "%inline" id_colon ":" rule_rhs_list
+                      {
+                        rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, [], val[4], is_inline: true)
                         @grammar.add_parameterizing_rule(rule)
                       }
 
