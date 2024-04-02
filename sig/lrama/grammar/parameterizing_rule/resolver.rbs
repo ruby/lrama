@@ -14,9 +14,9 @@ module Lrama
 
         private
 
-        def select_not_inline_rules: () -> Array[Grammar::ParameterizingRule::Rule]
-        def select_rules: (Lexer::Token::InstantiateRule token) -> Array[Grammar::ParameterizingRule::Rule]
-        def select_rules_by_name: (String rule_name) -> Array[Grammar::ParameterizingRule::Rule]
+        def select_rules: (Array[Grammar::ParameterizingRule::Rule] rules, Lexer::Token::InstantiateRule token) -> Array[Grammar::ParameterizingRule::Rule]
+        def select_not_inline_rules: (Array[Grammar::ParameterizingRule::Rule] rules) -> Array[Grammar::ParameterizingRule::Rule]
+        def select_rules_by_name: (Array[Grammar::ParameterizingRule::Rule] rules, String rule_name) -> Array[Grammar::ParameterizingRule::Rule]
       end
     end
   end
