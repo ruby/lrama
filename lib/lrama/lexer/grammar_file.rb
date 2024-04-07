@@ -14,6 +14,10 @@ module Lrama
         @text = Text.new(text).freeze
       end
 
+      def inspect
+        "<#{self.class}: @path=#{path}, @text=#{text.inspect}>"
+      end
+
       def ==(other)
         self.class == other.class &&
         self.path == other.path
