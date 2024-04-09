@@ -144,6 +144,7 @@ module Lrama
     end
 
     def prepare
+      resolve_inline_rules
       normalize_rules
       collect_symbols
       set_lhs_and_rhs
@@ -290,6 +291,18 @@ module Lrama
       term = add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "$accept"))
       term.accept_symbol = true
       @accept_symbol = term
+    end
+
+    def resolve_inline_rules
+      while @rule_builders.any? {|r| r.has_inline_rules?(@parameterizing_rule_resolver) } do
+        @rule_builders.map! do |builder|
+          if builder.has_inline_rules?(@parameterizing_rule_resolver)
+            builder.resolve_inline_rules(@parameterizing_rule_resolver)
+          else
+            builder
+          end
+        end.flatten!
+      end
     end
 
     def normalize_rules
