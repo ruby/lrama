@@ -2398,7 +2398,7 @@ RSpec.describe Lrama::Parser do
 
           expect(grammar.rules).to eq([
             Rule.new(
-              id: 2,
+              id: 0,
               lhs: grammar.find_symbol_by_s_value!("$accept"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
@@ -2410,7 +2410,7 @@ RSpec.describe Lrama::Parser do
               lineno: 24,
             ),
             Rule.new(
-              id: 3,
+              id: 1,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("NUM"),
@@ -2421,7 +2421,7 @@ RSpec.describe Lrama::Parser do
               lineno: 24,
             ),
             Rule.new(
-              id: 4,
+              id: 2,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
@@ -2434,7 +2434,7 @@ RSpec.describe Lrama::Parser do
               lineno: 25,
             ),
             Rule.new(
-              id: 5,
+              id: 3,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
@@ -2462,7 +2462,7 @@ RSpec.describe Lrama::Parser do
 
           expect(grammar.rules).to eq([
             Rule.new(
-              id: 2,
+              id: 0,
               lhs: grammar.find_symbol_by_s_value!("$accept"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
@@ -2474,7 +2474,7 @@ RSpec.describe Lrama::Parser do
               lineno: 24,
             ),
             Rule.new(
-              id: 3,
+              id: 1,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("NUM"),
@@ -2485,7 +2485,7 @@ RSpec.describe Lrama::Parser do
               lineno: 24,
             ),
             Rule.new(
-              id: 4,
+              id: 2,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
@@ -2498,7 +2498,7 @@ RSpec.describe Lrama::Parser do
               lineno: 25,
             ),
             Rule.new(
-              id: 5,
+              id: 3,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
@@ -2526,7 +2526,7 @@ RSpec.describe Lrama::Parser do
 
           expect(grammar.rules).to eq([
             Rule.new(
-              id: 2,
+              id: 0,
               lhs: grammar.find_symbol_by_s_value!("$accept"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
@@ -2538,7 +2538,7 @@ RSpec.describe Lrama::Parser do
               lineno: 24,
             ),
             Rule.new(
-              id: 3,
+              id: 1,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("NUM"),
@@ -2549,7 +2549,7 @@ RSpec.describe Lrama::Parser do
               lineno: 24,
             ),
             Rule.new(
-              id: 4,
+              id: 2,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
@@ -2562,7 +2562,7 @@ RSpec.describe Lrama::Parser do
               lineno: 25,
             ),
             Rule.new(
-              id: 5,
+              id: 3,
               lhs: grammar.find_symbol_by_s_value!("expression"),
               rhs: [
                 grammar.find_symbol_by_s_value!("expression"),
