@@ -20,9 +20,7 @@ module Lrama
         @rules = []
         @rule_builders_for_parameterizing_rules = []
         @rule_builders_for_derived_rules = []
-        @rule_builders_for_inline_rules = []
         @parameterizing_rules = []
-        @inline_rules = []
         @midrule_action_rules = []
       end
 
@@ -67,7 +65,7 @@ module Lrama
       end
 
       def rules
-        @parameterizing_rules + @inline_rules + @midrule_action_rules + @rules
+        @parameterizing_rules + @midrule_action_rules + @rules
       end
 
       def has_inline_rules?(parameterizing_rule_resolver)
@@ -107,25 +105,19 @@ module Lrama
       def build_rules
         tokens = @replaced_rhs
 
-        if tokens
-          rule = Rule.new(
-            id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
-            position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
-          )
-          @rules = [rule]
-          @parameterizing_rules = @rule_builders_for_parameterizing_rules.map do |rule_builder|
-            rule_builder.rules
-          end.flatten
-          @midrule_action_rules = @rule_builders_for_derived_rules.map do |rule_builder|
-            rule_builder.rules
-          end.flatten
-          @midrule_action_rules.each do |r|
-            r.original_rule = rule
-          end
-        else
-          @inline_rules = @rule_builders_for_inline_rules.map do |rule_builder|
-            rule_builder.rules
-          end.flatten
+        rule = Rule.new(
+          id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
+          position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
+        )
+        @rules = [rule]
+        @parameterizing_rules = @rule_builders_for_parameterizing_rules.map do |rule_builder|
+          rule_builder.rules
+        end.flatten
+        @midrule_action_rules = @rule_builders_for_derived_rules.map do |rule_builder|
+          rule_builder.rules
+        end.flatten
+        @midrule_action_rules.each do |r|
+          r.original_rule = rule
         end
       end
 
