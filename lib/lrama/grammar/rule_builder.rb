@@ -77,13 +77,12 @@ module Lrama
         rhs.each_with_index do |token, i|
           if inline_rule = parameterizing_rule_resolver.find_inline(token)
             inline_rule.rhs_list.each do |inline_rhs|
-              rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: lhs_tag, skip_preprocess_references: true)
+              rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: lhs_tag)
               resolve_inline_rhs(rule_builder, inline_rhs, i)
               rule_builder.lhs = lhs
               rule_builder.line = line
+              rule_builder.precedence_sym = precedence_sym
               rule_builder.user_code = replace_inline_user_code(inline_rhs, i)
-              rule_builder.complete_input
-              rule_builder.setup_rules(parameterizing_rule_resolver)
               resolved_builders << rule_builder
             end
             break
