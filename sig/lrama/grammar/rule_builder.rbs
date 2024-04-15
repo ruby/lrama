@@ -16,11 +16,9 @@ module Lrama
       @user_code: Lexer::Token::UserCode?
       @rule_builders_for_parameterizing_rules: Array[RuleBuilder]
       @rule_builders_for_derived_rules: Array[RuleBuilder]
-      @rule_builders_for_inline_rules: Array[RuleBuilder]
       @rules: Array[Rule]
       @replaced_rhs: Array[Lexer::Token]
       @parameterizing_rules: Array[Rule]
-      @inline_rules: Array[Rule]
       @midrule_action_rules: Array[Rule]
 
       def initialize: (Counter rule_counter, Counter midrule_action_counter, Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
