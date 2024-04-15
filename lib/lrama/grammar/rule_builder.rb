@@ -229,7 +229,8 @@ module Lrama
         return user_code if user_code.nil?
 
         code = user_code.s_value.gsub(/\$#{index + 1}/, inline_rhs.user_code.s_value)
-        user_code.references[(index+1)..-1]&.each do |ref|
+        user_code.references.each do |ref|
+          next if ref.index.nil? || ref.index <= index # nil is a case for `$$`
           code = code.gsub(/\$#{ref.index}/, "$#{ref.index + (inline_rhs.symbols.count-1)}")
         end
         Lrama::Lexer::Token::UserCode.new(s_value: code, location: user_code.location)
