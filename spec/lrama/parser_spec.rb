@@ -2387,7 +2387,7 @@ RSpec.describe Lrama::Parser do
         end
       end
 
-      context 'when inline with resolve index' do
+      context 'when inline with resolve index `@n` style' do
         let(:path) { "inlining/resolve_index.y" }
 
         it "expands inlining rules" do
@@ -2443,6 +2443,70 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("expression"),
               ],
               token_code: T::UserCode.new(s_value: " $$ = $1  +=  $4; "),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'='"),
+              lineno: 25,
+            ),
+          ])
+        end
+      end
+
+      context 'when inline with resolve index' do
+        let(:path) { "inlining/resolve_index_at.y" }
+
+        it "expands inlining rules" do
+          expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "expression"), alias_name: nil, number: 7, tag:  T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: false),
+          ])
+
+          expect(grammar.rules).to eq([
+            Rule.new(
+              id: 2,
+              lhs: grammar.find_symbol_by_s_value!("$accept"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("YYEOF"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+              lineno: 24,
+            ),
+            Rule.new(
+              id: 3,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("NUM"),
+              ],
+              token_code: nil,
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("NUM"),
+              lineno: 24,
+            ),
+            Rule.new(
+              id: 4,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("'+'"),
+                grammar.find_symbol_by_s_value!("expression"),
+              ],
+              token_code: T::UserCode.new(s_value: " $$ = @1  +  @3; "),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
+              lineno: 25,
+            ),
+            Rule.new(
+              id: 5,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("'+'"),
+                grammar.find_symbol_by_s_value!("'='"),
+                grammar.find_symbol_by_s_value!("expression"),
+              ],
+              token_code: T::UserCode.new(s_value: " $$ = @1  +=  @4; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'='"),
               lineno: 25,
