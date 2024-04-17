@@ -32,6 +32,10 @@ module Lrama
         "#{l}: #{r}"
       end
 
+      def with_actions
+        "#{to_s} {#{token_code&.s_value}}"
+      end
+
       # opt_nl: ε     <-- empty_rule
       #       | '\n'  <-- not empty_rule
       def empty_rule?
