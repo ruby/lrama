@@ -50,6 +50,25 @@ RSpec.describe Lrama::Command do
       end
     end
 
+    context "when `--trace=actions` option specified" do
+      it "print grammar rules with actions" do
+        command = Lrama::Command.new
+        expect { command.run(o_option + [fixture_path("command/basic.y"), "--trace=actions"]) }.to output(<<~'OUTPUT').to_stdout
+          Grammar rules with actions:
+          $accept -> list, YYEOF {}
+          list -> ε {}
+          list -> list, LF {}
+          list -> list, expr, LF { printf("=> %d\n", $2); }
+          expr -> NUM {}
+          expr -> expr, '+', expr { $$ = $1 + $3; }
+          expr -> expr, '-', expr { $$ = $1 - $3; }
+          expr -> expr, '*', expr { $$ = $1 * $3; }
+          expr -> expr, '/', expr { $$ = $1 / $3; }
+          expr -> '(', expr, ')' { $$ = $2; }
+        OUTPUT
+      end
+    end
+
     context "when `--report-file` option specified" do
       it "create report file" do
         allow(File).to receive(:open).and_call_original
