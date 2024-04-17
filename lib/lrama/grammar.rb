@@ -294,10 +294,10 @@ module Lrama
     end
 
     def resolve_inline_rules
-      while @rule_builders.any? {|r| r.has_inline_rules?(@parameterizing_rule_resolver) } do
+      while @rule_builders.any? {|r| r.has_inline_rules? } do
         @rule_builders.map! do |builder|
-          if builder.has_inline_rules?(@parameterizing_rule_resolver)
-            builder.resolve_inline_rules(@parameterizing_rule_resolver)
+          if builder.has_inline_rules?
+            builder.resolve_inline_rules
           else
             builder
           end

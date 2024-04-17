@@ -56,11 +56,7 @@ module Lrama
 
       def setup_rules
         preprocess_references unless @skip_preprocess_references
-        if rhs.any? { |token| @parameterizing_rule_resolver.find_inline(token) }
-          resolve_inline
-        else
-          process_rhs
-        end
+        process_rhs
         build_rules
       end
 
@@ -68,16 +64,16 @@ module Lrama
         @parameterizing_rules + @midrule_action_rules + @rules
       end
 
-      def has_inline_rules?(parameterizing_rule_resolver)
-        rhs.any? { |token| parameterizing_rule_resolver.find_inline(token) }
+      def has_inline_rules?
+        rhs.any? { |token| @parameterizing_rule_resolver.find_inline(token) }
       end
 
-      def resolve_inline_rules(parameterizing_rule_resolver)
+      def resolve_inline_rules
         resolved_builders = []
         rhs.each_with_index do |token, i|
-          if inline_rule = parameterizing_rule_resolver.find_inline(token)
+          if inline_rule = @parameterizing_rule_resolver.find_inline(token)
             inline_rule.rhs_list.each do |inline_rhs|
-              rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: lhs_tag)
+              rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: lhs_tag)
               resolve_inline_rhs(rule_builder, inline_rhs, i)
               rule_builder.lhs = lhs
               rule_builder.line = line
