@@ -36,16 +36,16 @@ RSpec.describe Lrama::Command do
         command = Lrama::Command.new
         expect { command.run(o_option + [fixture_path("command/basic.y"), "--trace=rules"]) }.to output(<<~OUTPUT).to_stdout
           Grammar rules:
-          $accept -> list, YYEOF
+          $accept -> list YYEOF
           list -> ε
-          list -> list, LF
-          list -> list, expr, LF
+          list -> list LF
+          list -> list expr LF
           expr -> NUM
-          expr -> expr, '+', expr
-          expr -> expr, '-', expr
-          expr -> expr, '*', expr
-          expr -> expr, '/', expr
-          expr -> '(', expr, ')'
+          expr -> expr '+' expr
+          expr -> expr '-' expr
+          expr -> expr '*' expr
+          expr -> expr '/' expr
+          expr -> '(' expr ')'
         OUTPUT
       end
     end
@@ -55,16 +55,16 @@ RSpec.describe Lrama::Command do
         command = Lrama::Command.new
         expect { command.run(o_option + [fixture_path("command/basic.y"), "--trace=actions"]) }.to output(<<~'OUTPUT').to_stdout
           Grammar rules with actions:
-          $accept -> list, YYEOF {}
+          $accept -> list YYEOF {}
           list -> ε {}
-          list -> list, LF {}
-          list -> list, expr, LF { printf("=> %d\n", $2); }
+          list -> list LF {}
+          list -> list expr LF { printf("=> %d\n", $2); }
           expr -> NUM {}
-          expr -> expr, '+', expr { $$ = $1 + $3; }
-          expr -> expr, '-', expr { $$ = $1 - $3; }
-          expr -> expr, '*', expr { $$ = $1 * $3; }
-          expr -> expr, '/', expr { $$ = $1 / $3; }
-          expr -> '(', expr, ')' { $$ = $2; }
+          expr -> expr '+' expr { $$ = $1 + $3; }
+          expr -> expr '-' expr { $$ = $1 - $3; }
+          expr -> expr '*' expr { $$ = $1 * $3; }
+          expr -> expr '/' expr { $$ = $1 / $3; }
+          expr -> '(' expr ')' { $$ = $2; }
         OUTPUT
       end
     end

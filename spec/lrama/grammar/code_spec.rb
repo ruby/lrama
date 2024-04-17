@@ -297,7 +297,7 @@ RSpec.describe Lrama::Grammar::Code do
           expect { code.translated_code }.to raise_error("Tag is not specified for '$$' in '@2 -> ε'")
 
           code = grammar.rules.find {|r| r.lhs.id.s_value == "rule7" }
-          expect { code.translated_code }.to raise_error("Tag is not specified for '$2' in 'rule7 -> expr, @2, '+', expr'")
+          expect { code.translated_code }.to raise_error("Tag is not specified for '$2' in 'rule7 -> expr @2 '+' expr'")
 
           # midrule action in rule8
           # rule8 has no tag
@@ -305,7 +305,7 @@ RSpec.describe Lrama::Grammar::Code do
           expect { code.translated_code }.to raise_error("Tag is not specified for '$$' in '@3 -> ε'")
 
           code = grammar.rules.find {|r| r.lhs.id.s_value == "rule8" }
-          expect { code.translated_code }.to raise_error("Tag is not specified for '$2' in 'rule8 -> expr, @3, '+', expr'")
+          expect { code.translated_code }.to raise_error("Tag is not specified for '$2' in 'rule8 -> expr @3 '+' expr'")
         end
       end
 
