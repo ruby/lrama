@@ -74,7 +74,11 @@ module Lrama
           if inline_rule = @parameterizing_rule_resolver.find_inline(token)
             inline_rule.rhs_list.each do |inline_rhs|
               rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: lhs_tag)
-              resolve_inline_rhs(rule_builder, inline_rhs, i)
+              if token.is_a?(Lexer::Token::InstantiateRule)
+                resolve_inline_rhs(rule_builder, inline_rhs, i, Binding.new(inline_rule, token.args))
+              else
+                resolve_inline_rhs(rule_builder, inline_rhs, i)
+              end
               rule_builder.lhs = lhs
               rule_builder.line = line
               rule_builder.precedence_sym = precedence_sym
@@ -184,27 +188,10 @@ module Lrama
         "#{token.rule_name}_#{s_values.join('_')}"
       end
 
-      def resolve_inline
-        rhs.each_with_index do |token, i|
-          if (inline_rule = @parameterizing_rule_resolver.find_inline(token))
-            inline_rule.rhs_list.each_with_index do |inline_rhs|
-              rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: lhs_tag, skip_preprocess_references: true)
-              resolve_inline_rhs(rule_builder, inline_rhs, i)
-              rule_builder.lhs = lhs
-              rule_builder.line = line
-              rule_builder.user_code = replace_inline_user_code(inline_rhs, i)
-              rule_builder.complete_input
-              rule_builder.setup_rules
-              @rule_builders_for_inline_rules << rule_builder
-            end
-          end
-        end
-      end
-
-      def resolve_inline_rhs(rule_builder, inline_rhs, index)
+      def resolve_inline_rhs(rule_builder, inline_rhs, index, bindings = nil)
         rhs.each_with_index do |token, i|
           if index == i
-            inline_rhs.symbols.each { |sym| rule_builder.add_rhs(sym) }
+            inline_rhs.symbols.each { |sym| rule_builder.add_rhs(bindings.nil? ? sym : bindings.resolve_symbol(sym)) }
           else
             rule_builder.add_rhs(token)
           end
