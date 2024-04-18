@@ -19,7 +19,7 @@ module Lrama
       # TODO: Change this to display_name
       def to_s
         l = lhs.id.s_value
-        r = empty_rule? ? "ε" : rhs.map {|r| r.id.s_value }.join(", ")
+        r = empty_rule? ? "ε" : rhs.map {|r| r.id.s_value }.join(" ")
 
         "#{l} -> #{r}"
       end

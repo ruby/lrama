@@ -598,8 +598,8 @@ RSpec.describe Lrama::States do
           [Includes Relation]
 
           [Lookback Relation]
-            (Rule: A -> B, C, D, A) -> (State 0, A)
-            (Rule: A -> B, C, D, A) -> (State 7, A)
+            (Rule: A -> B C D A) -> (State 0, A)
+            (Rule: A -> B C D A) -> (State 7, A)
 
           [Follow sets]
 
@@ -790,8 +790,8 @@ RSpec.describe Lrama::States do
           [Includes Relation]
 
           [Lookback Relation]
-            (Rule: A -> b, B) -> (State 0, A)
-            (Rule: A -> b, B) -> (State 8, A)
+            (Rule: A -> b B) -> (State 0, A)
+            (Rule: A -> b B) -> (State 8, A)
 
           [Follow sets]
 
@@ -861,7 +861,7 @@ RSpec.describe Lrama::States do
           [Includes Relation]
 
           [Lookback Relation]
-            (Rule: B -> c, C) -> (State 2, B)
+            (Rule: B -> c C) -> (State 2, B)
 
           [Follow sets]
 
@@ -884,7 +884,7 @@ RSpec.describe Lrama::States do
           [Includes Relation]
 
           [Lookback Relation]
-            (Rule: C -> d, A) -> (State 5, C)
+            (Rule: C -> d A) -> (State 5, C)
 
           [Follow sets]
 
