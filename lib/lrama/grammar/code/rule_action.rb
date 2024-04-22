@@ -41,6 +41,7 @@ module Lrama
           when ref.type == :dollar && ref.name == "$" # $$
             tag = ref.ex_tag || lhs.tag
             raise_tag_not_found_error(ref) unless tag
+            # @type var tag: Lexer::Token::Tag
             "(yyval.#{tag.member})"
           when ref.type == :at && ref.name == "$" # @$
             "(yyloc)"
@@ -50,6 +51,7 @@ module Lrama
             i = -position_in_rhs + ref.index
             tag = ref.ex_tag || rhs[ref.index - 1].tag
             raise_tag_not_found_error(ref) unless tag
+            # @type var tag: Lexer::Token::Tag
             "(yyvsp[#{i}].#{tag.member})"
           when ref.type == :at # @n
             i = -position_in_rhs + ref.index

@@ -5,7 +5,7 @@ module Lrama
 
       def initialize: (
         ?id: untyped, ?_lhs: untyped, ?lhs: untyped, ?lhs_tag: untyped, ?_rhs: untyped, ?rhs: untyped,
-        ?token_code: untyped, ?position_in_original_rule_rhs: untyped, ?nullable: untyped,
+        ?token_code: untyped, ?position_in_original_rule_rhs: Integer?, ?nullable: untyped,
         ?precedence_sym: untyped, ?lineno: untyped
       ) -> void
     end
