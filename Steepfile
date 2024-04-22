@@ -6,7 +6,7 @@ target :lib do
 
   check "lib/lrama/grammar/binding.rb"
   check "lib/lrama/grammar/code/destructor_code.rb"
-  check "lib/lrama/grammar/code/printer_code.rb"
+  check "lib/lrama/grammar/code"
   check "lib/lrama/grammar/code.rb"
   check "lib/lrama/grammar/counter.rb"
   check "lib/lrama/grammar/error_token.rb"
