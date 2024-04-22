@@ -8,7 +8,7 @@ module Lrama
         # * (@$) error
         # * ($1) error
         # * (@1) error
-        def reference_to_c: (Reference ref) -> void
+        def reference_to_c: (Reference ref) -> bot
       end
     end
   end

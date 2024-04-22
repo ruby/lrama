@@ -4,7 +4,7 @@ module Lrama
       class RuleAction < Code
         @rule: untyped
 
-        def initialize: (type: Symbol, token_code: Lexer::Token::UserCode, rule: Rule) -> void
+        def initialize: (type: ::Symbol, token_code: Grammar::Code, rule: Rule) -> void
 
         private
 
@@ -12,7 +12,7 @@ module Lrama
         def position_in_rhs: () -> Integer
         def rhs: () -> Array[Grammar::Symbol]
         def lhs: () -> Grammar::Symbol
-        def raise_tag_not_found_error: (Reference ref) -> void
+        def raise_tag_not_found_error: (Reference ref) -> bot
       end
     end
   end

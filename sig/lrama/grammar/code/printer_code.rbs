@@ -7,8 +7,7 @@ module Lrama
 
         private
 
-        # ref: Lrama::Grammar::Code.token_code.references
-        def reference_to_c: (untyped ref) -> untyped
+        def reference_to_c: (Reference ref) -> (String | bot)
       end
     end
   end
