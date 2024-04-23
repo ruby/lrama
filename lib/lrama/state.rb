@@ -82,6 +82,11 @@ module Lrama
       @transitions ||= shifts.map {|shift| [shift, @items_to_state[shift.next_items]] }
     end
 
+    def update_transition(shift, next_state)
+      set_items_to_state(shift.next_items, next_state)
+      @transitions = shifts.map {|sh| [sh, @items_to_state[sh.next_items]] }
+    end
+
     def selected_term_transitions
       term_transitions.reject do |shift, next_state|
         shift.not_selected
@@ -139,6 +144,46 @@ module Lrama
       @conflicts.select do |conflict|
         conflict.type == :reduce_reduce
       end
+    end
+
+    def always_follows(shift, next_state)
+      internal_dependencies(shift, next_state).union(successor_dependencies(shift, next_state)).reduce([]) {|result, transition| result += transition[1].term_transitions.map {|shift, _| shift.next_sym } }
+    end
+
+    def internal_dependencies(shift, next_state)
+      nterm_transitions.select {|other_shift, _|
+        @items.find {|item| item.next_sym == shift.next_sym && item.lhs == other_shift.next_sym && item.symbols_after_dot.all?(&:nullable) }
+      }.reduce([[shift, next_state]]) {|result, transition|
+        result += internal_follows(*transition)
+      }
+    end
+
+    def successor_dependencies(shift, next_state)
+      next_state.nterm_transitions.select {|other_shift, _|
+        other_shift.next_sym.nullable
+      }.reduce([[shift, next_state]]) {|result, transition|
+        result += successor_dependencies(*transition)
+      }
+    end
+
+    def inadequacy_list
+      return @inadequacy_list if @inadequacy_list
+
+      list = shifts.to_h {|shift| [shift.next_sym, [[shift, nil]]] }
+      reduces.each do |reduce|
+        reduce_list = (reduce.look_ahead || []).to_h {|sym| [sym, [[reduce, reduce.item]]] }
+        list.merge!(reduce_list) {|_, list_value, reduce_value| list_value + reduce_value }
+      end
+
+      @inadequacy_list = {self => list.select {|_, actions| actions.size > 1 }}
+    end
+
+    def follow_kernel?(item)
+      item.symbols_after_dot.all?(&:nullable)
+    end
+
+    def follow_kernel_items(shift, next_state, item)
+      internal_dependencies(shift, next_state).any? {|shift, _| shift.next_sym == item.next_sym } && item.symbols_after_dot.all?(&:nullable)
     end
   end
 end
