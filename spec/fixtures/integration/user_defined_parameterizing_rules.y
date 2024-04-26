@@ -25,6 +25,7 @@ static int yyerror(YYLTYPE *loc, const char *str);
                     {
                         $$ = $1 + $2;
                         printf("(%d, %d)\n", $1, $2);
+                        printf("(%d, %d)\n", $:1, $:2);
                     }
                 ;
 

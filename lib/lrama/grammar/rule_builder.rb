@@ -130,7 +130,7 @@ module Lrama
               @replaced_rhs << lhs_token
               parameterizing_rule_resolver.created_lhs_list << lhs_token
               parameterizing_rule.rhs_list.each do |r|
-                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: token.lhs_tag, skip_preprocess_references: true)
+                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, lhs_tag: token.lhs_tag)
                 rule_builder.lhs = lhs_token
                 r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
