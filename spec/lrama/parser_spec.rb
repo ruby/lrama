@@ -2049,7 +2049,7 @@ RSpec.describe Lrama::Parser do
 
       context 'when error case' do
         context "when invalid argument number" do
-          let(:path) { "parameterizing_rules/invalid_argument_number.y" }
+          let(:path) { "parameterizing_rules/error/invalid_argument_number.y" }
 
           it "raise an error" do
             expect {grammar}.to raise_error(/Invalid number of arguments\. `list`/)
@@ -2057,7 +2057,7 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when invalid rule name" do
-          let(:path) { "parameterizing_rules/invalid_rule_name.y" }
+          let(:path) { "parameterizing_rules/error/invalid_rule_name.y" }
 
           it "raise an error" do
             expect {grammar}.to raise_error(/Parameterizing rule does not exist\. `invalid`/)
