@@ -276,7 +276,7 @@ rule
               builder.symbols << token
               result = builder
             }
-          | rule_rhs IDENTIFIER parameterizing_suffix
+          | rule_rhs symbol parameterizing_suffix
               {
                 builder = val[0]
                 builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
