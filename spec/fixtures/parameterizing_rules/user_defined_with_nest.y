@@ -37,10 +37,15 @@ static int yyerror(YYLTYPE *loc, const char *str);
                         | nested_multi_option(Y) X
                         ;
 
+%rule with_word_seps(X): /* empty */
+                   | X ' '+
+                   ;
+
 %%
 
 program         : option(number)
                 | multi_option(number, string)
+                | with_word_seps(string)
                 ;
 
 %%
