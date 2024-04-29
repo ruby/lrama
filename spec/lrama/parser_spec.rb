@@ -1714,6 +1714,112 @@ RSpec.describe Lrama::Parser do
           end
         end
 
+        context "when nested rules with tag" do
+          let(:path) { "parameterizing_rules/user_defined/nested_rules_with_tag.y" }
+
+          it "expands parameterizing rules" do
+            expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+              Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
+              Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 5, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "nested_option_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 2, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "nested_nested_option_number"), alias_name: nil, number: 7, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 3, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 4, nullable: true),
+            ])
+
+            expect(grammar.rules).to eq([
+              Rule.new(
+                id: 0,
+                lhs: grammar.find_symbol_by_s_value!("$accept"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("program"),
+                  grammar.find_symbol_by_s_value!("YYEOF"),
+                ],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+                lineno: 31,
+              ),
+              Rule.new(
+                id: 1,
+                lhs: grammar.find_symbol_by_s_value!("option_number"),
+                rhs: [],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 31,
+              ),
+              Rule.new(
+                id: 2,
+                lhs: grammar.find_symbol_by_s_value!("nested_option_number"),
+                rhs: [],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 31,
+              ),
+              Rule.new(
+                id: 3,
+                lhs: grammar.find_symbol_by_s_value!("nested_nested_option_number"),
+                rhs: [],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 31,
+              ),
+              Rule.new(
+                id: 4,
+                lhs: grammar.find_symbol_by_s_value!("nested_nested_option_number"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("number")
+                ],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("number"),
+                lineno: 31,
+              ),
+              Rule.new(
+                id: 5,
+                lhs: grammar.find_symbol_by_s_value!("nested_option_number"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("nested_nested_option_number")
+                ],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 31,
+              ),
+              Rule.new(
+                id: 6,
+                lhs: grammar.find_symbol_by_s_value!("option_number"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("nested_option_number")
+                ],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 31,
+              ),
+              Rule.new(
+                id: 7,
+                lhs: grammar.find_symbol_by_s_value!("program"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("option_number")
+                ],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 31,
+              ),
+            ])
+          end
+        end
+
         context "when nested rules with symbols and parameterizing rules suffix" do
           let(:path) { "parameterizing_rules/user_defined/nested_rules_symbols.y" }
 

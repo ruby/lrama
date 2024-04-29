@@ -282,10 +282,10 @@ rule
                 builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
                 result = builder
               }
-          | rule_rhs IDENTIFIER "(" parameterizing_args ")"
+          | rule_rhs IDENTIFIER "(" parameterizing_args ")" tag_opt
               {
                 builder = val[0]
-                builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3])
+                builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
                 result = builder
               }
           | rule_rhs "{"
