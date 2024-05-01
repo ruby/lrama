@@ -6,9 +6,10 @@ module Lrama
         attr_reader parameters: Array[Lexer::Token]
         attr_reader rhs_list: Array[Grammar::ParameterizingRule::Rhs]
         attr_reader required_parameters_count: Integer
+        attr_reader tag: Lexer::Token::Tag?
         attr_reader is_inline: bool
 
-        def initialize: (String name, Array[Lexer::Token] parameters, Array[Grammar::ParameterizingRule::Rhs] rhs_list, ?is_inline: bool) -> void
+        def initialize: (String name, Array[Lexer::Token] parameters, Array[Grammar::ParameterizingRule::Rhs] rhs_list, ?tag: Lexer::Token::Tag, ?is_inline: bool) -> void
       end
     end
   end

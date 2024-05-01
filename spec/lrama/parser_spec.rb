@@ -1461,6 +1461,80 @@ RSpec.describe Lrama::Parser do
           end
         end
 
+        context "with tag" do
+          let(:path) { "parameterizing_rules/user_defined/with_tag.y" }
+
+          it "expands parameterizing rules" do
+            expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+              Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+              Sym.new(id: T::Ident.new(s_value: "with_tag_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: false),
+              Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
+              Sym.new(id: T::Ident.new(s_value: "with_tag_string"), alias_name: nil, number: 8, tag: T::Tag.new(s_value: "<s>"), term: false, token_id: 3, nullable: false),
+            ])
+
+            expect(grammar.rules).to eq([
+              Rule.new(
+                id: 0,
+                lhs: grammar.find_symbol_by_s_value!("$accept"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("program"),
+                  grammar.find_symbol_by_s_value!("YYEOF"),
+                ],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+                lineno: 24,
+              ),
+              Rule.new(
+                id: 1,
+                lhs: grammar.find_symbol_by_s_value!("with_tag_number"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("number"),
+                ],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: T::UserCode.new(s_value: " $$ = $1; "),
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("number"),
+                lineno: 24,
+              ),
+              Rule.new(
+                id: 2,
+                lhs: grammar.find_symbol_by_s_value!("program"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("with_tag_number"),
+                ],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: nil,
+                lineno: 24,
+              ),
+              Rule.new(
+                id: 3,
+                lhs: grammar.find_symbol_by_s_value!("with_tag_string"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("string"),
+                ],
+                lhs_tag: T::Tag.new(s_value: "<s>"),
+                token_code: T::UserCode.new(s_value: " $$ = $1; "),
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("string"),
+                lineno: 25,
+              ),
+              Rule.new(
+                id: 4,
+                lhs: grammar.find_symbol_by_s_value!("program"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("with_tag_string"),
+                ],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: nil,
+                lineno: 25,
+              ),
+            ])
+          end
+        end
+
         context "when multi arguments" do
           let(:path) { "parameterizing_rules/user_defined/multi_arguments.y" }
 
