@@ -135,7 +135,7 @@ module Lrama
                 r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
                 rule_builder.precedence_sym = r.precedence_sym
-                rule_builder.user_code = r.user_code
+                rule_builder.user_code = r.resolve_user_code(bindings)
                 rule_builder.complete_input
                 rule_builder.setup_rules(parameterizing_rule_resolver)
                 @rule_builders_for_parameterizing_rules << rule_builder

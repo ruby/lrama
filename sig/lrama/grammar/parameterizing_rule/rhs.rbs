@@ -7,6 +7,7 @@ module Lrama
         attr_reader precedence_sym: Lexer::Token?
 
         def initialize: () -> void
+        def resolve_user_code: (Grammar::Binding bindings) -> Lexer::Token::UserCode?
       end
     end
   end
