@@ -98,8 +98,10 @@ RSpec.describe "integration" do
     it "prints messages corresponding to rules" do
       expected = <<~STR
         (2, 3)
+        (2, 3)
         (-2, -1)
         pair even odd: 5
+        (1, 0)
         (1, 0)
         (-2, -1)
         pair odd even: 1
