@@ -35,7 +35,7 @@ module Lrama
                                         :find_symbol_by_s_value!, :fill_symbol_number, :fill_nterm_type,
                                         :fill_printer, :fill_destructor, :fill_error_token, :sort_by_number!
 
-    def initialize(rule_counter)
+    def initialize(rule_counter, define = {})
       @rule_counter = rule_counter
 
       # Code defined by "%code"
@@ -57,7 +57,7 @@ module Lrama
       @aux = Auxiliary.new
       @no_stdlib = false
       @locations = false
-      @define = {}
+      @define = define.map {|d| d.split('=') }.to_h
 
       append_special_symbols
     end

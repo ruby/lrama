@@ -428,17 +428,18 @@ end
 
 include Lrama::Report::Duration
 
-def initialize(text, path, debug = false)
+def initialize(text, path, debug = false, define = {})
   @grammar_file = Lrama::Lexer::GrammarFile.new(path, text)
   @yydebug = debug
   @rule_counter = Lrama::Grammar::Counter.new(0)
   @midrule_action_counter = Lrama::Grammar::Counter.new(1)
+  @define = define
 end
 
 def parse
   report_duration(:parse) do
     @lexer = Lrama::Lexer.new(@grammar_file)
-    @grammar = Lrama::Grammar.new(@rule_counter)
+    @grammar = Lrama::Grammar.new(@rule_counter, @define)
     @precedence_number = 0
     reset_precs
     do_parse
