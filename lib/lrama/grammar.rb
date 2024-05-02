@@ -39,7 +39,7 @@ module Lrama
                                         :fill_printer, :fill_destructor, :fill_error_token, :sort_by_number!
 
 
-    def initialize(rule_counter)
+    def initialize(rule_counter, define = {})
       @rule_counter = rule_counter
 
       # Code defined by "%code"
@@ -60,7 +60,7 @@ module Lrama
       @accept_symbol = nil
       @aux = Auxiliary.new
       @no_stdlib = false
-      @define = {}
+      @define = define
 
       append_special_symbols
     end
