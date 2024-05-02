@@ -1686,6 +1686,59 @@ RSpec.describe Lrama::Parser do
               ),
             ])
           end
+
+          context "with named references" do
+            let(:path) { "parameterizing_rules/user_defined/with_action_and_named_references.y" }
+
+            it "expands parameterizing rules" do
+              expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+                Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
+                Sym.new(id: T::Ident.new(s_value: "pair_number_string"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
+                Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: false),
+              ])
+
+              expect(grammar.rules).to eq([
+                Rule.new(
+                  id: 0,
+                  lhs: grammar.find_symbol_by_s_value!("$accept"),
+                  rhs: [
+                    grammar.find_symbol_by_s_value!("program"),
+                    grammar.find_symbol_by_s_value!("YYEOF"),
+                  ],
+                  token_code: nil,
+                  nullable: false,
+                  precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+                  lineno: 24,
+                ),
+                Rule.new(
+                  id: 1,
+                  lhs: grammar.find_symbol_by_s_value!("pair_number_string"),
+                  rhs: [
+                    grammar.find_symbol_by_s_value!("number"),
+                    grammar.find_symbol_by_number!(5),
+                    grammar.find_symbol_by_s_value!("string")
+                  ],
+                  lhs_tag: nil,
+                  token_code: T::UserCode.new(s_value: " printf(\"(%d, %d)\\n\", $X, $3); "),
+                  nullable: false,
+                  precedence_sym: grammar.find_symbol_by_s_value!("string"),
+                  lineno: 24,
+                ),
+                Rule.new(
+                  id: 2,
+                  lhs: grammar.find_symbol_by_s_value!("program"),
+                  rhs: [
+                    grammar.find_symbol_by_s_value!("pair_number_string"),
+                  ],
+                  lhs_tag: nil,
+                  token_code: T::UserCode.new(s_value: " printf(\"pair odd even\\n\"); "),
+                  nullable: false,
+                  precedence_sym: nil,
+                  lineno: 24,
+                ),
+              ])
+            end
+          end
         end
 
         context "when nested rules" do
