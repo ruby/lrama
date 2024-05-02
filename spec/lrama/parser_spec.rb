@@ -1719,7 +1719,7 @@ RSpec.describe Lrama::Parser do
                     grammar.find_symbol_by_s_value!("string")
                   ],
                   lhs_tag: nil,
-                  token_code: T::UserCode.new(s_value: " printf(\"(%d, %d)\\n\", $number, $2); "),
+                  token_code: T::UserCode.new(s_value: " printf(\"(%d, %d)\\n\", $X, $3); "),
                   nullable: false,
                   precedence_sym: grammar.find_symbol_by_s_value!("string"),
                   lineno: 24,

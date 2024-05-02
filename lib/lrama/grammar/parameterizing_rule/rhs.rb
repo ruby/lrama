@@ -13,14 +13,23 @@ module Lrama
         def resolve_user_code(bindings)
           return unless user_code
 
-          code = user_code.s_value
+          var_to_arg = {}
           symbols.each do |sym|
             resolved_sym = bindings.resolve_symbol(sym)
             if resolved_sym != sym
-              code = code.gsub(/\$#{sym.s_value}/, "$#{resolved_sym.s_value}")
+              var_to_arg[sym.s_value] = resolved_sym.s_value
             end
           end
-          Lrama::Lexer::Token::UserCode.new(s_value: code, location: user_code.location)
+
+          var_to_arg.each do |var, arg|
+            user_code.references.each do |ref|
+              if ref.name == var
+                ref.name = arg
+              end
+            end
+          end
+
+          return user_code
         end
       end
     end

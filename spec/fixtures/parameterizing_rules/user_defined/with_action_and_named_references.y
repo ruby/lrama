@@ -16,7 +16,7 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %token <i> number
 %token <s> string
 
-%rule pair(X, Y): X ',' Y { printf("(%d, %d)\n", $X, $2); }
+%rule pair(X, Y): X ',' Y { printf("(%d, %d)\n", $X, $3); }
                 ;
 
 %%
