@@ -1693,7 +1693,7 @@ RSpec.describe Lrama::Parser do
             it "expands parameterizing rules" do
               expect(grammar.nterms.sort_by(&:number)).to match_symbols([
                 Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
-                Sym.new(id: T::Ident.new(s_value: "pair_number_string"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
+                Sym.new(id: T::Ident.new(s_value: "plus_summand"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
                 Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: false),
               ])
 
@@ -1708,33 +1708,33 @@ RSpec.describe Lrama::Parser do
                   token_code: nil,
                   nullable: false,
                   precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-                  lineno: 24,
+                  lineno: 23,
                 ),
                 Rule.new(
                   id: 1,
-                  lhs: grammar.find_symbol_by_s_value!("pair_number_string"),
+                  lhs: grammar.find_symbol_by_s_value!("plus_summand"),
                   rhs: [
-                    grammar.find_symbol_by_s_value!("number"),
-                    grammar.find_symbol_by_number!(5),
-                    grammar.find_symbol_by_s_value!("string")
+                    grammar.find_symbol_by_s_value!("summand"),
+                    grammar.find_symbol_by_s_value!("'+'"),
+                    grammar.find_symbol_by_s_value!("number")
                   ],
                   lhs_tag: nil,
-                  token_code: T::UserCode.new(s_value: " printf(\"(%d, %d)\\n\", $X, $alias); "),
+                  token_code: T::UserCode.new(s_value: " $$ = $X + $addend; "),
                   nullable: false,
-                  precedence_sym: grammar.find_symbol_by_s_value!("string"),
-                  lineno: 24,
+                  precedence_sym: grammar.find_symbol_by_s_value!("number"),
+                  lineno: 23,
                 ),
                 Rule.new(
                   id: 2,
                   lhs: grammar.find_symbol_by_s_value!("program"),
                   rhs: [
-                    grammar.find_symbol_by_s_value!("pair_number_string"),
+                    grammar.find_symbol_by_s_value!("plus_summand"),
                   ],
                   lhs_tag: nil,
-                  token_code: T::UserCode.new(s_value: " printf(\"pair odd even\\n\"); "),
+                  token_code: T::UserCode.new(s_value: " printf(\"plus number\\n\"); "),
                   nullable: false,
                   precedence_sym: nil,
-                  lineno: 24,
+                  lineno: 23,
                 ),
               ])
             end
