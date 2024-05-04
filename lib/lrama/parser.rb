@@ -2011,7 +2011,7 @@ module_eval(<<'.,.,', 'parser.y', 417)
 module_eval(<<'.,.,', 'parser.y', 427)
   def _reduce_104(val, _values, result)
                reset_precs
-           result = Grammar::RuleBuilder.new(@rule_counter, @midrule_action_counter)
+           result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
 
     result
   end
@@ -2020,7 +2020,7 @@ module_eval(<<'.,.,', 'parser.y', 427)
 module_eval(<<'.,.,', 'parser.y', 432)
   def _reduce_105(val, _values, result)
                reset_precs
-           result = Grammar::RuleBuilder.new(@rule_counter, @midrule_action_counter)
+           result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
 
     result
   end

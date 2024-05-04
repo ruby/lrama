@@ -1,7 +1,7 @@
 RSpec.describe Lrama::Grammar::RuleBuilder do
   let(:rule_counter) { Lrama::Grammar::Counter.new(1) }
   let(:midrule_action_counter) { Lrama::Grammar::Counter.new(1) }
-  let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(rule_counter, midrule_action_counter) }
+  let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(rule_counter, midrule_action_counter, Lrama::Grammar::ParameterizingRule::Resolver.new) }
   let(:path) { "parse.y" }
 
   describe "#add_rhs" do
@@ -464,7 +464,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.add_rhs(token_6)
       rule_builder.user_code = token_7
       rule_builder.complete_input
-      rule_builder.setup_rules(Lrama::Grammar::ParameterizingRule::Resolver.new)
+      rule_builder.setup_rules
 
       rules = rule_builder.rules
       midrule_1 = rules.find {|rule| rule._lhs.s_value == "@1"}
@@ -501,7 +501,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.add_rhs(token_6)
       rule_builder.user_code = token_7
       rule_builder.complete_input
-      rule_builder.setup_rules(Lrama::Grammar::ParameterizingRule::Resolver.new)
+      rule_builder.setup_rules
 
       tokens = rule_builder.instance_variable_get(:@replaced_rhs)
 

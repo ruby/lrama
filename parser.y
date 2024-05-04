@@ -426,12 +426,12 @@ rule
   rhs: /* empty */
          {
            reset_precs
-           result = Grammar::RuleBuilder.new(@rule_counter, @midrule_action_counter)
+           result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
          }
      | "%empty"
          {
            reset_precs
-           result = Grammar::RuleBuilder.new(@rule_counter, @midrule_action_counter)
+           result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
          }
      | rhs symbol named_ref_opt
          {
