@@ -39,7 +39,7 @@ stmts: separated_list(';', stmt)
      ;
 
 stmt: pair(ODD, EVEN) <num> { printf("pair odd even: %d\n", $1); }
-    | pair(EVEN, ODD) <num> { printf("pair even odd: %d\n", $1); }
+    | pair(EVEN, ODD)[result] <num> { printf("pair even odd: %d\n", $result); }
     ;
 
 %%

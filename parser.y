@@ -444,17 +444,17 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs symbol parameterizing_suffix TAG?
+     | rhs symbol parameterizing_suffix named_ref_opt TAG?
          {
-           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]], lhs_tag: val[3])
+           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], alias_name: val[3], location: @lexer.location, args: [val[1]], lhs_tag: val[4])
            builder = val[0]
            builder.add_rhs(token)
            builder.line = val[1].first_line
            result = builder
          }
-     | rhs IDENTIFIER "(" parameterizing_args ")" TAG?
+     | rhs IDENTIFIER "(" parameterizing_args ")" named_ref_opt TAG?
          {
-           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
+           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, alias_name: val[5], location: @lexer.location, args: val[3], lhs_tag: val[6])
            builder = val[0]
            builder.add_rhs(token)
            builder.line = val[1].first_line
