@@ -175,7 +175,7 @@ module Lrama
 
       def resolve_inline
         rhs.each_with_index do |token, i|
-          if inline_rule = @parameterizing_rule_resolver.find_inline(token)
+          if (inline_rule = @parameterizing_rule_resolver.find_inline(token))
             inline_rule.rhs_list.each_with_index do |inline_rhs|
               rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: lhs_tag, skip_preprocess_references: true)
               resolve_inline_rhs(rule_builder, inline_rhs, i)

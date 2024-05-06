@@ -37,7 +37,6 @@ module Lrama
                                         :find_symbol_by_s_value!, :fill_symbol_number, :fill_nterm_type,
                                         :fill_printer, :fill_destructor, :fill_error_token, :sort_by_number!
 
-
     def initialize(rule_counter)
       @rule_counter = rule_counter
 
