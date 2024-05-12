@@ -1,13 +1,13 @@
 require "set"
 
-require "lrama/counterexamples/derivation"
-require "lrama/counterexamples/example"
-require "lrama/counterexamples/path"
-require "lrama/counterexamples/production_path"
-require "lrama/counterexamples/start_path"
-require "lrama/counterexamples/state_item"
-require "lrama/counterexamples/transition_path"
-require "lrama/counterexamples/triple"
+require_relative "counterexamples/derivation"
+require_relative "counterexamples/example"
+require_relative "counterexamples/path"
+require_relative "counterexamples/production_path"
+require_relative "counterexamples/start_path"
+require_relative "counterexamples/state_item"
+require_relative "counterexamples/transition_path"
+require_relative "counterexamples/triple"
 
 module Lrama
   # See: https://www.cs.cornell.edu/andru/papers/cupex/cupex.pdf
