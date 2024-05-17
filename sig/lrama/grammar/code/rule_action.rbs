@@ -11,7 +11,7 @@ module Lrama
         def reference_to_c: (Reference ref) -> String
         def position_in_rhs: () -> Integer
         def rhs: () -> Array[Grammar::Symbol]
-        def lhs: () -> Symbol
+        def lhs: () -> Grammar::Symbol
         def raise_tag_not_found_error: (Reference ref) -> bot
       end
     end
