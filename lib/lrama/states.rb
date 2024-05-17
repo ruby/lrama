@@ -1,6 +1,6 @@
 require "forwardable"
-require "lrama/report/duration"
-require "lrama/states/item"
+require_relative "report/duration"
+require_relative "states/item"
 
 module Lrama
   # States is passed to a template file

@@ -1,8 +1,8 @@
 require "strscan"
 
-require "lrama/lexer/grammar_file"
-require "lrama/lexer/location"
-require "lrama/lexer/token"
+require_relative "lexer/grammar_file"
+require_relative "lexer/location"
+require_relative "lexer/token"
 
 module Lrama
   class Lexer

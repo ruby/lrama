@@ -1,2 +1,2 @@
-require 'lrama/report/duration'
-require 'lrama/report/profile'
+require_relative 'report/duration'
+require_relative 'report/profile'

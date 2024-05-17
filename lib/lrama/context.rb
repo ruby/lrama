@@ -1,4 +1,4 @@
-require "lrama/report/duration"
+require_relative "report/duration"
 
 module Lrama
   # This is passed to a template
