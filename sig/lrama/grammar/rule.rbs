@@ -1,13 +1,32 @@
 module Lrama
   class Grammar
     class Rule
+      attr_accessor id: Integer
+      attr_accessor _lhs: Lexer::Token
+      attr_accessor lhs: Symbol
+      attr_accessor lhs_tag: untyped
+      attr_accessor _rhs: untyped
+      attr_accessor rhs: untyped
+      attr_accessor token_code: Lexer::Token::UserCode?
+      attr_accessor position_in_original_rule_rhs: untyped
+      attr_accessor nullable: bool
+      attr_accessor precedence_sym: Lexer::Token?
+      attr_accessor lineno: Integer?
       attr_accessor original_rule: Rule
 
       def initialize: (
-        ?id: untyped, ?_lhs: untyped, ?lhs: untyped, ?lhs_tag: untyped, ?_rhs: untyped, ?rhs: untyped,
-        ?token_code: untyped, ?position_in_original_rule_rhs: untyped, ?nullable: untyped,
-        ?precedence_sym: untyped, ?lineno: untyped
+        ?id: Integer, ?_lhs: Lexer::Token, ?lhs: Lexer::Token, ?lhs_tag: untyped, ?_rhs: untyped, ?rhs: untyped,
+        ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool,
+        ?precedence_sym: Lexer::Token?, ?lineno: Integer?
       ) -> void
+
+      def as_comment: -> String
+
+      def empty_rule?: -> bool
+
+      def initial_rule?: -> bool
+
+      def with_actions: -> String
     end
   end
 end

@@ -4,7 +4,7 @@ module Lrama
       attr_accessor id: Lexer::Token
       attr_accessor alias_name: String?
       attr_accessor number: Integer
-      attr_accessor tag: Lexer::Token?
+      attr_accessor tag: Lexer::Token::Tag?
       attr_accessor term: bool
       attr_accessor token_id: Integer
       attr_accessor nullable: bool

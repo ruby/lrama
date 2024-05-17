@@ -5,7 +5,7 @@ module Lrama
       attr_accessor token_code: Grammar::Code
       attr_accessor lineno: Integer
 
-      def translated_code: (Lexer::Token member) -> String
+      def translated_code: (Lexer::Token::Tag tag) -> String
     end
   end
 end

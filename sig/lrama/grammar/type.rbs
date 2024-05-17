@@ -2,9 +2,9 @@ module Lrama
   class Grammar
     class Type
       attr_reader id: Lexer::Token
-      attr_reader tag: Lexer::Token
+      attr_reader tag: Lexer::Token::Tag
 
-      def initialize: (id: Lexer::Token, tag: Lexer::Token) -> void
+      def initialize: (id: Lexer::Token, tag: Lexer::Token::Tag) -> void
       def ==: (Grammar::Type other) -> bool
     end
   end

@@ -2,13 +2,12 @@ module Lrama
   class Grammar
     class Code
       class PrinterCode < Code
-        @tag: untyped
-        def initialize: (type: untyped, token_code: untyped, tag: untyped) -> void
+        @tag: Lexer::Token::Tag
+        def initialize: (type: ::Symbol, token_code: Grammar::Code, tag: Lexer::Token::Tag) -> void
 
         private
 
-        # ref: Lrama::Grammar::Code.token_code.references
-        def reference_to_c: (untyped ref) -> untyped
+        def reference_to_c: (Reference ref) -> (String | bot)
       end
     end
   end

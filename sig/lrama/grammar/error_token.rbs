@@ -2,10 +2,10 @@ module Lrama
   class Grammar
     class ErrorToken
       attr_accessor ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag]
-      attr_accessor token_code: Symbol
+      attr_accessor token_code: Code
       attr_accessor lineno: Integer
 
-      def translated_code: (Lexer::Token? tag) -> String
+      def translated_code: (Lexer::Token::Tag tag) -> String
     end
   end
 end
