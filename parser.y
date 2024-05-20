@@ -231,7 +231,7 @@ rule
   token_declaration_list: token_declaration { result = [val[0]] }
                         | token_declaration_list token_declaration { result = val[0].append(val[1]) }
 
-  token_declaration: id int_opt alias { result = val }
+  token_declaration: id INTEGER? alias { result = val }
 
   rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" TAG? ":" rule_rhs_list
                       {
@@ -322,9 +322,6 @@ rule
               builder.precedence_sym = sym
               result = builder
             }
-
-  int_opt: # empty
-         | INTEGER
 
   alias: # empty
        | STRING # TODO: change this to string_as_id
