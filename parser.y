@@ -1,5 +1,6 @@
 class Lrama::Parser
   expect 0
+  error_on_expect_mismatch
 
   token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
 
