@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gemspec
 
 gem "pry"
-gem "racc", "1.7.3"
+gem "racc", "1.8.0"
 gem "rake"
 gem "rspec"
 gem "simplecov", require: false
