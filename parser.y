@@ -231,9 +231,9 @@ rule
   token_declaration_list: token_declaration { result = [val[0]] }
                         | token_declaration_list token_declaration { result = val[0].append(val[1]) }
 
-  token_declaration: id int_opt alias { result = val }
+  token_declaration: id INTEGER? alias { result = val }
 
-  rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" tag_opt ":" rule_rhs_list
+  rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" TAG? ":" rule_rhs_list
                       {
                         rule = Grammar::ParameterizingRule::Rule.new(val[1].s_value, val[3], val[7], tag: val[5])
                         @grammar.add_parameterizing_rule(rule)
@@ -288,7 +288,7 @@ rule
                 builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
                 result = builder
               }
-          | rule_rhs IDENTIFIER "(" parameterizing_args ")" tag_opt
+          | rule_rhs IDENTIFIER "(" parameterizing_args ")" TAG?
               {
                 builder = val[0]
                 builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
@@ -322,9 +322,6 @@ rule
               builder.precedence_sym = sym
               result = builder
             }
-
-  int_opt: # empty
-         | INTEGER
 
   alias: # empty
        | STRING # TODO: change this to string_as_id
@@ -447,7 +444,7 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs symbol parameterizing_suffix tag_opt
+     | rhs symbol parameterizing_suffix TAG?
          {
            token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]], lhs_tag: val[3])
            builder = val[0]
@@ -455,7 +452,7 @@ rule
            builder.line = val[1].first_line
            result = builder
          }
-     | rhs IDENTIFIER "(" parameterizing_args ")" tag_opt
+     | rhs IDENTIFIER "(" parameterizing_args ")" TAG?
          {
            token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
            builder = val[0]
@@ -475,7 +472,7 @@ rule
          {
            end_c_declaration
          }
-       "}" named_ref_opt tag_opt
+       "}" named_ref_opt TAG?
          {
            user_code = val[3]
            user_code.alias_name = val[6]
@@ -533,9 +530,6 @@ rule
                       | TAG
 
   string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
-
-  tag_opt: # empty
-         | TAG
 end
 
 ---- inner
