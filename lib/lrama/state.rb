@@ -7,7 +7,7 @@ require "lrama/state/shift_reduce_conflict"
 module Lrama
   class State
     attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
-                :default_reduction_rule, :closure, :items
+                :default_reduction_rule, :closure, :items, :predecessors
     attr_accessor :shifts, :reduces
 
     def initialize(id, accessing_symbol, kernels)
@@ -21,6 +21,7 @@ module Lrama
       @conflicts = []
       @resolved_conflicts = []
       @default_reduction_rule = nil
+      @predecessors = []
     end
 
     def closure=(closure)
@@ -184,6 +185,10 @@ module Lrama
 
     def follow_kernel_items(shift, next_state, item)
       internal_dependencies(shift, next_state).any? {|shift, _| shift.next_sym == item.next_sym } && item.symbols_after_dot.all?(&:nullable)
+    end
+
+    def append_predecessor(prev_state)
+      @predecessors << prev_state
     end
   end
 end

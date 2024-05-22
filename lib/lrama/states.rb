@@ -94,6 +94,7 @@ module Lrama
     end
 
     def compute_ielr
+      report_duration(:compute_predecessors) { compute_predecessors }
       report_duration(:split_states) { split_states }
     end
 
@@ -557,12 +558,22 @@ module Lrama
       end
     end
 
+    def compute_predecessors
+      queue = [@states.first]
+      until queue.empty?
+        state = queue.shift
+        state.transitions.each do |_, next_state|
+          next_state.append_predecessor(state)
+          queue << next_state
+        end
+      end
+    end
+
     def split_states
       @item_lookahead_set = {}
       @lalr_isocores = Hash.new {|hash, key| hash[key] = key }
       @ielr_isocores = Hash.new {|hash, key| hash[key] = [key] }
       @lookaheads_recomputed = Hash.new {|hash, key| hash[key] = false }
-      @predecessors = {}
       @states.each do |state|
         state.transitions.each do |shift, next_state|
           compute_state(state, shift, next_state)
@@ -670,7 +681,7 @@ module Lrama
               prev_state, prev_item = predecessor_with_item(state, item)
               item_lookahead_set(prev_state)[prev_item]
             elsif item.position == 1
-              prev_state = predecessors(state).find {|p| p.shifts.any? {|shift| shift.next_sym == item.lhs } }
+              prev_state = state.predecessors.find {|p| p.shifts.any? {|shift| shift.next_sym == item.lhs } }
               shift, next_state = prev_state.nterm_transitions.find {|shift, _| shift.next_sym == item.lhs }
               goto_follows(prev_state, shift, next_state)
             else
@@ -680,12 +691,8 @@ module Lrama
         }
     end
 
-    def predecessors(state)
-      @predecessors[state] ||= @states.select {|prev| prev.transitions.any? {|_, to_state| to_state == state } }
-    end
-
     def predecessor_with_item(state, item)
-      predecessors(state).each do |state|
+      state.predecessors.each do |state|
         state.kernels.each do |kernel|
           return [state, kernel] if kernel.rule == item.rule && kernel.position == item.position - 1
         end
