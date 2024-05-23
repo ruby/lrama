@@ -324,7 +324,7 @@ rule
             }
 
   alias: # empty
-       | STRING # TODO: change this to string_as_id
+       | string_as_id { result = val[0].s_value }
 
   symbol_declarations: symbol_declaration_list
                          {
