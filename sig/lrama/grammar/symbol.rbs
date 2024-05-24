@@ -13,12 +13,12 @@ module Lrama
       attr_accessor destructor: Destructor?
       attr_accessor error_token: ErrorToken
 
-      attr_accessor first_set: Set[Array[Symbol]]
+      attr_accessor first_set: Set[Array[Symbol]] | Set[Symbol]
       attr_accessor first_set_bitmap: Integer
-      attr_writer eof_symbol: Symbol
-      attr_writer error_symbol: Symbol
-      attr_writer undef_symbol: Symbol
-      attr_writer accept_symbol: Symbol
+      attr_writer eof_symbol: bool
+      attr_writer error_symbol: bool
+      attr_writer undef_symbol: bool
+      attr_writer accept_symbol: bool
 
       def initialize: (
           id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?,

@@ -23,6 +23,8 @@ module Lrama
 
       def initialize: (Counter rule_counter, Counter midrule_action_counter, Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
       def add_rhs: (Lexer::Token rhs) -> void
+      def has_inline_rules?: -> bool
+      def resolve_inline_rules: -> Array[RuleBuilder]
       def user_code=: (Lexer::Token::UserCode? user_code) -> void
       def precedence_sym=: (Lexer::Token? precedence_sym) -> void
       def complete_input: () -> void
