@@ -13,7 +13,7 @@ module Lrama
         def symbols: () -> Array[Grammar::Symbol]
         def sort_by_number!: () -> void
         def add_term: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
-        def add_nterm: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol?
+        def add_nterm: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
         def find_symbol_by_s_value: (Grammar::Symbol s_value) -> Grammar::Symbol?
         def find_symbol_by_s_value!: (Grammar::Symbol s_value) -> Grammar::Symbol
         def find_symbol_by_id: (Lexer::Token id) -> Grammar::Symbol?
