@@ -13,14 +13,13 @@ static int yyerror(YYLTYPE *loc, const char *str);
 }
 
 %token <i> number
-%token <i> summand
 
-%rule plus(X): X '+' number[addend] { $$ = $X + $addend; }
+%rule sum(X, Y) <i>: X[summand] '+' Y[addend] { $$ = $summand + $addend; }
              ;
 
 %%
 
-program         : plus(summand) { printf("plus number\n"); }
+program         : sum(number, number) { printf("sum number\n"); }
                 ;
 
 %%

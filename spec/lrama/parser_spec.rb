@@ -1692,9 +1692,9 @@ RSpec.describe Lrama::Parser do
 
             it "expands parameterizing rules" do
               expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-                Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
-                Sym.new(id: T::Ident.new(s_value: "plus_summand"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
-                Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: false),
+                Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+                Sym.new(id: T::Ident.new(s_value: "sum_number_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: false),
+                Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: false),
               ])
 
               expect(grammar.rules).to eq([
@@ -1708,33 +1708,33 @@ RSpec.describe Lrama::Parser do
                   token_code: nil,
                   nullable: false,
                   precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-                  lineno: 23,
+                  lineno: 22,
                 ),
                 Rule.new(
                   id: 1,
-                  lhs: grammar.find_symbol_by_s_value!("plus_summand"),
+                  lhs: grammar.find_symbol_by_s_value!("sum_number_number"),
                   rhs: [
-                    grammar.find_symbol_by_s_value!("summand"),
+                    grammar.find_symbol_by_s_value!("number"),
                     grammar.find_symbol_by_s_value!("'+'"),
                     grammar.find_symbol_by_s_value!("number")
                   ],
-                  lhs_tag: nil,
-                  token_code: T::UserCode.new(s_value: " $$ = $X + $addend; "),
+                  lhs_tag: T::Tag.new(s_value: "<i>"),
+                  token_code: T::UserCode.new(s_value: " $$ = $summand + $addend; "),
                   nullable: false,
                   precedence_sym: grammar.find_symbol_by_s_value!("number"),
-                  lineno: 23,
+                  lineno: 22,
                 ),
                 Rule.new(
                   id: 2,
                   lhs: grammar.find_symbol_by_s_value!("program"),
                   rhs: [
-                    grammar.find_symbol_by_s_value!("plus_summand"),
+                    grammar.find_symbol_by_s_value!("sum_number_number"),
                   ],
                   lhs_tag: nil,
-                  token_code: T::UserCode.new(s_value: " printf(\"plus number\\n\"); "),
+                  token_code: T::UserCode.new(s_value: " printf(\"sum number\\n\"); "),
                   nullable: false,
                   precedence_sym: nil,
-                  lineno: 23,
+                  lineno: 22,
                 ),
               ])
             end
