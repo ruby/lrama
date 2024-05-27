@@ -15,11 +15,13 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %union {
     int num;
+    char* str;
 }
 
 %token <num> ODD EVEN
 
 %type <num> stmt
+%type <str> opt_nl
 
 %%
 
@@ -33,7 +35,7 @@ stmt: ODD opt_nl { printf("odd: %d\n", $1); }
     | EVEN opt_semicolon { printf("even: %d\n", $1); }
     ;
 
-opt_nl: '\n'?
+opt_nl: '\n'?[nl] <str> { $$ = $nl; }
       ;
 
 opt_semicolon: semicolon?
