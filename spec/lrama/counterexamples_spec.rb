@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::Counterexamples do
-  let(:out) { "" }
+  let(:out) { "".dup }
   let(:warning) { Lrama::Warning.new(out) }
 
   describe "#compute" do

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'token/char'
 require_relative 'token/ident'
 require_relative 'token/instantiate_rule'

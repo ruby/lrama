@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "erb"
 require "forwardable"
 require_relative "report/duration"
@@ -63,7 +65,7 @@ module Lrama
 
     # A part of b4_token_enums
     def token_enums
-      str = ""
+      str = "".dup
 
       @context.yytokentype.each do |s_value, token_id, display_name|
         s = sprintf("%s = %d%s", s_value, token_id, token_id == yymaxutok ? "" : ",")
@@ -80,7 +82,7 @@ module Lrama
 
     # b4_symbol_enum
     def symbol_enum
-      str = ""
+      str = "".dup
 
       last_sym_number = @context.yysymbol_kind_t.last[1]
       @context.yysymbol_kind_t.each do |s_value, sym_number, display_name|
@@ -132,7 +134,7 @@ module Lrama
     end
 
     def symbol_actions_for_printer
-      str = ""
+      str = "".dup
 
       @grammar.symbols.each do |sym|
         next unless sym.printer
@@ -151,7 +153,7 @@ module Lrama
     end
 
     def symbol_actions_for_destructor
-      str = ""
+      str = "".dup
 
       @grammar.symbols.each do |sym|
         next unless sym.destructor
@@ -236,7 +238,7 @@ module Lrama
     end
 
     def symbol_actions_for_error_token
-      str = ""
+      str = "".dup
 
       @grammar.symbols.each do |sym|
         next unless sym.error_token
@@ -256,7 +258,7 @@ module Lrama
 
     # b4_user_actions
     def user_actions
-      str = ""
+      str = "".dup
 
       @context.states.rules.each do |rule|
         next unless rule.token_code
@@ -343,7 +345,7 @@ module Lrama
 
     # b4_parse_param_use
     def parse_param_use(val, loc)
-      str = <<-STR
+      str = <<-STR.dup
   YY_USE (#{val});
   YY_USE (#{loc});
       STR
@@ -398,7 +400,7 @@ module Lrama
       last = ary.count - 1
 
       s = ary.each_with_index.each_slice(10).map do |slice|
-        str = "  "
+        str = "  ".dup
 
         slice.each do |e, i|
           str << sprintf("%6d%s", e, (i == last) ? "" : ",")
@@ -461,8 +463,8 @@ module Lrama
     end
 
     def string_array_to_string(ary)
-      str = ""
-      tmp = " "
+      str = "".dup
+      tmp = " ".dup
 
       ary.each do |s|
         s = s.gsub('\\', '\\\\\\\\')
@@ -470,7 +472,7 @@ module Lrama
 
         if (tmp + s + " \"\",").length > 75
           str << tmp << "\n"
-          tmp = "  \"#{s}\","
+          tmp = "  \"#{s}\",".dup
         else
           tmp << " \"#{s}\","
         end

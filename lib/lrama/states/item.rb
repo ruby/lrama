@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # TODO: Validate position is not over rule rhs
 
 require "forwardable"

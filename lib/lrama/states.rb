@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "forwardable"
 require_relative "report/duration"
 require_relative "states/item"

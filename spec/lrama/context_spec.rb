@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::Context do
   let(:out) { "" }
   let(:warning) { Lrama::Warning.new(out) }

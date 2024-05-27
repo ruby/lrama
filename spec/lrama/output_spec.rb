@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "stringio"
 
 RSpec.describe Lrama::Output do

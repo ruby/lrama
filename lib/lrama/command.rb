@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Lrama
   class Command
     LRAMA_LIB = File.realpath(File.join(File.dirname(__FILE__)))

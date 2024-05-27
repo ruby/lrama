@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::Lexer::Location do
   describe "#to_s" do
     it "returns location information" do

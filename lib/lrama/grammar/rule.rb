@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Lrama
   class Grammar
     # _rhs holds original RHS element. Use rhs to refer to Symbol.

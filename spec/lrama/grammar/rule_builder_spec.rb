@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::Grammar::RuleBuilder do
   let(:rule_counter) { Lrama::Grammar::Counter.new(1) }
   let(:midrule_action_counter) { Lrama::Grammar::Counter.new(1) }
