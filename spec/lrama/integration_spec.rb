@@ -246,12 +246,17 @@ RSpec.describe "integration" do
     end
   end
 
-  # TODO: Add test case for "(1+2"
   describe "error_recovery" do
     it "returns 101 for '(1+)'" do
       # (1+) #=> 101
       # '100' is complemented
       test_parser("error_recovery", "(1+)", "=> 101", lrama_command_args: %W[-e])
+    end
+
+    it "returns 103 for '(1+2'" do
+      # (1+2 #=> 103
+      # '100' is complemented
+      test_parser("error_recovery", "(1+2", "=> 103", lrama_command_args: %W[-e])
     end
   end
 
