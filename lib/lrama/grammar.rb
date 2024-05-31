@@ -297,13 +297,13 @@ module Lrama
 
     def resolve_inline_rules
       while @rule_builders.any? {|r| r.has_inline_rules? } do
-        @rule_builders.map! do |builder|
+        @rule_builders = @rule_builders.flat_map do |builder|
           if builder.has_inline_rules?
             builder.resolve_inline_rules
           else
             builder
           end
-        end.flatten!
+        end
       end
     end
 
