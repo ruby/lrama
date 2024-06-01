@@ -10,18 +10,16 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %union {
     int i;
-    char *s;
 }
 
 %token <i> number
-%token <s> string
 
-%rule pair(X, Y): X ',' Y { printf("(%d, %d)\n", $X, $3); }
-                ;
+%rule sum(X, Y) <i>: X[summand] '+' Y[addend] { $$ = $summand + $addend; }
+             ;
 
 %%
 
-program         : pair(number, string) { printf("pair odd even\n"); }
+program         : sum(number, number) { printf("sum number\n"); }
                 ;
 
 %%
