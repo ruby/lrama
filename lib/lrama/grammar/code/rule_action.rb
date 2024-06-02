@@ -82,7 +82,7 @@ module Lrama
         end
 
         def raise_tag_not_found_error(ref)
-          raise "Tag is not specified for '$#{ref.value}' in '#{@rule}'"
+          raise "Tag is not specified for '$#{ref.value}' in '#{@rule.display_name}'"
         end
       end
     end

@@ -44,7 +44,7 @@ module Lrama
 
       if options.trace_opts && options.trace_opts[:rules]
         puts "Grammar rules:"
-        puts grammar.rules
+        grammar.rules.each { |rule| puts rule.display_name }
       end
 
       if options.trace_opts && options.trace_opts[:actions]
