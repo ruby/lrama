@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Context do
-  let(:out) { "" }
+  let(:out) { StringIO.new }
   let(:warning) { Lrama::Warning.new(out) }
 
   describe "basic" do
