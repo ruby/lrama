@@ -275,7 +275,7 @@ module Lrama
 
             a.each do |state_id2, nterm_id2|
               n = @states.nterms.find {|n| n.token_id == nterm_id2 }
-              io << "    (Rule: #{rule}) -> (State #{state_id2}, #{n.id.s_value})\n"
+              io << "    (Rule: #{rule.display_name}) -> (State #{state_id2}, #{n.id.s_value})\n"
             end
           end
           io << "\n"

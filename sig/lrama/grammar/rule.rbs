@@ -20,6 +20,8 @@ module Lrama
         ?precedence_sym: Lexer::Token?, ?lineno: Integer?
       ) -> void
 
+      def display_name: () -> String
+
       def as_comment: -> String
 
       def empty_rule?: -> bool
