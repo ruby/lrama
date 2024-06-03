@@ -15,9 +15,24 @@ RSpec.describe Lrama::States do
       states.compute
 
       io = StringIO.new
-      states.reporter.report(io, grammar: true, states: true, itemsets: true, lookaheads: true)
+      states.reporter.report(io, grammar: true, terms: true, states: true, itemsets: true, lookaheads: true)
 
       expect(io.string).to eq(<<~STR)
+        Unused Terms
+
+            0 YYerror
+            1 YYUNDEF
+            2 '\\\\'
+            3 '\\13'
+            4 keyword_class2
+            5 tNUMBER
+            6 tPLUS
+            7 tMINUS
+            8 tEQ
+            9 tEQEQ
+           10 '>'
+
+
         State 1 conflicts: 2 shift/reduce, 1 reduce/reduce
 
 
