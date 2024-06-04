@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::Grammar::Symbols::Resolver do
   let(:resolver) { Lrama::Grammar::Symbols::Resolver.new }
 

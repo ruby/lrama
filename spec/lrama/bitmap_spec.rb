@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::Bitmap do
   describe ".from_array" do
     it "converts array of integer into bitmap integer" do

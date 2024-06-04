@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::Lexer::Token::UserCode do
   describe "#references" do
     let(:grammar_file) { Lrama::Lexer::GrammarFile.new("test.y", "") }

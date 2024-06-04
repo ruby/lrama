@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "state/reduce"
 require_relative "state/reduce_reduce_conflict"
 require_relative "state/resolved_conflict"

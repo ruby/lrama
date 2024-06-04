@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::Grammar::Symbol do
   let(:token_class) { Lrama::Lexer::Token }
 

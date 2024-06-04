@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 RSpec.describe Lrama::States do
-  let(:out) { "" }
+  let(:out) { "".dup }
   let(:warning) { Lrama::Warning.new(out) }
 
   describe '#compute' do
@@ -12,7 +14,7 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = ""
+      str = "".dup
       states.reporter.report(str, grammar: true, states: true, itemsets: true, lookaheads: true)
 
       expect(str).to eq(<<~STR)
@@ -351,7 +353,7 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = ""
+      str = "".dup
       states.reporter.report(str, states: true, itemsets: true, verbose: true)
 
       expect(str).to eq(<<~STR)
@@ -621,7 +623,7 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = ""
+      str = "".dup
       states.reporter.report(str, states: true, itemsets: true, verbose: true)
 
       expect(str).to eq(<<~STR)
@@ -922,7 +924,7 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = ""
+        str = "".dup
         states.reporter.report(str, states: true, lookaheads: true)
 
         expect(str).to eq(<<~STR)
@@ -993,7 +995,7 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = ""
+        str = "".dup
         states.reporter.report(str, states: true, lookaheads: true, itemsets: true)
 
         expect(str).to eq(<<~STR)
@@ -1085,7 +1087,7 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = ""
+        str = "".dup
         states.reporter.report(str, states: true, solved: true)
 
         expect(str).to eq(<<~STR)
@@ -1204,7 +1206,7 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = ""
+        str = "".dup
         states.reporter.report(str, states: true, solved: true)
 
         expect(str).to eq(<<~STR)
@@ -1303,7 +1305,7 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = ""
+        str = "".dup
         states.reporter.report(str, states: true, solved: true)
 
         expect(str).to eq(<<~STR)
@@ -1454,7 +1456,7 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = ""
+      str = "".dup
       states.reporter.report(str, states: true)
 
       expect(str).to eq(<<~STR)
@@ -1628,7 +1630,7 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = ""
+      str = "".dup
       states.reporter.report(str, states: true)
 
       expect(str).to eq(<<~STR)
