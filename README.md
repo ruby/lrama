@@ -128,7 +128,7 @@ $ bundle install
 $ bundle exec rake
 ```
 
-### Profiling Lrama
+### Call-stack Profiling Lrama
 
 #### 1. Create parse.tmp.y in ruby/ruby
 
@@ -164,6 +164,41 @@ $ exe/lrama -o parse.tmp.c --header=parse.tmp.h tmp/parse.tmp.y
 
 ```shell
 $ stackprof --d3-flamegraph tmp/stackprof-cpu-myapp.dump > tmp/flamegraph.html
+```
+
+### Memory Profiling Lrama
+
+#### 1. Create parse.tmp.y in ruby/ruby
+
+```shell
+$ ruby tool/id2token.rb parse.y > parse.tmp.y
+$ cp parse.tmp.y dir/lrama/tmp
+```
+
+#### 2. Enable Profiler
+
+```diff
+diff --git a/exe/lrama b/exe/lrama
+index 1aece5d141..f5f94cf7fa 100755
+--- a/exe/lrama
++++ b/exe/lrama
+@@ -3,5 +3,9 @@
+
+ $LOAD_PATH << File.join(__dir__, "../lib")
+ require "lrama"
++require 'memory_profiler'
+
+-Lrama::Command.new.run(ARGV.dup)
++report = MemoryProfiler.report do
++  Lrama::Command.new.run(ARGV.dup)
++end
++report.pretty_print
+```
+
+#### 3. Run Lrama
+
+```shell
+$ exe/lrama -o parse.tmp.c --header=parse.tmp.h tmp/parse.tmp.y > report.txt
 ```
 
 ### Build Ruby
