@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::States do
-  let(:out) { "".dup }
+  let(:out) { StringIO.new }
   let(:warning) { Lrama::Warning.new(out) }
 
   describe '#compute' do
@@ -14,10 +14,10 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = "".dup
-      states.reporter.report(str, grammar: true, states: true, itemsets: true, lookaheads: true)
+      io = StringIO.new
+      states.reporter.report(io, grammar: true, states: true, itemsets: true, lookaheads: true)
 
-      expect(str).to eq(<<~STR)
+      expect(io.string).to eq(<<~STR)
         State 1 conflicts: 2 shift/reduce, 1 reduce/reduce
 
 
@@ -353,10 +353,10 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = "".dup
-      states.reporter.report(str, states: true, itemsets: true, verbose: true)
+      io = StringIO.new
+      states.reporter.report(io, states: true, itemsets: true, verbose: true)
 
-      expect(str).to eq(<<~STR)
+      expect(io.string).to eq(<<~STR)
         State 0 conflicts: 1 shift/reduce
         State 7 conflicts: 1 shift/reduce
 
@@ -623,10 +623,10 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = "".dup
-      states.reporter.report(str, states: true, itemsets: true, verbose: true)
+      io = StringIO.new
+      states.reporter.report(io, states: true, itemsets: true, verbose: true)
 
-      expect(str).to eq(<<~STR)
+      expect(io.string).to eq(<<~STR)
         State 0
 
             0 $accept: • program "end of file"
@@ -924,10 +924,10 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = "".dup
-        states.reporter.report(str, states: true, lookaheads: true)
+        io = StringIO.new
+        states.reporter.report(io, states: true, lookaheads: true)
 
-        expect(str).to eq(<<~STR)
+        expect(io.string).to eq(<<~STR)
           State 0
 
               0 $accept: • program "EOI"
@@ -995,10 +995,10 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = "".dup
-        states.reporter.report(str, states: true, lookaheads: true, itemsets: true)
+        io = StringIO.new
+        states.reporter.report(io, states: true, lookaheads: true, itemsets: true)
 
-        expect(str).to eq(<<~STR)
+        expect(io.string).to eq(<<~STR)
           State 0
 
               0 $accept: • program "EOI"
@@ -1087,10 +1087,10 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = "".dup
-        states.reporter.report(str, states: true, solved: true)
+        io = StringIO.new
+        states.reporter.report(io, states: true, solved: true)
 
-        expect(str).to eq(<<~STR)
+        expect(io.string).to eq(<<~STR)
           State 0
 
               0 $accept: • program "EOI"
@@ -1206,10 +1206,10 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = "".dup
-        states.reporter.report(str, states: true, solved: true)
+        io = StringIO.new
+        states.reporter.report(io, states: true, solved: true)
 
-        expect(str).to eq(<<~STR)
+        expect(io.string).to eq(<<~STR)
           State 0
 
               0 $accept: • program "EOI"
@@ -1305,10 +1305,10 @@ RSpec.describe Lrama::States do
         states = Lrama::States.new(grammar, warning)
         states.compute
 
-        str = "".dup
-        states.reporter.report(str, states: true, solved: true)
+        io = StringIO.new
+        states.reporter.report(io, states: true, solved: true)
 
-        expect(str).to eq(<<~STR)
+        expect(io.string).to eq(<<~STR)
           State 7 conflicts: 1 shift/reduce
           State 8 conflicts: 1 shift/reduce
 
@@ -1456,10 +1456,10 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = "".dup
-      states.reporter.report(str, states: true)
+      io = StringIO.new
+      states.reporter.report(io, states: true)
 
-      expect(str).to eq(<<~STR)
+      expect(io.string).to eq(<<~STR)
         State 0
 
             0 $accept: • program "EOI"
@@ -1630,10 +1630,10 @@ RSpec.describe Lrama::States do
       states = Lrama::States.new(grammar, warning)
       states.compute
 
-      str = "".dup
-      states.reporter.report(str, states: true)
+      io = StringIO.new
+      states.reporter.report(io, states: true)
 
-      expect(str).to eq(<<~STR)
+      expect(io.string).to eq(<<~STR)
         State 0
 
             0 $accept: • program "EOI"
@@ -1850,7 +1850,7 @@ RSpec.describe Lrama::States do
             states = Lrama::States.new(grammar, warning)
             states.compute
 
-            expect(out).to eq("reduce/reduce conflicts: 1 found, 0 expected\n")
+            expect(out.string).to eq("reduce/reduce conflicts: 1 found, 0 expected\n")
             expect(warning.errors).to eq([
               "reduce/reduce conflicts: 1 found, 0 expected"
             ])
@@ -1876,7 +1876,7 @@ RSpec.describe Lrama::States do
             states = Lrama::States.new(grammar, warning)
             states.compute
 
-            expect(out).to eq("shift/reduce conflicts: 2 found, 0 expected\nreduce/reduce conflicts: 1 found, 0 expected\n")
+            expect(out.string).to eq("shift/reduce conflicts: 2 found, 0 expected\nreduce/reduce conflicts: 1 found, 0 expected\n")
             expect(warning.errors).to eq([
               "shift/reduce conflicts: 2 found, 0 expected",
               "reduce/reduce conflicts: 1 found, 0 expected"
@@ -1902,7 +1902,7 @@ RSpec.describe Lrama::States do
           states = Lrama::States.new(grammar, warning)
           states.compute
 
-          expect(out).to eq("shift/reduce conflicts: 2 found\nreduce/reduce conflicts: 1 found\n")
+          expect(out.string).to eq("shift/reduce conflicts: 2 found\nreduce/reduce conflicts: 1 found\n")
           expect(warning.errors).to eq([])
           expect(warning.warns).to eq([
             "shift/reduce conflicts: 2 found",
