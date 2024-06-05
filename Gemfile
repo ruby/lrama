@@ -10,6 +10,7 @@ gem "rake"
 gem "rspec"
 gem "simplecov", require: false
 gem "stackprof", platforms: [:ruby] # stackprof doesn't support Windows
+gem "memory_profiler"
 
 # Recent steep requires Ruby >= 3.0.0.
 # Then skip install on some CI jobs.
