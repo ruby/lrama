@@ -33,17 +33,17 @@ module Lrama
     attr_reader accept_symbol: Grammar::Symbol
     attr_reader aux: Auxiliary
     attr_accessor union: Union
-    attr_accessor expect: untyped
+    attr_accessor expect: Integer
     attr_accessor printers: Array[Printer]
     attr_accessor error_tokens: Array[ErrorToken]
     attr_accessor lex_param: String
     attr_accessor parse_param: String
     attr_accessor initial_action: Grammar::Code::InitialActionCode
-    attr_accessor after_shift: untyped
-    attr_accessor before_reduce: untyped
-    attr_accessor after_reduce: untyped
-    attr_accessor after_shift_error_token: untyped
-    attr_accessor after_pop_stack: untyped
+    attr_accessor after_shift: Lexer::Token
+    attr_accessor before_reduce: Lexer::Token
+    attr_accessor after_reduce: Lexer::Token
+    attr_accessor after_shift_error_token: Lexer::Token
+    attr_accessor after_pop_stack: Lexer::Token
     attr_accessor symbols_resolver: Symbols::Resolver
     attr_accessor types: Array[Type]
     attr_accessor rules: Array[Rule]
@@ -53,7 +53,7 @@ module Lrama
 
     def initialize: (Counter rule_counter) -> void
     def create_rule_builder: (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
-    def add_percent_code: (id: untyped, code: untyped) -> Array[PercentCode]
+    def add_percent_code: (id: Lexer::Token, code: Lexer::Token::UserCode) -> Array[PercentCode]
     def add_destructor: (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Destructor]
     def add_printer: (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Printer]
     def add_error_token: (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[ErrorToken]
@@ -69,9 +69,9 @@ module Lrama
     def parameterizing_rules: () -> Array[ParameterizingRule::Rule]
     def insert_before_parameterizing_rules: (Array[ParameterizingRule::Rule] rules) -> Array[ParameterizingRule::Rule]
     def prologue_first_lineno=: (Integer prologue_first_lineno) -> Integer
-    def prologue=: (untyped prologue) -> untyped
+    def prologue=: (String prologue) -> String
     def epilogue_first_lineno=: (Integer epilogue_first_lineno) -> Integer
-    def epilogue=: (untyped epilogue) -> untyped
+    def epilogue=: (String epilogue) -> String
     def prepare: () -> void
     def validate!: () -> (void | bot)
     def find_rules_by_symbol!: (Grammar::Symbol sym) -> Array[Rule]
