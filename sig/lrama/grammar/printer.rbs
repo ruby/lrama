@@ -5,6 +5,8 @@ module Lrama
       attr_accessor token_code: Grammar::Code
       attr_accessor lineno: Integer
 
+      def initialize: (?ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], ?token_code: Grammar::Code, ?lineno: Integer) -> void
+
       def translated_code: (Lexer::Token::Tag tag) -> String
     end
   end

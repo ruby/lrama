@@ -1,0 +1,10 @@
+module Lrama
+  class Grammar
+    class Auxiliary
+      attr_accessor prologue_first_lineno: Integer
+      attr_accessor prologue: String
+      attr_accessor epilogue_first_lineno: Integer
+      attr_accessor epilogue: String
+    end
+  end
+end

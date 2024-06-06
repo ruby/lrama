@@ -79,10 +79,10 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
       expect(nterm.tag).to eq("tag")
     end
 
-    it "returns nil if nterm exists" do
-      resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
-      nterm = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
-      expect(nterm).to eq(nil)
+    it "returns existing nterm if nterm exists" do
+      nterm1 = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
+      nterm2 = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
+      expect(nterm2).to eq(nterm1)
     end
   end
 

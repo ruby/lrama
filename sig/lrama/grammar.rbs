@@ -1,5 +1,93 @@
 module Lrama
   class Grammar
-    def numberize_references: (Lexer::Token lhs, Array[Lexer::Token] rhs, Array[Reference]) -> void
+    include Symbols::_DelegatedMethods
+
+    @rule_counter: Counter
+    @percent_codes: Array[PercentCode]
+    @printers: Array[Printer]
+    @destructors: Array[Destructor]
+    @error_tokens: Array[ErrorToken]
+    @symbols_resolver: Symbols::Resolver
+    @types: Array[Type]
+    @rule_builders: Array[RuleBuilder]
+    @rules: Array[Rule]
+    @sym_to_rules: Hash[Integer, Array[Rule]]
+    @parameterizing_rule_resolver: ParameterizingRule::Resolver
+    @empty_symbol: Grammar::Symbol
+    @eof_symbol: Grammar::Symbol
+    @error_symbol: Grammar::Symbol
+    @undef_symbol: Grammar::Symbol
+    @accept_symbol: Grammar::Symbol
+    @aux: Auxiliary
+    @no_stdlib: bool
+    @union: Union
+
+    extend Forwardable
+
+    attr_reader percent_codes: Array[PercentCode]
+    attr_reader eof_symbol: Grammar::Symbol
+    attr_reader error_symbol: Grammar::Symbol
+    attr_reader undef_symbol: Grammar::Symbol
+    attr_reader accept_symbol: Grammar::Symbol
+    attr_reader aux: Auxiliary
+    attr_accessor union: Union
+    attr_accessor expect: Integer
+    attr_accessor printers: Array[Printer]
+    attr_accessor error_tokens: Array[ErrorToken]
+    attr_accessor lex_param: String
+    attr_accessor parse_param: String
+    attr_accessor initial_action: Grammar::Code::InitialActionCode
+    attr_accessor after_shift: Lexer::Token
+    attr_accessor before_reduce: Lexer::Token
+    attr_accessor after_reduce: Lexer::Token
+    attr_accessor after_shift_error_token: Lexer::Token
+    attr_accessor after_pop_stack: Lexer::Token
+    attr_accessor symbols_resolver: Symbols::Resolver
+    attr_accessor types: Array[Type]
+    attr_accessor rules: Array[Rule]
+    attr_accessor rule_builders: Array[RuleBuilder]
+    attr_accessor sym_to_rules: Hash[Integer, Array[Rule]]
+    attr_accessor no_stdlib: bool
+
+    def initialize: (Counter rule_counter) -> void
+    def create_rule_builder: (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
+    def add_percent_code: (id: Lexer::Token, code: Lexer::Token::UserCode) -> Array[PercentCode]
+    def add_destructor: (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Destructor]
+    def add_printer: (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Printer]
+    def add_error_token: (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[ErrorToken]
+    def add_type: (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
+    def add_nonassoc: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    def add_left: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    def add_right: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    def add_precedence: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
+    def set_union: (Grammar::Code::NoReferenceCode code, Integer lineno) -> Union
+    def add_rule_builder: (RuleBuilder builder) -> Array[RuleBuilder]
+    def add_parameterizing_rule: (ParameterizingRule::Rule rule) -> Array[ParameterizingRule::Rule]
+    def parameterizing_rules: () -> Array[ParameterizingRule::Rule]
+    def insert_before_parameterizing_rules: (Array[ParameterizingRule::Rule] rules) -> Array[ParameterizingRule::Rule]
+    def prologue_first_lineno=: (Integer prologue_first_lineno) -> Integer
+    def prologue=: (String prologue) -> String
+    def epilogue_first_lineno=: (Integer epilogue_first_lineno) -> Integer
+    def epilogue=: (String epilogue) -> String
+    def prepare: () -> void
+    def validate!: () -> (void | bot)
+    def find_rules_by_symbol!: (Grammar::Symbol sym) -> Array[Rule]
+    def find_rules_by_symbol: (Grammar::Symbol sym) -> Array[Rule]?
+
+    private
+
+    def compute_nullable: () -> Array[Grammar::Symbol]
+    def compute_first_set: () -> Array[Grammar::Symbol]
+    def resolve_inline_rules: () -> void
+    def setup_rules: () -> Array[RuleBuilder]
+    def append_special_symbols: () -> Grammar::Symbol
+    def normalize_rules: () -> Array[Rule]
+    def collect_symbols: () -> Array[Lexer::Token]
+    def set_lhs_and_rhs: () -> void
+    def fill_default_precedence: () -> void
+    def fill_symbols: () -> Array[Grammar::Symbol]
+    def fill_sym_to_rules: () -> Array[Rule]
+    def validate_rule_lhs_is_nterm!: () -> bot?
   end
 end
