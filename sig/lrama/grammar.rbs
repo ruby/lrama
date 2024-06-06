@@ -1,9 +1,7 @@
 module Lrama
-  # Grammar is the result of parsing an input grammar file
   class Grammar
-    ExceedsMaxError: Class
-
     include Symbols::_DelegatedMethods
+
     @rule_counter: Counter
     @percent_codes: Array[PercentCode]
     @printers: Array[Printer]
