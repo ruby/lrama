@@ -27,7 +27,7 @@ rule
                       | "%require" STRING
 
   bison_declarations: /* empty */ { result = "" }
-                    | bison_declarations bison_declaration
+                    | bison_declarations bison_declaration ";"?
 
   bison_declaration: grammar_declaration
                    | rule_declaration
@@ -72,7 +72,6 @@ rule
                          @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[3])
                        }
                    | "%no-stdlib" { @grammar.no_stdlib = true }
-                   | ";"
 
   grammar_declaration: "%union" "{"
                          {
@@ -394,7 +393,7 @@ rule
   grammar: rules_or_grammar_declaration
          | grammar rules_or_grammar_declaration
 
-  rules_or_grammar_declaration: rules
+  rules_or_grammar_declaration: rules ";"?
                               | grammar_declaration ";"
 
   rules: id_colon named_ref_opt ":" rhs_list
@@ -424,7 +423,6 @@ rule
                 end
                 result = val[0].append(builder)
               }
-          | rhs_list ";"
 
   rhs: /* empty */
          {
