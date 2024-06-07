@@ -71,7 +71,7 @@ module Lrama
     def epilogue_first_lineno=: (Integer epilogue_first_lineno) -> Integer
     def epilogue=: (String epilogue) -> String
     def prepare: () -> void
-    def validate!: () -> (void | bot)
+    def validate!: () -> void
     def find_rules_by_symbol!: (Grammar::Symbol sym) -> Array[Rule]
     def find_rules_by_symbol: (Grammar::Symbol sym) -> Array[Rule]?
 
