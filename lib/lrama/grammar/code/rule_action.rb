@@ -73,12 +73,12 @@ module Lrama
           @rule.position_in_original_rule_rhs || @rule.rhs.count
         end
 
-        # If this is midrule action, RHS is a RHS of the original rule.
+        # If this is midrule action, RHS is an RHS of the original rule.
         def rhs
           (@rule.original_rule || @rule).rhs
         end
 
-        # Unlike `rhs`, LHS is always a LHS of the rule.
+        # Unlike `rhs`, LHS is always an LHS of the rule.
         def lhs
           @rule.lhs
         end
