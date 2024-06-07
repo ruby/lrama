@@ -88,6 +88,6 @@ module Lrama
     def fill_default_precedence: () -> void
     def fill_symbols: () -> Array[Grammar::Symbol]
     def fill_sym_to_rules: () -> Array[Rule]
-    def validate_rule_lhs_is_nterm!: () -> bot?
+    def validate_rule_lhs_is_nterm!: () -> void
   end
 end
