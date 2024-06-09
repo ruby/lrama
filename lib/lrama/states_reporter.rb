@@ -32,10 +32,6 @@ module Lrama
 
       terms = @states.symbols.select(&:term?)
 
-      @states.states.select do |state|
-        state.shifts.map(&:next_sym)
-      end
-
       @states.states.each do |state|
         state.reduces.select do |reduce|
           used_symbols << reduce.look_ahead.flatten if !reduce.look_ahead.nil?
