@@ -144,13 +144,17 @@ module Lrama
             if (created_lhs = @parameterizing_rule_resolver.created_lhs(lhs_s_value))
               @replaced_rhs << created_lhs
             else
+              next if parameterizing_rule.rhs_list.all? { |r| r.skip?(bindings) }
               lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: token.location)
               @replaced_rhs << lhs_token
               @parameterizing_rule_resolver.created_lhs_list << lhs_token
               parameterizing_rule.rhs_list.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: token.lhs_tag || parameterizing_rule.tag)
                 rule_builder.lhs = lhs_token
-                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
+                next if r.skip?(bindings)
+                r.resolve_symbols(bindings).each do |sym|
+                  rule_builder.add_rhs(sym)
+                end
                 rule_builder.line = line
                 rule_builder.precedence_sym = r.precedence_sym
                 rule_builder.user_code = r.resolve_user_code(bindings)

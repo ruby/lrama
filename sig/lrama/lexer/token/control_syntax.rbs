@@ -1,0 +1,16 @@
+module Lrama
+  class Lexer
+    class Token
+      class ControlSyntax < Token
+        attr_accessor condition: Lexer::Token::Ident?
+
+        def initialize: (s_value: String, location: Location, ?condition: Lexer::Token::Ident?) -> void
+        def if?: () -> bool
+        def endif?: () -> bool
+        def true?: () -> bool
+        def false?: () -> bool
+        def condition_value: () -> String?
+      end
+    end
+  end
+end

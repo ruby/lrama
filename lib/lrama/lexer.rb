@@ -41,6 +41,10 @@ module Lrama
       %no-stdlib
       %inline
       %locations
+      %if
+      %endif
+      %true
+      %false
     )
 
     def initialize(grammar_file)

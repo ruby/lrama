@@ -28,7 +28,7 @@ module Lrama
     attr_reader :percent_codes, :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux, :parameterizing_rule_resolver
     attr_accessor :union, :expect, :printers, :error_tokens, :lex_param, :parse_param, :initial_action,
                   :after_shift, :before_reduce, :after_reduce, :after_shift_error_token, :after_pop_stack,
-                  :symbols_resolver, :types, :rules, :rule_builders, :sym_to_rules, :no_stdlib, :locations
+                  :symbols_resolver, :types, :rules, :rule_builders, :sym_to_rules, :no_stdlib, :locations, :if_count
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term,
                                         :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
@@ -57,6 +57,7 @@ module Lrama
       @aux = Auxiliary.new
       @no_stdlib = false
       @locations = false
+      @if_count = 0
 
       append_special_symbols
     end
@@ -169,6 +170,10 @@ module Lrama
 
     def find_rules_by_symbol(sym)
       @sym_to_rules[sym.number]
+    end
+
+    def initialize_if_count
+      @if_count = 0
     end
 
     private
