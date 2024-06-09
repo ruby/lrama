@@ -16,13 +16,51 @@ module Lrama
 
     private
 
-    def _report(io, grammar: false, states: false, itemsets: false, lookaheads: false, solved: false, counterexamples: false, verbose: false)
-      # TODO: Unused terms
+    def _report(io, grammar: false, terms: false, states: false, itemsets: false, lookaheads: false, solved: false, counterexamples: false, verbose: false)
       # TODO: Unused rules
 
+      report_unused_terms(io) if terms
       report_conflicts(io)
       report_grammar(io) if grammar
       report_states(io, itemsets, lookaheads, solved, counterexamples, verbose)
+    end
+
+    def report_unused_terms(io)
+      io << "Unused Terms\n\n"
+
+      results = []
+      terms = []
+      used_symbols = []
+
+      terms = @states.symbols.select(&:term?)
+
+      @states.states.select do |state|
+        state.shifts.map(&:next_sym)
+      end
+
+      @states.states.each do |state|
+        state.reduces.select do |reduce|
+          used_symbols << reduce.look_ahead.flatten if !reduce.look_ahead.nil?
+        end
+      end
+
+      @states.states.each do |state|
+        used_symbols << state.shifts.map(&:next_sym).select(&:term?).flatten
+      end
+
+      used_symbols = used_symbols.flatten
+
+      results = terms.select do |term|
+        !used_symbols.include?(term)
+      end
+
+      results.each_with_index do |term, index|
+        io << sprintf("%5d %s\n", index, term.id.s_value)
+      end
+
+      if !results.empty?
+        io << "\n\n"
+      end
     end
 
     def report_conflicts(io)

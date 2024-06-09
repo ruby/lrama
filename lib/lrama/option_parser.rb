@@ -92,7 +92,7 @@ module Lrama
     end
 
     BISON_REPORTS = %w[states itemsets lookaheads solved counterexamples cex all none]
-    OTHER_REPORTS = %w[verbose]
+    OTHER_REPORTS = %w[terms verbose]
     NOT_SUPPORTED_REPORTS = %w[cex none]
     VALID_REPORTS = BISON_REPORTS + OTHER_REPORTS - NOT_SUPPORTED_REPORTS
 
