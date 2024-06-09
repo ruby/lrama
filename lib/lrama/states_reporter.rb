@@ -26,37 +26,25 @@ module Lrama
     end
 
     def report_unused_terms(io)
-      results = []
-      terms = []
-      used_symbols = []
-
-      terms = @states.symbols.select(&:term?)
-
-      @states.states.each do |state|
-        state.reduces.select do |reduce|
-          used_symbols << reduce.look_ahead.flatten if !reduce.look_ahead.nil?
+      look_aheads = @states.states.each do |state|
+        state.reduces.flat_map do |reduce|
+          reduce.look_ahead unless reduce.look_ahead.nil?
         end
       end
 
-      @states.states.each do |state|
-        used_symbols << state.shifts.map(&:next_sym).select(&:term?).flatten
+      next_terms = @states.states.flat_map do |state|
+        state.shifts.map(&:next_sym).select(&:term?)
       end
 
-      used_symbols = used_symbols.flatten
-
-      results = terms.select do |term|
-        !used_symbols.include?(term)
+      unused_symbols = @states.terms.select do |term|
+        !(look_aheads + next_terms).include?(term)
       end
 
-      if !results.empty?
-        io << "#{results.count} Unused Terms\n\n"
-      end
-
-      results.each_with_index do |term, index|
-        io << sprintf("%5d %s\n", index, term.id.s_value)
-      end
-
-      if !results.empty?
+      unless unused_symbols.empty?
+        io << "#{unused_symbols.count} Unused Terms\n\n"
+        unused_symbols.each_with_index do |term, index|
+          io << sprintf("%5d %s\n", index, term.id.s_value)
+        end
         io << "\n\n"
       end
     end
