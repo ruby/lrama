@@ -71,7 +71,7 @@ module Lrama
     def epilogue_first_lineno=: (Integer epilogue_first_lineno) -> Integer
     def epilogue=: (String epilogue) -> String
     def prepare: () -> void
-    def validate!: () -> (void | bot)
+    def validate!: () -> void
     def find_rules_by_symbol!: (Grammar::Symbol sym) -> Array[Rule]
     def find_rules_by_symbol: (Grammar::Symbol sym) -> Array[Rule]?
 
@@ -88,6 +88,6 @@ module Lrama
     def fill_default_precedence: () -> void
     def fill_symbols: () -> Array[Grammar::Symbol]
     def fill_sym_to_rules: () -> Array[Rule]
-    def validate_rule_lhs_is_nterm!: () -> bot?
+    def validate_rule_lhs_is_nterm!: () -> void
   end
 end

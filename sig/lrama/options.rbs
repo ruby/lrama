@@ -1,5 +1,5 @@
 module Lrama
- class Options
+  class Options
     attr_accessor skeleton: String
     attr_accessor header: bool
     attr_accessor header_file: String?
@@ -13,5 +13,5 @@ module Lrama
     attr_accessor debug: bool
 
     def initialize: () -> void
- end
+  end
 end
