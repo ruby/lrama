@@ -257,6 +257,10 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq([':', ':'])
         expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'tSTRING')])
         expect(lexer.next_token).to eq([';', ';'])
+        expect(lexer.next_token).to eq([:IDENT_COLON, token_class::Ident.new(s_value: 'unused')])
+        expect(lexer.next_token).to eq([':', ':'])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'tNUMBER')])
+        expect(lexer.next_token).to eq([';', ';'])
         expect(lexer.next_token).to eq(['%%', '%%'])
         expect(lexer.next_token).to eq(nil)
       end

@@ -107,6 +107,7 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: T::Ident.new(s_value: "string_1"),  alias_name: nil, number: 28, tag: nil,                                 term: false, token_id:  9, nullable: false, precedence: nil, printer: nil),
         Sym.new(id: T::Ident.new(s_value: "string_2"),  alias_name: nil, number: 29, tag: nil,                                 term: false, token_id: 10, nullable: false, precedence: nil, printer: nil),
         Sym.new(id: T::Ident.new(s_value: "string"),    alias_name: nil, number: 30, tag: nil,                                 term: false, token_id: 11, nullable: false, precedence: nil, printer: nil),
+        Sym.new(id: T::Ident.new(s_value: "unused"),    alias_name: nil, number: 31, tag: nil,                                 term: false, token_id: 12, nullable: false, precedence: nil, printer: nil),
       ])
       expect(grammar.types).to eq([Type.new(id: T::Ident.new(s_value: "class"), tag: T::Tag.new(s_value: "<i>"))])
       _rules = grammar.rule_builders.map {|b| [b.lhs, (b.rhs + [b.precedence_sym, b.user_code]).compact, b.line] }
@@ -213,6 +214,13 @@ RSpec.describe Lrama::Parser do
             T::Ident.new(s_value: "tSTRING")
           ],
           81,
+        ],
+        [
+          T::Ident.new(s_value: "unused"),
+          [
+            T::Ident.new(s_value: "tNUMBER")
+          ],
+          84,
         ],
       ])
       expect(grammar.rules).to eq([
@@ -414,6 +422,17 @@ RSpec.describe Lrama::Parser do
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("tSTRING"),
           lineno: 81,
+        ),
+        Rule.new(
+          id: 17,
+          lhs: grammar.find_symbol_by_s_value!("unused"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("tNUMBER"),
+          ],
+          token_code: nil,
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("tNUMBER"),
+          lineno: 84,
         ),
       ])
     end

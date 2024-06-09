@@ -16,9 +16,8 @@ module Lrama
 
     private
 
-    def _report(io, grammar: false, terms: false, states: false, itemsets: false, lookaheads: false, solved: false, counterexamples: false, verbose: false)
-      # TODO: Unused rules
-
+    def _report(io, grammar: false, rules: false, terms: false, states: false, itemsets: false, lookaheads: false, solved: false, counterexamples: false, verbose: false)
+      report_unused_rules(io) if rules
       report_unused_terms(io) if terms
       report_conflicts(io)
       report_grammar(io) if grammar
@@ -59,6 +58,22 @@ module Lrama
       end
 
       if !results.empty?
+        io << "\n\n"
+      end
+    end
+
+    def report_unused_rules(io)
+      used_rules = @states.rules.flat_map(&:rhs)
+
+      unused_rules = @states.rules.map(&:lhs).select do |rule|
+        !used_rules.include?(rule) && rule.token_id != 0
+      end
+
+      unless unused_rules.empty?
+        io << "#{unused_rules.count} Unused Rules\n\n"
+        unused_rules.each_with_index do |rule, index|
+          io << sprintf("%5d %s\n", index, rule.display_name)
+        end
         io << "\n\n"
       end
     end
