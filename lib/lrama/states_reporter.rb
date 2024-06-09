@@ -26,8 +26,6 @@ module Lrama
     end
 
     def report_unused_terms(io)
-      io << "Unused Terms\n\n"
-
       results = []
       terms = []
       used_symbols = []
@@ -52,6 +50,10 @@ module Lrama
 
       results = terms.select do |term|
         !used_symbols.include?(term)
+      end
+
+      if !results.empty?
+        io << "#{results.count} Unused Terms\n\n"
       end
 
       results.each_with_index do |term, index|

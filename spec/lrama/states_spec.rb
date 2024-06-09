@@ -18,7 +18,7 @@ RSpec.describe Lrama::States do
       states.reporter.report(io, grammar: true, terms: true, states: true, itemsets: true, lookaheads: true)
 
       expect(io.string).to eq(<<~STR)
-        Unused Terms
+        11 Unused Terms
 
             0 YYerror
             1 YYUNDEF
