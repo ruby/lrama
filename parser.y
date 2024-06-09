@@ -253,14 +253,16 @@ rule
   rule_args: IDENTIFIER { result = [val[0]] }
            | rule_args "," IDENTIFIER { result = val[0].append(val[2]) }
 
-  rule_rhs_list: rule_rhs
+  rule_rhs_list: rule_rhs if_clause?
                 {
                   builder = val[0]
+                  builder.symbols << val[1] if val[1]
                   result = [builder]
                 }
-          | rule_rhs_list "|" rule_rhs
+          | rule_rhs_list "|" rule_rhs if_clause?
                 {
                   builder = val[2]
+                  builder.symbols << val[3] if val[3]
                   result = val[0].append(builder)
                 }
 
@@ -322,11 +324,10 @@ rule
               builder.precedence_sym = sym
               result = builder
             }
-          | rule_rhs "%if" "(" IDENTIFIER ")"
+
+  if_clause: "%if" "(" IDENTIFIER ")"
             {
-              builder = val[0]
-              builder.symbols << Lrama::Lexer::Token::ControlSyntax.new(s_value: val[1], location: @lexer.location, condition: val[3])
-              result = builder
+              result = Lrama::Lexer::Token::ControlSyntax.new(s_value: val[0], location: @lexer.location, condition: val[2])
             }
 
   alias: # empty
