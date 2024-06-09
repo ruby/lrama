@@ -13,10 +13,6 @@ module Lrama
           s_value == '%if'
         end
 
-        def endif?
-          s_value == '%endif'
-        end
-
         def true?
           !!@condition&.s_value
         end

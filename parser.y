@@ -243,7 +243,6 @@ rule
                       {
                         rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, [], val[4], is_inline: true)
                         @grammar.add_parameterizing_rule(rule)
-                        @grammar.initialize_if_count
                       }
                     | "%rule" "%inline" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
                       {
@@ -327,15 +326,6 @@ rule
             {
               builder = val[0]
               builder.symbols << Lrama::Lexer::Token::ControlSyntax.new(s_value: val[1], location: @lexer.location, condition: val[3])
-              @grammar.if_count += 1
-              result = builder
-            }
-          | rule_rhs "%endif"
-            {
-              on_action_error("no %if before %endif", val[0]) if @grammar.if_count == 0
-              builder = val[0]
-              builder.symbols << Lrama::Lexer::Token::ControlSyntax.new(s_value: val[1], location: @lexer.location)
-              @grammar.if_count -= 1
               result = builder
             }
 

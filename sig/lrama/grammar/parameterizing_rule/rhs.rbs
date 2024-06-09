@@ -8,7 +8,6 @@ module Lrama
 
         def initialize: () -> void
         def skip?: (Grammar::Binding bindings) -> bool
-        def resolve_symbols: (Grammar::Binding bindings) -> Array[untyped]
         def resolve_user_code: (Grammar::Binding bindings) -> Lexer::Token::UserCode?
       end
     end

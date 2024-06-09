@@ -152,9 +152,7 @@ module Lrama
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: token.lhs_tag || parameterizing_rule.tag)
                 rule_builder.lhs = lhs_token
                 next if r.skip?(bindings)
-                r.resolve_symbols(bindings).each do |sym|
-                  rule_builder.add_rhs(sym)
-                end
+                r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
                 rule_builder.precedence_sym = r.precedence_sym
                 rule_builder.user_code = r.resolve_user_code(bindings)
@@ -176,6 +174,8 @@ module Lrama
             rule_builder.setup_rules
 
             @rule_builders_for_derived_rules << rule_builder
+          when Lrama::Lexer::Token::ControlSyntax
+            # NOP
           else
             raise "Unexpected token. #{token}"
           end

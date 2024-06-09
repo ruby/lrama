@@ -42,7 +42,6 @@ module Lrama
       %inline
       %locations
       %if
-      %endif
       %true
       %false
     )

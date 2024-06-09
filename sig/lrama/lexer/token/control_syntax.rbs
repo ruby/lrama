@@ -6,7 +6,6 @@ module Lrama
 
         def initialize: (s_value: String, location: Location, ?condition: Lexer::Token::Ident?) -> void
         def if?: () -> bool
-        def endif?: () -> bool
         def true?: () -> bool
         def false?: () -> bool
         def condition_value: () -> String?

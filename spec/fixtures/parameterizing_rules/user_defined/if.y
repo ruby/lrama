@@ -16,7 +16,6 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %rule defined_rule(X, condition): /* empty */
                                 | X { $$ = $1; } %if(condition)
-                                | %if(condition) X %endif X { $$ = $1; }
                                 ;
 
 %%

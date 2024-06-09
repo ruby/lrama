@@ -18,25 +18,6 @@ module Lrama
           last_sym.is_a?(Lexer::Token::ControlSyntax) && last_sym.if? && last_sym.false?
         end
 
-        def resolve_symbols(bindings)
-          is_skip = []
-          @symbols.map do |sym|
-            resolved = bindings.resolve_symbol(sym)
-            if resolved.is_a?(Lexer::Token::ControlSyntax)
-              if resolved.if?
-                is_skip.push(resolved.false?)
-              elsif resolved.endif?
-                is_skip.pop
-              else
-                raise "Unexpected control syntax: #{resolved.condition_value}"
-              end
-              nil
-            else
-              resolved unless is_skip.last
-            end
-          end.compact
-        end
-
         def resolve_user_code(bindings)
           return unless user_code
 
