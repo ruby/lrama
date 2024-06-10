@@ -23,7 +23,7 @@ RSpec.describe Lrama::States do
             0 unused
 
 
-        Unused Terms
+        11 Unused Terms
 
             0 YYerror
             1 YYUNDEF
