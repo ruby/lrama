@@ -68,7 +68,7 @@ RSpec.describe Lrama::OptionParser do
               -h, --help                       display this help and exit
 
           Valid Reports:
-              states itemsets lookaheads solved counterexamples all terms verbose
+              states itemsets lookaheads solved counterexamples all rules terms verbose
 
           Valid Traces:
               none locations scan parse automaton bitsets closure grammar rules actions resource sets muscles tools m4-early m4 skeleton time ielr cex all

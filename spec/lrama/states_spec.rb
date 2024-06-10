@@ -15,9 +15,14 @@ RSpec.describe Lrama::States do
       states.compute
 
       io = StringIO.new
-      states.reporter.report(io, grammar: true, terms: true, states: true, itemsets: true, lookaheads: true)
+      states.reporter.report(io, grammar: true, rules: true, terms: true, states: true, itemsets: true, lookaheads: true)
 
       expect(io.string).to eq(<<~STR)
+        1 Unused Rules
+
+            0 unused
+
+
         11 Unused Terms
 
             0 YYerror
@@ -68,6 +73,8 @@ RSpec.describe Lrama::States do
            15 string_2: string '+'
 
            16 string: tSTRING
+
+           17 unused: tNUMBER
 
 
         State 0

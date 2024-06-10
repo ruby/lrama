@@ -81,6 +81,9 @@ string_2: string '+'
 string: tSTRING
       ;
 
+unused: tNUMBER
+      ;
+
 %%
 
 // Epilogue
