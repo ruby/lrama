@@ -44,15 +44,8 @@ module Lrama
         end
       end
 
-      if options.trace_opts && options.trace_opts[:rules]
-        puts "Grammar rules:"
-        grammar.rules.each { |rule| puts rule.display_name }
-      end
-
-      if options.trace_opts && options.trace_opts[:actions]
-        puts "Grammar rules with actions:"
-        grammar.rules.each { |rule| puts rule.with_actions }
-      end
+      reporter = Lrama::TraceReporter.new(grammar)
+      reporter.report(**options.trace_opts)
 
       File.open(options.outfile, "w+") do |f|
         Lrama::Output.new(
