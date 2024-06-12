@@ -1,0 +1,33 @@
+module Lrama
+  class Counterexamples
+    class Derivation
+      @item: untyped
+
+      @left: untyped
+
+      @right: untyped
+
+      attr_reader item: untyped
+
+      attr_reader left: untyped
+
+      attr_reader right: untyped
+
+      attr_writer right: untyped
+
+      def initialize: (untyped item, untyped left, ?untyped? right) -> void
+
+      def to_s: () -> ::String
+
+      alias inspect to_s
+
+      def render_strings_for_report: () -> untyped
+
+      def render_for_report: () -> untyped
+
+      private
+
+      def _render_for_report: (untyped derivation, untyped offset, untyped strings, untyped index) -> untyped
+    end
+  end
+end

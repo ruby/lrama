@@ -1,0 +1,19 @@
+module Lrama
+  class Counterexamples
+    class Path
+      @from_state_item: untyped
+
+      @to_state_item: untyped
+
+      def initialize: (untyped? from_state_item, untyped to_state_item) -> void
+
+      def from: () -> untyped
+
+      def to: () -> untyped
+
+      def to_s: () -> ::String
+
+      alias inspect to_s
+    end
+  end
+end

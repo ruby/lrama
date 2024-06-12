@@ -1,0 +1,47 @@
+module Lrama
+  class Counterexamples
+    class Example
+      @path1: untyped
+
+      @path2: untyped
+
+      @conflict: untyped
+
+      @conflict_symbol: untyped
+
+      @counterexamples: untyped
+
+      @derivations1: untyped
+
+      @derivations2: untyped
+
+      attr_reader path1: untyped
+
+      attr_reader path2: untyped
+
+      attr_reader conflict: untyped
+
+      attr_reader conflict_symbol: untyped
+
+      # path1 is shift conflict when S/R conflict
+      # path2 is always reduce conflict
+      def initialize: (untyped path1, untyped path2, untyped conflict, untyped conflict_symbol, untyped counterexamples) -> void
+
+      def type: () -> untyped
+
+      def path1_item: () -> untyped
+
+      def path2_item: () -> untyped
+
+      def derivations1: () -> untyped
+
+      def derivations2: () -> untyped
+
+      private
+
+      def _derivations: (untyped paths) -> untyped
+
+      def find_derivation_for_symbol: (untyped state_item, untyped sym) -> untyped
+    end
+  end
+end

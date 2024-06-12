@@ -1,0 +1,141 @@
+module Lrama
+  # States is passed to a template file
+  #
+  # "Efficient Computation of LALR(1) Look-Ahead Sets"
+  #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
+  class States
+    @grammar: untyped
+
+    @warning: untyped
+
+    @trace_state: untyped
+
+    @states: untyped
+
+    # `DR(p, A) = {t ∈ T | p -(A)-> r -(t)-> }`
+    #   where p is state, A is nterm, t is term.
+    #
+    # `@direct_read_sets` is a hash whose
+    # key is [state.id, nterm.token_id],
+    # value is bitmap of term.
+    @direct_read_sets: untyped
+
+    # Reads relation on nonterminal transitions (pair of state and nterm)
+    # `(p, A) reads (r, C) iff p -(A)-> r -(C)-> and C =>* ε`
+    #   where p, r are state, A, C are nterm.
+    #
+    # `@reads_relation` is a hash whose
+    # key is [state.id, nterm.token_id],
+    # value is array of [state.id, nterm.token_id].
+    @reads_relation: untyped
+
+    # `@read_sets` is a hash whose
+    # key is [state.id, nterm.token_id],
+    # value is bitmap of term.
+    @read_sets: untyped
+
+    # `(p, A) includes (p', B) iff B -> βAγ, γ =>* ε, p' -(β)-> p`
+    #   where p, p' are state, A, B are nterm, β, γ is sequence of symbol.
+    #
+    # `@includes_relation` is a hash whose
+    # key is [state.id, nterm.token_id],
+    # value is array of [state.id, nterm.token_id].
+    @includes_relation: untyped
+
+    # `(q, A -> ω) lookback (p, A) iff p -(ω)-> q`
+    #   where p, q are state, A -> ω is rule, A is nterm, ω is sequence of symbol.
+    #
+    # `@lookback_relation` is a hash whose
+    # key is [state.id, rule.id],
+    # value is array of [state.id, nterm.token_id].
+    @lookback_relation: untyped
+
+    # `@follow_sets` is a hash whose
+    # key is [state.id, rule.id],
+    # value is bitmap of term.
+    @follow_sets: untyped
+
+    # `LA(q, A -> ω) = ∪{Follow(p, A) | (q, A -> ω) lookback (p, A)`
+    #
+    # `@la` is a hash whose
+    # key is [state.id, rule.id],
+    # value is bitmap of term.
+    @la: untyped
+
+    extend Forwardable
+
+    include Lrama::Report::Duration
+
+    attr_reader states: untyped
+
+    attr_reader reads_relation: untyped
+
+    attr_reader includes_relation: untyped
+
+    attr_reader lookback_relation: untyped
+
+    def initialize: (untyped grammar, untyped warning, ?trace_state: bool) -> void
+
+    def compute: () -> untyped
+
+    def reporter: () -> untyped
+
+    def states_count: () -> untyped
+
+    def direct_read_sets: () -> untyped
+
+    def read_sets: () -> untyped
+
+    def follow_sets: () -> untyped
+
+    def la: () -> untyped
+
+    private
+
+    def sr_conflicts: () -> untyped
+
+    def rr_conflicts: () -> untyped
+
+    def trace_state: () { (untyped) -> untyped } -> (untyped | nil)
+
+    def create_state: (untyped accessing_symbol, untyped kernels, untyped states_created) -> (::Array[untyped | false] | ::Array[untyped | true])
+
+    def setup_state: (untyped state) -> untyped
+
+    def enqueue_state: (untyped states, untyped state) -> untyped
+
+    def compute_lr0_states: () -> untyped
+
+    def nterm_transitions: () -> untyped
+
+    def compute_direct_read_sets: () -> untyped
+
+    def compute_reads_relation: () -> untyped
+
+    def compute_read_sets: () -> untyped
+
+    # Execute transition of state by symbols
+    # then return final state.
+    def transition: (untyped state, untyped symbols) -> untyped
+
+    def compute_includes_relation: () -> untyped
+
+    def compute_lookback_relation: () -> untyped
+
+    def compute_follow_sets: () -> untyped
+
+    def compute_look_ahead_sets: () -> untyped
+
+    def bitmap_to_terms: (untyped bit) -> untyped
+
+    def compute_conflicts: () -> untyped
+
+    def compute_shift_reduce_conflicts: () -> untyped
+
+    def compute_reduce_reduce_conflicts: () -> untyped
+
+    def compute_default_reduction: () -> untyped
+
+    def check_conflicts: () -> untyped
+  end
+end

@@ -1,0 +1,13 @@
+module Lrama
+  class Counterexamples
+    class StartPath < Path
+      def initialize: (untyped to_state_item) -> void
+
+      def type: () -> :start
+
+      def transition?: () -> false
+
+      def production?: () -> false
+    end
+  end
+end

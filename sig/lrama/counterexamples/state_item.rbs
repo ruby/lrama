@@ -1,0 +1,10 @@
+module Lrama
+  class Counterexamples
+    class StateItem
+     attr_accessor state: untyped
+     attr_accessor item: untyped
+
+      def initialize: (untyped state, untyped item) -> untyped
+    end
+  end
+end

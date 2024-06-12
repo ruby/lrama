@@ -1,0 +1,29 @@
+module Lrama
+  class Counterexamples
+    @states: untyped
+    @transitions: untyped
+    @reverse_transitions: untyped
+    @productions: untyped
+    @reverse_productions: untyped
+
+    attr_reader transitions: untyped
+    attr_reader productions: untyped
+
+    def initialize: (untyped states) -> void
+    def to_s: () -> "#<Counterexamples>"
+    alias inspect to_s
+    def compute: (untyped conflict_state) -> untyped
+
+    private
+
+    def setup_transitions: () -> untyped
+    def setup_productions: () -> untyped
+    def shift_reduce_example: (untyped conflict_state, untyped conflict) -> untyped
+    def reduce_reduce_examples: (untyped conflict_state, untyped conflict) -> untyped
+    def find_shift_conflict_shortest_path: (untyped reduce_path, untyped conflict_state, untyped conflict_item) -> untyped
+    def find_shift_conflict_shortest_state_items: (untyped reduce_path, untyped conflict_state, untyped conflict_item) -> untyped
+    def build_paths_from_state_items: (untyped state_items) -> untyped
+    def shortest_path: (untyped conflict_state, untyped conflict_reduce_item, untyped conflict_term) -> (untyped | nil)
+    def follow_l: (untyped item, untyped current_l) -> untyped
+  end
+end
