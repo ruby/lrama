@@ -26,13 +26,9 @@ module Lrama
     extend Forwardable
 
     attr_reader :percent_codes, :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux
-    attr_accessor :union, :expect,
-                  :printers, :error_tokens,
-                  :lex_param, :parse_param, :initial_action,
+    attr_accessor :union, :expect, :printers, :error_tokens, :lex_param, :parse_param, :initial_action,
                   :after_shift, :before_reduce, :after_reduce, :after_shift_error_token, :after_pop_stack,
-                  :symbols_resolver, :types,
-                  :rules, :rule_builders,
-                  :sym_to_rules, :no_stdlib
+                  :symbols_resolver, :types, :rules, :rule_builders, :sym_to_rules, :no_stdlib, :locations
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term,
                                         :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
@@ -60,6 +56,7 @@ module Lrama
       @accept_symbol = nil
       @aux = Auxiliary.new
       @no_stdlib = false
+      @locations = false
 
       append_special_symbols
     end
@@ -155,6 +152,7 @@ module Lrama
       fill_sym_to_rules
       compute_nullable
       compute_first_set
+      set_locations
     end
 
     # TODO: More validation methods
@@ -395,6 +393,10 @@ module Lrama
       return if errors.empty?
 
       raise errors.join("\n")
+    end
+
+    def set_locations
+      @locations = @locations || @rules.any? {|rule| rule.contains_at_reference? }
     end
   end
 end

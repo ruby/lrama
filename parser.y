@@ -72,6 +72,7 @@ rule
                          @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[3])
                        }
                    | "%no-stdlib" { @grammar.no_stdlib = true }
+                   | "%locations" { @grammar.locations = true }
 
   grammar_declaration: "%union" "{"
                          {

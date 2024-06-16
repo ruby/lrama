@@ -40,6 +40,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %token <val> NUM
 %type <val> expr
 
+%locations
+
 %%
 
 line: expr

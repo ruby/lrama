@@ -31,6 +31,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %left '+' '-'
 %left '*' '/'
 
+%locations
+
 %rule %inline op    : '+' { + }
                     | '-' { - }
                     | '*' { * }

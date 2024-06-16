@@ -56,6 +56,12 @@ module Lrama
 
         Code::RuleAction.new(type: :rule_action, token_code: token_code, rule: self).translated_code
       end
+
+      def contains_at_reference?
+        return false unless token_code
+
+        token_code.references.any? {|r| r.type == :at }
+      end
     end
   end
 end

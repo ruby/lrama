@@ -30,6 +30,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
                     }
                 ;
 
+%locations
+
 %%
 
 program: stmts

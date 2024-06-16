@@ -66,6 +66,10 @@ RSpec.describe "integration" do
     test_parser("prologue_epilogue_optional", "", "")
   end
 
+  it "contains at reference in action" do
+    test_parser("contains_at_reference", "", "")
+  end
+
   describe "YYDEBUG, %lex-param, %parse-param option are enabled" do
     it "returns 9 for '(1+2)*3'" do
       test_parser("params", "(1+2)*3", "=> 9")
@@ -147,28 +151,28 @@ RSpec.describe "integration" do
     it "prints messages when symbol is discarded" do
       expected = <<~STR
         destructor for expr: 1
-        line for expr: 43
+        line for expr: 45
       STR
       test_parser("destructors", "1 +", expected, expect_success: false)
 
       expected = <<~STR
         destructor for val2: 1
-        line for val2: 33
+        line for val2: 35
       STR
       test_parser("destructors", "+ 1 -", expected, expect_success: false)
 
       expected = <<~STR
         => 3
         destructor for val1: 3
-        line for val1: 28
+        line for val1: 30
       STR
       test_parser("destructors", "1 + 2 3", expected, expect_success: false)
 
       expected = <<~STR
         destructor for val4: 10
-        line for val4: 38
+        line for val4: 40
         destructor for expr: 1
-        line for expr: 43
+        line for expr: 45
       STR
       test_parser("destructors", "1 * ", expected, expect_success: false)
     end
@@ -177,10 +181,10 @@ RSpec.describe "integration" do
   describe "__LINE__ of each place" do
     it "prints line number of each place" do
       expected = <<~STR
-        line_pre_program: 31
+        line_pre_program: 33
         line_1: 15
-        line_2: 55
-        line_post_program: 37
+        line_2: 57
+        line_post_program: 39
       STR
 
       test_parser("line_number", "1 + 2", expected)

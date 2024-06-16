@@ -12,6 +12,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
     int val;
 }
 
+%locations
+
 %%
 
 program : /* empty */

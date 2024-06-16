@@ -23,6 +23,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %left '+' '-'
 %left '*' '/'
 
+%locations
+
 %destructor {
     printf("destructor for val1: %d\n", $$);
     printf("line for val1: %d\n", __LINE__);

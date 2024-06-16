@@ -8,7 +8,7 @@
 
 %code provides {
 
-static enum yytokentype yylex(YYSTYPE *lval, YYLTYPE *yylloc);
+static enum yytokentype yylex(YYSTYPE *lval);
 static void yyerror(YYLTYPE *yylloc, const char *msg);
 
 }
@@ -44,7 +44,7 @@ factor          : number
 // Epilogue
 
 static enum yytokentype
-yylex(YYSTYPE *lval, YYLTYPE *yylloc)
+yylex(YYSTYPE *lval)
 {
     return 0;
 }

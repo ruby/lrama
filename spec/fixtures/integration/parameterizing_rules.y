@@ -23,6 +23,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %type <num> stmt
 %type <str> opt_nl
 
+%locations
+
 %%
 
 program: stmts

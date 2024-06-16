@@ -53,6 +53,8 @@ after_pop_stack(int len)
 %left '+' '-'
 %left '*' '/'
 
+%locations
+
 %%
 
 program : /* empty */

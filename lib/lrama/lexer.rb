@@ -40,6 +40,7 @@ module Lrama
       %rule
       %no-stdlib
       %inline
+      %locations
     )
 
     def initialize(grammar_file)
