@@ -1,6 +1,6 @@
 module Lrama
   class Counterexamples
-    @states: untyped
+    @states: States
     @transitions: untyped
     @reverse_transitions: untyped
     @productions: untyped

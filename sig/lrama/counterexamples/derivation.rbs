@@ -5,7 +5,7 @@ module Lrama
 
       @left: untyped
 
-      @right: untyped
+      @right: Derivation
 
       attr_reader item: untyped
 

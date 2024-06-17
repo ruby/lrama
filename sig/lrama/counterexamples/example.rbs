@@ -11,9 +11,9 @@ module Lrama
 
       @counterexamples: untyped
 
-      @derivations1: untyped
+      @derivations1: Derivation
 
-      @derivations2: untyped
+      @derivations2: Derivation
 
       attr_reader path1: untyped
 
@@ -41,7 +41,7 @@ module Lrama
 
       def _derivations: (untyped paths) -> untyped
 
-      def find_derivation_for_symbol: (untyped state_item, untyped sym) -> untyped
+      def find_derivation_for_symbol: (untyped state_item, untyped sym) -> Derivation?
     end
   end
 end
