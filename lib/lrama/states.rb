@@ -18,9 +18,8 @@ module Lrama
 
     attr_reader :states, :reads_relation, :includes_relation, :lookback_relation
 
-    def initialize(grammar, warning, trace_state: false)
+    def initialize(grammar, trace_state: false)
       @grammar = grammar
-      @warning = warning
       @trace_state = trace_state
 
       @states = []
@@ -91,8 +90,6 @@ module Lrama
       report_duration(:compute_conflicts) { compute_conflicts }
 
       report_duration(:compute_default_reduction) { compute_default_reduction }
-
-      check_conflicts
     end
 
     def reporter
@@ -127,15 +124,15 @@ module Lrama
       end
     end
 
+    def sr_conflicts_count
+      @sr_conflicts_count ||= @states.flat_map(&:sr_conflicts).count
+    end
+
+    def rr_conflicts_count
+      @rr_conflicts_count ||= @states.flat_map(&:rr_conflicts).count
+    end
+
     private
-
-    def sr_conflicts
-      @states.flat_map(&:sr_conflicts)
-    end
-
-    def rr_conflicts
-      @states.flat_map(&:rr_conflicts)
-    end
 
     def trace_state
       if @trace_state
@@ -525,33 +522,6 @@ module Lrama
         end.min_by do |rule, rule_id, count|
           [-count, rule_id]
         end.first
-      end
-    end
-
-    def check_conflicts
-      sr_count = sr_conflicts.count
-      rr_count = rr_conflicts.count
-
-      if @grammar.expect
-
-        expected_sr_conflicts = @grammar.expect
-        expected_rr_conflicts = 0
-
-        if expected_sr_conflicts != sr_count
-          @warning.error("shift/reduce conflicts: #{sr_count} found, #{expected_sr_conflicts} expected")
-        end
-
-        if expected_rr_conflicts != rr_count
-          @warning.error("reduce/reduce conflicts: #{rr_count} found, #{expected_rr_conflicts} expected")
-        end
-      else
-        if sr_count != 0
-          @warning.warn("shift/reduce conflicts: #{sr_count} found")
-        end
-
-        if rr_count != 0
-          @warning.warn("reduce/reduce conflicts: #{rr_count} found")
-        end
       end
     end
   end

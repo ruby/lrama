@@ -16,7 +16,6 @@ module Lrama
 
       Report::Duration.enable if options.trace_opts[:time]
 
-      warning = Lrama::Warning.new
       text = options.y.read
       options.y.close if options.y != STDIN
       begin
@@ -33,7 +32,7 @@ module Lrama
         message = message.gsub(/.+/, "\e[1m\\&\e[m") if Exception.to_tty?
         abort message
       end
-      states = Lrama::States.new(grammar, warning, trace_state: (options.trace_opts[:automaton] || options.trace_opts[:closure]))
+      states = Lrama::States.new(grammar, trace_state: (options.trace_opts[:automaton] || options.trace_opts[:closure]))
       states.compute
       context = Lrama::Context.new(states)
 
@@ -60,9 +59,9 @@ module Lrama
         ).render
       end
 
-      if warning.has_error?
-        exit false
-      end
+      logger = Lrama::Logger.new
+      exit false unless Lrama::GrammarValidator.new(grammar, states, logger).valid?
+      Lrama::Diagnostics.new(states, logger).run(**options.diagnostic_opts)
     end
   end
 end
