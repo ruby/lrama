@@ -20,6 +20,7 @@ module Lrama
     @accept_symbol: Grammar::Symbol
     @aux: Auxiliary
     @no_stdlib: bool
+    @locations: bool
     @union: Union
 
     extend Forwardable
@@ -89,5 +90,6 @@ module Lrama
     def fill_symbols: () -> Array[Grammar::Symbol]
     def fill_sym_to_rules: () -> Array[Rule]
     def validate_rule_lhs_is_nterm!: () -> void
+    def set_locations: () -> void
   end
 end

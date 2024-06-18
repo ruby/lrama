@@ -335,7 +335,8 @@ module Lrama
 
     # b4_yylex_formals
     def yylex_formals
-      ary = ["&yylval", "&yylloc"]
+      ary = ["&yylval"]
+      ary << "&yylloc" if @grammar.locations
 
       if @grammar.lex_param
         ary << lex_param_name

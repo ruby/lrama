@@ -34,6 +34,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
     printf("expr: %d\n", $$);
 } expr // printer for symbol
 
+%locations
+
 %%
 
 program : /* empty */

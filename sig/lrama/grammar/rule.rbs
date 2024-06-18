@@ -29,6 +29,8 @@ module Lrama
       def initial_rule?: -> bool
 
       def with_actions: -> String
+
+      def contains_at_reference?: -> bool
     end
   end
 end

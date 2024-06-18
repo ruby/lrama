@@ -25,6 +25,8 @@ line_1(void)
 
 %token <i> NUM
 
+%locations
+
 %%
 
 program :   {

@@ -26,6 +26,8 @@ static int yyerror(YYLTYPE *loc, int parse_param, const char *str);
 %left '+' '-'
 %left '*' '/'
 
+%locations
+
 %%
 
 program : /* empty */

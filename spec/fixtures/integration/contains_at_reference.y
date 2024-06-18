@@ -1,8 +1,8 @@
 %{
 
 #include <stdio.h>
-#include "calculator.h"
-#include "calculator-lexer.h"
+#include "contains_at_reference.h"
+#include "contains_at_reference-lexer.h"
 
 static int yyerror(YYLTYPE *loc, const char *str);
 
@@ -12,25 +12,10 @@ static int yyerror(YYLTYPE *loc, const char *str);
     int val;
 }
 
-%token <val> NUM
-%type <val> expr
-%left '+' '-'
-%left '*' '/'
-
-%locations
-
 %%
 
-program : /* empty */
-     | expr { printf("=> %d", $1); }
-     ;
-expr : NUM
-     | expr '+' expr { $$ = $1 + $3; }
-     | expr '-' expr { $$ = $1 - $3; }
-     | expr '*' expr { $$ = $1 * $3; }
-     | expr '/' expr { $$ = $1 / $3; }
-     | '(' expr ')'  { $$ = $2; }
-     ;
+program : /* empty */ { (void)@1; }
+        ;
 
 %%
 

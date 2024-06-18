@@ -17,6 +17,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %left '+' '-'
 %left '*' '/'
 
+%locations
+
 %error-token {
     $$ = 100;
 } NUM
