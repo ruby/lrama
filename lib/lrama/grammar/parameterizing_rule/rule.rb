@@ -14,6 +14,10 @@ module Lrama
           @is_inline = is_inline
           @required_parameters_count = parameters.count
         end
+
+        def to_s
+          "#{@name}(#{@parameters.map(&:s_value).join(', ')})"
+        end
       end
     end
   end

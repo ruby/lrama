@@ -75,9 +75,43 @@ RSpec.describe Lrama::Diagnostics do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Diagnostics.new(states, logger).run(conflicts_sr: true, conflicts_rr: true)
+        Lrama::Diagnostics.new(grammar, states, logger).run(conflicts_sr: true, conflicts_rr: true)
         expect(logger).to have_received(:warn).with("shift/reduce conflicts: 2 found")
         expect(logger).to have_received(:warn).with("reduce/reduce conflicts: 1 found")
+      end
+    end
+
+    context "when rule has parameterizing redefined" do
+      let(:y) do
+        <<~STR
+          %{
+          // Prologue
+          %}
+          %union {
+              int i;
+          }
+          %token <i> tNUMBER
+          %rule foo(X) : X
+                          ;
+          %rule foo(Y) : Y
+                          ;
+          %%
+          program: foo(tNUMBER)
+                  ;
+        STR
+      end
+
+      it "has warns for parameterizing redefined" do
+        grammar = Lrama::Parser.new(y, "states/parameterizing_rule_redefined.y").parse
+        grammar.prepare
+        grammar.validate!
+        states = Lrama::States.new(grammar)
+        states.compute
+        logger = Lrama::Logger.new
+        allow(logger).to receive(:warn)
+        Lrama::Diagnostics.new(grammar, states, logger).run(parameterizing_redefined: true)
+        expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(X)")
+        expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(Y)")
       end
     end
   end

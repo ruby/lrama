@@ -27,6 +27,10 @@ module Lrama
           @created_lhs_list.reverse.find { |created_lhs| created_lhs.s_value == lhs_s_value }
         end
 
+        def redefined_rules
+          @rules.select { |rule| @rules.count { |r| r.name == rule.name && r.required_parameters_count == rule.required_parameters_count } > 1 }
+        end
+
         private
 
         def select_rules(rules, token)

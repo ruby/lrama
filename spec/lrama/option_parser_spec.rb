@@ -66,6 +66,7 @@ RSpec.describe Lrama::OptionParser do
           Warning categories include:
               conflicts-sr                     Shift/Reduce conflicts (enabled by default)
               conflicts-rr                     Reduce/Reduce conflicts (enabled by default)
+              parameterizing-redefined         redefinition of parameterizing rule
               all                              all warnings
               none                             turn off all warnings
 

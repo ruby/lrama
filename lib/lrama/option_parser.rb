@@ -95,6 +95,7 @@ module Lrama
         o.separator 'Warning categories include:'
         o.separator '    conflicts-sr                     Shift/Reduce conflicts (enabled by default)'
         o.separator '    conflicts-rr                     Reduce/Reduce conflicts (enabled by default)'
+        o.separator '    parameterizing-redefined         redefinition of parameterizing rule'
         o.separator '    all                              all warnings'
         o.separator '    none                             turn off all warnings'
         o.separator ''
@@ -160,7 +161,7 @@ module Lrama
     end
 
     DIAGNOSTICS = %w[]
-    HYPHENATED_DIAGNOSTICS = %w[conflicts-sr conflicts-rr]
+    HYPHENATED_DIAGNOSTICS = %w[conflicts-sr conflicts-rr parameterizing-redefined]
 
     def validate_diagnostic(diagnostic)
       h = { conflicts_sr: true, conflicts_rr: true }
