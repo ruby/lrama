@@ -68,7 +68,7 @@ RSpec.describe Lrama::OptionParser do
               -h, --help                       display this help and exit
 
           Valid Reports:
-              states itemsets lookaheads solved counterexamples all rules terms verbose
+              states itemsets lookaheads solved counterexamples cex all rules terms verbose
 
           Valid Traces:
               none locations scan parse automaton bitsets closure grammar rules actions resource sets muscles tools m4-early m4 skeleton time ielr cex all
@@ -81,18 +81,25 @@ RSpec.describe Lrama::OptionParser do
   describe "#validate_report" do
     let(:option_parser) { Lrama::OptionParser.new }
 
-    describe "valid options are passed" do
+    context "when valid options are passed" do
       it "returns option hash" do
         opts = option_parser.send(:validate_report, ["states", "itemsets"])
         expect(opts).to eq({grammar: true, states: true, itemsets: true})
       end
 
-      describe "all is passed" do
+      context "when cex is passed" do
+        it "returns option hash counterexamples flag enabled" do
+          opts = option_parser.send(:validate_report, ["cex"])
+          expect(opts).to eq({grammar: true, counterexamples: true})
+        end
+      end
+
+      context "when all is passed" do
         it "returns option hash all flags enabled" do
           opts = option_parser.send(:validate_report, ["all"])
           expect(opts).to eq({
             grammar: true, states: true, itemsets: true,
-            lookaheads: true, solved: true, counterexamples: true,
+            lookaheads: true, solved: true, counterexamples: true, cex: true,
           })
         end
       end

@@ -93,16 +93,16 @@ module Lrama
 
     BISON_REPORTS = %w[states itemsets lookaheads solved counterexamples cex all none]
     OTHER_REPORTS = %w[rules terms verbose]
-    NOT_SUPPORTED_REPORTS = %w[cex none]
+    NOT_SUPPORTED_REPORTS = %w[none]
+    ALIASED_REPORTS = { cex: :counterexamples }
     VALID_REPORTS = BISON_REPORTS + OTHER_REPORTS - NOT_SUPPORTED_REPORTS
 
     def validate_report(report)
-      list = VALID_REPORTS
       h = { grammar: true }
 
       report.each do |r|
-        if list.include?(r)
-          h[r.to_sym] = true
+        if VALID_REPORTS.include?(r)
+          h[aliased_report_option(r)] = true
         else
           raise "Invalid report option \"#{r}\"."
         end
@@ -117,6 +117,10 @@ module Lrama
       end
 
       return h
+    end
+
+    def aliased_report_option(opt)
+      (ALIASED_REPORTS[opt.to_sym] || opt).to_sym
     end
 
     VALID_TRACES = %w[
