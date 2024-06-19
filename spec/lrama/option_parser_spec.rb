@@ -81,6 +81,13 @@ RSpec.describe Lrama::OptionParser do
   describe "#validate_report" do
     let(:option_parser) { Lrama::OptionParser.new }
 
+    context "when no options are passed" do
+      it "returns option hash with grammar flag enabled" do
+        opts = option_parser.send(:validate_report, [])
+        expect(opts).to eq({grammar: true})
+      end
+    end
+
     context "when valid options are passed" do
       it "returns option hash" do
         opts = option_parser.send(:validate_report, ["states", "itemsets"])
@@ -99,8 +106,16 @@ RSpec.describe Lrama::OptionParser do
           opts = option_parser.send(:validate_report, ["all"])
           expect(opts).to eq({
             grammar: true, states: true, itemsets: true,
-            lookaheads: true, solved: true, counterexamples: true, cex: true,
+            lookaheads: true, solved: true, counterexamples: true,
+            rules: true, terms: true, verbose: true
           })
+        end
+      end
+
+      context "when none is passed" do
+        it "returns empty option hash" do
+          opts = option_parser.send(:validate_report, ["none"])
+          expect(opts).to eq({})
         end
       end
     end
