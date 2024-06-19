@@ -54,7 +54,7 @@ RSpec.describe Lrama::OptionParser do
           Output:
               -H, --header=[FILE]              also produce a header file named FILE
               -d                               also produce a header file
-              -r, --report=THINGS              also produce details on the automaton
+              -r, --report=REPORTS             also produce details on the automaton
                   --report-file=FILE           also produce details on the automaton output to a file named FILE
               -o, --output=FILE                leave output to FILE
                   --trace=THINGS               also output trace logs at runtime
@@ -67,8 +67,17 @@ RSpec.describe Lrama::OptionParser do
               -V, --version                    output version information and exit
               -h, --help                       display this help and exit
 
-          Valid Reports:
-              states itemsets lookaheads solved counterexamples cex all rules terms verbose
+          REPORTS is a list of comma-separated words that can include:
+              states                           describe the states
+              itemsets                         complete the core item sets with their closure
+              lookaheads                       explicitly associate lookahead tokens to items
+              solved                           describe shift/reduce conflicts solving
+              counterexamples, cex             generate conflict counterexamples
+              rules                            list unused rules
+              terms                            list unused terminals
+              verbose                          report detailed internal state and analysis results
+              all                              include all the above reports
+              none                             disable all reports
 
           Valid Traces:
               none locations scan parse automaton bitsets closure grammar rules actions resource sets muscles tools m4-early m4 skeleton time ielr cex all
