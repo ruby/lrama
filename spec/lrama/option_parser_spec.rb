@@ -54,7 +54,7 @@ RSpec.describe Lrama::OptionParser do
           Output:
               -H, --header=[FILE]              also produce a header file named FILE
               -d                               also produce a header file
-              -r, --report=THINGS              also produce details on the automaton
+              -r, --report=REPORTS             also produce details on the automaton
                   --report-file=FILE           also produce details on the automaton output to a file named FILE
               -o, --output=FILE                leave output to FILE
                   --trace=THINGS               also output trace logs at runtime
@@ -67,8 +67,17 @@ RSpec.describe Lrama::OptionParser do
               -V, --version                    output version information and exit
               -h, --help                       display this help and exit
 
-          Valid Reports:
-              states itemsets lookaheads solved counterexamples all rules terms verbose
+          REPORTS is a list of comma-separated words that can include:
+              states                           describe the states
+              itemsets                         complete the core item sets with their closure
+              lookaheads                       explicitly associate lookahead tokens to items
+              solved                           describe shift/reduce conflicts solving
+              counterexamples, cex             generate conflict counterexamples
+              rules                            list unused rules
+              terms                            list unused terminals
+              verbose                          report detailed internal state and analysis results
+              all                              include all the above reports
+              none                             disable all reports
 
           Valid Traces:
               none locations scan parse automaton bitsets closure grammar rules actions resource sets muscles tools m4-early m4 skeleton time ielr cex all
@@ -81,19 +90,41 @@ RSpec.describe Lrama::OptionParser do
   describe "#validate_report" do
     let(:option_parser) { Lrama::OptionParser.new }
 
-    describe "valid options are passed" do
+    context "when no options are passed" do
+      it "returns option hash with grammar flag enabled" do
+        opts = option_parser.send(:validate_report, [])
+        expect(opts).to eq({grammar: true})
+      end
+    end
+
+    context "when valid options are passed" do
       it "returns option hash" do
         opts = option_parser.send(:validate_report, ["states", "itemsets"])
         expect(opts).to eq({grammar: true, states: true, itemsets: true})
       end
 
-      describe "all is passed" do
+      context "when cex is passed" do
+        it "returns option hash counterexamples flag enabled" do
+          opts = option_parser.send(:validate_report, ["cex"])
+          expect(opts).to eq({grammar: true, counterexamples: true})
+        end
+      end
+
+      context "when all is passed" do
         it "returns option hash all flags enabled" do
           opts = option_parser.send(:validate_report, ["all"])
           expect(opts).to eq({
             grammar: true, states: true, itemsets: true,
             lookaheads: true, solved: true, counterexamples: true,
+            rules: true, terms: true, verbose: true
           })
+        end
+      end
+
+      context "when none is passed" do
+        it "returns empty option hash" do
+          opts = option_parser.send(:validate_report, ["none"])
+          expect(opts).to eq({})
         end
       end
     end

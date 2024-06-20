@@ -65,11 +65,19 @@ module Lrama
         o.separator 'Output:'
         o.on('-H', '--header=[FILE]', 'also produce a header file named FILE') {|v| @options.header = true; @options.header_file = v }
         o.on('-d', 'also produce a header file') { @options.header = true }
-        o.on('-r', '--report=THINGS', Array, 'also produce details on the automaton') {|v| @report = v }
+        o.on('-r', '--report=REPORTS', Array, 'also produce details on the automaton') {|v| @report = v }
         o.on_tail ''
-        o.on_tail 'Valid Reports:'
-        o.on_tail "    #{VALID_REPORTS.join(' ')}"
-
+        o.on_tail 'REPORTS is a list of comma-separated words that can include:'
+        o.on_tail '    states                           describe the states'
+        o.on_tail '    itemsets                         complete the core item sets with their closure'
+        o.on_tail '    lookaheads                       explicitly associate lookahead tokens to items'
+        o.on_tail '    solved                           describe shift/reduce conflicts solving'
+        o.on_tail '    counterexamples, cex             generate conflict counterexamples'
+        o.on_tail '    rules                            list unused rules'
+        o.on_tail '    terms                            list unused terminals'
+        o.on_tail '    verbose                          report detailed internal state and analysis results'
+        o.on_tail '    all                              include all the above reports'
+        o.on_tail '    none                             disable all reports'
         o.on('--report-file=FILE', 'also produce details on the automaton output to a file named FILE') {|v| @options.report_file = v }
         o.on('-o', '--output=FILE', 'leave output to FILE') {|v| @options.outfile = v }
 
@@ -91,32 +99,32 @@ module Lrama
       end
     end
 
-    BISON_REPORTS = %w[states itemsets lookaheads solved counterexamples cex all none]
-    OTHER_REPORTS = %w[rules terms verbose]
-    NOT_SUPPORTED_REPORTS = %w[cex none]
-    VALID_REPORTS = BISON_REPORTS + OTHER_REPORTS - NOT_SUPPORTED_REPORTS
+    ALIASED_REPORTS = { cex: :counterexamples }
+    VALID_REPORTS = %i[states itemsets lookaheads solved counterexamples rules terms verbose]
 
     def validate_report(report)
-      list = VALID_REPORTS
       h = { grammar: true }
+      return h if report.empty?
+      return {} if report == ['none']
+      if report == ['all']
+        VALID_REPORTS.each { |r| h[r] = true }
+        return h
+      end
 
       report.each do |r|
-        if list.include?(r)
-          h[r.to_sym] = true
+        aliased = aliased_report_option(r)
+        if VALID_REPORTS.include?(aliased)
+          h[aliased] = true
         else
           raise "Invalid report option \"#{r}\"."
         end
       end
 
-      if h[:all]
-        (BISON_REPORTS - NOT_SUPPORTED_REPORTS).each do |r|
-          h[r.to_sym] = true
-        end
-
-        h.delete(:all)
-      end
-
       return h
+    end
+
+    def aliased_report_option(opt)
+      (ALIASED_REPORTS[opt.to_sym] || opt).to_sym
     end
 
     VALID_TRACES = %w[
