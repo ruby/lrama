@@ -16,6 +16,7 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %type <val> expr
 %left '+' '-'
 %left '*' '/'
+%define lr.type ielr
 
 %%
 

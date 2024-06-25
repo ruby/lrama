@@ -96,6 +96,14 @@ module Lrama
     def compute_ielr
       report_duration(:compute_predecessors) { compute_predecessors }
       report_duration(:split_states) { split_states }
+      @states.each {|state| p state, state.transitions, state.item_lookahead_set }
+      report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
+      report_duration(:compute_reads_relation) { compute_reads_relation }
+      report_duration(:compute_read_sets) { compute_read_sets }
+      report_duration(:compute_includes_relation) { compute_includes_relation }
+      report_duration(:compute_lookback_relation) { compute_lookback_relation }
+      report_duration(:compute_follow_sets) { compute_follow_sets }
+      report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
     end
 
     def reporter
@@ -570,19 +578,23 @@ module Lrama
     end
 
     def split_states
-      @item_lookahead_set = {}
-      @lalr_isocores = Hash.new {|hash, key| hash[key] = key }
       @ielr_isocores = Hash.new {|hash, key| hash[key] = [key] }
       @lookaheads_recomputed = Hash.new {|hash, key| hash[key] = false }
-      @states.each do |state|
-        state.transitions.each do |shift, next_state|
-          compute_state(state, shift, next_state)
+      transition_queue = []
+      @states.first.transitions.each do |shift, next_state|
+        transition_queue << [@states.first, shift, next_state]
+      end
+      until transition_queue.empty?
+        state, shift, next_state = transition_queue.shift
+        compute_state(state, shift, next_state)
+        next_state.transitions.each do |sh, next_st|
+          transition_queue << [next_state, sh, next_st]
         end
       end
     end
 
     def merge_lookaheads(state, k)
-      return if state.kernels.all? {|item| (k[item] - item_lookahead_set(state)[item]).empty? }
+      return if state.kernels.all? {|item| (k[item] - state.item_lookahead_set[item]).empty? }
 
       state.transitions.each do |shift, next_state|
         next if @lookaheads_recomputed[next_state]
@@ -603,18 +615,19 @@ module Lrama
           new_state.set_items_to_state(sh.next_items, next_state)
         end
         @states << new_state
-        @lalr_isocores[new_state] = s
+        new_state.lalr_isocore = s
         @ielr_isocores[s] << new_state
         @ielr_isocores[s].each do |st|
           @ielr_isocores[st] = @ielr_isocores[s]
         end
         @lookaheads_recomputed[new_state] = true
-        @item_lookahead_set[new_state] = k
+        new_state.item_lookahead_set = k
         state.update_transition(shift, new_state)
       elsif(!@lookaheads_recomputed[s])
-        @item_lookahead_set[s] = k
+        s.item_lookahead_set = k
         @lookaheads_recomputed[s] = true
       else
+        state.update_transition(shift, s)
         merge_lookaheads(s, k)
       end
     end
@@ -623,29 +636,33 @@ module Lrama
       next_state.kernels.to_h {|item|
         lookahead_sets =
           if item.position == 1
-            compute_goto_follow_set(@lalr_isocores[state], item.lhs)
+            compute_goto_follow_set(state.lalr_isocore, item.lhs)
           else
             kernel = state.kernels.find {|k| k.rule == item.rule && k.position == item.position - 1 }
-            item_lookahead_set(state)[kernel]
+            state.item_lookahead_set[kernel]
           end
+
+        # p [state, lookahead_sets, lookahead_set_filters(next_state)[item]]
 
         [item, lookahead_sets & lookahead_set_filters(next_state)[item]]
       }
     end
 
     def lookahead_set_filters(state)
+      p state
       state.kernels.to_h {|kernel|
+        # p [state, kernel, annotation_list(@lalr_isocores[state])]
         [kernel,
-        annotation_list(@lalr_isocores[state])[@lalr_isocores[state]].filter_map {|token, actions|
+         annotation_list(state.lalr_isocore).filter_map {|token, actions|
           token if token.term? && actions.any? {|item, _| item == kernel }
         }]
       }
     end
 
     def is_compatible(state, k)
-      @lookaheads_recomputed[state] ||
-        annotation_list(@lalr_isocores[state])[@lalr_isocores[state]].all? {|token, actions|
-          a = dominant_contribution(state, token, actions, item_lookahead_set(state))
+      !@lookaheads_recomputed[state] ||
+        annotation_list(state.lalr_isocores).all? {|token, actions|
+          a = dominant_contribution(state, token, actions, state.item_lookahead_set)
           b = dominant_contribution(state, token, actions, k)
           a.empty? || b.empty? || a == b
         }
@@ -669,119 +686,15 @@ module Lrama
       state.always_follows(shift, next_state).union(state.kernels.select {|item|
         state.follow_kernel_items(shift, next_state, item)
       }.reduce([]) {|result, item|
-        result.union(item_lookahead_set(state)[item])
+        result.union(state.item_lookahead_set[item])
       })
     end
 
-    def item_lookahead_set(state)
-      @item_lookahead_set[state] ||=
-        state.kernels.to_h {|item|
-          value =
-            if item.position > 1
-              prev_state, prev_item = predecessor_with_item(state, item)
-              item_lookahead_set(prev_state)[prev_item]
-            elsif item.position == 1
-              prev_state = state.predecessors.find {|p| p.shifts.any? {|shift| shift.next_sym == item.lhs } }
-              shift, next_state = prev_state.nterm_transitions.find {|shift, _| shift.next_sym == item.lhs }
-              goto_follows(prev_state, shift, next_state)
-            else
-              []
-            end
-          [item, value]
-        }
-    end
-
-    def predecessor_with_item(state, item)
-      state.predecessors.each do |state|
-        state.kernels.each do |kernel|
-          return [state, kernel] if kernel.rule == item.rule && kernel.position == item.position - 1
-        end
-      end
-    end
-
-    def goto_follows(state, shift, next_state)
-      compute_include_dependencies(state, shift, next_state).reduce([]) {|result, goto|
-        st, sh, next_st = goto
-        result.union(st.always_follows(sh, next_st))
-      }
-    end
-
-    def compute_include_dependencies(state, shift, next_state)
-      internal = state.internal_dependencies(shift, next_state).map {|sh, next_st| [state, sh, next_st] }
-
-      item = state.kernels.find {|kernel| kernel.next_sym == shift.next_sym }
-      return internal unless item.symbols_after_dot.all?(&:nullable)
-
-      s, i = state, item
-      while i.position > 0
-        s = predecessors(s).find {|p| p.kernels.find {|item| item.rule == i.rule && item.position == i.position - 1 } }
-        i = s.kernels.find {|item| item.rule == i.rule && item.position == i.position - 1 }
-      end
-
-      p_shift, p_next_state = s.transitions.find {|sh, _| sh.next_sym == item.lhs }
-      internal.union([[s, p_shift, p_next_state]])
-    end
-
     def annotation_list(state)
-      manifestations = state.inadequacy_list.transform_values {|hash| hash.to_h {|token, actions| [token, annotate_manifestation(state, token, actions)] } }
-      state.transitions.reduce(manifestations) {|item, transition|
-        item.merge(annotate_predecessor(state, transition[1], annotation_list(transition[1])[transition[1]])) {|state, annotations, other_annotations|
-          annotations.merge(other_annotations) {|token, actions, other_actions|
-            actions.merge(other_actions) {|action, items, other_items|
-              items.merge(other_items) {|item, bool, other_bool|
-                raise if bool != other_bool
-                bool
-              }
-            }
-          }
-        }
-      }
-    end
-
-    def annotate_manifestation(state, token, actions)
-      actions.to_h {|action, item|
-        [action,
-         if action.is_a?(State::Shift)
-           {}
-         elsif action.is_a?(State::Reduce)
-           if item.empty_rule?
-             compute_lhs_contributions(state, item.lhs, token)
-           else
-             state.kernels.to_h {|kernel| [kernel, kernel.rule == item.rule && kernel.end_of_rule?] }
-           end
-         end
-        ]
-      }
-    end
-
-    def compute_lhs_contributions(state, sym, token)
-      shift, next_state = state.nterm_transitions.find {|sh, _| sh.next_sym == sym }
-      if state.always_follows(shift, next_state).include?(token)
-        {}
-      else
-        state.kernels.to_h {|kernel| [kernel, state.follow_kernel?(kernel) && item_lookahead_set(state)[kernel].include?(token)] }
-      end
-    end
-
-    def annotate_predecessor(state, next_state, annotation_list)
-      {state => annotation_list.to_h {|token, actions|
-        next [token, {}] if actions.empty? || actions.any? {|action, hash|
-          hash.keys.any? {|item| hash[item] && item.position == 1 && compute_lhs_contributions(state, item.lhs, token).empty? }
-        }
-        [token, actions.to_h {|action, hash|
-          [action, hash.to_h {|item, _|
-            kernel = state.kernels.find {|k| k.rule == item.rule && k.position == item.position - 1 }
-            [kernel,
-             hash[item] &&
-             (
-               !kernel.nil? && (item_lookahead_set(state)[kernel].include?(token)) ||
-               (item.position == 1 && compute_lhs_contributions(state, item.lhs, token)[item])
-             )
-            ]
-          }]
-        }]
-      }
-      }
+      manifestations = state.annotate_manifestation
+      predecessors = state.transitions.map {|_, next_state| state.annotate_predecessor(annotation_list(next_state)) }
+      p state, state.inadequacy_list, manifestations, predecessors
+      manifestations + predecessors
     end
   end
 end

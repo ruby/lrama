@@ -62,6 +62,10 @@ module Lrama
         rhs[position..-1]
       end
 
+      def symbols_after_transition
+        rhs[position+1..-1]
+      end
+
       def to_s
         "#{lhs.id.s_value}: #{display_name}"
       end

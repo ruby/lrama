@@ -25,6 +25,7 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %union {
     int val;
 }
+%define lr.type ielr
 %token LF
 %token <val> NUM
 %type <val> expr

@@ -1910,4 +1910,17 @@ RSpec.describe Lrama::States do
       end
     end
   end
+
+  describe '#compute_ielr' do
+    it 'recompute states' do
+      path = "integration/ielr.y"
+      y = File.read(fixture_path(path))
+      grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, warning)
+      states.compute
+      states.compute_ielr
+    end
+  end
 end

@@ -21,11 +21,5 @@ module Lrama
       @y = STDIN
       @debug = false
     end
-
-    def define=(v)
-      v.split(',').each do |p_define|
-        @define.store *p_define.split('=')
-      end
-    end
   end
 end
