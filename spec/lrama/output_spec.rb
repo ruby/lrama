@@ -17,7 +17,6 @@ RSpec.describe Lrama::Output do
   }
   let(:out) { StringIO.new }
   let(:header_out) { StringIO.new }
-  let(:warning) { Lrama::Warning.new(StringIO.new) } # suppress warnings
   let(:text) { File.read(grammar_file_path) }
   let(:grammar) do
     grammar = Lrama::Parser.new(text, grammar_file_path).parse
@@ -25,7 +24,7 @@ RSpec.describe Lrama::Output do
     grammar.validate!
     grammar
   end
-  let(:states) { s = Lrama::States.new(grammar, warning); s.compute; s }
+  let(:states) { s = Lrama::States.new(grammar); s.compute; s }
   let(:context) { Lrama::Context.new(states) }
   let(:grammar_file_path) { fixture_path("common/basic.y") }
   let(:header_file_path) { "y.tab.h" }

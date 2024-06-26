@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Counterexamples do
-  let(:out) { StringIO.new }
-  let(:warning) { Lrama::Warning.new(out) }
-
   describe "#compute" do
     # Example comes from https://www.cs.cornell.edu/andru/papers/cupex/cupex.pdf
     # "4. Constructing Nonunifying Counterexamples"
@@ -55,7 +52,7 @@ RSpec.describe Lrama::Counterexamples do
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar, warning)
+        states = Lrama::States.new(grammar)
         states.compute
         counterexamples = Lrama::Counterexamples.new(states)
 
@@ -256,7 +253,7 @@ RSpec.describe Lrama::Counterexamples do
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar, warning)
+        states = Lrama::States.new(grammar)
         states.compute
         counterexamples = Lrama::Counterexamples.new(states)
 
@@ -335,7 +332,7 @@ RSpec.describe Lrama::Counterexamples do
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar, warning)
+        states = Lrama::States.new(grammar)
         states.compute
         counterexamples = Lrama::Counterexamples.new(states)
 
@@ -418,7 +415,7 @@ RSpec.describe Lrama::Counterexamples do
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar, warning)
+        states = Lrama::States.new(grammar)
         states.compute
         counterexamples = Lrama::Counterexamples.new(states)
 

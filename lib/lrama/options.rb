@@ -6,8 +6,8 @@ module Lrama
     attr_accessor :skeleton, :header, :header_file,
                   :report_file, :outfile,
                   :error_recovery, :grammar_file,
-                  :trace_opts, :report_opts, :y,
-                  :debug
+                  :trace_opts, :report_opts,
+                  :diagnostic, :y, :debug
 
     def initialize
       @skeleton = "bison/yacc.c"
@@ -19,6 +19,7 @@ module Lrama
       @grammar_file = nil
       @trace_opts = nil
       @report_opts = nil
+      @diagnostic = false
       @y = STDIN
       @debug = false
     end

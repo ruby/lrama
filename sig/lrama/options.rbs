@@ -9,6 +9,7 @@ module Lrama
     attr_accessor grammar_file: String?
     attr_accessor trace_opts: Hash[Symbol, bool]?
     attr_accessor report_opts: Hash[Symbol, bool]?
+    attr_accessor diagnostic: bool
     attr_accessor y: IO
     attr_accessor debug: bool
 

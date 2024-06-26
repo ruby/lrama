@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Context do
-  let(:out) { StringIO.new }
-  let(:warning) { Lrama::Warning.new(out) }
-
   describe "basic" do
     it do
       path = "context/basic.y"
@@ -11,7 +8,7 @@ RSpec.describe Lrama::Context do
       grammar = Lrama::Parser.new(y, path).parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar, warning)
+      states = Lrama::States.new(grammar)
       states.compute
       context = Lrama::Context.new(states)
 
@@ -189,7 +186,7 @@ RSpec.describe Lrama::Context do
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar, warning)
+        states = Lrama::States.new(grammar)
         states.compute
         context = Lrama::Context.new(states)
 
@@ -240,7 +237,7 @@ RSpec.describe Lrama::Context do
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar, warning)
+        states = Lrama::States.new(grammar)
         states.compute
         context = Lrama::Context.new(states)
 

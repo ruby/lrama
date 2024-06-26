@@ -88,6 +88,9 @@ module Lrama
 
         o.on('-v', 'reserved, do nothing') { }
         o.separator ''
+        o.separator 'Diagnostics:'
+        o.on('-W', '--warnings', 'report the warnings') {|v| @options.diagnostic = true }
+        o.separator ''
         o.separator 'Error Recovery:'
         o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }
         o.separator ''
