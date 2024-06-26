@@ -21,7 +21,12 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %%
 
 program         : defined_option(number) <i>
+                | defined_list(number) <i>
                 ;
+
+%rule defined_list(X): /* empty */
+                     | defined_list(X) number
+                     ;
 
 %%
 

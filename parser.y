@@ -30,8 +30,6 @@ rule
                     | bison_declarations bison_declaration ";"?
 
   bison_declaration: grammar_declaration
-                   | rule_declaration
-                   | inline_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
                    | "%param" params
@@ -90,6 +88,8 @@ rule
                            )
                          }
                      | symbol_declaration
+                     | rule_declaration
+                     | inline_declaration
                      | "%destructor" "{"
                          {
                            begin_c_declaration("}")

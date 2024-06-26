@@ -1430,6 +1430,7 @@ RSpec.describe Lrama::Parser do
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "defined_option_number"), alias_name: nil, number: 5, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
               Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "defined_list_number"), alias_name: nil, number: 7, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 3, nullable: true),
             ])
 
             expect(grammar.rules).to eq([
@@ -1477,6 +1478,40 @@ RSpec.describe Lrama::Parser do
                 nullable: true,
                 precedence_sym: nil,
                 lineno: 23,
+              ),
+              Rule.new(
+                id: 4,
+                lhs: grammar.find_symbol_by_s_value!("defined_list_number"),
+                rhs: [],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 24,
+              ),
+              Rule.new(
+                id: 5,
+                lhs: grammar.find_symbol_by_s_value!("defined_list_number"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("defined_list_number"),
+                  grammar.find_symbol_by_s_value!("number"),
+                ],
+                lhs_tag: T::Tag.new(s_value: "<i>"),
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("number"),
+                lineno: 24,
+              ),
+              Rule.new(
+                id: 6,
+                lhs: grammar.find_symbol_by_s_value!("program"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("defined_list_number"),
+                ],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 24,
               ),
             ])
           end
@@ -2324,8 +2359,8 @@ RSpec.describe Lrama::Parser do
 
         it "expands inlining rules" do
           expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 0, nullable: false),
-            Sym.new(id: T::Ident.new(s_value: "expression"), alias_name: nil, number: 9, tag:  T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 10, tag: nil, term: false, token_id: 0, nullable: false),
+            Sym.new(id: T::Ident.new(s_value: "expression"), alias_name: nil, number: 11, tag:  T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: false),
           ])
 
           expect(grammar.rules).to eq([
@@ -2403,6 +2438,32 @@ RSpec.describe Lrama::Parser do
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'/'"),
               lineno: 27,
+            ),
+            Rule.new(
+              id: 6,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("'%'"),
+                grammar.find_symbol_by_s_value!("expression"),
+              ],
+              token_code: T::UserCode.new(s_value: " $$ = $1  + 1 +  $3; "),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'%'"),
+              lineno: 28,
+            ),
+            Rule.new(
+              id: 7,
+              lhs: grammar.find_symbol_by_s_value!("expression"),
+              rhs: [
+                grammar.find_symbol_by_s_value!("expression"),
+                grammar.find_symbol_by_s_value!("'&'"),
+                grammar.find_symbol_by_s_value!("expression"),
+              ],
+              token_code: T::UserCode.new(s_value: " $$ = $1  - 1 -  $3; "),
+              nullable: false,
+              precedence_sym: grammar.find_symbol_by_s_value!("'&'"),
+              lineno: 28,
             ),
           ])
         end
