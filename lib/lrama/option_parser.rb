@@ -16,7 +16,6 @@ module Lrama
 
       @options.trace_opts = validate_trace(@trace)
       @options.report_opts = validate_report(@report)
-      @options.diagnostic_opts = validate_diagnostic(@diagnostic)
       @options.grammar_file = argv.shift
 
       if !@options.grammar_file
@@ -90,14 +89,7 @@ module Lrama
         o.on('-v', 'reserved, do nothing') { }
         o.separator ''
         o.separator 'Diagnostics:'
-        o.on('-W', '--warnings=CATEGORY', Array, 'report the warnings falling in category') {|v| @diagnostic = v }
-        o.separator ''
-        o.separator 'Warning categories include:'
-        o.separator '    conflicts-sr                     Shift/Reduce conflicts (enabled by default)'
-        o.separator '    conflicts-rr                     Reduce/Reduce conflicts (enabled by default)'
-        o.separator '    parameterizing-redefined         redefinition of parameterizing rule'
-        o.separator '    all                              all warnings'
-        o.separator '    none                             turn off all warnings'
+        o.on('-W', '--warnings', 'report the warnings') {|v| @options.diagnostic = true }
         o.separator ''
         o.separator 'Error Recovery:'
         o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }
@@ -154,28 +146,6 @@ module Lrama
           h[t.to_sym] = true
         else
           raise "Invalid trace option \"#{t}\"."
-        end
-      end
-
-      return h
-    end
-
-    DIAGNOSTICS = %w[]
-    HYPHENATED_DIAGNOSTICS = %w[conflicts-sr conflicts-rr parameterizing-redefined]
-
-    def validate_diagnostic(diagnostic)
-      h = { conflicts_sr: true, conflicts_rr: true }
-      return h if diagnostic.nil?
-      return {} if diagnostic.any? { |d| d == 'none' }
-      return { all: true } if diagnostic.any? { |d| d == 'all' }
-
-      diagnostic.each do |d|
-        if DIAGNOSTICS.include?(d)
-          h[d.to_sym] = true
-        elsif HYPHENATED_DIAGNOSTICS.include?(d)
-          h[d.gsub('-', '_').to_sym] = true
-        else
-          raise "Invalid diagnostic option \"#{d}\"."
         end
       end
 

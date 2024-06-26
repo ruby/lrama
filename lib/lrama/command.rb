@@ -61,7 +61,7 @@ module Lrama
 
       logger = Lrama::Logger.new
       exit false unless Lrama::GrammarValidator.new(grammar, states, logger).valid?
-      Lrama::Diagnostics.new(grammar, states, logger).run(**options.diagnostic_opts)
+      Lrama::Diagnostics.new(grammar, states, logger).run(options.diagnostic)
     end
   end
 end

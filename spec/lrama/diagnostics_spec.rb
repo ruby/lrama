@@ -75,7 +75,7 @@ RSpec.describe Lrama::Diagnostics do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Diagnostics.new(grammar, states, logger).run(conflicts_sr: true, conflicts_rr: true)
+        Lrama::Diagnostics.new(grammar, states, logger).run(true)
         expect(logger).to have_received(:warn).with("shift/reduce conflicts: 2 found")
         expect(logger).to have_received(:warn).with("reduce/reduce conflicts: 1 found")
       end
@@ -109,7 +109,7 @@ RSpec.describe Lrama::Diagnostics do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Diagnostics.new(grammar, states, logger).run(parameterizing_redefined: true)
+        Lrama::Diagnostics.new(grammar, states, logger).run(true)
         expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(X)")
         expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(Y)")
       end

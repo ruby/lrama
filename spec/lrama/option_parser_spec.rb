@@ -61,14 +61,7 @@ RSpec.describe Lrama::OptionParser do
               -v                               reserved, do nothing
 
           Diagnostics:
-              -W, --warnings=CATEGORY          report the warnings falling in category
-
-          Warning categories include:
-              conflicts-sr                     Shift/Reduce conflicts (enabled by default)
-              conflicts-rr                     Reduce/Reduce conflicts (enabled by default)
-              parameterizing-redefined         redefinition of parameterizing rule
-              all                              all warnings
-              none                             turn off all warnings
+              -W, --warnings                   report the warnings
 
           Error Recovery:
               -e                               enable error recovery
@@ -247,57 +240,32 @@ RSpec.describe Lrama::OptionParser do
     end
   end
 
-  describe "@diagnostic_opts" do
+  describe "@diagnostic" do
     context "when diagnostic option is not passed" do
-      it "returns { conflicts_sr: true, conflicts_rr: true }" do
+      it "returns false" do
         option_parser = Lrama::OptionParser.new
         option_parser.send(:parse, [fixture_path("command/basic.y")])
         options = option_parser.instance_variable_get(:@options)
-        expect(options.diagnostic_opts).to eq({ conflicts_sr: true, conflicts_rr: true })
+        expect(options.diagnostic).to be false
       end
     end
 
     context "when diagnostic option is passed" do
-      context "when all is passed" do
-        it "returns { all: true }" do
+      context "when --warnings is passed" do
+        it "returns true" do
           option_parser = Lrama::OptionParser.new
-          option_parser.send(:parse, ["--warnings=all", fixture_path("command/basic.y")])
+          option_parser.send(:parse, ["--warnings", fixture_path("command/basic.y")])
           options = option_parser.instance_variable_get(:@options)
-          expect(options.diagnostic_opts).to eq({all: true})
+          expect(options.diagnostic).to be true
         end
       end
 
-      context "when conflicts-sr is passed" do
-        it "returns { conflicts_sr: true, conflicts_rr: true }" do
+      context "when -W is passed" do
+        it "returns true" do
           option_parser = Lrama::OptionParser.new
-          option_parser.send(:parse, ["--warnings=conflicts-sr", fixture_path("command/basic.y")])
+          option_parser.send(:parse, ["-W", fixture_path("command/basic.y")])
           options = option_parser.instance_variable_get(:@options)
-          expect(options.diagnostic_opts).to eq({ conflicts_sr: true, conflicts_rr: true })
-        end
-      end
-
-      context "when conflicts-rr is passed" do
-        it "returns { conflicts_sr: true, conflicts_rr: true }" do
-          option_parser = Lrama::OptionParser.new
-          option_parser.send(:parse, ["--warnings=conflicts-rr", fixture_path("command/basic.y")])
-          options = option_parser.instance_variable_get(:@options)
-          expect(options.diagnostic_opts).to eq({ conflicts_sr: true, conflicts_rr: true })
-        end
-      end
-
-      context "when none is passed" do
-        it "returns empty hash" do
-          option_parser = Lrama::OptionParser.new
-          option_parser.send(:parse, ["--warnings=none", fixture_path("command/basic.y")])
-          options = option_parser.instance_variable_get(:@options)
-          expect(options.diagnostic_opts).to eq({})
-        end
-      end
-
-      context "when invalid option is passed" do
-        it "raise error" do
-          option_parser = Lrama::OptionParser.new
-          expect { option_parser.send(:parse, ["--warnings=invalid", fixture_path("command/basic.y")]) }.to raise_error(/Invalid diagnostic option/)
+          expect(options.diagnostic).to be true
         end
       end
     end
