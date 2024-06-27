@@ -6,7 +6,7 @@ module Lrama
       attr_reader lhs_tag: Lexer::Token::Tag?
       attr_reader rhs: Array[Lexer::Token]
       attr_reader user_code: Lexer::Token::UserCode?
-      attr_reader precedence_sym: Lexer::Token?
+      attr_reader precedence_sym: Grammar::Symbol?
 
       @rule_counter: Counter
       @midrule_action_counter: Counter
@@ -26,7 +26,7 @@ module Lrama
       def has_inline_rules?: -> bool
       def resolve_inline_rules: -> Array[RuleBuilder]
       def user_code=: (Lexer::Token::UserCode? user_code) -> void
-      def precedence_sym=: (Lexer::Token? precedence_sym) -> void
+      def precedence_sym=: (Grammar::Symbol? precedence_sym) -> void
       def complete_input: () -> void
       def setup_rules: () -> void
       def rules: () -> Array[Rule]
