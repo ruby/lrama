@@ -95,7 +95,7 @@ This also requires Lrama to be able to run with only default gems because BASERU
 ### How to generate parser.rb
 
 ```shell
-$ rake build:parser
+$ bundle exec rake build:parser
 ```
 
 `parser.rb` is generated from `parser.y` by Racc.
