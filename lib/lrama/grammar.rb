@@ -57,7 +57,6 @@ module Lrama
       @aux = Auxiliary.new
       @no_stdlib = false
       @locations = false
-      @if_count = 0
 
       append_special_symbols
     end
