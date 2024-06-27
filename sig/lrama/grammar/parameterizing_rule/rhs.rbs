@@ -4,7 +4,7 @@ module Lrama
       class Rhs
         attr_reader symbols: Array[untyped]
         attr_reader user_code: Lexer::Token::UserCode?
-        attr_reader precedence_sym: Lexer::Token?
+        attr_reader precedence_sym: Grammar::Symbol?
 
         def initialize: () -> void
         def resolve_user_code: (Grammar::Binding bindings) -> Lexer::Token::UserCode?
