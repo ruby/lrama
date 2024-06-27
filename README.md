@@ -217,4 +217,4 @@ $ exe/lrama -o parse.tmp.c --header=parse.tmp.h tmp/parse.tmp.y > report.txt
 
 ## License
 
-See LEGAL.md file.
+See [LEGAL.md](./LEGAL.md) file.
