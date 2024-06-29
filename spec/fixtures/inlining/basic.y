@@ -25,7 +25,13 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 expression      : NUM
                 | expression op expression { $$ = $1 $2 $3; }
+                | expression other_op expression { $$ = $1 $2 $3; }
                 ;
+
+
+%rule %inline other_op : '%' { + 1 + }
+                       | '&' { - 1 - }
+                       ;
 
 %%
 
