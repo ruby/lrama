@@ -80,12 +80,16 @@ module Lrama
         o.on_tail '    none                             disable all reports'
         o.on('--report-file=FILE', 'also produce details on the automaton output to a file named FILE') {|v| @options.report_file = v }
         o.on('-o', '--output=FILE', 'leave output to FILE') {|v| @options.outfile = v }
-
-        o.on('--trace=THINGS', Array, 'also output trace logs at runtime') {|v| @trace = v }
+        o.on('--trace=TRACES', Array, 'also output trace logs at runtime') {|v| @trace = v }
         o.on_tail ''
-        o.on_tail 'Valid Traces:'
-        o.on_tail "    #{VALID_TRACES.join(' ')}"
-
+        o.on_tail 'TRACES is a list of comma-separated words that can include:'
+        o.on_tail '    automaton                        display states'
+        o.on_tail '    closure                          display states'
+        o.on_tail '    rules                            display grammar rules'
+        o.on_tail '    actions                          display grammar rules with actions'
+        o.on_tail '    time                             display generation time'
+        o.on_tail '    all                              include all the above traces'
+        o.on_tail '    none                             disable all traces'
         o.on('-v', 'reserved, do nothing') { }
         o.separator ''
         o.separator 'Diagnostics:'
@@ -131,18 +135,26 @@ module Lrama
     end
 
     VALID_TRACES = %w[
-      none locations scan parse automaton bitsets
-      closure grammar rules actions resource
-      sets muscles tools m4-early m4 skeleton time
-      ielr cex all
+      locations scan parse automaton bitsets closure
+      grammar rules actions resource sets muscles
+      tools m4-early m4 skeleton time ielr cex
+    ]
+    NOT_SUPPORTED_TRACES = %w[
+      locations scan parse bitsets grammar resource
+      sets muscles tools m4-early m4 skeleton ielr cex
     ]
 
     def validate_trace(trace)
-      list = VALID_TRACES
       h = {}
+      return h if trace.empty? || trace == ['none']
+      supported = VALID_TRACES - NOT_SUPPORTED_TRACES
+      if trace == ['all']
+        supported.each { |t| h[t.to_sym] = true }
+        return h
+      end
 
       trace.each do |t|
-        if list.include?(t)
+        if supported.include?(t)
           h[t.to_sym] = true
         else
           raise "Invalid trace option \"#{t}\"."
