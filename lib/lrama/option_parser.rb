@@ -90,7 +90,7 @@ module Lrama
         o.on_tail '    time                             display generation time'
         o.on_tail '    all                              include all the above traces'
         o.on_tail '    none                             disable all traces'
-        o.on('-v', 'reserved, do nothing') { }
+        o.on('-v', '--verbose', "same as '--report=state'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
         o.on('-W', '--warnings', 'report the warnings') {|v| @options.diagnostic = true }

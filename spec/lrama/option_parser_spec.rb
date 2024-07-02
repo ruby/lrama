@@ -58,7 +58,7 @@ RSpec.describe Lrama::OptionParser do
                   --report-file=FILE           also produce details on the automaton output to a file named FILE
               -o, --output=FILE                leave output to FILE
                   --trace=TRACES               also output trace logs at runtime
-              -v                               reserved, do nothing
+              -v, --verbose                    same as '--report=state'
 
           Diagnostics:
               -W, --warnings                   report the warnings
@@ -141,6 +141,20 @@ RSpec.describe Lrama::OptionParser do
     describe "invalid options are passed" do
       it "returns option hash" do
         expect { option_parser.send(:validate_report, ["invalid"]) }.to raise_error(/Invalid report option/)
+      end
+    end
+
+    context "when -v option is passed" do
+      it "returns option hash states flag enabled" do
+        opts = option_parser.send(:validate_report, ["states"])
+        expect(opts).to eq({grammar: true, states: true})
+      end
+    end
+
+    context "when --verbose option is passed" do
+      it "returns option hash states flag enabled" do
+        opts = option_parser.send(:validate_report, ["states"])
+        expect(opts).to eq({grammar: true, states: true})
       end
     end
   end
