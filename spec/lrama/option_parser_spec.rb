@@ -57,7 +57,7 @@ RSpec.describe Lrama::OptionParser do
               -r, --report=REPORTS             also produce details on the automaton
                   --report-file=FILE           also produce details on the automaton output to a file named FILE
               -o, --output=FILE                leave output to FILE
-                  --trace=THINGS               also output trace logs at runtime
+                  --trace=TRACES               also output trace logs at runtime
               -v                               reserved, do nothing
 
           Diagnostics:
@@ -82,8 +82,14 @@ RSpec.describe Lrama::OptionParser do
               all                              include all the above reports
               none                             disable all reports
 
-          Valid Traces:
-              none locations scan parse automaton bitsets closure grammar rules actions resource sets muscles tools m4-early m4 skeleton time ielr cex all
+          TRACES is a list of comma-separated words that can include:
+              automaton                        display states
+              closure                          display states
+              rules                            display grammar rules
+              actions                          display grammar rules with actions
+              time                             display generation time
+              all                              include all the above traces
+              none                             disable all traces
 
         HELP
       end
@@ -135,6 +141,46 @@ RSpec.describe Lrama::OptionParser do
     describe "invalid options are passed" do
       it "returns option hash" do
         expect { option_parser.send(:validate_report, ["invalid"]) }.to raise_error(/Invalid report option/)
+      end
+    end
+  end
+
+  describe "#validate_trace" do
+    let(:option_parser) { Lrama::OptionParser.new }
+
+    context "when no options are passed" do
+      it "returns empty option hash" do
+        opts = option_parser.send(:validate_trace, [])
+        expect(opts).to eq({})
+      end
+    end
+
+    context "when valid options are passed" do
+      it "returns option hash" do
+        opts = option_parser.send(:validate_trace, ["automaton", "closure"])
+        expect(opts).to eq({automaton: true, closure: true})
+      end
+
+      context "when all is passed" do
+        it "returns option hash all flags enabled" do
+          opts = option_parser.send(:validate_trace, ["all"])
+          expect(opts).to eq({
+            automaton: true, closure: true, rules: true, actions: true, time: true
+          })
+        end
+      end
+
+      context "when none is passed" do
+        it "returns empty option hash" do
+          opts = option_parser.send(:validate_trace, ["none"])
+          expect(opts).to eq({})
+        end
+      end
+    end
+
+    describe "invalid options are passed" do
+      it "returns option hash" do
+        expect { option_parser.send(:validate_trace, ["invalid"]) }.to raise_error(/Invalid trace option/)
       end
     end
   end
