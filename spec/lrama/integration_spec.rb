@@ -15,13 +15,17 @@ RSpec.describe "integration" do
       ENV['COMPILER'] || "gcc"
     end
 
+    def file_extension
+      ENV['COMPILER'] == "gcc" ? ".c" : ".cpp"
+    end
+
     def test_parser(parser_name, input, expected, expect_success: true, lrama_command_args: [], debug: false)
       tmpdir = Dir.tmpdir
       grammar_file_path = fixture_path("integration/#{parser_name}.y")
       lexer_file_path = fixture_path("integration/#{parser_name}.l")
-      parser_c_path = tmpdir + "/#{parser_name}.c"
+      parser_c_path = tmpdir + "/#{parser_name}#{file_extension}"
       parser_h_path = tmpdir + "/#{parser_name}.h"
-      lexer_c_path = tmpdir + "/#{parser_name}-lexer.c"
+      lexer_c_path = tmpdir + "/#{parser_name}-lexer#{file_extension}"
       lexer_h_path = tmpdir + "/#{parser_name}-lexer.h"
       obj_path = tmpdir + "/#{parser_name}"
 
