@@ -1,0 +1,12 @@
+module Lrama
+  class State
+    class ResolvedConflict
+      attr_accessor symbol: Grammar::Symbol
+      attr_accessor reduce: State::Reduce
+      attr_accessor which: (:reduce | :shift)
+      attr_accessor same_prec: bool
+
+      def report_message: () -> (::String | bot)
+    end
+  end
+end

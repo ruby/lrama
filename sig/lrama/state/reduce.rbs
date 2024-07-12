@@ -1,0 +1,20 @@
+module Lrama
+  class State
+    class Reduce
+      @item: States::Item
+      @look_ahead: Array[Grammar::Symbol]?
+      @not_selected_symbols: Array[Grammar::Symbol]
+
+      attr_reader item: States::Item
+      attr_reader look_ahead: Array[Grammar::Symbol]?
+      attr_reader not_selected_symbols: Array[Grammar::Symbol]
+      attr_accessor default_reduction: bool
+
+      def initialize: (States::Item item) -> void
+      def rule: -> Grammar::Rule
+      def look_ahead=: (Array[Grammar::Symbol] look_ahead) -> Array[Grammar::Symbol]
+      def add_not_selected_symbol: (Grammar::Symbol sym) -> Array[Grammar::Symbol]
+      def selected_look_ahead: () -> (::Array[Grammar::Symbol?])
+    end
+  end
+end

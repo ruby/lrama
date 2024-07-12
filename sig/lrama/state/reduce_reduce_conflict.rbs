@@ -1,0 +1,11 @@
+module Lrama
+  class State
+    class ReduceReduceConflict
+    attr_accessor symbols: Array[Grammar::Symbol?]
+    attr_accessor reduce1: State::Reduce
+    attr_accessor reduce2: State::Reduce
+
+      def type: () -> :reduce_reduce
+    end
+  end
+end
