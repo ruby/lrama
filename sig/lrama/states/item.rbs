@@ -2,42 +2,28 @@ module Lrama
   class States
     class Item
       extend Forwardable
+      include Grammar::Rule::_DelegatedMethods
 
-      attr_accessor rule: untyped
+      attr_accessor rule: Grammar::Rule
       attr_accessor position: Integer
 
-      # Optimization for States#setup_state
-      def hash: () -> untyped
+      def initialize: (?rule: Grammar::Rule, ?position: Integer) -> void
 
-      def rule_id: () -> untyped
-
-      def empty_rule?: () -> untyped
-
-      def number_of_rest_symbols: () -> untyped
-
-      def next_sym: () -> untyped
-
-      def next_next_sym: () -> untyped
-
-      def previous_sym: () -> untyped
-
-      def end_of_rule?: () -> untyped
-
-      def beginning_of_rule?: () -> untyped
-
-      def start_item?: () -> untyped
-
-      def new_by_next_position: () -> untyped
-
-      def symbols_before_dot: () -> untyped
-
-      def symbols_after_dot: () -> untyped
-
+      def hash: () -> Integer
+      def rule_id: () -> Integer
+      def empty_rule?: () -> bool
+      def number_of_rest_symbols: () -> Integer
+      def next_sym: () -> Grammar::Symbol
+      def next_next_sym: () -> Grammar::Symbol
+      def previous_sym: () -> Grammar::Symbol
+      def end_of_rule?: () -> bool
+      def beginning_of_rule?: () -> bool
+      def start_item?: () -> bool
+      def new_by_next_position: () -> States::Item
+      def symbols_before_dot: () -> Array[Grammar::Symbol]
+      def symbols_after_dot: () -> Array[Grammar::Symbol]
       def to_s: () -> ::String
-
       def display_name: () -> ::String
-
-      # Right after position
       def display_rest: () -> ::String
     end
   end
