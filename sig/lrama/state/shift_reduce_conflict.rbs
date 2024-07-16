@@ -1,9 +1,11 @@
 module Lrama
   class State
     class ShiftReduceConflict
-    attr_accessor symbols: Array[Grammar::Symbol]
-    attr_accessor shift: State::Shift
-    attr_accessor reduce: State::Reduce
+      attr_accessor symbols: Array[Grammar::Symbol]
+      attr_accessor shift: State::Shift
+      attr_accessor reduce: State::Reduce
+
+      def initialize: (?symbols: Array[Grammar::Symbol], ?shift: State::Shift, ?reduce: State::Reduce) -> void
 
       def type: () -> :shift_reduce
     end
