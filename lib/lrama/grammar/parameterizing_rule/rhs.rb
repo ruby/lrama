@@ -12,6 +12,12 @@ module Lrama
           @precedence_sym = nil
         end
 
+        def skip?(bindings)
+          return false unless @symbols.last
+          last_sym = bindings.resolve_symbol(@symbols.last)
+          last_sym.is_a?(Lexer::Token::ControlSyntax) && last_sym.if? && last_sym.false?
+        end
+
         def resolve_user_code(bindings)
           return unless user_code
 

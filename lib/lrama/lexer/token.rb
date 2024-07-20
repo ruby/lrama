@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'token/char'
+require_relative 'token/control_syntax'
 require_relative 'token/ident'
 require_relative 'token/instantiate_rule'
 require_relative 'token/tag'
