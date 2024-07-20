@@ -23,7 +23,6 @@ rule
                           }
                       | "%require" STRING
 
-
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
