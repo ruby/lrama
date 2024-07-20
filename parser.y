@@ -6,7 +6,7 @@ class Lrama::Parser
 
 rule
 
-  input: prologue_declarations bison_declarations "%%" grammar epilogue_opt
+  input: prologue_declarations bison_declarations "%%" grammar epilogue?
 
   prologue_declarations: # empty
                        | prologue_declarations prologue_declaration
@@ -502,17 +502,16 @@ rule
 
   id_colon: IDENT_COLON
 
-  epilogue_opt: # empty
-              | "%%"
-                  {
-                    begin_c_declaration('\Z')
-                    @grammar.epilogue_first_lineno = @lexer.line + 1
-                  }
-                C_DECLARATION
-                  {
-                    end_c_declaration
-                    @grammar.epilogue = val[2].s_value
-                  }
+  epilogue: "%%"
+              {
+                begin_c_declaration('\Z')
+                @grammar.epilogue_first_lineno = @lexer.line + 1
+              }
+            C_DECLARATION
+              {
+                end_c_declaration
+                @grammar.epilogue = val[2].s_value
+              }
 
   variable: id
 
