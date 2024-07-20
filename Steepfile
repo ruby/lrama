@@ -9,6 +9,7 @@ target :lib do
   check "lib/lrama/grammar"
   check "lib/lrama/lexer"
   check "lib/lrama/report"
+  check "lib/lrama/state"
   check "lib/lrama/bitmap.rb"
   check "lib/lrama/digraph.rb"
   check "lib/lrama/grammar.rb"

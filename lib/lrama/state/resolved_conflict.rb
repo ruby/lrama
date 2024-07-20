@@ -8,7 +8,7 @@ module Lrama
     class ResolvedConflict < Struct.new(:symbol, :reduce, :which, :same_prec, keyword_init: true)
       def report_message
         s = symbol.display_name
-        r = reduce.rule.precedence_sym.display_name
+        r = reduce.rule.precedence_sym&.display_name
         case
         when which == :shift && same_prec
           msg = "resolved as #{which} (%right #{s})"
