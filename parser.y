@@ -6,7 +6,7 @@ class Lrama::Parser
 
 rule
 
-  input: prologue_declaration* bison_declarations "%%" grammar epilogue?
+  input: prologue_declaration* bison_declaration* "%%" grammar epilogue?
 
   prologue_declaration: "%{"
                           {
@@ -23,8 +23,6 @@ rule
                           }
                       | "%require" STRING
 
-  bison_declarations: /* empty */ { result = "" }
-                    | bison_declarations bison_declaration ";"?
 
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
@@ -68,6 +66,7 @@ rule
                        }
                    | "%no-stdlib" { @grammar.no_stdlib = true }
                    | "%locations" { @grammar.locations = true }
+                   | bison_declaration ";"
 
   grammar_declaration: "%union" "{"
                          {
