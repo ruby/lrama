@@ -274,7 +274,7 @@ rule
               reset_precs
               result = Grammar::ParameterizingRule::Rhs.new
             }
-          | rule_rhs symbol named_ref_opt
+          | rule_rhs symbol named_ref?
             {
               token = val[1]
               token.alias_name = val[2]
@@ -306,7 +306,7 @@ rule
             {
               end_c_declaration
             }
-          "}" named_ref_opt
+          "}" named_ref?
             {
               user_code = val[3]
               user_code.alias_name = val[6]
@@ -397,7 +397,7 @@ rule
   rules_or_grammar_declaration: rules ";"?
                               | grammar_declaration ";"
 
-  rules: id_colon named_ref_opt ":" rhs_list
+  rules: id_colon named_ref? ":" rhs_list
            {
              lhs = val[0]
              lhs.alias_name = val[1]
@@ -435,7 +435,7 @@ rule
            reset_precs
            result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
          }
-     | rhs symbol named_ref_opt
+     | rhs symbol named_ref?
          {
            token = val[1]
            token.alias_name = val[2]
@@ -443,7 +443,7 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs symbol parameterizing_suffix named_ref_opt TAG?
+     | rhs symbol parameterizing_suffix named_ref? TAG?
          {
            token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], alias_name: val[3], location: @lexer.location, args: [val[1]], lhs_tag: val[4])
            builder = val[0]
@@ -451,7 +451,7 @@ rule
            builder.line = val[1].first_line
            result = builder
          }
-     | rhs IDENTIFIER "(" parameterizing_args ")" named_ref_opt TAG?
+     | rhs IDENTIFIER "(" parameterizing_args ")" named_ref? TAG?
          {
            token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, alias_name: val[5], location: @lexer.location, args: val[3], lhs_tag: val[6])
            builder = val[0]
@@ -471,7 +471,7 @@ rule
          {
            end_c_declaration
          }
-       "}" named_ref_opt TAG?
+       "}" named_ref? TAG?
          {
            user_code = val[3]
            user_code.alias_name = val[6]
@@ -498,8 +498,7 @@ rule
                      | symbol parameterizing_suffix { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[0])] }
                      | IDENTIFIER "(" parameterizing_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
 
-  named_ref_opt: # empty
-               | '[' IDENTIFIER ']' { result = val[1].s_value }
+  named_ref: '[' IDENTIFIER ']' { result = val[1].s_value }
 
   id_colon: IDENT_COLON
 
