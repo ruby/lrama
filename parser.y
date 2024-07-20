@@ -27,14 +27,14 @@ rule
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
-                   | "%param" params
-                   | "%lex-param" params
+                   | "%param" param+
+                   | "%lex-param" param+
                        {
                          val[1].each {|token|
                            @grammar.lex_param = Grammar::Code::NoReferenceCode.new(type: :lex_param, token_code: token).token_code.s_value
                          }
                        }
-                   | "%parse-param" params
+                   | "%parse-param" param+
                        {
                          val[1].each {|token|
                            @grammar.parse_param = Grammar::Code::NoReferenceCode.new(type: :parse_param, token_code: token).token_code.s_value
@@ -94,7 +94,7 @@ rule
                          {
                            end_c_declaration
                          }
-                       "}" generic_symlist
+                       "}" generic_symbol+
                          {
                            @grammar.add_destructor(
                              ident_or_tags: val[6],
@@ -110,7 +110,7 @@ rule
                          {
                            end_c_declaration
                          }
-                       "}" generic_symlist
+                       "}" generic_symbol+
                          {
                            @grammar.add_printer(
                              ident_or_tags: val[6],
@@ -126,7 +126,7 @@ rule
                          {
                            end_c_declaration
                          }
-                       "}" generic_symlist
+                       "}" generic_symbol+
                          {
                            @grammar.add_error_token(
                              ident_or_tags: val[6],
@@ -319,49 +319,24 @@ rule
   alias: # empty
        | string_as_id { result = val[0].s_value }
 
-  symbol_declarations: symbol_declaration_list
-                         {
-                           result = [{tag: nil, tokens: val[0]}]
-                         }
-                     | TAG symbol_declaration_list
-                         {
-                           result = [{tag: val[0], tokens: val[1]}]
-                         }
-                     | symbol_declarations TAG symbol_declaration_list
-                       {
-                         result = val[0].append({tag: val[1], tokens: val[2]})
-                       }
-
-  symbol_declaration_list: symbol { result = [val[0]] }
-                         | symbol_declaration_list symbol { result = val[0].append(val[1]) }
+  symbol_declarations: symbol+ { result = [{tag: nil, tokens: val[0]}] }
+                     | TAG symbol+ { result = [{tag: val[0], tokens: val[1]}] }
+                     | symbol_declarations TAG symbol+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
 
   symbol: id
         | string_as_id
 
-  params: params "{"
-            {
-              begin_c_declaration("}")
-            }
-          C_DECLARATION
-            {
-              end_c_declaration
-            }
-          "}"
-            {
-              result = val[0].append(val[3])
-            }
-        | "{"
-            {
-              begin_c_declaration("}")
-            }
-          C_DECLARATION
-            {
-              end_c_declaration
-            }
-          "}"
-            {
-              result = [val[2]]
-            }
+  param: "{" {
+               begin_c_declaration("}")
+             }
+         C_DECLARATION
+             {
+               end_c_declaration
+             }
+         "}"
+             {
+               result = val[2]
+             }
 
   token_declarations_for_precedence: id+ { result = [{tag: nil, tokens: val[0]}] }
                                    | TAG id+ { result = [{tag: val[0], tokens: val[1]}] }
@@ -497,11 +472,8 @@ rule
        | STRING
        | "{...}"
 
-  generic_symlist: generic_symlist_item { result = [val[0]] }
-                 | generic_symlist generic_symlist_item { result = val[0].append(val[1]) }
-
-  generic_symlist_item: symbol
-                      | TAG
+  generic_symbol: symbol
+                | TAG
 
   string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
 end
