@@ -232,7 +232,7 @@ rule
                         @grammar.add_parameterizing_rule(rule)
                       }
 
-  inline_declaration: "%rule" "%inline" id_colon ":" rule_rhs_list
+  inline_declaration: "%rule" "%inline" IDENT_COLON ":" rule_rhs_list
                       {
                         rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, [], val[4], is_inline: true)
                         @grammar.add_parameterizing_rule(rule)
@@ -287,22 +287,10 @@ rule
                 builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
                 result = builder
               }
-          | rule_rhs "{"
+          | rule_rhs midrule_action named_ref?
             {
-              if @prec_seen
-                on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
-                @code_after_prec = true
-              end
-              begin_c_declaration("}")
-            }
-          C_DECLARATION
-            {
-              end_c_declaration
-            }
-          "}" named_ref?
-            {
-              user_code = val[3]
-              user_code.alias_name = val[6]
+              user_code = val[1]
+              user_code.alias_name = val[2]
               builder = val[0]
               builder.user_code = user_code
               result = builder
@@ -349,7 +337,7 @@ rule
   rules_or_grammar_declaration: rules ";"?
                               | grammar_declaration ";"
 
-  rules: id_colon named_ref? ":" rhs_list
+  rules: IDENT_COLON named_ref? ":" rhs_list
            {
              lhs = val[0]
              lhs.alias_name = val[1]
@@ -411,23 +399,11 @@ rule
            builder.line = val[1].first_line
            result = builder
          }
-     | rhs "{"
+     | rhs midrule_action named_ref? TAG?
          {
-           if @prec_seen
-             on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
-             @code_after_prec = true
-           end
-           begin_c_declaration("}")
-         }
-       C_DECLARATION
-         {
-           end_c_declaration
-         }
-       "}" named_ref? TAG?
-         {
-           user_code = val[3]
-           user_code.alias_name = val[6]
-           user_code.tag = val[7]
+           user_code = val[1]
+           user_code.alias_name = val[2]
+           user_code.tag = val[3]
            builder = val[0]
            builder.user_code = user_code
            result = builder
@@ -450,9 +426,24 @@ rule
                      | symbol parameterizing_suffix { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[0])] }
                      | IDENTIFIER "(" parameterizing_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
 
-  named_ref: '[' IDENTIFIER ']' { result = val[1].s_value }
+  midrule_action: "{"
+                    {
+                      if @prec_seen
+                        on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
+                        @code_after_prec = true
+                      end
+                      begin_c_declaration("}")
+                    }
+                  C_DECLARATION
+                    {
+                      end_c_declaration
+                    }
+                  "}"
+                    {
+                      result = val[2]
+                    }
 
-  id_colon: IDENT_COLON
+  named_ref: '[' IDENTIFIER ']' { result = val[1].s_value }
 
   epilogue: "%%"
               {
