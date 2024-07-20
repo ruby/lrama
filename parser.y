@@ -205,27 +205,24 @@ rule
                           @precedence_number += 1
                         }
 
-  token_declarations: token_declaration_list
+  token_declarations: token_declaration+
                         {
                           val[0].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: nil, replace: true)
                           }
                         }
-                    | TAG token_declaration_list
+                    | TAG token_declaration+
                         {
                           val[1].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[0], replace: true)
                           }
                         }
-                    | token_declarations TAG token_declaration_list
+                    | token_declarations TAG token_declaration+
                         {
                           val[2].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[1], replace: true)
                           }
                         }
-
-  token_declaration_list: token_declaration { result = [val[0]] }
-                        | token_declaration_list token_declaration { result = val[0].append(val[1]) }
 
   token_declaration: id INTEGER? alias { result = val }
 
