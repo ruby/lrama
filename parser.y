@@ -40,98 +40,50 @@ rule
                            @grammar.parse_param = Grammar::Code::NoReferenceCode.new(type: :parse_param, token_code: token).token_code.s_value
                          }
                        }
-                   | "%code" IDENTIFIER "{"
+                   | "%code" IDENTIFIER param
                        {
-                         begin_c_declaration("}")
+                         @grammar.add_percent_code(id: val[1], code: val[2])
                        }
-                     C_DECLARATION
+                   | "%initial-action" param
                        {
-                         end_c_declaration
-                       }
-                     "}"
-                       {
-                         @grammar.add_percent_code(id: val[1], code: val[4])
-                       }
-                   | "%initial-action" "{"
-                       {
-                         begin_c_declaration("}")
-                       }
-                     C_DECLARATION
-                       {
-                         end_c_declaration
-                       }
-                     "}"
-                       {
-                         @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[3])
+                         @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[1])
                        }
                    | "%no-stdlib" { @grammar.no_stdlib = true }
                    | "%locations" { @grammar.locations = true }
                    | bison_declaration ";"
 
-  grammar_declaration: "%union" "{"
-                         {
-                           begin_c_declaration("}")
-                         }
-                       C_DECLARATION
-                         {
-                           end_c_declaration
-                         }
-                       "}"
+  grammar_declaration: "%union" param
                          {
                            @grammar.set_union(
-                             Grammar::Code::NoReferenceCode.new(type: :union, token_code: val[3]),
-                             val[3].line
+                             Grammar::Code::NoReferenceCode.new(type: :union, token_code: val[1]),
+                             val[1].line
                            )
                          }
                      | symbol_declaration
                      | rule_declaration
                      | inline_declaration
-                     | "%destructor" "{"
-                         {
-                           begin_c_declaration("}")
-                         }
-                       C_DECLARATION
-                         {
-                           end_c_declaration
-                         }
-                       "}" generic_symbol+
+                     | "%destructor" param generic_symbol+
                          {
                            @grammar.add_destructor(
-                             ident_or_tags: val[6],
-                             token_code: val[3],
-                             lineno: val[3].line
+                             ident_or_tags: val[2],
+                             token_code: val[1],
+                             lineno: val[1].line
                            )
                          }
-                     | "%printer" "{"
-                         {
-                           begin_c_declaration("}")
-                         }
-                       C_DECLARATION
-                         {
-                           end_c_declaration
-                         }
-                       "}" generic_symbol+
+                     | "%printer" param generic_symbol+
                          {
                            @grammar.add_printer(
-                             ident_or_tags: val[6],
-                             token_code: val[3],
-                             lineno: val[3].line
+                             ident_or_tags: val[2],
+                             token_code: val[1],
+                             lineno: val[1].line
                            )
                          }
-                     | "%error-token" "{"
-                         {
-                           begin_c_declaration("}")
-                         }
-                       C_DECLARATION
-                         {
-                           end_c_declaration
-                         }
-                       "}" generic_symbol+
+                     | "%error-token" param generic_symbol+
                          {
                            @grammar.add_error_token(
-                             ident_or_tags: val[6],
-                             token_code: val[3],
-                             lineno: val[3].line
+                             ident_or_tags: val[2],
+                             token_code: val[1],
+                             lineno: val[1].line
                            )
                          }
                      | "%after-shift" IDENTIFIER
