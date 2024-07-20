@@ -1159,11 +1159,11 @@ Racc_token_to_s_table = [
   "prologue_declaration",
   "bison_declaration",
   "rules_or_grammar_declaration",
-  "epilogue",
+  "epilogue_declaration",
   "\"-many@prologue_declaration\"",
   "\"-many@bison_declaration\"",
   "\"-many1@rules_or_grammar_declaration\"",
-  "\"-option@epilogue\"",
+  "\"-option@epilogue_declaration\"",
   "@1",
   "@2",
   "grammar_declaration",
@@ -2056,8 +2056,8 @@ module_eval(<<'.,.,', 'parser.y', 387)
 
 module_eval(<<'.,.,', 'parser.y', 391)
   def _reduce_115(val, _values, result)
-                    begin_c_declaration('\Z')
-                @grammar.epilogue_first_lineno = @lexer.line + 1
+                                begin_c_declaration('\Z')
+                            @grammar.epilogue_first_lineno = @lexer.line + 1
 
     result
   end
@@ -2065,8 +2065,8 @@ module_eval(<<'.,.,', 'parser.y', 391)
 
 module_eval(<<'.,.,', 'parser.y', 396)
   def _reduce_116(val, _values, result)
-                    end_c_declaration
-                @grammar.epilogue = val[2].s_value
+                                end_c_declaration
+                            @grammar.epilogue = val[2].s_value
 
     result
   end

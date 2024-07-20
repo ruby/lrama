@@ -6,7 +6,7 @@ class Lrama::Parser
 
 rule
 
-  input: prologue_declaration* bison_declaration* "%%" rules_or_grammar_declaration+ epilogue?
+  input: prologue_declaration* bison_declaration* "%%" rules_or_grammar_declaration+ epilogue_declaration?
 
   prologue_declaration: "%{"
                           {
@@ -387,16 +387,16 @@ rule
 
   named_ref: '[' IDENTIFIER ']' { result = val[1].s_value }
 
-  epilogue: "%%"
-              {
-                begin_c_declaration('\Z')
-                @grammar.epilogue_first_lineno = @lexer.line + 1
-              }
-            C_DECLARATION
-              {
-                end_c_declaration
-                @grammar.epilogue = val[2].s_value
-              }
+  epilogue_declaration: "%%"
+                          {
+                            begin_c_declaration('\Z')
+                            @grammar.epilogue_first_lineno = @lexer.line + 1
+                          }
+                        C_DECLARATION
+                          {
+                            end_c_declaration
+                            @grammar.epilogue = val[2].s_value
+                          }
 
   variable: id
 
