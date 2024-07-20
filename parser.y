@@ -6,7 +6,7 @@ class Lrama::Parser
 
 rule
 
-  input: prologue_declaration* bison_declaration* "%%" grammar epilogue?
+  input: prologue_declaration* bison_declaration* "%%" rules_or_grammar_declaration+ epilogue?
 
   prologue_declaration: "%{"
                           {
@@ -363,29 +363,13 @@ rule
               result = [val[2]]
             }
 
-  token_declarations_for_precedence: token_declaration_list_for_precedence
-                                       {
-                                         result = [{tag: nil, tokens: val[0]}]
-                                       }
-                                   | TAG token_declaration_list_for_precedence
-                                       {
-                                         result = [{tag: val[0], tokens: val[1]}]
-                                       }
-                                   | token_declarations_for_precedence TAG token_declaration_list_for_precedence
-                                       {
-                                         result = val[0].append({tag: val[1], tokens: val[2]})
-                                       }
-
-  token_declaration_list_for_precedence: token_declaration_for_precedence { result = [val[0]] }
-                                       | token_declaration_list_for_precedence token_declaration_for_precedence { result = val[0].append(val[1]) }
-
-  token_declaration_for_precedence: id
+  token_declarations_for_precedence: id+ { result = [{tag: nil, tokens: val[0]}] }
+                                   | TAG id+ { result = [{tag: val[0], tokens: val[1]}] }
+                                   | id TAG id+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
 
   id: IDENTIFIER { on_action_error("ident after %prec", val[0]) if @prec_seen }
     | CHARACTER { on_action_error("char after %prec", val[0]) if @prec_seen }
 
-  grammar: rules_or_grammar_declaration
-         | grammar rules_or_grammar_declaration
 
   rules_or_grammar_declaration: rules ";"?
                               | grammar_declaration ";"
