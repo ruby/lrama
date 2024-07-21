@@ -491,11 +491,11 @@ module Lrama
       states.each do |state|
         count = state.reduces.count
 
-        for i in 0...count do
+        (0...count).each do |i|
           reduce1 = state.reduces[i]
           next if reduce1.look_ahead.nil?
 
-          for j in (i+1)...count do
+          ((i+1)...count).each do |j|
             reduce2 = state.reduces[j]
             next if reduce2.look_ahead.nil?
 
