@@ -59,72 +59,22 @@ RSpec.describe Lrama::GrammarValidator do
                 ;
 
           %%
-        STR
-      end
+      STR
+    end
 
-      context "when expect is specified" do
-        context "when the number of s/r conflicts is same with expect" do
-          let(:header) do
-            <<~STR
-              %{
-              // Prologue
-              %}
-
-              %expect 2
-            STR
-          end
-
-          it "has errors for r/r conflicts" do
-            grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
-            grammar.prepare
-            grammar.validate!
-            states = Lrama::States.new(grammar)
-            states.compute
-            logger = Lrama::Logger.new
-            allow(logger).to receive(:error)
-
-            expect(Lrama::GrammarValidator.new(grammar, states, logger).valid?).to eq(false)
-            expect(logger).to have_received(:error).with("reduce/reduce conflicts: 1 found, 0 expected")
-          end
-        end
-
-        context "when the number of s/r conflicts is not same with expect" do
-          let(:header) do
-            <<~STR
-              %{
-              // Prologue
-              %}
-
-              %expect 0
-            STR
-          end
-
-          it "has errors for s/r conflicts and r/r conflicts" do
-            grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
-            grammar.prepare
-            grammar.validate!
-            states = Lrama::States.new(grammar)
-            states.compute
-            logger = Lrama::Logger.new
-            allow(logger).to receive(:error)
-
-            expect(Lrama::GrammarValidator.new(grammar, states, logger).valid?).to eq(false)
-            expect(logger).to have_received(:error).with("shift/reduce conflicts: 2 found, 0 expected")
-            expect(logger).to have_received(:error).with("reduce/reduce conflicts: 1 found, 0 expected")
-          end
-        end
-      end
-
-      describe "expect is not specified" do
+    context "when expect is specified" do
+      context "when the number of s/r conflicts is same with expect" do
         let(:header) do
           <<~STR
             %{
             // Prologue
             %}
+
+            %expect 2
           STR
         end
 
-        it "has warns for s/r conflicts and r/r conflicts" do
+        it "has errors for r/r conflicts" do
           grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
           grammar.prepare
           grammar.validate!
@@ -133,9 +83,59 @@ RSpec.describe Lrama::GrammarValidator do
           logger = Lrama::Logger.new
           allow(logger).to receive(:error)
 
-          expect(Lrama::GrammarValidator.new(grammar, states, logger).valid?).to eq(true)
-          expect(logger).not_to have_received(:error)
+          expect(Lrama::GrammarValidator.new(grammar, states, logger).valid?).to be(false)
+          expect(logger).to have_received(:error).with("reduce/reduce conflicts: 1 found, 0 expected")
+        end
+      end
+
+      context "when the number of s/r conflicts is not same with expect" do
+        let(:header) do
+          <<~STR
+            %{
+            // Prologue
+            %}
+
+            %expect 0
+          STR
+        end
+
+        it "has errors for s/r conflicts and r/r conflicts" do
+          grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
+          grammar.prepare
+          grammar.validate!
+          states = Lrama::States.new(grammar)
+          states.compute
+          logger = Lrama::Logger.new
+          allow(logger).to receive(:error)
+
+          expect(Lrama::GrammarValidator.new(grammar, states, logger).valid?).to be(false)
+          expect(logger).to have_received(:error).with("shift/reduce conflicts: 2 found, 0 expected")
+          expect(logger).to have_received(:error).with("reduce/reduce conflicts: 1 found, 0 expected")
         end
       end
     end
+
+    describe "expect is not specified" do
+      let(:header) do
+        <<~STR
+          %{
+          // Prologue
+          %}
+        STR
+      end
+
+      it "has warns for s/r conflicts and r/r conflicts" do
+        grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
+        grammar.prepare
+        grammar.validate!
+        states = Lrama::States.new(grammar)
+        states.compute
+        logger = Lrama::Logger.new
+        allow(logger).to receive(:error)
+
+        expect(Lrama::GrammarValidator.new(grammar, states, logger).valid?).to be(true)
+        expect(logger).not_to have_received(:error)
+      end
+    end
   end
+end
