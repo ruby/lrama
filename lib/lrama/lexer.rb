@@ -11,7 +11,7 @@ module Lrama
     attr_reader :head_line, :head_column, :line
     attr_accessor :status, :end_symbol
 
-    SYMBOLS = ['%{', '%}', '%%', '{', '}', '\[', '\]', '\(', '\)', '\,', ':', '\|', ';']
+    SYMBOLS = ['%{', '%}', '%%', '{', '}', '\[', '\]', '\(', '\)', '\,', ':', '\|', ';'].freeze
     PERCENT_TOKENS = %w(
       %union
       %token
@@ -41,7 +41,7 @@ module Lrama
       %no-stdlib
       %inline
       %locations
-    )
+    ).freeze
 
     def initialize(grammar_file)
       @grammar_file = grammar_file

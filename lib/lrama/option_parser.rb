@@ -106,8 +106,8 @@ module Lrama
       end
     end
 
-    ALIASED_REPORTS = { cex: :counterexamples }
-    VALID_REPORTS = %i[states itemsets lookaheads solved counterexamples rules terms verbose]
+    ALIASED_REPORTS = { cex: :counterexamples }.freeze
+    VALID_REPORTS = %i[states itemsets lookaheads solved counterexamples rules terms verbose].freeze
 
     def validate_report(report)
       h = { grammar: true }
@@ -138,11 +138,11 @@ module Lrama
       locations scan parse automaton bitsets closure
       grammar rules actions resource sets muscles
       tools m4-early m4 skeleton time ielr cex
-    ]
+    ].freeze
     NOT_SUPPORTED_TRACES = %w[
       locations scan parse bitsets grammar resource
       sets muscles tools m4-early m4 skeleton ielr cex
-    ]
+    ].freeze
 
     def validate_trace(trace)
       h = {}
