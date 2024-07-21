@@ -18,7 +18,7 @@ module Lrama
       @options.report_opts = validate_report(@report)
       @options.grammar_file = argv.shift
 
-      if !@options.grammar_file
+      unless @options.grammar_file
         abort "File should be specified\n"
       end
 

@@ -27,9 +27,7 @@ module Lrama
       end
 
       def add_rhs(rhs)
-        if !@line
-          @line = rhs.line
-        end
+        @line ||= rhs.line
 
         flush_user_code
 
@@ -37,9 +35,7 @@ module Lrama
       end
 
       def user_code=(user_code)
-        if !@line
-          @line = user_code&.line
-        end
+        @line ||= user_code&.line
 
         flush_user_code
 

@@ -78,7 +78,7 @@ module Lrama
           messages << "#{cs[:reduce_reduce].count} reduce/reduce"
         end
 
-        if !messages.empty?
+        unless messages.empty?
           has_conflict = true
           io << "State #{state.id} conflicts: #{messages.join(', ')}\n"
         end
@@ -139,7 +139,7 @@ module Lrama
           if lookaheads && item.end_of_rule?
             reduce = state.find_reduce_by_item!(item)
             look_ahead = reduce.selected_look_ahead
-            if !look_ahead.empty?
+            unless look_ahead.empty?
               la = "  [#{look_ahead.map(&:display_name).join(", ")}]"
             end
           end
@@ -159,7 +159,7 @@ module Lrama
         tmp.each do |term, state_id|
           io << "    #{term.display_name.ljust(max_len)}  shift, and go to state #{state_id}\n"
         end
-        io << "\n" if !tmp.empty?
+        io << "\n" unless tmp.empty?
 
         # Report error caused by %nonassoc
         nl = false
@@ -173,7 +173,7 @@ module Lrama
           nl = true
           io << "    #{name.ljust(max_len)}  error (nonassociative)\n"
         end
-        io << "\n" if !tmp.empty?
+        io << "\n" unless tmp.empty?
 
         # Report reduces
         nl = false
@@ -222,14 +222,14 @@ module Lrama
         tmp.each do |nterm, state_id|
           io << "    #{nterm.id.s_value.ljust(max_len)}  go to state #{state_id}\n"
         end
-        io << "\n" if !tmp.empty?
+        io << "\n" unless tmp.empty?
 
         if solved
           # Report conflict resolutions
           state.resolved_conflicts.each do |resolved|
             io << "    #{resolved.report_message}\n"
           end
-          io << "\n" if !state.resolved_conflicts.empty?
+          io << "\n" unless state.resolved_conflicts.empty?
         end
 
         if counterexamples && state.has_conflicts?
@@ -260,7 +260,7 @@ module Lrama
           direct_read_sets = @states.direct_read_sets
           @states.nterms.each do |nterm|
             terms = direct_read_sets[[state.id, nterm.token_id]]
-            next if !terms
+            next unless terms
             next if terms.empty?
 
             str = terms.map {|sym| sym.id.s_value }.join(", ")
@@ -272,7 +272,7 @@ module Lrama
           io << "  [Reads Relation]\n"
           @states.nterms.each do |nterm|
             a = @states.reads_relation[[state.id, nterm.token_id]]
-            next if !a
+            next unless a
 
             a.each do |state_id2, nterm_id2|
               n = @states.nterms.find {|n| n.token_id == nterm_id2 }
@@ -286,7 +286,7 @@ module Lrama
           read_sets = @states.read_sets
           @states.nterms.each do |nterm|
             terms = read_sets[[state.id, nterm.token_id]]
-            next if !terms
+            next unless terms
             next if terms.empty?
 
             terms.each do |sym|
@@ -299,7 +299,7 @@ module Lrama
           io << "  [Includes Relation]\n"
           @states.nterms.each do |nterm|
             a = @states.includes_relation[[state.id, nterm.token_id]]
-            next if !a
+            next unless a
 
             a.each do |state_id2, nterm_id2|
               n = @states.nterms.find {|n| n.token_id == nterm_id2 }
@@ -312,7 +312,7 @@ module Lrama
           io << "  [Lookback Relation]\n"
           @states.rules.each do |rule|
             a = @states.lookback_relation[[state.id, rule.id]]
-            next if !a
+            next unless a
 
             a.each do |state_id2, nterm_id2|
               n = @states.nterms.find {|n| n.token_id == nterm_id2 }
@@ -327,7 +327,7 @@ module Lrama
           @states.nterms.each do |nterm|
             terms = follow_sets[[state.id, nterm.token_id]]
 
-            next if !terms
+            next unless terms
 
             terms.each do |sym|
               io << "    #{nterm.id.s_value} -> #{sym.id.s_value}\n"
@@ -341,7 +341,7 @@ module Lrama
           max_len = 0
           @states.rules.each do |rule|
             syms = @states.la[[state.id, rule.id]]
-            next if !syms
+            next unless syms
 
             tmp << [rule, syms]
             max_len = ([max_len] + syms.map {|s| s.id.s_value.length }).max
@@ -351,7 +351,7 @@ module Lrama
               io << "    #{sym.id.s_value.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.id.s_value})\n"
             end
           end
-          io << "\n" if !tmp.empty?
+          io << "\n" unless tmp.empty?
         end
 
         # End of Report State

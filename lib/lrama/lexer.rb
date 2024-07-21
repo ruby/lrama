@@ -74,7 +74,7 @@ module Lrama
     end
 
     def lex_token
-      while !@scanner.eos? do
+      until @scanner.eos? do
         case
         when @scanner.scan(/\n/)
           newline
@@ -129,7 +129,7 @@ module Lrama
       code = ''
       reset_first_position
 
-      while !@scanner.eos? do
+      until @scanner.eos? do
         case
         when @scanner.scan(/{/)
           code += @scanner.matched
@@ -166,7 +166,7 @@ module Lrama
     private
 
     def lex_comment
-      while !@scanner.eos? do
+      until @scanner.eos? do
         case
         when @scanner.scan(/\n/)
           newline
