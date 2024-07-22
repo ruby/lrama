@@ -428,7 +428,7 @@ module Lrama
     end
 
     def template_dir
-      File.expand_path("../../../template", __FILE__)
+      File.expand_path('../../template', __dir__)
     end
 
     def string_array_to_string(ary)

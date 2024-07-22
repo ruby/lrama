@@ -18,7 +18,7 @@ module Lrama
           scanner = StringScanner.new(s_value)
           references = []
 
-          while !scanner.eos? do
+          until scanner.eos? do
             case
             when reference = scan_reference(scanner)
               references << reference

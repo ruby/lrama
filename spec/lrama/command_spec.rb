@@ -77,7 +77,7 @@ RSpec.describe Lrama::Command do
         command = Lrama::Command.new
         expect(command.run(o_option + [fixture_path("command/basic.y"), "--report-file=report.output"])).to be_nil
         expect(File).to have_received(:open).with("report.output", "w+").once
-        expect(File.exist?("report.output")).to be_truthy
+        expect(File).to exist("report.output")
         File.delete("report.output")
       end
     end

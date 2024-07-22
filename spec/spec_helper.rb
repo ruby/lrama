@@ -51,12 +51,12 @@ module LramaCustomMatchers
     def matches?(target)
       @target = target
 
-      if !@expected.is_a?(Lrama::Grammar::Symbol)
+      unless @expected.is_a?(Lrama::Grammar::Symbol)
         @_failure_message = "expected #{@expected.inspect} to be Lrama::Grammar::Symbol"
         return false
       end
 
-      if !@target.is_a?(Lrama::Grammar::Symbol)
+      unless @target.is_a?(Lrama::Grammar::Symbol)
         @_failure_message = "expected #{@target.inspect} to be Lrama::Grammar::Symbol"
         return false
       end
@@ -97,12 +97,12 @@ module LramaCustomMatchers
     def matches?(target)
       @target = target
 
-      if !@expected.is_a?(Array)
+      unless @expected.is_a?(Array)
         @_failure_message = "expected #{@expected.inspect} to be Array"
         return false
       end
 
-      if !@target.is_a?(Array)
+      unless @target.is_a?(Array)
         @_failure_message = "expected #{@target.inspect} to be Array"
         return false
       end
