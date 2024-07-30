@@ -35,6 +35,11 @@ module Lrama
       def with_actions: -> String
 
       def contains_at_reference?: -> bool
+
+      interface _DelegatedMethods
+        def lhs: -> Grammar::Symbol
+        def rhs: -> Array[Grammar::Symbol]
+      end
     end
   end
 end
