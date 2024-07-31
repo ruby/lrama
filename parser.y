@@ -6,10 +6,7 @@ class Lrama::Parser
 
 rule
 
-  input: prologue_declarations bison_declarations "%%" grammar epilogue_opt
-
-  prologue_declarations: # empty
-                       | prologue_declarations prologue_declaration
+  input: prologue_declaration* bison_declaration* "%%" rules_or_grammar_declaration+ epilogue_declaration?
 
   prologue_declaration: "%{"
                           {
@@ -26,116 +23,66 @@ rule
                           }
                       | "%require" STRING
 
-  bison_declarations: /* empty */ { result = "" }
-                    | bison_declarations bison_declaration ";"?
-
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
                    | "%define" variable value
-                   | "%param" params
-                   | "%lex-param" params
+                   | "%param" param+
+                   | "%lex-param" param+
                        {
                          val[1].each {|token|
                            @grammar.lex_param = Grammar::Code::NoReferenceCode.new(type: :lex_param, token_code: token).token_code.s_value
                          }
                        }
-                   | "%parse-param" params
+                   | "%parse-param" param+
                        {
                          val[1].each {|token|
                            @grammar.parse_param = Grammar::Code::NoReferenceCode.new(type: :parse_param, token_code: token).token_code.s_value
                          }
                        }
-                   | "%code" IDENTIFIER "{"
+                   | "%code" IDENTIFIER param
                        {
-                         begin_c_declaration("}")
+                         @grammar.add_percent_code(id: val[1], code: val[2])
                        }
-                     C_DECLARATION
+                   | "%initial-action" param
                        {
-                         end_c_declaration
-                       }
-                     "}"
-                       {
-                         @grammar.add_percent_code(id: val[1], code: val[4])
-                       }
-                   | "%initial-action" "{"
-                       {
-                         begin_c_declaration("}")
-                       }
-                     C_DECLARATION
-                       {
-                         end_c_declaration
-                       }
-                     "}"
-                       {
-                         @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[3])
+                         @grammar.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: val[1])
                        }
                    | "%no-stdlib" { @grammar.no_stdlib = true }
                    | "%locations" { @grammar.locations = true }
+                   | bison_declaration ";"
 
-  grammar_declaration: "%union" "{"
-                         {
-                           begin_c_declaration("}")
-                         }
-                       C_DECLARATION
-                         {
-                           end_c_declaration
-                         }
-                       "}"
+  grammar_declaration: "%union" param
                          {
                            @grammar.set_union(
-                             Grammar::Code::NoReferenceCode.new(type: :union, token_code: val[3]),
-                             val[3].line
+                             Grammar::Code::NoReferenceCode.new(type: :union, token_code: val[1]),
+                             val[1].line
                            )
                          }
                      | symbol_declaration
                      | rule_declaration
                      | inline_declaration
-                     | "%destructor" "{"
-                         {
-                           begin_c_declaration("}")
-                         }
-                       C_DECLARATION
-                         {
-                           end_c_declaration
-                         }
-                       "}" generic_symlist
+                     | "%destructor" param generic_symbol+
                          {
                            @grammar.add_destructor(
-                             ident_or_tags: val[6],
-                             token_code: val[3],
-                             lineno: val[3].line
+                             ident_or_tags: val[2],
+                             token_code: val[1],
+                             lineno: val[1].line
                            )
                          }
-                     | "%printer" "{"
-                         {
-                           begin_c_declaration("}")
-                         }
-                       C_DECLARATION
-                         {
-                           end_c_declaration
-                         }
-                       "}" generic_symlist
+                     | "%printer" param generic_symbol+
                          {
                            @grammar.add_printer(
-                             ident_or_tags: val[6],
-                             token_code: val[3],
-                             lineno: val[3].line
+                             ident_or_tags: val[2],
+                             token_code: val[1],
+                             lineno: val[1].line
                            )
                          }
-                     | "%error-token" "{"
-                         {
-                           begin_c_declaration("}")
-                         }
-                       C_DECLARATION
-                         {
-                           end_c_declaration
-                         }
-                       "}" generic_symlist
+                     | "%error-token" param generic_symbol+
                          {
                            @grammar.add_error_token(
-                             ident_or_tags: val[6],
-                             token_code: val[3],
-                             lineno: val[3].line
+                             ident_or_tags: val[2],
+                             token_code: val[1],
+                             lineno: val[1].line
                            )
                          }
                      | "%after-shift" IDENTIFIER
@@ -209,27 +156,24 @@ rule
                           @precedence_number += 1
                         }
 
-  token_declarations: token_declaration_list
+  token_declarations: token_declaration+
                         {
                           val[0].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: nil, replace: true)
                           }
                         }
-                    | TAG token_declaration_list
+                    | TAG token_declaration+
                         {
                           val[1].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[0], replace: true)
                           }
                         }
-                    | token_declarations TAG token_declaration_list
+                    | token_declarations TAG token_declaration+
                         {
                           val[2].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[1], replace: true)
                           }
                         }
-
-  token_declaration_list: token_declaration { result = [val[0]] }
-                        | token_declaration_list token_declaration { result = val[0].append(val[1]) }
 
   token_declaration: id INTEGER? alias { result = val }
 
@@ -239,7 +183,7 @@ rule
                         @grammar.add_parameterizing_rule(rule)
                       }
 
-  inline_declaration: "%rule" "%inline" id_colon ":" rule_rhs_list
+  inline_declaration: "%rule" "%inline" IDENT_COLON ":" rule_rhs_list
                       {
                         rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, [], val[4], is_inline: true)
                         @grammar.add_parameterizing_rule(rule)
@@ -264,17 +208,12 @@ rule
                   result = val[0].append(builder)
                 }
 
-  rule_rhs: /* empty */
+  rule_rhs: empty
             {
               reset_precs
               result = Grammar::ParameterizingRule::Rhs.new
             }
-          | "%empty"
-            {
-              reset_precs
-              result = Grammar::ParameterizingRule::Rhs.new
-            }
-          | rule_rhs symbol named_ref_opt
+          | rule_rhs symbol named_ref?
             {
               token = val[1]
               token.alias_name = val[2]
@@ -294,22 +233,10 @@ rule
                 builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
                 result = builder
               }
-          | rule_rhs "{"
+          | rule_rhs midrule_action named_ref?
             {
-              if @prec_seen
-                on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
-                @code_after_prec = true
-              end
-              begin_c_declaration("}")
-            }
-          C_DECLARATION
-            {
-              end_c_declaration
-            }
-          "}" named_ref_opt
-            {
-              user_code = val[3]
-              user_code.alias_name = val[6]
+              user_code = val[1]
+              user_code.alias_name = val[2]
               builder = val[0]
               builder.user_code = user_code
               result = builder
@@ -326,78 +253,37 @@ rule
   alias: # empty
        | string_as_id { result = val[0].s_value }
 
-  symbol_declarations: symbol_declaration_list
-                         {
-                           result = [{tag: nil, tokens: val[0]}]
-                         }
-                     | TAG symbol_declaration_list
-                         {
-                           result = [{tag: val[0], tokens: val[1]}]
-                         }
-                     | symbol_declarations TAG symbol_declaration_list
-                       {
-                         result = val[0].append({tag: val[1], tokens: val[2]})
-                       }
-
-  symbol_declaration_list: symbol { result = [val[0]] }
-                         | symbol_declaration_list symbol { result = val[0].append(val[1]) }
+  symbol_declarations: symbol+ { result = [{tag: nil, tokens: val[0]}] }
+                     | TAG symbol+ { result = [{tag: val[0], tokens: val[1]}] }
+                     | symbol_declarations TAG symbol+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
 
   symbol: id
         | string_as_id
 
-  params: params "{"
-            {
-              begin_c_declaration("}")
-            }
-          C_DECLARATION
-            {
-              end_c_declaration
-            }
-          "}"
-            {
-              result = val[0].append(val[3])
-            }
-        | "{"
-            {
-              begin_c_declaration("}")
-            }
-          C_DECLARATION
-            {
-              end_c_declaration
-            }
-          "}"
-            {
-              result = [val[2]]
-            }
+  param: "{" {
+               begin_c_declaration("}")
+             }
+         C_DECLARATION
+             {
+               end_c_declaration
+             }
+         "}"
+             {
+               result = val[2]
+             }
 
-  token_declarations_for_precedence: token_declaration_list_for_precedence
-                                       {
-                                         result = [{tag: nil, tokens: val[0]}]
-                                       }
-                                   | TAG token_declaration_list_for_precedence
-                                       {
-                                         result = [{tag: val[0], tokens: val[1]}]
-                                       }
-                                   | token_declarations_for_precedence TAG token_declaration_list_for_precedence
-                                       {
-                                         result = val[0].append({tag: val[1], tokens: val[2]})
-                                       }
-
-  token_declaration_list_for_precedence: token_declaration_for_precedence { result = [val[0]] }
-                                       | token_declaration_list_for_precedence token_declaration_for_precedence { result = val[0].append(val[1]) }
-
-  token_declaration_for_precedence: id
+  token_declarations_for_precedence: id+ { result = [{tag: nil, tokens: val[0]}] }
+                                   | TAG id+ { result = [{tag: val[0], tokens: val[1]}] }
+                                   | id TAG id+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
 
   id: IDENTIFIER { on_action_error("ident after %prec", val[0]) if @prec_seen }
     | CHARACTER { on_action_error("char after %prec", val[0]) if @prec_seen }
 
-  grammar: rules_or_grammar_declaration
-         | grammar rules_or_grammar_declaration
 
   rules_or_grammar_declaration: rules ";"?
                               | grammar_declaration ";"
 
-  rules: id_colon named_ref_opt ":" rhs_list
+  rules: IDENT_COLON named_ref? ":" rhs_list
            {
              lhs = val[0]
              lhs.alias_name = val[1]
@@ -425,17 +311,12 @@ rule
                 result = val[0].append(builder)
               }
 
-  rhs: /* empty */
+  rhs: empty
          {
            reset_precs
            result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
          }
-     | "%empty"
-         {
-           reset_precs
-           result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
-         }
-     | rhs symbol named_ref_opt
+     | rhs symbol named_ref?
          {
            token = val[1]
            token.alias_name = val[2]
@@ -443,7 +324,7 @@ rule
            builder.add_rhs(token)
            result = builder
          }
-     | rhs symbol parameterizing_suffix named_ref_opt TAG?
+     | rhs symbol parameterizing_suffix named_ref? TAG?
          {
            token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], alias_name: val[3], location: @lexer.location, args: [val[1]], lhs_tag: val[4])
            builder = val[0]
@@ -451,7 +332,7 @@ rule
            builder.line = val[1].first_line
            result = builder
          }
-     | rhs IDENTIFIER "(" parameterizing_args ")" named_ref_opt TAG?
+     | rhs IDENTIFIER "(" parameterizing_args ")" named_ref? TAG?
          {
            token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, alias_name: val[5], location: @lexer.location, args: val[3], lhs_tag: val[6])
            builder = val[0]
@@ -459,23 +340,11 @@ rule
            builder.line = val[1].first_line
            result = builder
          }
-     | rhs "{"
+     | rhs midrule_action named_ref? TAG?
          {
-           if @prec_seen
-             on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
-             @code_after_prec = true
-           end
-           begin_c_declaration("}")
-         }
-       C_DECLARATION
-         {
-           end_c_declaration
-         }
-       "}" named_ref_opt TAG?
-         {
-           user_code = val[3]
-           user_code.alias_name = val[6]
-           user_code.tag = val[7]
+           user_code = val[1]
+           user_code.alias_name = val[2]
+           user_code.tag = val[3]
            builder = val[0]
            builder.user_code = user_code
            result = builder
@@ -498,22 +367,35 @@ rule
                      | symbol parameterizing_suffix { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[0])] }
                      | IDENTIFIER "(" parameterizing_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
 
-  named_ref_opt: # empty
-               | '[' IDENTIFIER ']' { result = val[1].s_value }
+  midrule_action: "{"
+                    {
+                      if @prec_seen
+                        on_action_error("multiple User_code after %prec", val[0])  if @code_after_prec
+                        @code_after_prec = true
+                      end
+                      begin_c_declaration("}")
+                    }
+                  C_DECLARATION
+                    {
+                      end_c_declaration
+                    }
+                  "}"
+                    {
+                      result = val[2]
+                    }
 
-  id_colon: IDENT_COLON
+  named_ref: '[' IDENTIFIER ']' { result = val[1].s_value }
 
-  epilogue_opt: # empty
-              | "%%"
-                  {
-                    begin_c_declaration('\Z')
-                    @grammar.epilogue_first_lineno = @lexer.line + 1
-                  }
-                C_DECLARATION
-                  {
-                    end_c_declaration
-                    @grammar.epilogue = val[2].s_value
-                  }
+  epilogue_declaration: "%%"
+                          {
+                            begin_c_declaration('\Z')
+                            @grammar.epilogue_first_lineno = @lexer.line + 1
+                          }
+                        C_DECLARATION
+                          {
+                            end_c_declaration
+                            @grammar.epilogue = val[2].s_value
+                          }
 
   variable: id
 
@@ -522,11 +404,11 @@ rule
        | STRING
        | "{...}"
 
-  generic_symlist: generic_symlist_item { result = [val[0]] }
-                 | generic_symlist generic_symlist_item { result = val[0].append(val[1]) }
+  generic_symbol: symbol
+                | TAG
 
-  generic_symlist_item: symbol
-                      | TAG
+  empty: /* empty */
+       | "%empty"
 
   string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
 end
