@@ -6,6 +6,10 @@ typedef struct code_location {
   int first_column;
   int last_line;
   int last_column;
+#ifdef __cplusplus
+  code_location()
+    : first_line(0), first_column(0), last_line(0), last_column(0) {}
+#endif
 } code_location_t;
 
 #define YYLTYPE code_location_t
