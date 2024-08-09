@@ -1166,9 +1166,9 @@ yydestruct (const char *yymsg,
 #endif
 
 enum yy_repair_type {
-  insert,
-  delete,
-  shift,
+  inserting,
+  deleting,
+  shifting,
 };
 
 struct yy_repair {
@@ -1410,7 +1410,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
                   YYCOPY (reps->states, current->states, current->state - current->states + 1);
                   reps->repair_length = current->repair_length + 1;
                   reps->prev_repair = current;
-                  reps->repair.type = insert;
+                  reps->repair.type = inserting;
                   reps->repair.term = (yysymbol_kind_t) yyx;
 
                   /* Process PDA assuming next token is yyx */
