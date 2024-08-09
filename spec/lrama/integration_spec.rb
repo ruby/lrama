@@ -270,7 +270,7 @@ RSpec.describe "integration" do
   end
 
   describe "sample files" do
-    let(:c_path)   { Dir.tmpdir + "/test.c" }
+    let(:c_path)   { Dir.tmpdir + "/test#{file_extension}" }
     let(:obj_path) { Dir.tmpdir + "/test" }
 
     describe "calc.y" do
