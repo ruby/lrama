@@ -1401,27 +1401,27 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
                   if (current->repair_length + 1 > YYMAXREPAIR(<%= output.parse_param_name %>))
                     continue;
 
-                  yy_repairs *new = (yy_repairs *) YYMALLOC (sizeof (yy_repairs));
-                  new->id = count;
-                  new->next = 0;
-                  new->stack_length = stack_length;
-                  new->states = (yy_state_t *) YYMALLOC (sizeof (yy_state_t) * (stack_length));
-                  new->state = new->states + (current->state - current->states);
-                  YYCOPY (new->states, current->states, current->state - current->states + 1);
-                  new->repair_length = current->repair_length + 1;
-                  new->prev_repair = current;
-                  new->repair.type = insert;
-                  new->repair.term = (yysymbol_kind_t) yyx;
+                  yy_repairs *reps = (yy_repairs *) YYMALLOC (sizeof (yy_repairs));
+                  reps->id = count;
+                  reps->next = 0;
+                  reps->stack_length = stack_length;
+                  reps->states = (yy_state_t *) YYMALLOC (sizeof (yy_state_t) * (stack_length));
+                  reps->state = reps->states + (current->state - current->states);
+                  YYCOPY (reps->states, current->states, current->state - current->states + 1);
+                  reps->repair_length = current->repair_length + 1;
+                  reps->prev_repair = current;
+                  reps->repair.type = insert;
+                  reps->repair.term = (yysymbol_kind_t) yyx;
 
                   /* Process PDA assuming next token is yyx */
-                  if (! yy_process_repairs (new, yyx))
+                  if (! yy_process_repairs (reps, yyx))
                     {
-                      YYFREE (new);
+                      YYFREE (reps);
                       continue;
                     }
 
-                  tail->next = new;
-                  tail = new;
+                  tail->next = reps;
+                  tail = reps;
                   count++;
 
                   if (yyx == yytoken)
@@ -1437,7 +1437,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
                   YYDPRINTF ((stderr,
                         "New repairs is enqueued. count: %d, yystate: %d, yyx: %d\n",
                         count, yystate, yyx));
-                  yy_print_repairs (new<%= output.user_args %>);
+                  yy_print_repairs (reps<%= output.user_args %>);
                 }
             }
         }
