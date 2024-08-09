@@ -1476,7 +1476,8 @@ int yychar;
 /* Default value used for initialization, for pacifying older GCCs
    or non-GCC compilers.  */
 #ifdef __cplusplus
-static const YYSTYPE yyval_default = YY_INITIAL_VALUE(YYSTYPE());
+static const YYSTYPE yyval_default = {};
+(void) yyval_default;
 #else
 YY_INITIAL_VALUE (static const YYSTYPE yyval_default;)
 #endif
