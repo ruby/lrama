@@ -1414,7 +1414,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
                   reps->repair.term = (yysymbol_kind_t) yyx;
 
                   /* Process PDA assuming next token is yyx */
-                  if (! yy_process_repairs (reps, yyx))
+                  if (! yy_process_repairs (reps, (yysymbol_kind_t)yyx))
                     {
                       YYFREE (reps);
                       continue;
