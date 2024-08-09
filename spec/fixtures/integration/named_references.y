@@ -1,14 +1,6 @@
 %{
 #include <stdio.h>
 
-typedef struct code_location {
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
-} code_location_t;
-
-#define YYLTYPE code_location_t
 #define YYLLOC_DEFAULT(Current, Rhs, N)                           \
   do                                                              \
     if (N)                                                        \
