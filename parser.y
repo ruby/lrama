@@ -200,13 +200,13 @@ rule
   rule_rhs_list: rule_rhs if_clause?
                 {
                   builder = val[0]
-                  builder.symbols << val[1] if val[1]
+                  builder.if_clause = val[1]
                   result = [builder]
                 }
           | rule_rhs_list "|" rule_rhs if_clause?
                 {
                   builder = val[2]
-                  builder.symbols << val[3] if val[3]
+                  builder.if_clause = val[3]
                   result = val[0].append(builder)
                 }
 
