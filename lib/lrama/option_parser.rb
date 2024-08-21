@@ -18,7 +18,7 @@ module Lrama
       @options.report_opts = validate_report(@report)
       @options.grammar_file = argv.shift
 
-      if !@options.grammar_file
+      unless @options.grammar_file
         abort "File should be specified\n"
       end
 
@@ -90,7 +90,7 @@ module Lrama
         o.on_tail '    time                             display generation time'
         o.on_tail '    all                              include all the above traces'
         o.on_tail '    none                             disable all traces'
-        o.on('-v', 'reserved, do nothing') { }
+        o.on('-v', '--verbose', "same as '--report=state'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
         o.on('-W', '--warnings', 'report the warnings') {|v| @options.diagnostic = true }
@@ -106,8 +106,8 @@ module Lrama
       end
     end
 
-    ALIASED_REPORTS = { cex: :counterexamples }
-    VALID_REPORTS = %i[states itemsets lookaheads solved counterexamples rules terms verbose]
+    ALIASED_REPORTS = { cex: :counterexamples }.freeze
+    VALID_REPORTS = %i[states itemsets lookaheads solved counterexamples rules terms verbose].freeze
 
     def validate_report(report)
       h = { grammar: true }
@@ -138,11 +138,11 @@ module Lrama
       locations scan parse automaton bitsets closure
       grammar rules actions resource sets muscles
       tools m4-early m4 skeleton time ielr cex
-    ]
+    ].freeze
     NOT_SUPPORTED_TRACES = %w[
       locations scan parse bitsets grammar resource
       sets muscles tools m4-early m4 skeleton ielr cex
-    ]
+    ].freeze
 
     def validate_trace(trace)
       h = {}

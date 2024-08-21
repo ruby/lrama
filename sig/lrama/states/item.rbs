@@ -1,0 +1,30 @@
+module Lrama
+  class States
+    class Item
+      extend Forwardable
+      include Grammar::Rule::_DelegatedMethods
+
+      attr_accessor rule: Grammar::Rule
+      attr_accessor position: Integer
+
+      def initialize: (?rule: Grammar::Rule, ?position: Integer) -> void
+
+      def hash: () -> Integer
+      def rule_id: () -> Integer
+      def empty_rule?: () -> bool
+      def number_of_rest_symbols: () -> Integer
+      def next_sym: () -> Grammar::Symbol
+      def next_next_sym: () -> Grammar::Symbol
+      def previous_sym: () -> Grammar::Symbol
+      def end_of_rule?: () -> bool
+      def beginning_of_rule?: () -> bool
+      def start_item?: () -> bool
+      def new_by_next_position: () -> States::Item
+      def symbols_before_dot: () -> Array[Grammar::Symbol]
+      def symbols_after_dot: () -> Array[Grammar::Symbol]
+      def to_s: () -> ::String
+      def display_name: () -> ::String
+      def display_rest: () -> ::String
+    end
+  end
+end

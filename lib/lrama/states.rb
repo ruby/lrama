@@ -349,7 +349,7 @@ module Lrama
               # TODO: need to omit if state == state2 ?
               @includes_relation[key] ||= []
               @includes_relation[key] << [state.id, nterm.token_id]
-              break if !sym.nullable
+              break unless sym.nullable
               i -= 1
             end
           end
@@ -384,7 +384,7 @@ module Lrama
       @states.each do |state|
         rules.each do |rule|
           ary = @lookback_relation[[state.id, rule.id]]
-          next if !ary
+          next unless ary
 
           ary.each do |state2_id, nterm_token_id|
             # q = state, A -> ω = rule, p = state2, A = nterm
@@ -427,7 +427,7 @@ module Lrama
             sym = shift.next_sym
 
             next unless reduce.look_ahead
-            next if !reduce.look_ahead.include?(sym)
+            next unless reduce.look_ahead.include?(sym)
 
             # Shift/Reduce conflict
             shift_prec = sym.precedence
@@ -491,17 +491,17 @@ module Lrama
       states.each do |state|
         count = state.reduces.count
 
-        for i in 0...count do
+        (0...count).each do |i|
           reduce1 = state.reduces[i]
           next if reduce1.look_ahead.nil?
 
-          for j in (i+1)...count do
+          ((i+1)...count).each do |j|
             reduce2 = state.reduces[j]
             next if reduce2.look_ahead.nil?
 
             intersection = reduce1.look_ahead & reduce2.look_ahead
 
-            if !intersection.empty?
+            unless intersection.empty?
               state.conflicts << State::ReduceReduceConflict.new(symbols: intersection, reduce1: reduce1, reduce2: reduce2)
             end
           end
@@ -513,7 +513,7 @@ module Lrama
       states.each do |state|
         next if state.reduces.empty?
         # Do not set, if conflict exist
-        next if !state.conflicts.empty?
+        next unless state.conflicts.empty?
         # Do not set, if shift with `error` exists.
         next if state.shifts.map(&:next_sym).include?(@grammar.error_symbol)
 

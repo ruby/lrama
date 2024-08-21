@@ -173,7 +173,13 @@ module Lrama
               break
             end
 
-            if !si.item.beginning_of_rule?
+            if si.item.beginning_of_rule?
+              key = [si.state, si.item.lhs]
+              @reverse_productions[key].each do |item|
+                state_item = StateItem.new(si.state, item)
+                queue << (sis + [state_item])
+              end
+            else
               key = [si, si.item.previous_sym]
               @reverse_transitions[key].each do |prev_target_state_item|
                 next if prev_target_state_item.state != prev_state_item.state
@@ -184,12 +190,6 @@ module Lrama
                 i = j
                 queue.clear
                 break
-              end
-            else
-              key = [si.state, si.item.lhs]
-              @reverse_productions[key].each do |item|
-                state_item = StateItem.new(si.state, item)
-                queue << (sis + [state_item])
               end
             end
           end

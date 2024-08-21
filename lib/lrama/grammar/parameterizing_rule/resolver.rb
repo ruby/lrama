@@ -20,7 +20,7 @@ module Lrama
         end
 
         def find_inline(token)
-          @rules.select { |rule| rule.name == token.s_value && rule.is_inline }.last
+          @rules.reverse.find { |rule| rule.name == token.s_value && rule.is_inline }
         end
 
         def created_lhs(lhs_s_value)

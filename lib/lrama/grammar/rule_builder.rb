@@ -27,9 +27,7 @@ module Lrama
       end
 
       def add_rhs(rhs)
-        if !@line
-          @line = rhs.line
-        end
+        @line ||= rhs.line
 
         flush_user_code
 
@@ -37,9 +35,7 @@ module Lrama
       end
 
       def user_code=(user_code)
-        if !@line
-          @line = user_code&.line
-        end
+        @line ||= user_code&.line
 
         flush_user_code
 
@@ -73,7 +69,7 @@ module Lrama
       def resolve_inline_rules
         resolved_builders = []
         rhs.each_with_index do |token, i|
-          if inline_rule = @parameterizing_rule_resolver.find_inline(token)
+          if (inline_rule = @parameterizing_rule_resolver.find_inline(token))
             inline_rule.rhs_list.each do |inline_rhs|
               rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: lhs_tag)
               if token.is_a?(Lexer::Token::InstantiateRule)
