@@ -11,13 +11,21 @@ RSpec.describe "integration" do
       raise "#{command} failed." unless $?.success?
     end
 
+    def compiler
+      ENV['COMPILER'] || "gcc"
+    end
+
+    def file_extension
+      ENV['COMPILER'] == "gcc" ? ".c" : ".cpp"
+    end
+
     def test_parser(parser_name, input, expected, expect_success: true, lrama_command_args: [], debug: false)
       tmpdir = Dir.tmpdir
       grammar_file_path = fixture_path("integration/#{parser_name}.y")
       lexer_file_path = fixture_path("integration/#{parser_name}.l")
-      parser_c_path = tmpdir + "/#{parser_name}.c"
+      parser_c_path = tmpdir + "/#{parser_name}#{file_extension}"
       parser_h_path = tmpdir + "/#{parser_name}.h"
-      lexer_c_path = tmpdir + "/#{parser_name}-lexer.c"
+      lexer_c_path = tmpdir + "/#{parser_name}-lexer#{file_extension}"
       lexer_h_path = tmpdir + "/#{parser_name}-lexer.h"
       obj_path = tmpdir + "/#{parser_name}"
 
@@ -29,7 +37,7 @@ RSpec.describe "integration" do
 
       Lrama::Command.new.run(%W[-H#{parser_h_path} -o#{parser_c_path}] + lrama_command_args + %W[#{grammar_file_path}])
       exec_command("flex --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
-      exec_command("gcc -Wall -ggdb3 -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
+      exec_command("#{compiler} -Wall -ggdb3 -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
 
       out = err = status = nil
 
@@ -50,7 +58,7 @@ RSpec.describe "integration" do
 
     def generate_object(grammar_file_path, c_path, obj_path, command_args: [])
       Lrama::Command.new.run(%W[-d -o #{c_path}] + command_args + %W[#{grammar_file_path}])
-      exec_command("gcc -Wall #{c_path} -o #{obj_path}")
+      exec_command("#{compiler} -Wall #{c_path} -o #{obj_path}")
     end
   end
 
@@ -262,7 +270,7 @@ RSpec.describe "integration" do
   end
 
   describe "sample files" do
-    let(:c_path)   { Dir.tmpdir + "/test.c" }
+    let(:c_path)   { Dir.tmpdir + "/test#{file_extension}" }
     let(:obj_path) { Dir.tmpdir + "/test" }
 
     describe "calc.y" do
