@@ -12,7 +12,7 @@ module Lrama
 
     @trace_state: untyped
 
-    @states: untyped
+    @states: Array[State]
 
     # `DR(p, A) = {t ∈ T | p -(A)-> r -(t)-> }`
     #   where p is state, A is nterm, t is term.
@@ -68,7 +68,7 @@ module Lrama
 
     include Lrama::Report::Duration
 
-    attr_reader states: untyped
+    attr_reader states: Array[State]
 
     attr_reader reads_relation: untyped
 

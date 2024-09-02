@@ -9,7 +9,7 @@ module Lrama
 
       def from: () -> untyped
 
-      def to: () -> untyped
+      def to: () -> StateItem
 
       def to_s: () -> ::String
 

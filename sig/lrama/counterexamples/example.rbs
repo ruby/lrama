@@ -1,47 +1,45 @@
 module Lrama
   class Counterexamples
     class Example
-      @path1: untyped
+      @path1: (StartPath | ProductionPath | TransitionPath)
 
-      @path2: untyped
+      @path2: [StartPath]?
 
-      @conflict: untyped
+      @conflict: (State::ShiftReduceConflict | State::ReduceReduceConflict)
 
-      @conflict_symbol: untyped
+      @conflict_symbol: Grammar::Symbol
 
-      @counterexamples: untyped
+      @counterexamples: Counterexamples
 
       @derivations1: Derivation
 
       @derivations2: Derivation
 
-      attr_reader path1: untyped
+      attr_reader path1: (StartPath | ProductionPath | TransitionPath)
 
-      attr_reader path2: untyped
+      attr_reader path2: [StartPath]?
 
-      attr_reader conflict: untyped
+      attr_reader conflict: (State::ShiftReduceConflict | State::ReduceReduceConflict)
 
-      attr_reader conflict_symbol: untyped
+      attr_reader conflict_symbol: Grammar::Symbol
 
-      # path1 is shift conflict when S/R conflict
-      # path2 is always reduce conflict
-      def initialize: (untyped path1, untyped path2, untyped conflict, untyped conflict_symbol, untyped counterexamples) -> void
+      def initialize: ((StartPath | ProductionPath | TransitionPath) path1, [StartPath]? path2, (State::ShiftReduceConflict | State::ReduceReduceConflict) conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
 
-      def type: () -> untyped
+      def type: () -> (:shift_reduce | :reduce_reduce)
 
-      def path1_item: () -> untyped
+      def path1_item: () -> States::Item
 
-      def path2_item: () -> untyped
+      def path2_item: () -> States::Item
 
-      def derivations1: () -> untyped
+      def derivations1: () -> Derivation
 
-      def derivations2: () -> untyped
+      def derivations2: () -> Derivation
 
       private
 
-      def _derivations: (untyped paths) -> untyped
+      def _derivations: (Array[Path] paths) -> Derivation
 
-      def find_derivation_for_symbol: (untyped state_item, untyped sym) -> Derivation?
+      def find_derivation_for_symbol: (StateItem state_item, Grammar::Symbol sym) -> Derivation?
     end
   end
 end

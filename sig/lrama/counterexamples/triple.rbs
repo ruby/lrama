@@ -2,14 +2,14 @@ module Lrama
   class Counterexamples
     class Triple
       attr_accessor s: untyped
-      attr_accessor itm: untyped
+      attr_accessor itm: States::Item
       attr_accessor l: untyped
 
       alias state s
       alias item itm
       alias precise_lookahead_set l
 
-      def initialize: (untyped s, untyped itm, untyped l) -> void
+      def initialize: (untyped s, States::Item itm, untyped l) -> void
 
       def state_item: () -> untyped
       def inspect: () -> ::String
