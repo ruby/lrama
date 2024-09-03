@@ -226,7 +226,7 @@ module Lrama
       # queue: is an array of [Triple, [Path]]
       queue = []
       visited = {}
-      start_state = @states.states.first
+      start_state = @states.states.first #: Lrama::State
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
 
       start = Triple.new(start_state, start_state.kernels.first, Set.new([@states.eof_symbol]))

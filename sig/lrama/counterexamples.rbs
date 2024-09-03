@@ -23,7 +23,7 @@ module Lrama
     def find_shift_conflict_shortest_path: (untyped reduce_path, untyped conflict_state, untyped conflict_item) -> untyped
     def find_shift_conflict_shortest_state_items: (untyped reduce_path, untyped conflict_state, untyped conflict_item) -> untyped
     def build_paths_from_state_items: (untyped state_items) -> untyped
-    def shortest_path: (untyped conflict_state, untyped conflict_reduce_item, untyped conflict_term) -> [StartPath]?
+    def shortest_path: (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> [Path]?
     def follow_l: (untyped item, untyped current_l) -> untyped
   end
 end
