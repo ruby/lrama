@@ -1,13 +1,13 @@
 module Lrama
   class Counterexamples
     class Path
-      @from_state_item: untyped
+      @from_state_item: StateItem
 
-      @to_state_item: untyped
+      @to_state_item: StateItem
 
-      def initialize: (untyped? from_state_item, untyped to_state_item) -> void
+      def initialize: (StateItem? from_state_item, StateItem to_state_item) -> void
 
-      def from: () -> untyped
+      def from: () -> StateItem
 
       def to: () -> StateItem
 

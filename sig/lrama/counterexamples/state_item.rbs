@@ -1,10 +1,10 @@
 module Lrama
   class Counterexamples
     class StateItem
-     attr_accessor state: untyped
-     attr_accessor item: untyped
+     attr_accessor state: State
+     attr_accessor item: States::Item
 
-      def initialize: (untyped state, untyped item) -> untyped
+      def initialize: (State state, States::Item item) -> void
     end
   end
 end
