@@ -1,5 +1,116 @@
 # NEWS for Lrama
 
+## Lrama 0.6.10 (2024-09-11)
+
+### Aliased Named References for actions of RHS in parameterizing rules
+
+Allow to use aliased named references for actions of RHS in parameterizing rules.
+
+```
+%rule sum(X, Y): X[summand] '+' Y[addend] { $$ = $summand + $addend }
+               ;
+```
+
+https://github.com/ruby/lrama/pull/410
+
+
+### Named References for actions of RHS in parameterizing rules caller side
+
+Allow to use named references for actions of RHS in parameterizing rules caller side.
+
+```
+opt_nl: '\n'?[nl] <str> { $$ = $nl; }
+      ;
+```
+
+https://github.com/ruby/lrama/pull/414
+
+### Widen the definable position of parameterizing rules
+
+Allow to define parameterizing rules in the middle of the grammar.
+
+```
+%rule defined_option(X): /* empty */
+                       | X
+                       ;
+
+%%
+
+program         : defined_option(number) <i>
+                | defined_list(number) <i>
+                ;
+
+%rule defined_list(X): /* empty */  /* <--- here */
+                     | defined_list(X) number
+                     ;
+```
+
+https://github.com/ruby/lrama/pull/420
+
+### Report unused terminal symbols
+
+Support to report unused terminal symbols.
+Run `exe/lrama --report=terms` to show unused terminal symbols.
+
+```
+❯ exe/lrama --report=terms sample/calc.y
+ 11 Unused Terms
+     0 YYerror
+     1 YYUNDEF
+     2 '\\\\'
+     3 '\\13'
+     4 keyword_class2
+     5 tNUMBER
+     6 tPLUS
+     7 tMINUS
+     8 tEQ
+     9 tEQEQ
+    10 '>'
+```
+https://github.com/ruby/lrama/pull/439
+
+### Report unused rules
+
+Support to report unused rules.
+Run `exe/lrama --report=rules` to show unused rules.
+
+```
+❯ exe/lrama --report=rules sample/calc.y
+  3 Unused Rules
+     0 unused_option
+     1 unused_list
+     2 unused_nonempty_list
+```
+
+https://github.com/ruby/lrama/pull/441
+
+### Ensure compatibility with Bison for `%locations` directive
+
+Support `%locations` directive to ensure compatibility with Bison.
+Change to `%locations` directive not set by default.
+
+https://github.com/ruby/lrama/pull/446
+
+### Diagnostics report for parameterizing rules redefine
+
+Support to warning redefined parameterizing rules.
+Run `exe/lrama -W` or  `exe/lrama --warnings` to show redefined parameterizing rules.
+
+```
+❯ exe/lrama -W sample/calc.y
+parameterizing rule redefined: redefined_method(X)
+parameterizing rule redefined: redefined_method(X)
+```
+
+https://github.com/ruby/lrama/pull/448
+
+### Support `-v` and `--verbose` option
+
+Support to `-v` and `--verbose` option.
+These options align with Bison behavior. So same as '--report=state' option.
+
+https://github.com/ruby/lrama/pull/457
+
 ## Lrama 0.6.9 (2024-05-02)
 
 ### Callee side tag specification of parameterizing rules
