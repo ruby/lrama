@@ -1,0 +1,174 @@
+Symbol
+
+   -2 EMPTY
+    0 "end of file"
+    1 error
+    2 "invalid token" (undef)
+    3 LF
+    4 NUM
+    5 '+'
+    6 '*'
+    7 '('
+    8 ')'
+    9 $accept # Start of nonterminal
+   10 program
+   11 expr
+
+
+Grammar
+
+    0 $accept: program "end of file"
+
+    1 program: ε
+    2        | expr LF
+
+    3 expr: NUM
+    4     | expr '+' expr
+    5     | expr '*' expr
+    6     | '(' expr ')'
+
+
+State 0
+
+    0 $accept: • program "end of file"
+    1 program: ε •  ["end of file"]
+    2        | • expr LF
+    3 expr: • NUM
+    4     | • expr '+' expr
+    5     | • expr '*' expr
+    6     | • '(' expr ')'
+
+    NUM  shift, and go to state 1
+    '('  shift, and go to state 2
+
+    $default  reduce using rule 1 (program)
+
+    program  go to state 3
+    expr     go to state 4
+
+
+State 1
+
+    3 expr: NUM •
+
+    $default  reduce using rule 3 (expr)
+
+
+State 2
+
+    3 expr: • NUM
+    4     | • expr '+' expr
+    5     | • expr '*' expr
+    6     | • '(' expr ')'
+    6     | '(' • expr ')'
+
+    NUM  shift, and go to state 1
+    '('  shift, and go to state 2
+
+    expr  go to state 5
+
+
+State 3
+
+    0 $accept: program • "end of file"
+
+    "end of file"  shift, and go to state 6
+
+
+State 4
+
+    2 program: expr • LF
+    4 expr: expr • '+' expr
+    5     | expr • '*' expr
+
+    LF   shift, and go to state 7
+    '+'  shift, and go to state 8
+    '*'  shift, and go to state 9
+
+
+State 5
+
+    4 expr: expr • '+' expr
+    5     | expr • '*' expr
+    6     | '(' expr • ')'
+
+    '+'  shift, and go to state 8
+    '*'  shift, and go to state 9
+    ')'  shift, and go to state 10
+
+
+State 6
+
+    0 $accept: program "end of file" •
+
+    $default  accept
+
+
+State 7
+
+    2 program: expr LF •
+
+    $default  reduce using rule 2 (program)
+
+
+State 8
+
+    3 expr: • NUM
+    4     | • expr '+' expr
+    4     | expr '+' • expr
+    5     | • expr '*' expr
+    6     | • '(' expr ')'
+
+    NUM  shift, and go to state 1
+    '('  shift, and go to state 2
+
+    expr  go to state 11
+
+
+State 9
+
+    3 expr: • NUM
+    4     | • expr '+' expr
+    5     | • expr '*' expr
+    5     | expr '*' • expr
+    6     | • '(' expr ')'
+
+    NUM  shift, and go to state 1
+    '('  shift, and go to state 2
+
+    expr  go to state 12
+
+
+State 10
+
+    6 expr: '(' expr ')' •
+
+    $default  reduce using rule 6 (expr)
+
+
+State 11
+
+    4 expr: expr • '+' expr
+    4     | expr '+' expr •  [LF, '+', ')']
+    5     | expr • '*' expr
+
+    '*'  shift, and go to state 9
+
+    $default  reduce using rule 4 (expr)
+
+    Conflict between rule 4 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 4 and token '*' resolved as shift ('+' < '*').
+
+
+State 12
+
+    4 expr: expr • '+' expr
+    5     | expr • '*' expr
+    5     | expr '*' expr •  [LF, '+', '*', ')']
+
+    $default  reduce using rule 5 (expr)
+
+    Conflict between rule 5 and token '+' resolved as reduce ('+' < '*').
+    Conflict between rule 5 and token '*' resolved as reduce (%left '*').
+
+
