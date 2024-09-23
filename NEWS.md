@@ -532,7 +532,7 @@ https://github.com/ruby/lrama/pull/62
 
 ### Runtime configuration for error recovery
 
-Meke error recovery function configurable on runtime by two new macros.
+Make error recovery function configurable on runtime by two new macros.
 
 * `YYMAXREPAIR`: Expected to return max length of repair operations. `%parse-param` is passed to this function.
 * `YYERROR_RECOVERY_ENABLED`: Expected to return bool value to determine error recovery is enabled or not. `%parse-param` is passed to this function.
