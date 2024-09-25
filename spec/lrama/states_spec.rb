@@ -1795,9 +1795,207 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, path).parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar, warning)
+      states = Lrama::States.new(grammar)
       states.compute
       states.compute_ielr
+
+      io = StringIO.new
+      states.reporter.report(io, states: true)
+
+      expect(io.string).to eq(<<~STR)
+        State 14 conflicts: 2 shift/reduce
+
+
+        State 0
+
+            0 $accept: • S "end of file"
+
+            a  shift, and go to state 1
+            b  shift, and go to state 2
+
+            S  go to state 3
+
+
+        State 1
+
+            1 S: a • A B a
+
+            a  shift, and go to state 4
+
+            A  go to state 5
+
+
+        State 2
+
+            2 S: b • A B b
+
+            a  shift, and go to state 19
+
+            A  go to state 6
+
+
+        State 3
+
+            0 $accept: S • "end of file"
+
+            "end of file"  shift, and go to state 7
+
+
+        State 4
+
+            3 A: a • C D E
+
+            a  shift, and go to state 8
+
+            C  go to state 9
+            D  go to state 10
+
+
+        State 5
+
+            1 S: a A • B a
+
+            c  shift, and go to state 11
+
+            $default  reduce using rule 5 (B)
+
+            B  go to state 12
+
+
+        State 6
+
+            2 S: b A • B b
+
+            c  shift, and go to state 11
+
+            $default  reduce using rule 5 (B)
+
+            B  go to state 13
+
+
+        State 7
+
+            0 $accept: S "end of file" •
+
+            $default  accept
+
+
+        State 8
+
+            7 D: a •
+
+            $default  reduce using rule 7 (D)
+
+
+        State 9
+
+            3 A: a C • D E
+
+            a  shift, and go to state 8
+
+            D  go to state 14
+
+
+        State 10
+
+            6 C: D •
+
+            $default  reduce using rule 6 (C)
+
+
+        State 11
+
+            4 B: c •
+
+            $default  reduce using rule 4 (B)
+
+
+        State 12
+
+            1 S: a A B • a
+
+            a  shift, and go to state 15
+
+
+        State 13
+
+            2 S: b A B • b
+
+            b  shift, and go to state 16
+
+
+        State 14
+
+            3 A: a C D • E
+
+            a  shift, and go to state 17
+
+            a  reduce using rule 9 (E)
+            b  reduce using rule 9 (E)
+            c  reduce using rule 9 (E)
+
+            E  go to state 18
+
+
+        State 15
+
+            1 S: a A B a •
+
+            $default  reduce using rule 1 (S)
+
+
+        State 16
+
+            2 S: b A B b •
+
+            $default  reduce using rule 2 (S)
+
+
+        State 17
+
+            8 E: a •
+
+            $default  reduce using rule 8 (E)
+
+
+        State 18
+
+            3 A: a C D E •
+
+            $default  reduce using rule 3 (A)
+
+
+        State 19
+
+            3 A: a • C D E
+
+            a  shift, and go to state 8
+
+            C  go to state 20
+            D  go to state 10
+
+
+        State 20
+
+            3 A: a C • D E
+
+            a  shift, and go to state 8
+
+            D  go to state 21
+
+
+        State 21
+
+            3 A: a C D • E
+
+            a  shift, and go to state 17
+
+            $default  reduce using rule 9 (E)
+
+            E  go to state 18
+
+
+      STR
     end
   end
 end
