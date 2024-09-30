@@ -16,5 +16,5 @@ gem "memory_profiler"
 # Then skip install on some CI jobs.
 if !ENV['GITHUB_ACTION'] || ENV['INSTALL_STEEP'] == 'true'
   gem "rbs", "3.6.0", require: false
-  gem "steep", "1.7.1", require: false
+  gem "steep", "1.8.0", require: false
 end
