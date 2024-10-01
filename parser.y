@@ -244,8 +244,7 @@ rule
               result = builder
             }
 
-  alias: # empty
-       | string_as_id { result = val[0].s_value }
+  alias: string_as_id? { result = val[0].s_value if val[0] }
 
   symbol_declarations: symbol+ { result = [{tag: nil, tokens: val[0]}] }
                      | TAG symbol+ { result = [{tag: val[0], tokens: val[1]}] }
