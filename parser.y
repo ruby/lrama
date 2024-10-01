@@ -208,7 +208,7 @@ rule
                   result = val[0].append(builder)
                 }
 
-  rule_rhs: empty
+  rule_rhs: "%empty"?
             {
               reset_precs
               result = Grammar::ParameterizingRule::Rhs.new
@@ -311,7 +311,7 @@ rule
                 result = val[0].append(builder)
               }
 
-  rhs: empty
+  rhs: "%empty"?
          {
            reset_precs
            result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
@@ -406,9 +406,6 @@ rule
 
   generic_symbol: symbol
                 | TAG
-
-  empty: /* empty */
-       | "%empty"
 
   string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
 end
