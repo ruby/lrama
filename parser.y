@@ -156,13 +156,7 @@ rule
                           @precedence_number += 1
                         }
 
-  token_declarations: token_declaration+
-                        {
-                          val[0].each {|token_declaration|
-                            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: nil, replace: true)
-                          }
-                        }
-                    | TAG token_declaration+
+  token_declarations: TAG? token_declaration+
                         {
                           val[1].each {|token_declaration|
                             @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[0], replace: true)
