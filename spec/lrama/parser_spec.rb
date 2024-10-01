@@ -2334,6 +2334,86 @@ RSpec.describe Lrama::Parser do
             ])
           end
         end
+
+        context "when if" do
+          let(:path) { "parameterizing_rules/user_defined/if.y" }
+
+          it "expands parameterizing rules" do
+            expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+              Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
+              Sym.new(id: T::Ident.new(s_value: "defined_rule_number_true"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "r_true"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 2, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "defined_rule_number_false"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 3, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "r_false"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 4, nullable: true),
+            ])
+
+            expect(grammar.rules).to eq([
+              Rule.new(
+                id: 0,
+                lhs: grammar.find_symbol_by_s_value!("$accept"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("r_true"),
+                  grammar.find_symbol_by_s_value!("YYEOF"),
+                ],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+                lineno: 23,
+              ),
+              Rule.new(
+                id: 1,
+                lhs: grammar.find_symbol_by_s_value!("defined_rule_number_true"),
+                rhs: [],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 23,
+              ),
+              Rule.new(
+                id: 2,
+                lhs: grammar.find_symbol_by_s_value!("defined_rule_number_true"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("number"),
+                ],
+                token_code: T::UserCode.new(s_value: " $$ = $1; "),
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("number"),
+                lineno: 23,
+              ),
+              Rule.new(
+                id: 3,
+                lhs: grammar.find_symbol_by_s_value!("r_true"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("defined_rule_number_true"),
+                ],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 23,
+              ),
+              Rule.new(
+                id: 4,
+                lhs: grammar.find_symbol_by_s_value!("defined_rule_number_false"),
+                rhs: [],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 26,
+              ),
+              Rule.new(
+                id: 5,
+                lhs: grammar.find_symbol_by_s_value!("r_false"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("defined_rule_number_false")
+                ],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 26,
+              ),
+            ])
+          end
+        end
       end
 
       context 'when error case' do

@@ -197,14 +197,16 @@ rule
   rule_args: IDENTIFIER { result = [val[0]] }
            | rule_args "," IDENTIFIER { result = val[0].append(val[2]) }
 
-  rule_rhs_list: rule_rhs
+  rule_rhs_list: rule_rhs if_clause?
                 {
                   builder = val[0]
+                  builder.if_clause = val[1]
                   result = [builder]
                 }
-          | rule_rhs_list "|" rule_rhs
+          | rule_rhs_list "|" rule_rhs if_clause?
                 {
                   builder = val[2]
+                  builder.if_clause = val[3]
                   result = val[0].append(builder)
                 }
 
@@ -227,7 +229,7 @@ rule
                 builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
                 result = builder
               }
-          | rule_rhs IDENTIFIER "(" parameterizing_args ")" TAG?
+          | rule_rhs IDENTIFIER "(" parameterizing_rule_args ")" TAG?
               {
                 builder = val[0]
                 builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
@@ -248,6 +250,11 @@ rule
               builder = val[0]
               builder.precedence_sym = sym
               result = builder
+            }
+
+  if_clause: "%if" "(" IDENTIFIER ")"
+            {
+              result = Lrama::Lexer::Token::ControlSyntax.new(s_value: val[0], location: @lexer.location, condition: val[2])
             }
 
   alias: # empty
@@ -362,10 +369,21 @@ rule
                        | "+" { result = "nonempty_list" }
                        | "*" { result = "list" }
 
-  parameterizing_args: symbol { result = [val[0]] }
-                     | parameterizing_args ',' symbol { result = val[0].append(val[2]) }
+  parameterizing_rule_args: symbol { result = [val[0]] }
+                          | parameterizing_args ',' symbol { result = val[0].append(val[2]) }
+                          | symbol parameterizing_suffix { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[0])] }
+                          | IDENTIFIER "(" parameterizing_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
+
+  parameterizing_args: symbol_or_bool { result = [val[0]] }
+                     | parameterizing_args ',' symbol_or_bool { result = val[0].append(val[2]) }
                      | symbol parameterizing_suffix { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[0])] }
                      | IDENTIFIER "(" parameterizing_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
+
+  symbol_or_bool: symbol
+                | bool
+
+  bool: "%true" { result = Lrama::Lexer::Token::Ident.new(s_value: true) }
+      | "%false" { result = Lrama::Lexer::Token::Ident.new(s_value: false) }
 
   midrule_action: "{"
                     {

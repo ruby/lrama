@@ -4,12 +4,20 @@ module Lrama
   class Grammar
     class ParameterizingRule
       class Rhs
-        attr_accessor :symbols, :user_code, :precedence_sym
+        attr_accessor :symbols, :user_code, :precedence_sym, :if_clause
 
         def initialize
           @symbols = []
           @user_code = nil
           @precedence_sym = nil
+          @if_clause = nil
+        end
+
+        def skip?(bindings)
+          return false unless @if_clause
+
+          resolved = bindings.resolve_symbol(@if_clause)
+          resolved.is_a?(Lexer::Token::ControlSyntax) && resolved.if? && resolved.false?
         end
 
         def resolve_user_code(bindings)
