@@ -18,6 +18,13 @@
 %printer {
     print_token();
 } tNUMBER tSTRING
+%destructor {
+    printf("destructor for i: %d\n", $$);
+    printf("line for i: %d\n", __LINE__);
+} <i>
+%error-token {
+    $$ = 100;
+} tNUMBER
 
 %lex-param {struct lex_params *p}
 %parse-param {struct parse_params *p}
