@@ -61,26 +61,26 @@ rule
                      | symbol_declaration
                      | rule_declaration
                      | inline_declaration
-                     | "%destructor" param generic_symbol+
+                     | "%destructor" param (symbol | TAG)+
                          {
                            @grammar.add_destructor(
-                             ident_or_tags: val[2],
+                             ident_or_tags: val[2].flatten,
                              token_code: val[1],
                              lineno: val[1].line
                            )
                          }
-                     | "%printer" param generic_symbol+
+                     | "%printer" param (symbol | TAG)+
                          {
                            @grammar.add_printer(
-                             ident_or_tags: val[2],
+                             ident_or_tags: val[2].flatten,
                              token_code: val[1],
                              lineno: val[1].line
                            )
                          }
-                     | "%error-token" param generic_symbol+
+                     | "%error-token" param (symbol | TAG)+
                          {
                            @grammar.add_error_token(
-                             ident_or_tags: val[2],
+                             ident_or_tags: val[2].flatten,
                              token_code: val[1],
                              lineno: val[1].line
                            )
@@ -396,9 +396,6 @@ rule
        | IDENTIFIER
        | STRING
        | "{...}"
-
-  generic_symbol: symbol
-                | TAG
 
   string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
 end

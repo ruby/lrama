@@ -98,8 +98,8 @@ RSpec.describe Lrama::Context do
       expect(context.yytname[context.yytranslate[11]]).to eq("\"escaped vertical tab\"")
       expect(context.yytname[context.yytranslate[258]]).to eq("keyword_class")
       expect(context.yyrline).to eq([
-         0,    57,    57,    58,    59,    62,    64,    64,    67,    70,
-        71,    74,    77,    80
+         0,    64,    64,    65,    66,    69,    71,    71,    74,    77,
+        78,    81,    84,    87
       ])
       expect(context.yytname).to eq([
         "\"EOI\"", "error", "\"invalid token\"", "\"backslash\"",
