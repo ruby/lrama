@@ -51,11 +51,12 @@ module Lrama
         end
 
         if derivation.right&.left
-          length = _render_for_report(derivation.right.left, str.length, strings, index + 1)
-          str << "#{item.symbols_after_dot[1..-1].map(&:display_name).join(" ")} "
+          left = derivation.right&.left #: Derivation
+          length = _render_for_report(left, str.length, strings, index + 1)
+          str << "#{item.symbols_after_dot[1..-1].map(&:display_name).join(" ")} " # steep:ignore
           str << " " * (length - str.length) if length > str.length
         elsif item.next_next_sym
-          str << "#{item.symbols_after_dot[1..-1].map(&:display_name).join(" ")} "
+          str << "#{item.symbols_after_dot[1..-1].map(&:display_name).join(" ")} " # steep:ignore
         end
 
         return str.length
