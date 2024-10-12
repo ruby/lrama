@@ -299,6 +299,92 @@ RSpec.describe Lrama::Counterexamples do
                   4: digit '+' digit  •
         STR
       end
+
+      context "when the grammar has a long rule name" do
+        let(:y) do
+          <<~STR
+            %{
+            // Prologue
+            %}
+
+            %union {
+                int i;
+            }
+
+            %token <i> digit
+
+            %type <i> stmt
+            %type <i> expr1
+            %type <i> long_long_long_name_expr2
+
+            %%
+
+            stmt : expr1
+                 | long_long_long_name_expr2
+                 ;
+
+            expr1 : digit '+' digit
+                  ;
+
+            long_long_long_name_expr2 : digit '+' digit
+                                      ;
+
+            %%
+
+          STR
+        end
+
+        it "build counterexamples of R/R conflicts" do
+          grammar = Lrama::Parser.new(y, "parse.y").parse
+          grammar.prepare
+          grammar.validate!
+          states = Lrama::States.new(grammar)
+          states.compute
+          counterexamples = Lrama::Counterexamples.new(states)
+
+          # State 7
+          #
+          #     3 expr1: digit '+' digit •  ["end of file"]
+          #     4 long_long_long_name_expr2: digit '+' digit •  ["end of file"]
+          #
+          #     "end of file"  reduce using rule 3 (expr1)
+          #     "end of file"  reduce using rule 4 (long_long_long_name_expr2)
+          state_7 = states.states[7]
+          examples = counterexamples.compute(state_7)
+          expect(examples.count).to eq 1
+          example = examples[0]
+
+          expect(example.type).to eq :reduce_reduce
+          # Reduce Conflict
+          expect(example.path1.map(&:to).map(&:item).map(&:to_s)).to eq([
+            "$accept: • stmt \"end of file\"  (rule 0)",
+            "stmt: • expr1  (rule 1)",
+            "expr1: • digit '+' digit  (rule 3)",
+            "expr1: digit • '+' digit  (rule 3)",
+            "expr1: digit '+' • digit  (rule 3)",
+            "expr1: digit '+' digit •  (rule 3)"
+          ])
+          expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
+            0:  stmt                       "end of file"
+                1:  expr1
+                    3: digit '+' digit  •
+          STR
+          # Reduce Conflict
+          expect(example.path2.map(&:to).map(&:item).map(&:to_s)).to eq([
+            "$accept: • stmt \"end of file\"  (rule 0)",
+            "stmt: • long_long_long_name_expr2  (rule 2)",
+            "long_long_long_name_expr2: • digit '+' digit  (rule 4)",
+            "long_long_long_name_expr2: digit • '+' digit  (rule 4)",
+            "long_long_long_name_expr2: digit '+' • digit  (rule 4)",
+            "long_long_long_name_expr2: digit '+' digit •  (rule 4)"
+          ])
+          expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
+            0:  stmt                         "end of file"
+                2:  long_long_long_name_expr2
+                    4: digit '+' digit  •
+          STR
+        end
+      end
     end
 
     describe "target state item will be start item when finding shift conflict shortest state items" do
