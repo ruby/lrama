@@ -93,14 +93,16 @@ module Lrama
     def set_locations: () -> void
 
     interface _DelegatedMethods
-    def symbols: () -> untyped
-    def terms: () -> untyped
-    def nterms: () -> untyped
-    def rules: () -> untyped
-    def accept_symbol: () -> untyped
-    def eof_symbol: () -> untyped
-    def undef_symbol: () -> untyped
-    def find_symbol_by_s_value!: () -> untyped
+    def rules: () -> Array[Rule]
+    def accept_symbol: () -> Grammar::Symbol
+    def eof_symbol: () -> Grammar::Symbol
+    def undef_symbol: () -> Grammar::Symbol
+
+    # delegate to @symbols_resolver
+    def symbols: () -> Array[Grammar::Symbol]
+    def terms: () -> Array[Grammar::Symbol]
+    def nterms: () -> Array[Grammar::Symbol]
+    def find_symbol_by_s_value!: (Grammar::Symbol s_value) -> Grammar::Symbol
     end
   end
 end
