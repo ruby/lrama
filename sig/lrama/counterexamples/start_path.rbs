@@ -1,7 +1,7 @@
 module Lrama
   class Counterexamples
     class StartPath < Path
-      def initialize: (untyped to_state_item) -> void
+      def initialize: (StateItem to_state_item) -> void
 
       def type: () -> :start
 
