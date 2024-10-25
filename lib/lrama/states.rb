@@ -97,7 +97,6 @@ module Lrama
     end
 
     def compute_ielr
-      report_duration(:compute_predecessors) { compute_predecessors }
       report_duration(:split_states) { split_states }
       report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
       report_duration(:compute_reads_relation) { compute_reads_relation }
@@ -284,7 +283,10 @@ module Lrama
         state.shifts.each do |shift|
           new_state, created = create_state(shift.next_sym, shift.next_items, states_created)
           state.set_items_to_state(shift.next_items, new_state)
-          enqueue_state(states, new_state) if created
+          if created
+            enqueue_state(states, new_state)
+            new_state.append_predecessor(state)
+          end
         end
       end
     end
@@ -541,17 +543,6 @@ module Lrama
         end.min_by do |rule, rule_id, count|
           [-count, rule_id]
         end.first
-      end
-    end
-
-    def compute_predecessors
-      queue = [@states.first]
-      until queue.empty?
-        state = queue.shift
-        state.transitions.each do |_, next_state|
-          next_state.append_predecessor(state)
-          queue << next_state
-        end
       end
     end
 
