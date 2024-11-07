@@ -909,7 +909,7 @@ racc_reduce_table = [
   0, 66, :_reduce_10,
   0, 67, :_reduce_11,
   5, 58, :_reduce_12,
-  2, 58, :_reduce_none,
+  2, 58, :_reduce_13,
   1, 72, :_reduce_14,
   2, 72, :_reduce_15,
   1, 59, :_reduce_none,
@@ -1299,7 +1299,12 @@ module_eval(<<'.,.,', 'parser.y', 21)
   end
 .,.,
 
-# reduce 13 omitted
+module_eval(<<'.,.,', 'parser.y', 23)
+  def _reduce_13(val, _values, result)
+     warn '%require is provided for compatibility with Bison and can be removed after migration to Lrama.'
+    result
+  end
+.,.,
 
 module_eval(<<'.,.,', 'parser.y', 54)
   def _reduce_14(val, _values, result)
