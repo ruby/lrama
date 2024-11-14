@@ -26,6 +26,9 @@ module Lrama
       @predecessors = []
       @lalr_isocore = self
       @ielr_isocores = [self]
+      @internal_dependencies = {}
+      @successor_dependencies = {}
+      @always_follows = {}
     end
 
     def closure=(closure)
@@ -230,21 +233,27 @@ module Lrama
     end
 
     def annotation_list
-      manifestations = annotate_manifestation
-      predecessors = transitions.map {|_, next_state| next_state.annotate_predecessor(self) }
-      predecessors.reduce(manifestations) {|result, annotations|
-        result.merge(annotations) {|_, actions_a, actions_b|
-          if actions_a.nil? || actions_b.nil?
-            actions_a || actions_b
-          else
-          actions_a.merge(actions_b) {|_, contributions_a, contributions_b|
-            contributions_a.merge(contributions_b) {|_, contributed_a, contributed_b|
-              contributed_a || contributed_b
-            }
+      return @annotation_list if @annotation_list
+
+      @annotation_list = annotate_manifestation
+      @annotation_list = @items_to_state.values.map {|next_state| next_state.annotate_predecessor(self) }
+        .reduce(@annotation_list) {|result, annotations|
+          result.merge(annotations) {|_, actions_a, actions_b|
+            if actions_a.nil? || actions_b.nil?
+              actions_a || actions_b
+            else
+              actions_a.merge(actions_b) {|_, contributions_a, contributions_b|
+                if contributions_a.nil? || contributions_b.nil?
+                  next contributions_a || contributions_b
+                end
+
+                contributions_a.merge(contributions_b) {|_, contributed_a, contributed_b|
+                  contributed_a || contributed_b
+                }
+              }
+            end
           }
-          end
         }
-      }
     end
 
     def annotate_manifestation
@@ -269,7 +278,7 @@ module Lrama
         token = annotation_list.key(actions)
         actions.transform_values {|inadequacy|
           next nil if inadequacy.nil?
-          lhs_adequacy = kernels.all? {|kernel|
+          lhs_adequacy = kernels.any? {|kernel|
             inadequacy[kernel] && kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, token).nil?
           }
           if lhs_adequacy
@@ -368,6 +377,8 @@ module Lrama
     end
 
     def always_follows(shift, next_state)
+      return @always_follows[[shift, next_state]] if @always_follows[[shift, next_state]]
+
       queue = internal_dependencies(shift, next_state) + successor_dependencies(shift, next_state)
       terms = []
       until queue.empty?
@@ -376,18 +387,23 @@ module Lrama
         st.internal_dependencies(sh, next_st).each {|v| queue << v }
         st.successor_dependencies(sh, next_st).each {|v| queue << v }
       end
-      terms
+      @always_follows[[shift, next_state]] = terms
     end
 
     def internal_dependencies(shift, next_state)
+      return @internal_dependencies[[shift, next_state]] if @internal_dependencies[[shift, next_state]]
+
       syms = @items.select {|i|
         i.next_sym == shift.next_sym && i.symbols_after_transition.all?(&:nullable) && i.position == 0
       }.map(&:lhs).uniq
-      nterm_transitions.select {|sh, _| syms.include?(sh.next_sym) }.map {|goto| [self, *goto] }
+      @internal_dependencies[[shift, next_state]] = nterm_transitions.select {|sh, _| syms.include?(sh.next_sym) }.map {|goto| [self, *goto] }
     end
 
     def successor_dependencies(shift, next_state)
-      next_state.nterm_transitions
+      return @successor_dependencies[[shift, next_state]] if @successor_dependencies[[shift, next_state]]
+
+      @successor_dependencies[[shift, next_state]] =
+        next_state.nterm_transitions
         .select {|next_shift, _| next_shift.next_sym.nullable }
         .map {|transition| [next_state, *transition] }
     end
