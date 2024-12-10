@@ -6,13 +6,13 @@ module Lrama
 
     @kernels: untyped
 
-    @items: untyped
+    @items: Array[States::Item]
 
     # Manage relationships between items to state
     # to resolve next state
     @items_to_state: untyped
 
-    @conflicts: untyped
+    @conflicts: Array[State::ShiftReduceConflict|State::ReduceReduceConflict]
 
     @resolved_conflicts: untyped
 
@@ -24,7 +24,7 @@ module Lrama
 
     @term_transitions: untyped
 
-    @transitions: untyped
+    @transitions: Array[[Shift, State]]
 
     attr_reader id: untyped
 
@@ -32,7 +32,7 @@ module Lrama
 
     attr_reader kernels: untyped
 
-    attr_reader conflicts: untyped
+    attr_reader conflicts: Array[State::ShiftReduceConflict|State::ReduceReduceConflict]
 
     attr_reader resolved_conflicts: untyped
 
@@ -40,13 +40,13 @@ module Lrama
 
     attr_reader closure: untyped
 
-    attr_reader items: untyped
+    attr_reader items: Array[States::Item]
 
-    attr_accessor shifts: untyped
+    attr_accessor shifts: Array[Shift]
 
     attr_accessor reduces: untyped
 
-    def initialize: (untyped id, untyped accessing_symbol, untyped kernels) -> void
+    def initialize: (untyped id, untyped accessing_symbol, Array[States::Item] kernels) -> void
 
     def closure=: (untyped closure) -> untyped
 
@@ -62,7 +62,7 @@ module Lrama
 
     def term_transitions: () -> untyped
 
-    def transitions: () -> untyped
+    def transitions: () -> Array[[Shift, State]]
 
     def selected_term_transitions: () -> untyped
 

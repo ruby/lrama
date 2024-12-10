@@ -1,9 +1,9 @@
 module Lrama
   class Counterexamples
     class Example
-      @path1: [Path]
+      @path1: ::Array[StartPath | TransitionPath | ProductionPath]
 
-      @path2: [Path]
+      @path2: ::Array[StartPath | TransitionPath | ProductionPath]
 
       @conflict: (State::ShiftReduceConflict | State::ReduceReduceConflict)
 
@@ -15,15 +15,15 @@ module Lrama
 
       @derivations2: Derivation
 
-      attr_reader path1: [Path]
+      attr_reader path1: ::Array[StartPath | TransitionPath | ProductionPath]
 
-      attr_reader path2: [Path]
+      attr_reader path2: ::Array[StartPath | TransitionPath | ProductionPath]
 
       attr_reader conflict: (State::ShiftReduceConflict | State::ReduceReduceConflict)
 
       attr_reader conflict_symbol: Grammar::Symbol
 
-      def initialize: ([Path]? path1, [Path]? path2, (State::ShiftReduceConflict | State::ReduceReduceConflict) conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      def initialize: (::Array[StartPath | TransitionPath | ProductionPath]? path1, ::Array[StartPath | TransitionPath | ProductionPath]? path2, (State::ShiftReduceConflict | State::ReduceReduceConflict) conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
 
       def type: () -> (:shift_reduce | :reduce_reduce)
 
@@ -37,7 +37,7 @@ module Lrama
 
       private
 
-      def _derivations: (Array[Path] paths) -> Derivation?
+      def _derivations: (::Array[StartPath | TransitionPath | ProductionPath] paths) -> Derivation?
 
       def find_derivation_for_symbol: (StateItem state_item, Grammar::Symbol sym) -> Derivation?
     end
