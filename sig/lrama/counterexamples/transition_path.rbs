@@ -1,0 +1,11 @@
+module Lrama
+  class Counterexamples
+    class TransitionPath < Path
+      def type: () -> :transition
+
+      def transition?: () -> true
+
+      def production?: () -> false
+    end
+  end
+end

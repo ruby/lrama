@@ -20,6 +20,10 @@ module Lrama
         "#<Path(#{type})>"
       end
       alias :inspect :to_s
+
+      def type
+        raise NoMethodError
+      end
     end
   end
 end

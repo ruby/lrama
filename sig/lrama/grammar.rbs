@@ -91,5 +91,18 @@ module Lrama
     def fill_sym_to_rules: () -> Array[Rule]
     def validate_rule_lhs_is_nterm!: () -> void
     def set_locations: () -> void
+
+    interface _DelegatedMethods
+    def rules: () -> Array[Rule]
+    def accept_symbol: () -> Grammar::Symbol
+    def eof_symbol: () -> Grammar::Symbol
+    def undef_symbol: () -> Grammar::Symbol
+
+    # delegate to @symbols_resolver
+    def symbols: () -> Array[Grammar::Symbol]
+    def terms: () -> Array[Grammar::Symbol]
+    def nterms: () -> Array[Grammar::Symbol]
+    def find_symbol_by_s_value!: (Grammar::Symbol s_value) -> Grammar::Symbol
+    end
   end
 end

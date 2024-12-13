@@ -1,0 +1,10 @@
+module Lrama
+  class Counterexamples
+    class StateItem
+     attr_accessor state: State
+     attr_accessor item: States::Item
+
+      def initialize: (State state, States::Item item) -> void
+    end
+  end
+end
