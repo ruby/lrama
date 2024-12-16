@@ -382,7 +382,7 @@ module Lrama
     end
 
     def validate_rule_lhs_is_nterm!
-      errors = []
+      errors = [] #: Array[String]
 
       rules.each do |rule|
         next if rule.lhs.nterm?
