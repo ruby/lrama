@@ -30,6 +30,7 @@ RSpec.describe Lrama::Diagnostics do
 
           %type <i> class /* comment for class */
           %nterm <str> string /* comment for string */
+          %type string_1 string_2 /* missing `%type` tag */
 
           %nonassoc tEQEQ
           %left  tPLUS tMINUS '>'
