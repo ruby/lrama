@@ -29,6 +29,7 @@ RSpec.describe Lrama::Diagnostics do
           %token tEQEQ  "=="
 
           %type <i> class /* comment for class */
+          %type string_1 string_2 /* missing `%type` tag */
 
           %nonassoc tEQEQ
           %left  tPLUS tMINUS '>'
