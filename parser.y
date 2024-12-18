@@ -107,7 +107,7 @@ rule
                          }
 
   symbol_declaration: "%token" token_declarations
-                    | "%type" symbol_declarations
+                    | ("%type" | "%nterm") symbol_declarations
                         {
                           val[1].each {|hash|
                             hash[:tokens].each {|id|
