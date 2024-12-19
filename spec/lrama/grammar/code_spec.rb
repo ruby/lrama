@@ -176,9 +176,9 @@ RSpec.describe Lrama::Grammar::Code do
         %type <rule2> rule2
         %type <rule3> rule3
         %type <rule4> rule4
-        %type <rule5> rule5
-        %type <rule6> rule6
-        %type <rule7> rule7
+        %nterm <rule5> rule5
+        %nterm <rule6> rule6
+        %nterm <rule7> rule7
 
         %%
 
