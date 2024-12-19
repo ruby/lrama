@@ -2,8 +2,6 @@
  * This is comment for this file.
  */
 
-%require "3.0"
-
 %{
 // Prologue
 %}
