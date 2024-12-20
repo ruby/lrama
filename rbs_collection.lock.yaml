@@ -6,7 +6,7 @@ gems:
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 218cf130d31f63e110e350efc3fa265311b0f238
+    revision: f2fa96be08e0f7fe5237a45d2b69d9d7a5d0b416
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: erb
@@ -26,7 +26,7 @@ gems:
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 4b0d2f72e63b6c3e92dc54e19ce23dd24524f9a7
+    revision: f2fa96be08e0f7fe5237a45d2b69d9d7a5d0b416
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: stackprof
@@ -34,7 +34,7 @@ gems:
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 4b0d2f72e63b6c3e92dc54e19ce23dd24524f9a7
+    revision: f2fa96be08e0f7fe5237a45d2b69d9d7a5d0b416
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: strscan

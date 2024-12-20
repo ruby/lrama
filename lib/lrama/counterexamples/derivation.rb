@@ -44,7 +44,7 @@ module Lrama
           str << "#{item.next_sym.display_name}"
           length = _render_for_report(derivation.left, len, strings, index + 1)
           # I want String#ljust!
-          str << " " * (length - str.length)
+          str << " " * (length - str.length) if length > str.length
         else
           str << " • #{item.symbols_after_dot.map(&:display_name).join(" ")} "
           return str.length
