@@ -50,7 +50,7 @@ module Lrama
       @reverse_transitions = {}
 
       @states.states.each do |src_state|
-        trans = {}
+        trans = {} #: Hash[Grammar::Symbol, State]
 
         src_state.transitions.each do |shift, next_state|
           trans[shift.next_sym] = next_state
@@ -85,7 +85,7 @@ module Lrama
 
       @states.states.each do |state|
         # LHS => Set(Item)
-        h = {}
+        h = {} #: Hash[Grammar::Symbol, Set[States::Item]]
 
         state.closure.each do |item|
           sym = item.lhs
@@ -165,7 +165,7 @@ module Lrama
         end
 
         if target_state_item.item.beginning_of_rule?
-          queue = []
+          queue = [] #: Array[Array[StateItem]]
           queue << [target_state_item]
 
           # Find reverse production
@@ -234,8 +234,8 @@ module Lrama
 
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
       # queue: is an array of [Triple, [Path]]
-      queue = []
-      visited = {}
+      queue = [] #: Array[[Triple, Array[StartPath|TransitionPath|ProductionPath]]]
+      visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
 

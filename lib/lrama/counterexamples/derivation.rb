@@ -18,7 +18,7 @@ module Lrama
       alias :inspect :to_s
 
       def render_strings_for_report
-        result = []
+        result = [] #: Array[String]
         _render_for_report(self, 0, result, 0)
         result.map(&:rstrip)
       end

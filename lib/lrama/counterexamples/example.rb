@@ -92,7 +92,7 @@ module Lrama
       end
 
       def find_derivation_for_symbol(state_item, sym)
-        queue = []
+        queue = [] #: Array[Array[StateItem]]
         queue << [state_item]
 
         while (sis = queue.shift)
