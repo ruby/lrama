@@ -3710,6 +3710,32 @@ RSpec.describe Lrama::Parser do
           ERROR
         end
       end
+
+      context "when pass the terminal symbol to `%nterm`" do
+        it "raises an error" do
+          y = <<~INPUT
+            %{
+            // Prologue
+            %}
+            
+            %token EOI 0 "EOI"
+            %nterm EOI
+            
+            %%
+            
+            program: /* empty */
+                   ;
+          INPUT
+
+          parser = Lrama::Parser.new(y, "error_messages/parse.y")
+
+          expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+            error_messages/parse.y:6:7: symbol EOI redeclared as a nonterminal
+            %nterm EOI
+                   ^^^
+          ERROR
+        end
+      end
     end
   end
 

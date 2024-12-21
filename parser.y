@@ -107,11 +107,23 @@ rule
                          }
 
   symbol_declaration: "%token" token_declarations
-                    | ("%type" | "%nterm") symbol_declarations
+                    | "%type" symbol_declarations
                         {
                           val[1].each {|hash|
                             hash[:tokens].each {|id|
                               @grammar.add_type(id: id, tag: hash[:tag])
+                            }
+                          }
+                        }
+                    | "%nterm" symbol_declarations
+                        {
+                          val[1].each {|hash|
+                            hash[:tokens].each {|id|
+                              if @grammar.find_term_by_s_value(id.s_value)
+                                on_action_error("symbol #{id.s_value} redeclared as a nonterminal", id)
+                              else
+                                @grammar.add_type(id: id, tag: hash[:tag])
+                              end
                             }
                           }
                         }
