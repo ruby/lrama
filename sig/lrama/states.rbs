@@ -1,8 +1,4 @@
 module Lrama
-  # States is passed to a template file
-  #
-  # "Efficient Computation of LALR(1) Look-Ahead Sets"
-  #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
     include Grammar::_DelegatedMethods
 
@@ -14,54 +10,18 @@ module Lrama
 
     @states: Array[State]
 
-    # `DR(p, A) = {t ∈ T | p -(A)-> r -(t)-> }`
-    #   where p is state, A is nterm, t is term.
-    #
-    # `@direct_read_sets` is a hash whose
-    # key is [state.id, nterm.token_id],
-    # value is bitmap of term.
     @direct_read_sets: untyped
 
-    # Reads relation on nonterminal transitions (pair of state and nterm)
-    # `(p, A) reads (r, C) iff p -(A)-> r -(C)-> and C =>* ε`
-    #   where p, r are state, A, C are nterm.
-    #
-    # `@reads_relation` is a hash whose
-    # key is [state.id, nterm.token_id],
-    # value is array of [state.id, nterm.token_id].
     @reads_relation: untyped
 
-    # `@read_sets` is a hash whose
-    # key is [state.id, nterm.token_id],
-    # value is bitmap of term.
     @read_sets: untyped
 
-    # `(p, A) includes (p', B) iff B -> βAγ, γ =>* ε, p' -(β)-> p`
-    #   where p, p' are state, A, B are nterm, β, γ is sequence of symbol.
-    #
-    # `@includes_relation` is a hash whose
-    # key is [state.id, nterm.token_id],
-    # value is array of [state.id, nterm.token_id].
     @includes_relation: untyped
 
-    # `(q, A -> ω) lookback (p, A) iff p -(ω)-> q`
-    #   where p, q are state, A -> ω is rule, A is nterm, ω is sequence of symbol.
-    #
-    # `@lookback_relation` is a hash whose
-    # key is [state.id, rule.id],
-    # value is array of [state.id, nterm.token_id].
     @lookback_relation: untyped
 
-    # `@follow_sets` is a hash whose
-    # key is [state.id, rule.id],
-    # value is bitmap of term.
     @follow_sets: untyped
 
-    # `LA(q, A -> ω) = ∪{Follow(p, A) | (q, A -> ω) lookback (p, A)`
-    #
-    # `@la` is a hash whose
-    # key is [state.id, rule.id],
-    # value is bitmap of term.
     @la: untyped
 
     extend Forwardable
@@ -116,8 +76,6 @@ module Lrama
 
     def compute_read_sets: () -> untyped
 
-    # Execute transition of state by symbols
-    # then return final state.
     def transition: (untyped state, untyped symbols) -> untyped
 
     def compute_includes_relation: () -> untyped

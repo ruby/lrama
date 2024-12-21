@@ -8,8 +8,6 @@ module Lrama
 
     @items: Array[States::Item]
 
-    # Manage relationships between items to state
-    # to resolve next state
     @items_to_state: untyped
 
     @conflicts: Array[State::ShiftReduceConflict|State::ReduceReduceConflict]
@@ -66,7 +64,6 @@ module Lrama
 
     def selected_term_transitions: () -> untyped
 
-    # Move to next state by sym
     def transition: (untyped sym) -> untyped
 
     def find_reduce_by_item!: (untyped item) -> untyped
