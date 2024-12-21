@@ -22,7 +22,7 @@ module Lrama
       alias :inspect :to_s
 
       def type
-        raise NoMethodError
+        raise NotImplementedError
       end
     end
   end
