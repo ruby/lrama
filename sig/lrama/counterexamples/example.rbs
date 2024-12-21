@@ -31,13 +31,13 @@ module Lrama
 
       def path2_item: () -> States::Item
 
-      def derivations1: () -> Derivation?
+      def derivations1: () -> Derivation
 
-      def derivations2: () -> Derivation?
+      def derivations2: () -> Derivation
 
       private
 
-      def _derivations: (::Array[StartPath | TransitionPath | ProductionPath] paths) -> Derivation?
+      def _derivations: (::Array[StartPath | TransitionPath | ProductionPath] paths) -> Derivation
 
       def find_derivation_for_symbol: (StateItem state_item, Grammar::Symbol sym) -> Derivation?
     end

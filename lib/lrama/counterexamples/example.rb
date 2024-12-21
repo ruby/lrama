@@ -38,7 +38,7 @@ module Lrama
       private
 
       def _derivations(paths)
-        derivation = nil #: Derivation?
+        derivation = nil #: Derivation
         current = :production
         last_path = paths.last #: Path
         lookahead_sym = last_path.to.item.end_of_rule? ? @conflict_symbol : nil
@@ -59,7 +59,7 @@ module Lrama
               derivation = Derivation.new(item, derivation)
               current = :production
             else
-              return nil
+              raise "Unexpected. #{path}"
             end
 
             if lookahead_sym && item.next_next_sym && item.next_next_sym.first_set.include?(lookahead_sym)
