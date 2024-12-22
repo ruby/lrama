@@ -21,7 +21,7 @@ rule
                           {
                             @grammar.prologue = val[2].s_value
                           }
-                      | "%require" STRING
+                      | "%require" STRING { warn '%require is provided for compatibility with Bison and can be removed after migration to Lrama.' }
 
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
