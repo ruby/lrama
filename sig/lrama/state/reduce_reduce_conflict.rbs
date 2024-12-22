@@ -1,11 +1,11 @@
 module Lrama
   class State
     class ReduceReduceConflict
-      attr_accessor symbols: Array[Grammar::Symbol?]
+      attr_accessor symbols: Array[Grammar::Symbol]
       attr_accessor reduce1: State::Reduce
       attr_accessor reduce2: State::Reduce
 
-      def initialize: (?symbols: Array[Grammar::Symbol?], ?reduce1: State::Reduce, ?reduce2: State::Reduce) -> void
+      def initialize: (?symbols: Array[Grammar::Symbol], ?reduce1: State::Reduce, ?reduce2: State::Reduce) -> void
 
       def type: () -> :reduce_reduce
     end

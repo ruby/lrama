@@ -13,7 +13,7 @@ module Lrama
       attr_accessor destructor: Destructor?
       attr_accessor error_token: ErrorToken
 
-      attr_accessor first_set: Set[Array[Symbol]] | Set[Symbol]
+      attr_accessor first_set: Set[Grammar::Symbol]
       attr_accessor first_set_bitmap: Integer
       attr_writer eof_symbol: bool
       attr_writer error_symbol: bool

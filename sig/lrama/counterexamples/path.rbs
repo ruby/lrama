@@ -1,0 +1,21 @@
+module Lrama
+  class Counterexamples
+    class Path
+      @from_state_item: StateItem?
+
+      @to_state_item: StateItem
+
+      def initialize: (StateItem? from_state_item, StateItem to_state_item) -> void
+
+      def from: () -> StateItem?
+
+      def to: () -> StateItem
+
+      def to_s: () -> ::String
+
+      alias inspect to_s
+
+      def type: -> bot
+    end
+  end
+end
