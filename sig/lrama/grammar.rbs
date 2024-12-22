@@ -102,7 +102,7 @@ module Lrama
     def symbols: () -> Array[Grammar::Symbol]
     def terms: () -> Array[Grammar::Symbol]
     def nterms: () -> Array[Grammar::Symbol]
-    def find_symbol_by_s_value!: (Grammar::Symbol s_value) -> Grammar::Symbol
+    def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
     end
   end
 end
