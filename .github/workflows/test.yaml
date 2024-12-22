@@ -186,4 +186,8 @@ jobs:
       - run: ../autogen.sh
       - run: ../configure -C --disable-install-doc
       - run: make
-      - run: make test-all
+      - run: make test-all RUN_OPTS="$RUN_OPTS" SPECOPTS="$SPECOPTS"
+        env:
+          EXCLUDES: '../test/.excludes-parsey'
+          RUN_OPTS: ${{ matrix.run_opts || '--parser=parse.y' }}
+          SPECOPTS: ${{ matrix.specopts || '-T --parser=parse.y' }}
