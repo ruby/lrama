@@ -258,8 +258,14 @@ rule
 
   alias: string_as_id? { result = val[0].s_value if val[0] }
 
-  symbol_declarations: symbol+ { result = [{tag: nil, tokens: val[0]}] }
-                     | TAG symbol+ { result = [{tag: val[0], tokens: val[1]}] }
+  symbol_declarations: TAG? symbol+
+                       {
+                          result = if val[0]
+                            [{tag: val[0], tokens: val[1]}]
+                          else
+                            [{tag: nil, tokens: val[1]}]
+                          end
+                       }
                      | symbol_declarations TAG symbol+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
 
   symbol: id
@@ -367,9 +373,15 @@ rule
                        | "+" { result = "nonempty_list" }
                        | "*" { result = "list" }
 
-  parameterizing_args: symbol { result = [val[0]] }
+  parameterizing_args: symbol parameterizing_suffix?
+                          {
+                            result = if val[1]
+                              [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[0])]
+                            else
+                              [val[0]]
+                            end
+                          }
                      | parameterizing_args ',' symbol { result = val[0].append(val[2]) }
-                     | symbol parameterizing_suffix { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[0])] }
                      | IDENTIFIER "(" parameterizing_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
 
   midrule_action: "{"
