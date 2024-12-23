@@ -1,5 +1,40 @@
 # NEWS for Lrama
 
+## Lrama 0.6.11 (2024-12-23)
+
+### Add support for %type declarations using %nterm in Nonterminal Symbols
+
+Allow to use `%nterm` in Nonterminal Symbols for `%type` declarations.
+
+```yacc
+%nterm <type> nonterminal…
+```
+
+This directive is also supported for compatibility with Bison, and only non-terminal symbols are allowed. In other words, definitions like the following will result in an error:
+
+```yacc
+%{
+// Prologue
+%}
+
+%token EOI 0 "EOI"
+%nterm EOI
+
+%%
+
+program: /* empty */
+        ;
+```
+
+It show an error message like the following:
+
+```command
+❯ exe/lrama nterm.y
+nterm.y:6:7: symbol EOI redeclared as a nonterminal
+%nterm EOI
+       ^^^
+```
+
 ## Lrama 0.6.10 (2024-09-11)
 
 ### Aliased Named References for actions of RHS in parameterizing rules
