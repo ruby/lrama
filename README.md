@@ -18,6 +18,7 @@ Lrama is LALR (1) parser generator written by Ruby. The first goal of this proje
   - [Supported Ruby version](#supported-ruby-version)
   - [Development](#development)
     - [How to generate parser.rb](#how-to-generate-parserrb)
+    - [How to Write a Type Signature](#how-to-write-a-type-signature)
     - [Test](#test)
     - [Call-stack Profiling Lrama](#call-stack-profiling-lrama)
       - [1. Create parse.tmp.y in ruby/ruby](#1-create-parsetmpy-in-rubyruby)
@@ -117,6 +118,14 @@ $ bundle exec rake build:parser
 
 `parser.rb` is generated from `parser.y` by Racc.
 Run the rake command when you update `parser.y` then commit changes of both files.
+
+### How to Write a Type Signature
+
+We use [Steep](https://github.com/soutaro/steep) for type checking and [rbs-inline](https://github.com/soutaro/rbs-inline) for type declarations.
+
+Currently, type signatures are declared in the [sig/lrama](https://github.com/ruby/lrama/blob/master/sig/lrama) directory. However, these files will be replaced with `rbs-inline`. This means type signatures should be written directly in the source code.
+
+For guidance on writing type signatures, refer to the [Syntax Guide](https://github.com/soutaro/rbs-inline/wiki/Syntax-guide) in the rbs-inline documentation.
 
 ### Test
 
