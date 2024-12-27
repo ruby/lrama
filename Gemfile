@@ -17,5 +17,5 @@ gem "memory_profiler"
 if !ENV['GITHUB_ACTION'] || ENV['INSTALL_STEEP'] == 'true'
   gem "rbs", "3.7.0", require: false
   gem "rbs-inline", require: false
-  gem "steep", "1.9.1", require: false
+  gem "steep", "1.9.2", require: false
 end
