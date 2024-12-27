@@ -1,0 +1,11 @@
+# Generated from lib/lrama/bitmap.rb with RBS::Inline
+
+module Lrama
+  module Bitmap
+    # @rbs (Array[Integer] ary) -> Integer
+    def self.from_array: (Array[Integer] ary) -> Integer
+
+    # @rbs (Integer int) -> Array[Integer]
+    def self.to_array: (Integer int) -> Array[Integer]
+  end
+end
