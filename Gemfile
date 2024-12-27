@@ -15,7 +15,7 @@ gem "memory_profiler"
 # Recent steep requires Ruby >= 3.0.0.
 # Then skip install on some CI jobs.
 if !ENV['GITHUB_ACTION'] || ENV['INSTALL_STEEP'] == 'true'
-  gem "rbs", "3.7.0", require: false
+  gem "rbs", "3.8.0", require: false
   gem "rbs-inline", require: false
-  gem "steep", "1.9.2", require: false
+  gem "steep", "1.9.3", require: false
 end
