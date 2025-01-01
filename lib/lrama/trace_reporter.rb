@@ -24,7 +24,9 @@ module Lrama
     # @rbs () -> void
     def report_rules
       puts "Grammar rules:"
-      @grammar.rules.each { |rule| puts rule.display_name }
+      @grammar.rules.each do |rule|
+        puts rule.display_name_without_action if rule.lhs.first_set.any?
+      end
     end
 
     # @rbs () -> void
