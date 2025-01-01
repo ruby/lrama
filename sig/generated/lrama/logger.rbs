@@ -1,0 +1,14 @@
+# Generated from lib/lrama/logger.rb with RBS::Inline
+
+module Lrama
+  class Logger
+    # @rbs (IO out) -> void
+    def initialize: (IO out) -> void
+
+    # @rbs (String message) -> void
+    def warn: (String message) -> void
+
+    # @rbs (String message) -> void
+    def error: (String message) -> void
+  end
+end
