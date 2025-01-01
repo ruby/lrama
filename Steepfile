@@ -18,5 +18,6 @@ target :lib do
   check "lib/lrama/digraph.rb"
   check "lib/lrama/grammar.rb"
   check "lib/lrama/options.rb"
+  check "lib/lrama/trace_reporter.rb"
   check "lib/lrama/warning.rb"
 end
