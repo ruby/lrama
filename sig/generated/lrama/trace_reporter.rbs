@@ -1,0 +1,22 @@
+# Generated from lib/lrama/trace_reporter.rb with RBS::Inline
+
+module Lrama
+  class TraceReporter
+    # @rbs (Lrama::Grammar grammar) -> void
+    def initialize: (Lrama::Grammar grammar) -> void
+
+    # @rbs (**Hash[Symbol, bool] options) -> void
+    def report: (**Hash[Symbol, bool] options) -> void
+
+    private
+
+    # @rbs rules: (bool rules, bool actions, **untyped _) -> void
+    def _report: (?rules: untyped, ?actions: untyped, **untyped _) -> untyped
+
+    # @rbs () -> void
+    def report_rules: () -> void
+
+    # @rbs () -> void
+    def report_actions: () -> void
+  end
+end
