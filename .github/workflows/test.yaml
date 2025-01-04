@@ -54,6 +54,25 @@ jobs:
       - run: flex --help
       - run: bundle install
       - run: bundle exec rspec
+  test-c:
+    needs: ruby-versions
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['head']
+        compiler: ['cc', 'gcc', 'clang']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - run: flex --help
+      - run: bundle install
+      - run: bundle exec rspec
+        env:
+          COMPILER: ${{ matrix.compiler }}
   test-cpp:
     needs: ruby-versions
     runs-on: ubuntu-20.04

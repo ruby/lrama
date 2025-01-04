@@ -16,7 +16,7 @@ RSpec.describe "integration" do
     end
 
     def file_extension
-      ENV['COMPILER'] == "gcc" ? ".c" : ".cpp"
+      ['cc', 'gcc', 'clang'].include?(ENV['COMPILER']) ? ".c" : ".cpp"
     end
 
     def test_parser(parser_name, input, expected, expect_success: true, lrama_command_args: [], debug: false)
