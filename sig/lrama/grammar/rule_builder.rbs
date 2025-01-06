@@ -37,7 +37,6 @@ module Lrama
       def preprocess_references: () -> void
       def build_rules: () -> void
       def process_rhs: () -> void
-      def lhs_s_value: (Lexer::Token::InstantiateRule token, Grammar::Binding bindings) -> String
       def resolve_inline: () -> void
       def resolve_inline_rhs: (RuleBuilder rule_builder, Grammar::ParameterizingRule::Rhs inline_rhs, Integer index, ?Binding bindings) -> void
       def replace_inline_user_code: (Grammar::ParameterizingRule::Rhs inline_rhs, Integer index) -> Lexer::Token::UserCode?
