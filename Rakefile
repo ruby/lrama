@@ -15,6 +15,13 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
 end
 task :spec => "build:parser"
 
+require "rdoc/task"
+RDoc::Task.new do |rdoc|
+  rdoc.title = "Lrama Documentation"
+  rdoc.main = "Index.md"
+  rdoc.rdoc_dir = "_site"
+end
+
 desc "steep check"
 task :steep do
   sh "bundle exec steep check"
