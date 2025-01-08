@@ -48,8 +48,7 @@ RSpec.describe Lrama::OptionParser do
 
           Tuning the Parser:
               -S, --skeleton=FILE              specify the skeleton to use
-              -t                               reserved, do nothing
-                  --debug                      display debugging outputs of internal parser
+              -t, --debug                      display debugging outputs of internal parser
 
           Output:
               -H, --header=[FILE]              also produce a header file named FILE
