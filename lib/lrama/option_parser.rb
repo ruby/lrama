@@ -85,6 +85,7 @@ module Lrama
         o.on_tail '    automaton                        display states'
         o.on_tail '    closure                          display states'
         o.on_tail '    rules                            display grammar rules'
+        o.on_tail '    only-explicit-rules              display only explicit grammar rules'
         o.on_tail '    actions                          display grammar rules with actions'
         o.on_tail '    time                             display generation time'
         o.on_tail '    all                              include all the above traces'
@@ -135,8 +136,8 @@ module Lrama
 
     VALID_TRACES = %w[
       locations scan parse automaton bitsets closure
-      grammar rules actions resource sets muscles
-      tools m4-early m4 skeleton time ielr cex
+      grammar rules only-explicit-rules actions resource
+      sets muscles tools m4-early m4 skeleton time ielr cex
     ].freeze
     NOT_SUPPORTED_TRACES = %w[
       locations scan parse bitsets grammar resource
@@ -146,7 +147,7 @@ module Lrama
     def validate_trace(trace)
       h = {}
       return h if trace.empty? || trace == ['none']
-      supported = VALID_TRACES - NOT_SUPPORTED_TRACES
+      supported = VALID_TRACES - NOT_SUPPORTED_TRACES - %w[only-explicit-rules]
       if trace == ['all']
         supported.each { |t| h[t.to_sym] = true }
         return h

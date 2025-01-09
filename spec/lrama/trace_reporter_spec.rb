@@ -11,10 +11,38 @@ RSpec.describe Lrama::TraceReporter do
       grammar
     end
 
-    context "when rules: true" do
-      it "prints the rules" do
+    context "when rules: true and only_explicit_rules: false" do
+      it "prints the all rules" do
         expect do
-          described_class.new(grammar).report(rules: true)
+          described_class.new(grammar).report(rules: true, only_explicit_rules: false)
+        end.to output(<<~RULES).to_stdout
+          Grammar rules:
+          $accept -> program EOI
+          program -> class
+          program -> '+' strings_1
+          program -> '-' strings_2
+          class -> keyword_class tSTRING keyword_end
+          $@1 -> ε
+          $@2 -> ε
+          class -> keyword_class $@1 tSTRING '!' keyword_end $@2
+          $@3 -> ε
+          $@4 -> ε
+          class -> keyword_class $@3 tSTRING '?' keyword_end $@4
+          strings_1 -> string_1
+          strings_2 -> string_1
+          strings_2 -> string_2
+          string_1 -> string
+          string_2 -> string '+'
+          string -> tSTRING
+          unused -> tNUMBER
+        RULES
+      end
+    end
+
+    context "when rules: true and only_explicit_rules: true" do
+      it "prints the only explicit rules" do
+        expect do
+          described_class.new(grammar).report(rules: true, only_explicit_rules: true)
         end.to output(<<~RULES).to_stdout
           Grammar rules:
           $accept -> program EOI

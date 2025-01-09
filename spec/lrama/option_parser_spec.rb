@@ -85,6 +85,7 @@ RSpec.describe Lrama::OptionParser do
               automaton                        display states
               closure                          display states
               rules                            display grammar rules
+              only-explicit-rules              display only explicit grammar rules
               actions                          display grammar rules with actions
               time                             display generation time
               all                              include all the above traces
