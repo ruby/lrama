@@ -212,7 +212,7 @@ jobs:
           sudo apt-get install -q -y pkg-config${arch} || :
       - run: sudo apt-get --purge remove bison
       - run: ../autogen.sh
-      - run: ../configure -C --disable-install-doc
+      - run: ../configure -C --disable-install-doc --with-parser=parse.y
       - run: make
       - run: make test-all RUN_OPTS="$RUN_OPTS" SPECOPTS="$SPECOPTS"
         env:
