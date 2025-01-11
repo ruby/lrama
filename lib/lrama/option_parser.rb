@@ -143,19 +143,20 @@ module Lrama
       locations scan parse bitsets grammar resource
       sets muscles tools m4-early m4 skeleton ielr cex
     ].freeze
+    SUPPORTED_TRACES = VALID_TRACES - NOT_SUPPORTED_TRACES
 
     def validate_trace(trace)
       h = {}
       return h if trace.empty? || trace == ['none']
-      supported = VALID_TRACES - NOT_SUPPORTED_TRACES - %w[only-explicit-rules]
+      all_traces = SUPPORTED_TRACES - %w[only-explicit-rules]
       if trace == ['all']
-        supported.each { |t| h[t.to_sym] = true }
+        all_traces.each { |t| h[t.gsub(/-/, '_').to_sym] = true }
         return h
       end
 
       trace.each do |t|
-        if supported.include?(t)
-          h[t.to_sym] = true
+        if SUPPORTED_TRACES.include?(t)
+          h[t.gsub(/-/, '_').to_sym] = true
         else
           raise "Invalid trace option \"#{t}\"."
         end
