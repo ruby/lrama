@@ -10,11 +10,14 @@ module Lrama
 
     private
 
-    # @rbs rules: (bool rules, bool actions, **untyped _) -> void
-    def _report: (?rules: untyped, ?actions: untyped, **untyped _) -> untyped
+    # @rbs rules: (bool rules, bool actions, bool only_explicit_rules, **untyped _) -> void
+    def _report: (?rules: untyped, ?actions: untyped, ?only_explicit_rules: untyped, **untyped _) -> untyped
 
     # @rbs () -> void
     def report_rules: () -> void
+
+    # @rbs () -> void
+    def report_only_explicit_rules: () -> void
 
     # @rbs () -> void
     def report_actions: () -> void

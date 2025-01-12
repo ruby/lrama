@@ -85,6 +85,7 @@ RSpec.describe Lrama::OptionParser do
               automaton                        display states
               closure                          display states
               rules                            display grammar rules
+              only-explicit-rules              display only explicit grammar rules
               actions                          display grammar rules with actions
               time                             display generation time
               all                              include all the above traces
@@ -169,9 +170,15 @@ RSpec.describe Lrama::OptionParser do
     end
 
     context "when valid options are passed" do
+      let(:valid_traces) do
+        %w[automaton closure rules only-explicit-rules actions time]
+      end
+
       it "returns option hash" do
-        opts = option_parser.send(:validate_trace, ["automaton", "closure"])
-        expect(opts).to eq({automaton: true, closure: true})
+        opts = option_parser.send(:validate_trace, valid_traces)
+        expect(opts).to eq({
+          only_explicit_rules: true, actions: true, automaton: true, closure: true, rules: true, time: true
+        })
       end
 
       context "when all is passed" do

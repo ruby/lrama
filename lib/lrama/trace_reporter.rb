@@ -15,9 +15,10 @@ module Lrama
 
     private
 
-    # @rbs rules: (bool rules, bool actions, **untyped _) -> void
-    def _report(rules: false, actions: false, **_)
-      report_rules if rules
+    # @rbs rules: (bool rules, bool actions, bool only_explicit_rules, **untyped _) -> void
+    def _report(rules: false, actions: false, only_explicit_rules: false, **_)
+      report_rules if rules && !only_explicit_rules
+      report_only_explicit_rules if only_explicit_rules
       report_actions if actions
     end
 
@@ -25,6 +26,14 @@ module Lrama
     def report_rules
       puts "Grammar rules:"
       @grammar.rules.each { |rule| puts rule.display_name }
+    end
+
+    # @rbs () -> void
+    def report_only_explicit_rules
+      puts "Grammar rules:"
+      @grammar.rules.each do |rule|
+        puts rule.display_name_without_action if rule.lhs.first_set.any?
+      end
     end
 
     # @rbs () -> void
