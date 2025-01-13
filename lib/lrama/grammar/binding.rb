@@ -17,7 +17,7 @@ module Lrama
             s_value: sym.s_value, location: sym.location, args: resolved_args(sym), lhs_tag: sym.lhs_tag
           )
         else
-          parameter_to_arg(sym) || sym
+          parameter_to_arg(sym)
         end
       end
 
@@ -40,12 +40,12 @@ module Lrama
         sym.args.map { |arg| resolve_symbol(arg) }
       end
 
-      # @rbs (Lexer::Token sym) -> Lexer::Token?
+      # @rbs (Lexer::Token sym) -> Lexer::Token
       def parameter_to_arg(sym)
         if (arg = @parameter_to_arg[sym.s_value].dup)
           arg.alias_name = sym.alias_name
         end
-        arg
+        arg || sym
       end
 
       # @rbs (Lexer::Token::InstantiateRule token) -> Array[String]
