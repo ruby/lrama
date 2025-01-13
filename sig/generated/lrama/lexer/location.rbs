@@ -1,0 +1,52 @@
+# Generated from lib/lrama/lexer/location.rb with RBS::Inline
+
+module Lrama
+  class Lexer
+    class Location
+      attr_reader grammar_file: GrammarFile
+
+      attr_reader first_line: Integer
+
+      attr_reader first_column: Integer
+
+      attr_reader last_line: Integer
+
+      attr_reader last_column: Integer
+
+      # @rbs (grammar_file: GrammarFile, first_line: Integer, first_column: Integer, last_line: Integer, last_column: Integer) -> void
+      def initialize: (grammar_file: GrammarFile, first_line: Integer, first_column: Integer, last_line: Integer, last_column: Integer) -> void
+
+      # @rbs (Location other) -> bool
+      def ==: (Location other) -> bool
+
+      # @rbs (Integer left, Integer right) -> Location
+      def partial_location: (Integer left, Integer right) -> Location
+
+      # @rbs () -> String
+      def to_s: () -> String
+
+      # @rbs (String error_message) -> String
+      def generate_error_message: (String error_message) -> String
+
+      # @rbs () -> String
+      def line_with_carets: () -> String
+
+      private
+
+      # @rbs () -> String
+      def path: () -> String
+
+      # @rbs () -> String
+      def blanks: () -> String
+
+      # @rbs () -> String
+      def carets: () -> String
+
+      # @rbs () -> String
+      def text: () -> String
+
+      # @rbs () -> Array[String]
+      def _text: () -> Array[String]
+    end
+  end
+end

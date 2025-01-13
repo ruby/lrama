@@ -1,3 +1,5 @@
+# Generated from lib/lrama/lexer/token/ident.rb with RBS::Inline
+
 module Lrama
   class Lexer
     class Token

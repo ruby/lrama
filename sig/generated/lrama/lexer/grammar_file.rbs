@@ -1,0 +1,28 @@
+# Generated from lib/lrama/lexer/grammar_file.rb with RBS::Inline
+
+module Lrama
+  class Lexer
+    class GrammarFile
+      class Text < String
+        # @rbs () -> String
+        def inspect: () -> String
+      end
+
+      attr_reader path: String
+
+      attr_reader text: String
+
+      # @rbs (String path, String text) -> void
+      def initialize: (String path, String text) -> void
+
+      # @rbs () -> String
+      def inspect: () -> String
+
+      # @rbs (GrammarFile other) -> bool
+      def ==: (GrammarFile other) -> bool
+
+      # @rbs () -> Array[String]
+      def lines: () -> Array[String]
+    end
+  end
+end
