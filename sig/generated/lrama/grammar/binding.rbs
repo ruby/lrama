@@ -14,6 +14,9 @@ module Lrama
 
       private
 
+      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token]
+      def map_params_to_args: (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token]
+
       # @rbs (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
       def resolved_args: (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
 

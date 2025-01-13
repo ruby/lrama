@@ -8,9 +8,7 @@ module Lrama
       def initialize(parameterizing_rule, actual_args)
         @parameters = parameterizing_rule.parameters
         @actual_args = actual_args
-        @parameter_to_arg = @parameters.zip(actual_args).map do |param, arg|
-          [param.s_value, arg]
-        end.to_h
+        @parameter_to_arg = map_params_to_args(@parameters, @actual_args)
       end
 
       # @rbs (Lexer::Token sym) -> Lexer::Token
@@ -30,6 +28,13 @@ module Lrama
       end
 
       private
+
+      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token]
+      def map_params_to_args(params, actual_args)
+        params.zip(actual_args).map do |param, arg|
+          [param.s_value, arg]
+        end.to_h
+      end
 
       # @rbs (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
       def resolved_args(sym)
