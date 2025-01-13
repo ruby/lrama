@@ -1,15 +1,20 @@
+# Generated from lib/lrama/lexer/token/user_code.rb with RBS::Inline
+
 module Lrama
   class Lexer
     class Token
       class UserCode < Token
         attr_accessor tag: Lexer::Token::Tag
-        @references: Array[Lrama::Grammar::Reference]
 
+        # @rbs () -> Array[Lrama::Grammar::Reference]
         def references: () -> Array[Lrama::Grammar::Reference]
 
         private
 
+        # @rbs () -> Array[Lrama::Grammar::Reference]
         def _references: () -> Array[Lrama::Grammar::Reference]
+
+        # @rbs (StringScanner scanner) -> Lrama::Grammar::Reference?
         def scan_reference: (StringScanner scanner) -> Lrama::Grammar::Reference?
       end
     end
