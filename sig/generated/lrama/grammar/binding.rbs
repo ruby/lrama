@@ -1,0 +1,34 @@
+# Generated from lib/lrama/grammar/binding.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Binding
+      @actual_args: Array[Lexer::Token]
+
+      @param_to_arg: Hash[String, Lexer::Token]
+
+      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> void
+      def initialize: (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> void
+
+      # @rbs (Lexer::Token sym) -> Lexer::Token
+      def resolve_symbol: (Lexer::Token sym) -> Lexer::Token
+
+      # @rbs (Lexer::Token::InstantiateRule token) -> String
+      def concatenated_args_str: (Lexer::Token::InstantiateRule token) -> String
+
+      private
+
+      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token]
+      def map_params_to_args: (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token]
+
+      # @rbs (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
+      def resolved_args: (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
+
+      # @rbs (Lexer::Token sym) -> Lexer::Token
+      def param_to_arg: (Lexer::Token sym) -> Lexer::Token
+
+      # @rbs (Lexer::Token::InstantiateRule token) -> Array[String]
+      def token_to_args_s_values: (Lexer::Token::InstantiateRule token) -> Array[String]
+    end
+  end
+end
