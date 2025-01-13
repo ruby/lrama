@@ -1,20 +1,27 @@
+# Generated from lib/lrama/grammar/binding.rb with RBS::Inline
+
 module Lrama
   class Grammar
     class Binding
       attr_reader actual_args: Array[Lexer::Token]
+
       attr_reader count: Integer
 
-      @required_parameters_count: Integer
-      @parameters: Array[Lexer::Token]
-      @parameter_to_arg: untyped
-
+      # @rbs (Grammar::ParameterizingRule::Rule parameterizing_rule, Array[Lexer::Token] actual_args) -> void
       def initialize: (Grammar::ParameterizingRule::Rule parameterizing_rule, Array[Lexer::Token] actual_args) -> void
+
+      # @rbs (Lexer::Token symbol) -> Lexer::Token
       def resolve_symbol: (Lexer::Token symbol) -> Lexer::Token
+
+      # @rbs (Lexer::Token::InstantiateRule token) -> String
       def concatenated_args_str: (Lexer::Token::InstantiateRule token) -> String
 
       private
 
+      # @rbs (Lexer::Token symbol) -> Lexer::Token?
       def parameter_to_arg: (Lexer::Token symbol) -> Lexer::Token?
+
+      # @rbs (Lexer::Token::InstantiateRule token) -> Array[String]
       def token_to_args_s_values: (Lexer::Token::InstantiateRule token) -> Array[String]
     end
   end
