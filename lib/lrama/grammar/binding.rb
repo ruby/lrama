@@ -16,13 +16,14 @@ module Lrama
         end.to_h
       end
 
-      # @rbs (Lexer::Token symbol) -> Lexer::Token
-      def resolve_symbol(symbol)
-        if symbol.is_a?(Lexer::Token::InstantiateRule)
-          resolved_args = symbol.args.map { |arg| resolve_symbol(arg) }
-          Lrama::Lexer::Token::InstantiateRule.new(s_value: symbol.s_value, location: symbol.location, args: resolved_args, lhs_tag: symbol.lhs_tag)
+      # @rbs (Lexer::Token sym) -> Lexer::Token
+      def resolve_symbol(sym)
+        if sym.is_a?(Lexer::Token::InstantiateRule)
+          Lrama::Lexer::Token::InstantiateRule.new(
+            s_value: sym.s_value, location: sym.location, args: resolved_args(sym), lhs_tag: sym.lhs_tag
+          )
         else
-          parameter_to_arg(symbol) || symbol
+          parameter_to_arg(sym) || sym
         end
       end
 
@@ -32,6 +33,11 @@ module Lrama
       end
 
       private
+
+      # @rbs (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
+      def resolved_args(sym)
+        sym.args.map { |arg| resolve_symbol(arg) }
+      end
 
       # @rbs (Lexer::Token symbol) -> Lexer::Token?
       def parameter_to_arg(symbol)

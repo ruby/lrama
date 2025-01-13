@@ -10,13 +10,16 @@ module Lrama
       # @rbs (Grammar::ParameterizingRule::Rule parameterizing_rule, Array[Lexer::Token] actual_args) -> void
       def initialize: (Grammar::ParameterizingRule::Rule parameterizing_rule, Array[Lexer::Token] actual_args) -> void
 
-      # @rbs (Lexer::Token symbol) -> Lexer::Token
-      def resolve_symbol: (Lexer::Token symbol) -> Lexer::Token
+      # @rbs (Lexer::Token sym) -> Lexer::Token
+      def resolve_symbol: (Lexer::Token sym) -> Lexer::Token
 
       # @rbs (Lexer::Token::InstantiateRule token) -> String
       def concatenated_args_str: (Lexer::Token::InstantiateRule token) -> String
 
       private
+
+      # @rbs (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
+      def resolved_args: (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
 
       # @rbs (Lexer::Token symbol) -> Lexer::Token?
       def parameter_to_arg: (Lexer::Token symbol) -> Lexer::Token?
