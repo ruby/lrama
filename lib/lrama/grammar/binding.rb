@@ -4,6 +4,9 @@
 module Lrama
   class Grammar
     class Binding
+      # @rbs @actual_args: Array[Lexer::Token]
+      # @rbs @param_to_arg: Hash[String, Lexer::Token]
+
       # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> void
       def initialize(params, actual_args)
         @actual_args = actual_args
