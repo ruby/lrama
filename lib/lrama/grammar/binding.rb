@@ -4,10 +4,10 @@
 module Lrama
   class Grammar
     class Binding
-      # @rbs (Grammar::ParameterizingRule::Rule parameterizing_rule, Array[Lexer::Token] actual_args) -> void
-      def initialize(parameterizing_rule, actual_args)
+      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> void
+      def initialize(params, actual_args)
         @actual_args = actual_args
-        @parameter_to_arg = map_params_to_args(parameterizing_rule.parameters, @actual_args)
+        @param_to_arg = map_params_to_args(params, @actual_args)
       end
 
       # @rbs (Lexer::Token sym) -> Lexer::Token
@@ -17,7 +17,7 @@ module Lrama
             s_value: sym.s_value, location: sym.location, args: resolved_args(sym), lhs_tag: sym.lhs_tag
           )
         else
-          parameter_to_arg(sym)
+          param_to_arg(sym)
         end
       end
 
@@ -41,8 +41,8 @@ module Lrama
       end
 
       # @rbs (Lexer::Token sym) -> Lexer::Token
-      def parameter_to_arg(sym)
-        if (arg = @parameter_to_arg[sym.s_value].dup)
+      def param_to_arg(sym)
+        if (arg = @param_to_arg[sym.s_value].dup)
           arg.alias_name = sym.alias_name
         end
         arg || sym
