@@ -1,12 +1,20 @@
+# Generated from lib/lrama/lexer/token/instantiate_rule.rb with RBS::Inline
+
 module Lrama
   class Lexer
     class Token
       class InstantiateRule < Token
         attr_reader args: Array[Lexer::Token]
+
         attr_reader lhs_tag: Lexer::Token::Tag?
 
+        # @rbs (s_value: String, ?alias_name: String, ?location: Location, ?args: Array[Lexer::Token], ?lhs_tag: Lexer::Token::Tag?) -> void
         def initialize: (s_value: String, ?alias_name: String, ?location: Location, ?args: Array[Lexer::Token], ?lhs_tag: Lexer::Token::Tag?) -> void
+
+        # @rbs () -> String
         def rule_name: () -> String
+
+        # @rbs () -> Integer
         def args_count: () -> Integer
       end
     end
