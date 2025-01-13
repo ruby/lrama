@@ -4,7 +4,6 @@
 module Lrama
   class Grammar
     class Binding
-      attr_reader :actual_args #: Array[Lexer::Token]
       attr_reader :count #: Integer
 
       # @rbs (Grammar::ParameterizingRule::Rule parameterizing_rule, Array[Lexer::Token] actual_args) -> void
