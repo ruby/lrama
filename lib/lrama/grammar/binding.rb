@@ -6,9 +6,8 @@ module Lrama
     class Binding
       # @rbs (Grammar::ParameterizingRule::Rule parameterizing_rule, Array[Lexer::Token] actual_args) -> void
       def initialize(parameterizing_rule, actual_args)
-        @parameters = parameterizing_rule.parameters
         @actual_args = actual_args
-        @parameter_to_arg = map_params_to_args(@parameters, @actual_args)
+        @parameter_to_arg = map_params_to_args(parameterizing_rule.parameters, @actual_args)
       end
 
       # @rbs (Lexer::Token sym) -> Lexer::Token
