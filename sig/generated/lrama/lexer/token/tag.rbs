@@ -1,7 +1,10 @@
+# Generated from lib/lrama/lexer/token/tag.rb with RBS::Inline
+
 module Lrama
   class Lexer
     class Token
       class Tag < Token
+        # @rbs () -> String
         def member: () -> String
       end
     end
