@@ -41,10 +41,10 @@ module Lrama
         sym.args.map { |arg| resolve_symbol(arg) }
       end
 
-      # @rbs (Lexer::Token symbol) -> Lexer::Token?
-      def parameter_to_arg(symbol)
-        if (arg = @parameter_to_arg[symbol.s_value].dup)
-          arg.alias_name = symbol.alias_name
+      # @rbs (Lexer::Token sym) -> Lexer::Token?
+      def parameter_to_arg(sym)
+        if (arg = @parameter_to_arg[sym.s_value].dup)
+          arg.alias_name = sym.alias_name
         end
         arg
       end

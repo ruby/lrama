@@ -20,8 +20,8 @@ module Lrama
       # @rbs (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
       def resolved_args: (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
 
-      # @rbs (Lexer::Token symbol) -> Lexer::Token?
-      def parameter_to_arg: (Lexer::Token symbol) -> Lexer::Token?
+      # @rbs (Lexer::Token sym) -> Lexer::Token?
+      def parameter_to_arg: (Lexer::Token sym) -> Lexer::Token?
 
       # @rbs (Lexer::Token::InstantiateRule token) -> Array[String]
       def token_to_args_s_values: (Lexer::Token::InstantiateRule token) -> Array[String]
