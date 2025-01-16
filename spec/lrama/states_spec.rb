@@ -1997,5 +1997,277 @@ RSpec.describe Lrama::States do
 
       STR
     end
+
+    it 'recompute states' do
+      y = <<~INPUT
+        %{
+        // Prologue
+        %}
+
+        %token <val> NUM
+        %token tEQ "=="
+        %type <val> expr
+
+        %nonassoc tEQ
+
+        %%
+
+        program : /* empty */
+             | expr { printf("=> %d", $1); }
+             ;
+
+        expr : NUM
+             | expr tEQ expr { $$ = $1; }
+             ;
+
+        %%
+      INPUT
+      grammar = Lrama::Parser.new(y, "states/ielr_nonassoc.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar)
+      states.compute
+      states.compute_ielr
+
+      io = StringIO.new
+      states.reporter.report(io, states: true)
+
+      expect(io.string).to eq(<<~STR)
+        State 0
+
+            0 $accept: • program "end of file"
+
+            NUM  shift, and go to state 1
+
+            $default  reduce using rule 1 (program)
+
+            program  go to state 2
+            expr     go to state 3
+
+
+        State 1
+
+            3 expr: NUM •
+
+            $default  reduce using rule 3 (expr)
+
+
+        State 2
+
+            0 $accept: program • "end of file"
+
+            "end of file"  shift, and go to state 4
+
+
+        State 3
+
+            2 program: expr •
+            4 expr: expr • "==" expr
+
+            "=="  shift, and go to state 5
+
+            $default  reduce using rule 2 (program)
+
+
+        State 4
+
+            0 $accept: program "end of file" •
+
+            $default  accept
+
+
+        State 5
+
+            4 expr: expr "==" • expr
+
+            NUM  shift, and go to state 1
+
+            expr  go to state 6
+
+
+        State 6
+
+            4 expr: expr • "==" expr
+            4     | expr "==" expr •
+
+            "=="  error (nonassociative)
+            "=="  error (nonassociative)
+
+            $default  reduce using rule 4 (expr)
+
+
+      STR
+    end
+
+    it 'recompute states' do
+      y = <<~INPUT
+        %{
+        // Prologue
+        %}
+
+        %token NUM
+
+        %nonassoc  tCMP
+        %left '>'
+        %left '+'
+
+        %%
+
+        program : arg
+                ;
+
+        arg : arg '+' arg
+            | rel_expr    %prec tCMP
+            | NUM
+            ;
+
+        relop : '>'
+              ;
+
+        rel_expr : arg relop arg   %prec '>'
+                 ;
+
+        %%
+      INPUT
+      grammar = Lrama::Parser.new(y, "states/ielr_prec.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar)
+      states.compute
+      states.compute_ielr
+
+      io = StringIO.new
+      states.reporter.report(io, states: true)
+
+      expect(io.string).to eq(<<~STR)
+        State 0
+
+            0 $accept: • program "end of file"
+
+            NUM  shift, and go to state 1
+
+            program   go to state 2
+            arg       go to state 3
+            rel_expr  go to state 4
+
+
+        State 1
+
+            4 arg: NUM •
+
+            $default  reduce using rule 4 (arg)
+
+
+        State 2
+
+            0 $accept: program • "end of file"
+
+            "end of file"  shift, and go to state 5
+
+
+        State 3
+
+            1 program: arg •
+            2 arg: arg • '+' arg
+            6 rel_expr: arg • relop arg
+
+            '>'  shift, and go to state 6
+            '+'  shift, and go to state 7
+
+            $default  reduce using rule 1 (program)
+
+            relop  go to state 8
+
+
+        State 4
+
+            3 arg: rel_expr •
+
+            $default  reduce using rule 3 (arg)
+
+
+        State 5
+
+            0 $accept: program "end of file" •
+
+            $default  accept
+
+
+        State 6
+
+            5 relop: '>' •
+
+            $default  reduce using rule 5 (relop)
+
+
+        State 7
+
+            2 arg: arg '+' • arg
+
+            NUM  shift, and go to state 1
+
+            arg       go to state 9
+            rel_expr  go to state 4
+
+
+        State 8
+
+            6 rel_expr: arg relop • arg
+
+            NUM  shift, and go to state 1
+
+            arg       go to state 10
+            rel_expr  go to state 4
+
+
+        State 9
+
+            2 arg: arg • '+' arg
+            2    | arg '+' arg •
+            6 rel_expr: arg • relop arg
+
+            $default  reduce using rule 2 (arg)
+
+            relop  go to state 8
+
+
+        State 10
+
+            2 arg: arg • '+' arg
+            6 rel_expr: arg • relop arg
+            6         | arg relop arg •
+
+            '+'  shift, and go to state 7
+
+            $default  reduce using rule 6 (rel_expr)
+
+            relop  go to state 11
+
+
+        State 11
+
+            6 rel_expr: arg relop • arg
+
+            NUM  shift, and go to state 1
+
+            arg       go to state 12
+            rel_expr  go to state 4
+
+
+        State 12
+
+            2 arg: arg • '+' arg
+            6 rel_expr: arg • relop arg
+            6         | arg relop arg •
+
+            '+'  shift, and go to state 7
+
+            $default  reduce using rule 6 (rel_expr)
+
+            relop  go to state 11
+
+
+      STR
+    end
   end
 end
