@@ -9,6 +9,7 @@ Lrama is LALR (1) parser generator written by Ruby. The first goal of this proje
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Documentation](#documentation)
 - [Versions and Branches](#versions-and-branches)
   - [v0\_7 (`master` branch)](#v0_7-master-branch)
   - [v0\_6 (`lrama_0_6` branch)](#v0_6-lrama_0_6-branch)
@@ -82,6 +83,10 @@ Enter the formula:
 (1+2)*3
 => 9
 ```
+
+## Documentation
+
+https://ruby.github.io/lrama/ provides a comprehensive guide to Lrama's features and usage.
 
 ## Versions and Branches
 
