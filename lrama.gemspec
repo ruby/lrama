@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata["homepage_uri"]      = spec.homepage
   spec.metadata["source_code_uri"]   = spec.homepage
-  spec.metadata["documentation_uri"] = spec.homepage
+  spec.metadata["documentation_uri"] = "https://ruby.github.io/lrama/"
   spec.metadata["changelog_uri"]     = "#{spec.homepage}/releases"
   spec.metadata["bug_tracker_uri"]   = "#{spec.homepage}/issues"
 
