@@ -25,7 +25,7 @@ rule
 
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }
-                   | "%define" variable value
+                   | "%define" variable value { @grammar.define[val[1].s_value] = val[2]&.s_value }
                    | "%param" param+
                    | "%lex-param" param+
                        {
@@ -428,17 +428,18 @@ end
 
 include Lrama::Report::Duration
 
-def initialize(text, path, debug = false)
+def initialize(text, path, debug = false, define = {})
   @grammar_file = Lrama::Lexer::GrammarFile.new(path, text)
   @yydebug = debug
   @rule_counter = Lrama::Grammar::Counter.new(0)
   @midrule_action_counter = Lrama::Grammar::Counter.new(1)
+  @define = define
 end
 
 def parse
   report_duration(:parse) do
     @lexer = Lrama::Lexer.new(@grammar_file)
-    @grammar = Lrama::Grammar.new(@rule_counter)
+    @grammar = Lrama::Grammar.new(@rule_counter, @define)
     @precedence_number = 0
     reset_precs
     do_parse

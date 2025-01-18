@@ -1,6 +1,7 @@
 module Lrama
   class Options
     attr_accessor skeleton: String
+    attr_accessor define: Hash[String, String]
     attr_accessor header: bool
     attr_accessor header_file: String?
     attr_accessor report_file: String?
