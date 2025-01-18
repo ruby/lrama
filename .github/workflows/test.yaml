@@ -16,7 +16,7 @@ jobs:
 
   test:
     needs: ruby-versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -56,7 +56,7 @@ jobs:
       - run: bundle exec rspec
   test-c:
     needs: ruby-versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -75,7 +75,7 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
   test-cpp:
     needs: ruby-versions
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -93,7 +93,7 @@ jobs:
         env:
           COMPILER: ${{ matrix.compiler }}
   test-memory:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -113,7 +113,7 @@ jobs:
         env:
           ENABEL_VALGRIND: 'true'
   check-misc:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         ruby: ['head']
@@ -141,7 +141,7 @@ jobs:
           bundle exec rake build:parser
           git diff --color --no-ext-diff --ignore-submodules --exit-code lib/lrama/parser.rb
   steep-check:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -167,7 +167,7 @@ jobs:
       - run: bundle exec rbs collection install
       - run: bundle exec steep check
   test-ruby:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
