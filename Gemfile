@@ -7,6 +7,7 @@ gemspec
 gem "pry"
 gem "racc", "1.8.1"
 gem "rake"
+gem "rdoc"
 gem "rspec"
 gem "simplecov", require: false
 gem "stackprof", platforms: [:ruby] # stackprof doesn't support Windows
