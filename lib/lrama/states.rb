@@ -547,7 +547,6 @@ module Lrama
     end
 
     def split_states
-      transition_queue = []
       @states.each do |state|
         state.transitions.each do |shift, next_state|
           compute_state(state, shift, next_state)
