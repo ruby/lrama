@@ -5,11 +5,12 @@ require_relative "state/reduce_reduce_conflict"
 require_relative "state/resolved_conflict"
 require_relative "state/shift"
 require_relative "state/shift_reduce_conflict"
+require_relative "state/inadequacy_annotation"
 
 module Lrama
   class State
     attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
-                :default_reduction_rule, :closure, :items
+                :default_reduction_rule, :closure, :items, :annotation_list, :predecessors
     attr_accessor :shifts, :reduces, :ielr_isocores, :lalr_isocore
 
     def initialize(id, accessing_symbol, kernels)
@@ -29,6 +30,7 @@ module Lrama
       @internal_dependencies = {}
       @successor_dependencies = {}
       @always_follows = {}
+      @annotation_list = []
     end
 
     def closure=(closure)
@@ -228,86 +230,47 @@ module Lrama
     def inadequacy_list
       return @inadequacy_list if @inadequacy_list
 
-      shift_contributions = shifts.map {|shift|
-        [shift.next_sym, [shift]]
-      }.to_h
-      reduce_contributions = reduces.map {|reduce|
-        (reduce.look_ahead || []).map {|sym|
-          [sym, [reduce]]
-        }.to_h
-      }.reduce(Hash.new([])) {|hash, cont|
-        hash.merge(cont) {|_, a, b| a | b }
-      }
+      @inadequacy_list = {}
 
-      list = shift_contributions.merge(reduce_contributions) {|_, a, b| a | b }
-      @inadequacy_list = list.select {|token, actions| token.term? && actions.size > 1 }
-    end
+      shifts.each do |shift|
+        next unless shift.next_sym.term?
 
-    # Definition 3.29 (annotation_lists)
-    def annotation_list
-      return @annotation_list if @annotation_list
+        @inadequacy_list[shift.next_sym] ||= []
+        @inadequacy_list[shift.next_sym] << shift
+      end
+      reduces.each do |reduce|
+        next if reduce.look_ahead.nil?
 
-      @annotation_list = annotate_manifestation
-      @annotation_list = @items_to_state.values.map {|next_state| next_state.annotate_predecessor(self) }
-        .reduce(@annotation_list) {|result, annotations|
-          result.merge(annotations) {|_, actions_a, actions_b|
-            if actions_a.nil? || actions_b.nil?
-              actions_a || actions_b
-            else
-              actions_a.merge(actions_b) {|_, contributions_a, contributions_b|
-                if contributions_a.nil? || contributions_b.nil?
-                  next contributions_a || contributions_b
-                end
+        reduce.look_ahead.each do |token|
+          @inadequacy_list[token] ||= []
+          @inadequacy_list[token] << reduce
+        end
+      end
 
-                contributions_a.merge(contributions_b) {|_, contributed_a, contributed_b|
-                  contributed_a || contributed_b
-                }
-              }
-            end
-          }
-        }
+      @inadequacy_list = @inadequacy_list.select {|token, actions| actions.size > 1 }
     end
 
     def annotate_manifestation
-      inadequacy_list.transform_values {|actions|
+      @annotation_list = inadequacy_list.map {|token, actions|
         actions.map {|action|
           if action.is_a?(Shift)
-            [action, nil]
+            InadequacyAnnotation.new(self, token, action, nil)
           elsif action.is_a?(Reduce)
             if action.rule.empty_rule?
-              [action, lhs_contributions(action.rule.lhs, inadequacy_list.key(actions))]
+              InadequacyAnnotation.new(self, token, action, lhs_contributions(action.rule.lhs, token))
             else
               contributions = kernels.map {|kernel| [kernel, kernel.rule == action.rule && kernel.end_of_rule?] }.to_h
-              [action, contributions]
+              InadequacyAnnotation.new(self, token, action, contributions)
             end
           end
-        }.to_h
-      }
+        }
+      }.flatten
     end
 
-    # Definition 3.32 (annotate_predecessor)
-    def annotate_predecessor(predecessor)
-      annotation_list.transform_values {|actions|
-        token = annotation_list.key(actions)
-        actions.transform_values {|inadequacy|
-          next nil if inadequacy.nil?
-          lhs_adequacy = kernels.any? {|kernel|
-            inadequacy[kernel] && kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, token).nil?
-          }
-          if lhs_adequacy
-            next nil
-          else
-            predecessor.kernels.map {|pred_k|
-              [pred_k, kernels.any? {|k|
-                inadequacy[k] && (
-                  pred_k.predecessor_item_of?(k) && predecessor.item_lookahead_set[pred_k].include?(token) ||
-                  k.position == 1 && predecessor.lhs_contributions(k.lhs, token)[pred_k]
-                )
-              }]
-            }.to_h
-          end
-        }
-      }
+    def merge_annotation_list(other)
+      other.each do |annotation|
+        @annotation_list << annotation unless @annotation_list.include?(annotation)
+      end
     end
 
     # Definition 3.31 (compute_lhs_contributions)

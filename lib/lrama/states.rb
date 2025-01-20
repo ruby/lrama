@@ -547,9 +547,28 @@ module Lrama
     end
 
     def split_states
+      compute_inadequacy_annotations
+
       @states.each do |state|
         state.transitions.each do |shift, next_state|
           compute_state(state, shift, next_state)
+        end
+      end
+    end
+
+    def compute_inadequacy_annotations
+      @states.each do |state|
+        state.annotate_manifestation
+      end
+
+      @states.reverse.each do |state|
+        queue = [state]
+        while (curr = queue.shift) do
+          curr.predecessors.each do |pred|
+            cache = pred.annotation_list.dup
+            pred.merge_annotation_list(curr.annotation_list)
+            queue << pred if cache != pred.annotation_list
+          end
         end
       end
     end
