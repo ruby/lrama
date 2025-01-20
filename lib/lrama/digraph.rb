@@ -15,7 +15,7 @@ module Lrama
     #   @h: Hash[Integer, (Integer|Float)?]
     #   @result: Hash[Integer, Integer]
 
-    # @rbs sets: String
+    # @rbs sets: Array[Integer]
     # @rbs relation: Hash[Integer, Array[Integer]]
     # @rbs base_function: Hash[Integer, Integer]
     # @rbs return: void

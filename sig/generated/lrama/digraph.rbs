@@ -15,11 +15,11 @@ module Lrama
 
     @result: Hash[Integer, Integer]
 
-    # @rbs sets: String
+    # @rbs sets: Array[Integer]
     # @rbs relation: Hash[Integer, Array[Integer]]
     # @rbs base_function: Hash[Integer, Integer]
     # @rbs return: void
-    def initialize: (String sets, Hash[Integer, Array[Integer]] relation, Hash[Integer, Integer] base_function) -> void
+    def initialize: (Array[Integer] sets, Hash[Integer, Array[Integer]] relation, Hash[Integer, Integer] base_function) -> void
 
     # @rbs () -> Hash[Integer, Integer]
     def compute: () -> Hash[Integer, Integer]
