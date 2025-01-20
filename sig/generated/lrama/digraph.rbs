@@ -3,6 +3,18 @@
 module Lrama
   # Algorithm Digraph of https://dl.acm.org/doi/pdf/10.1145/69622.357187 (P. 625)
   class Digraph
+    @sets: Array[Integer]
+
+    @relation: Hash[Integer, Array[Integer]]
+
+    @base_function: Hash[Integer, Integer]
+
+    @stack: Array[Integer]
+
+    @h: Hash[Integer, (Integer | Float)?]
+
+    @result: Hash[Integer, Integer]
+
     # @rbs sets: String
     # @rbs relation: Hash[Integer, Array[Integer]]
     # @rbs base_function: Hash[Integer, Integer]
