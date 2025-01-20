@@ -2,31 +2,38 @@
 
 module Lrama
   # Algorithm Digraph of https://dl.acm.org/doi/pdf/10.1145/69622.357187 (P. 625)
-  class Digraph
-    @sets: Array[Integer]
+  #
+  # @rbs generic X < Object -- Type of a member of `sets`
+  # @rbs generic Y < _Or    -- Type of sets assigned to a member of `sets`
+  class Digraph[X < Object, Y < _Or]
+    interface _Or
+      def |: (self) -> self
+    end
 
-    @relation: Hash[Integer, Array[Integer]]
+    @sets: Array[X]
 
-    @base_function: Hash[Integer, Integer]
+    @relation: Hash[X, Array[X]]
 
-    @stack: Array[Integer]
+    @base_function: Hash[X, Y]
 
-    @h: Hash[Integer, (Integer | Float)?]
+    @stack: Array[X]
 
-    @result: Hash[Integer, Integer]
+    @h: Hash[X, (Integer | Float)?]
 
-    # @rbs sets: Array[Integer]
-    # @rbs relation: Hash[Integer, Array[Integer]]
-    # @rbs base_function: Hash[Integer, Integer]
+    @result: Hash[X, Y]
+
+    # @rbs sets: Array[X]
+    # @rbs relation: Hash[X, Array[X]]
+    # @rbs base_function: Hash[X, Y]
     # @rbs return: void
-    def initialize: (Array[Integer] sets, Hash[Integer, Array[Integer]] relation, Hash[Integer, Integer] base_function) -> void
+    def initialize: (Array[X] sets, Hash[X, Array[X]] relation, Hash[X, Y] base_function) -> void
 
-    # @rbs () -> Hash[Integer, Integer]
-    def compute: () -> Hash[Integer, Integer]
+    # @rbs () -> Hash[X, Y]
+    def compute: () -> Hash[X, Y]
 
     private
 
-    # @rbs (Integer x) -> void
-    def traverse: (Integer x) -> void
+    # @rbs (X x) -> void
+    def traverse: (X x) -> void
   end
 end

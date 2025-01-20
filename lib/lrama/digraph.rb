@@ -3,21 +3,27 @@
 
 module Lrama
   # Algorithm Digraph of https://dl.acm.org/doi/pdf/10.1145/69622.357187 (P. 625)
+  #
+  # @rbs generic X < Object -- Type of a member of `sets`
+  # @rbs generic Y < _Or    -- Type of sets assigned to a member of `sets`
   class Digraph
     # TODO: rbs-inline 0.10.0 dosen't support instance variables.
     #       Move these type declarations above instance variable definitions, once it's supported.
     #
     # @rbs!
-    #   @sets: Array[Integer]
-    #   @relation: Hash[Integer, Array[Integer]]
-    #   @base_function: Hash[Integer, Integer]
-    #   @stack: Array[Integer]
-    #   @h: Hash[Integer, (Integer|Float)?]
-    #   @result: Hash[Integer, Integer]
+    #   interface _Or
+    #     def |: (self) -> self
+    #   end
+    #   @sets: Array[X]
+    #   @relation: Hash[X, Array[X]]
+    #   @base_function: Hash[X, Y]
+    #   @stack: Array[X]
+    #   @h: Hash[X, (Integer|Float)?]
+    #   @result: Hash[X, Y]
 
-    # @rbs sets: Array[Integer]
-    # @rbs relation: Hash[Integer, Array[Integer]]
-    # @rbs base_function: Hash[Integer, Integer]
+    # @rbs sets: Array[X]
+    # @rbs relation: Hash[X, Array[X]]
+    # @rbs base_function: Hash[X, Y]
     # @rbs return: void
     def initialize(sets, relation, base_function)
 
@@ -40,7 +46,7 @@ module Lrama
       @result = {}
     end
 
-    # @rbs () -> Hash[Integer, Integer]
+    # @rbs () -> Hash[X, Y]
     def compute
       @sets.each do |x|
         next if @h[x] != 0
@@ -52,7 +58,7 @@ module Lrama
 
     private
 
-    # @rbs (Integer x) -> void
+    # @rbs (X x) -> void
     def traverse(x)
       @stack.push(x)
       d = @stack.count
