@@ -1,0 +1,20 @@
+# Generated from lib/lrama/digraph.rb with RBS::Inline
+
+module Lrama
+  # Algorithm Digraph of https://dl.acm.org/doi/pdf/10.1145/69622.357187 (P. 625)
+  class Digraph
+    # @rbs sets: String
+    # @rbs relation: Hash[Integer, Array[Integer]]
+    # @rbs base_function: Hash[Integer, Integer]
+    # @rbs return: void
+    def initialize: (String sets, Hash[Integer, Array[Integer]] relation, Hash[Integer, Integer] base_function) -> void
+
+    # @rbs () -> Hash[Integer, Integer]
+    def compute: () -> Hash[Integer, Integer]
+
+    private
+
+    # @rbs (Integer x) -> void
+    def traverse: (Integer x) -> void
+  end
+end
