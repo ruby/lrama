@@ -7,7 +7,7 @@ module Lrama
   # @rbs generic X < Object -- Type of a member of `sets`
   # @rbs generic Y < _Or    -- Type of sets assigned to a member of `sets`
   class Digraph
-    # TODO: rbs-inline 0.10.0 dosen't support instance variables.
+    # TODO: rbs-inline 0.10.0 doesn't support instance variables.
     #       Move these type declarations above instance variable definitions, once it's supported.
     #
     # @rbs!
