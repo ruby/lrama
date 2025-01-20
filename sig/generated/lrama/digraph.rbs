@@ -1,0 +1,39 @@
+# Generated from lib/lrama/digraph.rb with RBS::Inline
+
+module Lrama
+  # Algorithm Digraph of https://dl.acm.org/doi/pdf/10.1145/69622.357187 (P. 625)
+  #
+  # @rbs generic X < Object -- Type of a member of `sets`
+  # @rbs generic Y < _Or    -- Type of sets assigned to a member of `sets`
+  class Digraph[X < Object, Y < _Or]
+    interface _Or
+      def |: (self) -> self
+    end
+
+    @sets: Array[X]
+
+    @relation: Hash[X, Array[X]]
+
+    @base_function: Hash[X, Y]
+
+    @stack: Array[X]
+
+    @h: Hash[X, (Integer | Float)?]
+
+    @result: Hash[X, Y]
+
+    # @rbs sets: Array[X]
+    # @rbs relation: Hash[X, Array[X]]
+    # @rbs base_function: Hash[X, Y]
+    # @rbs return: void
+    def initialize: (Array[X] sets, Hash[X, Array[X]] relation, Hash[X, Y] base_function) -> void
+
+    # @rbs () -> Hash[X, Y]
+    def compute: () -> Hash[X, Y]
+
+    private
+
+    # @rbs (X x) -> void
+    def traverse: (X x) -> void
+  end
+end
