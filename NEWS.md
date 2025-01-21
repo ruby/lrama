@@ -2,7 +2,7 @@
 
 ## Lrama 0.7.0 (2025-01-21)
 
-## [EXPERIMENTAL] Support the generation of the IELR(1) parser described in this paper
+### [EXPERIMENTAL] Support the generation of the IELR(1) parser described in this paper
 
 Support the generation of the IELR(1) parser described in this paper.
 https://www.sciencedirect.com/science/article/pii/S0167642309001191
@@ -15,12 +15,12 @@ If you use IELR(1) parser, you can write the following directive in your grammar
 
 But, currently IELR(1) parser is experimental feature. If you find any bugs, please report it to us. Thank you.
 
-## Support `-t` option as same as `--debug` option
+### Support `-t` option as same as `--debug` option
 
 Support to `-t` option as same as `--debug` option.
 These options align with Bison behavior. So same as `--debug` option.
 
-## Trace only explicit rules
+### Trace only explicit rules
 
 Support to trace only explicit rules.
 If you use `--trace=rules` option, it shows include mid-rule actions. If you want to show only explicit rules, you can use `--trace=only-explicit-rules` option.
