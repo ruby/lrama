@@ -10,6 +10,7 @@ module Lrama
   #
   # `compute_read_sets` and `compute_follow_sets` have the same structure.
   # Graph of gotos and attributes of gotos are given then compute propagated attributes for each node.
+  #
   # In the case of `compute_read_sets`:
   #
   # * Set of gotos is nodes of graph
@@ -17,6 +18,7 @@ module Lrama
   # * `direct_read_sets` is nodes attributes
   #
   # In the case of `compute_follow_sets`:
+  #
   # * Set of gotos is nodes of graph
   # * `includes_relation` is edges of graph
   # * `read_sets` is nodes attributes
