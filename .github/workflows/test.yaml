@@ -155,7 +155,7 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - run: bundle install
-      - run: bundle exec rbs-inline --output lib/
+      - run: bundle exec rake rbs_inline
       - name: Check for uncommitted changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
