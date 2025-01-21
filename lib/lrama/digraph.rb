@@ -39,9 +39,9 @@ module Lrama
     #   @h: Hash[X, (Integer|Float)?]
     #   @result: Hash[X, Y]
 
-    # @rbs sets: Array[X]
-    # @rbs relation: Hash[X, Array[X]]
-    # @rbs base_function: Hash[X, Y]
+    # @rbs sets: Array[X] -- Nodes of graph
+    # @rbs relation: Hash[X, Array[X]] -- Edges of graph
+    # @rbs base_function: Hash[X, Y] -- Attributes of nodes
     # @rbs return: void
     def initialize(sets, relation, base_function)
 

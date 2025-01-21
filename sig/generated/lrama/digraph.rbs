@@ -40,9 +40,9 @@ module Lrama
 
     @result: Hash[X, Y]
 
-    # @rbs sets: Array[X]
-    # @rbs relation: Hash[X, Array[X]]
-    # @rbs base_function: Hash[X, Y]
+    # @rbs sets: Array[X] -- Nodes of graph
+    # @rbs relation: Hash[X, Array[X]] -- Edges of graph
+    # @rbs base_function: Hash[X, Y] -- Attributes of nodes
     # @rbs return: void
     def initialize: (Array[X] sets, Hash[X, Array[X]] relation, Hash[X, Y] base_function) -> void
 
