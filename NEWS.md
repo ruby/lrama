@@ -1,6 +1,19 @@
 # NEWS for Lrama
 
-## Lrama 0.7.0 (2025-XX-XX)
+## Lrama 0.7.0 (2025-01-21)
+
+## [EXPERIMENTAL] Support the generation of the IELR(1) parser described in this paper
+
+Support the generation of the IELR(1) parser described in this paper.
+https://www.sciencedirect.com/science/article/pii/S0167642309001191
+
+If you use IELR(1) parser, you can write the following directive in your grammar file.
+
+```yacc
+%define lr.type ielr
+```
+
+But, currently IELR(1) parser is experimental feature. If you find any bugs, please report it to us. Thank you.
 
 ## Support `-t` option as same as `--debug` option
 

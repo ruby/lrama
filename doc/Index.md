@@ -23,7 +23,7 @@ $ cd "$(lrama root)"
 $ bundle install
 $ bundle exec rake install
 $ bundle exec lrama --version
-lrama 0.6.11
+lrama 0.7.0
 ```
 ## Usage
 
