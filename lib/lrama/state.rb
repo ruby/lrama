@@ -381,10 +381,7 @@ module Lrama
         .reduce(always_follows(shift, next_state)) {|result, terms| result |= terms }
     end
 
-    # Definition 3.14 (goto_follows, via successor_follows)
-    #
-    # TODO: This method uses `#always_follows` but the original papar uses `successor_follows`,
-    #       is this correct?
+    # Definition 3.24 (goto_follows, via always_follows)
     def goto_follows(shift, next_state)
       queue = internal_dependencies(shift, next_state) + predecessor_dependencies(shift, next_state)
       terms = always_follows(shift, next_state)
