@@ -161,6 +161,7 @@ module Lrama
       end
     end
 
+    # Definition 3.40 (propagate_lookaheads)
     def propagate_lookaheads(next_state)
       next_state.kernels.map {|item|
         lookahead_sets =
@@ -175,10 +176,12 @@ module Lrama
       }.to_h
     end
 
+    # Definition 3.41 (lookaheads_recomputed)
     def lookaheads_recomputed
       !@item_lookahead_set.nil?
     end
 
+    # Definition 3.43 (is_compatible)
     def compatible_lookahead?(filtered_lookahead)
       !lookaheads_recomputed ||
         @lalr_isocore.annotation_list.all? {|token, actions|
@@ -188,6 +191,7 @@ module Lrama
         }
     end
 
+    # Definition 3.38 (lookahead_set_filters)
     def lookahead_set_filters
       kernels.map {|kernel|
         [kernel,
@@ -200,6 +204,12 @@ module Lrama
       }.to_h
     end
 
+    # Definition 3.42 (dominant_contribution)
+    #
+    # TODO: This method uses the result of LALR parser table.
+    #       This means dominant_contribution of the given token is static.
+    #       However the rule of this method is simulateing conflicts under the given `lookaheads`.
+    #       We may need to calculate conflicts dynamically.
     def dominant_contribution(token, actions, lookaheads)
       a = actions.select {|action, contributions|
         contributions.nil? || contributions.any? {|item, contributed| contributed && lookaheads[item].include?(token) }
@@ -214,6 +224,7 @@ module Lrama
       }
     end
 
+    # Definition 3.27 (inadequacy_lists)
     def inadequacy_list
       return @inadequacy_list if @inadequacy_list
 
@@ -232,6 +243,7 @@ module Lrama
       @inadequacy_list = list.select {|token, actions| token.term? && actions.size > 1 }
     end
 
+    # Definition 3.29 (annotation_lists)
     def annotation_list
       return @annotation_list if @annotation_list
 
@@ -273,6 +285,7 @@ module Lrama
       }
     end
 
+    # Definition 3.32 (annotate_predecessor)
     def annotate_predecessor(predecessor)
       annotation_list.transform_values {|actions|
         token = annotation_list.key(actions)
@@ -297,6 +310,7 @@ module Lrama
       }
     end
 
+    # Definition 3.31 (compute_lhs_contributions)
     def lhs_contributions(sym, token)
       shift, next_state = nterm_transitions.find {|sh, _| sh.next_sym == sym }
       if always_follows(shift, next_state).include?(token)
@@ -306,6 +320,7 @@ module Lrama
       end
     end
 
+    # Definition 3.16 (follow_kernel_items)
     def follow_kernel_items(shift, next_state, kernel)
       queue = [[self, shift, next_state]]
       until queue.empty?
@@ -316,6 +331,7 @@ module Lrama
       false
     end
 
+    # Definition 3.26 (item_lookahead_sets)
     def item_lookahead_set
       return @item_lookahead_set if @item_lookahead_set
 
@@ -354,6 +370,7 @@ module Lrama
       @predecessors.uniq!
     end
 
+    # Definition 3.39 (compute_goto_follow_set)
     def goto_follow_set(nterm_token)
       return [] if nterm_token.accept_symbol?
       shift, next_state = @lalr_isocore.nterm_transitions.find {|sh, _| sh.next_sym == nterm_token }
@@ -364,6 +381,10 @@ module Lrama
         .reduce(always_follows(shift, next_state)) {|result, terms| result |= terms }
     end
 
+    # Definition 3.14 (goto_follows, via successor_follows)
+    #
+    # TODO: This method uses `#always_follows` but the original papar uses `successor_follows`,
+    #       is this correct?
     def goto_follows(shift, next_state)
       queue = internal_dependencies(shift, next_state) + predecessor_dependencies(shift, next_state)
       terms = always_follows(shift, next_state)
@@ -376,6 +397,7 @@ module Lrama
       terms
     end
 
+    # Definition 3.20 (always_follows, one closure)
     def always_follows(shift, next_state)
       return @always_follows[[shift, next_state]] if @always_follows[[shift, next_state]]
 
@@ -390,6 +412,7 @@ module Lrama
       @always_follows[[shift, next_state]] = terms
     end
 
+    # Definition 3.8 (Goto Follows Internal Relation)
     def internal_dependencies(shift, next_state)
       return @internal_dependencies[[shift, next_state]] if @internal_dependencies[[shift, next_state]]
 
@@ -399,6 +422,7 @@ module Lrama
       @internal_dependencies[[shift, next_state]] = nterm_transitions.select {|sh, _| syms.include?(sh.next_sym) }.map {|goto| [self, *goto] }
     end
 
+    # Definition 3.5 (Goto Follows Successor Relation)
     def successor_dependencies(shift, next_state)
       return @successor_dependencies[[shift, next_state]] if @successor_dependencies[[shift, next_state]]
 
@@ -408,6 +432,7 @@ module Lrama
         .map {|transition| [next_state, *transition] }
     end
 
+    # Definition 3.9 (Goto Follows Predecessor Relation)
     def predecessor_dependencies(shift, next_state)
       state_items = []
       @kernels.select {|kernel|
