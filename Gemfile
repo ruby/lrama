@@ -13,6 +13,10 @@ gem "simplecov", require: false
 gem "stackprof", platforms: [:ruby] # stackprof doesn't support Windows
 gem "memory_profiler"
 
+if RUBY_VERSION >= "3.1.0"
+  gem "railroad_diagrams"
+end
+
 # Recent steep requires Ruby >= 3.0.0.
 # Then skip install on some CI jobs.
 if !ENV['GITHUB_ACTION'] || ENV['INSTALL_STEEP'] == 'true'

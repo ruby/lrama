@@ -33,6 +33,14 @@ module Lrama
         "#{l} -> #{r}"
       end
 
+      def to_diagrams
+        if rhs.empty?
+          RailroadDiagrams::Skip.new
+        else
+          RailroadDiagrams::Sequence.new(*rhs_to_diagram)
+        end
+      end
+
       # Used by #user_actions
       def as_comment
         l = lhs.id.s_value
@@ -69,6 +77,18 @@ module Lrama
         return false unless token_code
 
         token_code.references.any? {|r| r.type == :at }
+      end
+
+      private
+
+      def rhs_to_diagram
+        rhs.map do |r|
+          if r.term
+            RailroadDiagrams::Terminal.new(r.id.s_value)
+          else
+            RailroadDiagrams::NonTerminal.new(r.id.s_value)
+          end
+        end
       end
     end
   end

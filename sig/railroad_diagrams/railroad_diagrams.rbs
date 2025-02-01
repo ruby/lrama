@@ -1,0 +1,14 @@
+module RailroadDiagrams
+  class Terminal
+    def initialize: (*untyped) -> void
+  end
+  class NonTerminal
+    def initialize: (*untyped) -> void
+  end
+  class Sequence
+    def initialize: (*untyped) -> void
+  end
+  class Skip
+    def initialize: (*untyped) -> void
+  end
+end
