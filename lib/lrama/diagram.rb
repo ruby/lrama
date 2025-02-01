@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
 require "erb"
-require "railroad_diagrams"
+begin
+  require "railroad_diagrams"
+rescue LoadError
+  warn "railroad_diagrams is not installed. Please run `bundle install`."
+end
 
 module Lrama
   class Diagram
@@ -9,6 +13,7 @@ module Lrama
       @grammar = grammar
       @out = out
       @template_name = template_name
+      return unless defined?(RailroadDiagrams) # Skip rendering if railroad_diagrams is not installed
       RailroadDiagrams::TextDiagram.set_formatting(RailroadDiagrams::TextDiagram::PARTS_UNICODE)
     end
 
@@ -23,6 +28,7 @@ module Lrama
     end
 
     def render
+      return unless defined?(RailroadDiagrams) # Skip rendering if railroad_diagrams is not installed
       @out << render_template(template_file)
     end
 
