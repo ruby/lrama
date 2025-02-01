@@ -283,10 +283,7 @@ module Lrama
         state.shifts.each do |shift|
           new_state, created = create_state(shift.next_sym, shift.next_items, states_created)
           state.set_items_to_state(shift.next_items, new_state)
-          if created
-            enqueue_state(states, new_state)
-            new_state.append_predecessor(state)
-          end
+          enqueue_state(states, new_state) if created
         end
       end
     end
@@ -547,6 +544,12 @@ module Lrama
     end
 
     def split_states
+      @states.each do |state|
+        state.transitions.each do |shift, next_state|
+          next_state.append_predecessor(state)
+        end
+      end
+
       compute_inadequacy_annotations
 
       @states.each do |state|
@@ -566,7 +569,7 @@ module Lrama
         while (curr = queue.shift) do
           curr.predecessors.each do |pred|
             cache = pred.annotation_list.dup
-            pred.merge_annotation_list(curr.annotation_list)
+            pred.annotate_predecessor(curr)
             queue << pred if cache != pred.annotation_list
           end
         end
@@ -584,8 +587,8 @@ module Lrama
     end
 
     def compute_state(state, shift, next_state)
-      filtered_lookaheads = state.propagate_lookaheads(next_state)
-      s = next_state.ielr_isocores.find {|st| st.compatible_lookahead?(filtered_lookaheads) }
+      propagating_lookaheads = state.propagate_lookaheads(next_state)
+      s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
 
       if s.nil?
         s = next_state.ielr_isocores.last
@@ -601,13 +604,13 @@ module Lrama
         s.ielr_isocores.each do |st|
           st.ielr_isocores = s.ielr_isocores
         end
-        new_state.item_lookahead_set = filtered_lookaheads
+        new_state.item_lookahead_set = propagating_lookaheads
         state.update_transition(shift, new_state)
       elsif(!s.lookaheads_recomputed)
-        s.item_lookahead_set = filtered_lookaheads
+        s.item_lookahead_set = propagating_lookaheads
       else
         state.update_transition(shift, s)
-        merge_lookaheads(s, filtered_lookaheads)
+        merge_lookaheads(s, propagating_lookaheads)
       end
     end
   end

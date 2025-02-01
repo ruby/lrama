@@ -1803,9 +1803,6 @@ RSpec.describe Lrama::States do
       states.reporter.report(io, states: true)
 
       expect(io.string).to eq(<<~STR)
-        State 14 conflicts: 2 shift/reduce
-
-
         State 0
 
             0 $accept: • S "end of file"
@@ -1928,11 +1925,7 @@ RSpec.describe Lrama::States do
 
             3 A: a C D • E
 
-            a  shift, and go to state 17
-
-            a  reduce using rule 9 (E)
-            b  reduce using rule 9 (E)
-            c  reduce using rule 9 (E)
+            $default  reduce using rule 9 (E)
 
             E  go to state 18
 

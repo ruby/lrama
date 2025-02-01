@@ -30,7 +30,7 @@ module Lrama
       @internal_dependencies = {}
       @successor_dependencies = {}
       @always_follows = {}
-      @annotation_list = []
+      @annotation_list = Set.new
     end
 
     def closure=(closure)
@@ -165,16 +165,16 @@ module Lrama
 
     # Definition 3.40 (propagate_lookaheads)
     def propagate_lookaheads(next_state)
-      next_state.kernels.map {|item|
+      next_state.kernels.map {|next_kernel|
         lookahead_sets =
-          if item.position == 1
-            goto_follow_set(item.lhs)
-          else
-            kernel = kernels.find {|k| k.predecessor_item_of?(item) }
+          if next_kernel.position > 1
+            kernel = kernels.find {|k| k.predecessor_item_of?(next_kernel) }
             item_lookahead_set[kernel]
+          else
+            goto_follow_set(next_kernel.lhs)
           end
 
-        [item, lookahead_sets & next_state.lookahead_set_filters[item]]
+        [next_kernel, lookahead_sets & next_state.lookahead_set_filters[next_kernel]]
       }.to_h
     end
 
@@ -184,11 +184,11 @@ module Lrama
     end
 
     # Definition 3.43 (is_compatible)
-    def compatible_lookahead?(filtered_lookahead)
+    def is_compatible?(filtered_lookahead)
       !lookaheads_recomputed ||
-        @lalr_isocore.annotation_list.all? {|token, actions|
-          a = dominant_contribution(token, actions, item_lookahead_set)
-          b = dominant_contribution(token, actions, filtered_lookahead)
+        @lalr_isocore.annotation_list.all? {|annotation|
+          a = annotation.dominant_contribution(item_lookahead_set)
+          b = annotation.dominant_contribution(filtered_lookahead)
           a.nil? || b.nil? || a == b
         }
     end
@@ -196,34 +196,8 @@ module Lrama
     # Definition 3.38 (lookahead_set_filters)
     def lookahead_set_filters
       kernels.map {|kernel|
-        [kernel,
-         @lalr_isocore.annotation_list.select {|token, actions|
-           token.term? && actions.any? {|action, contributions|
-             !contributions.nil? && contributions.key?(kernel) && contributions[kernel]
-           }
-         }.map {|token, _| token }
-        ]
+        [kernel, @lalr_isocore.annotation_list.select {|annotation| annotation.contributed?(kernel) }.map(&:token)]
       }.to_h
-    end
-
-    # Definition 3.42 (dominant_contribution)
-    #
-    # TODO: This method uses the result of LALR parser table.
-    #       This means dominant_contribution of the given token is static.
-    #       However the rule of this method is simulateing conflicts under the given `lookaheads`.
-    #       We may need to calculate conflicts dynamically.
-    def dominant_contribution(token, actions, lookaheads)
-      a = actions.select {|action, contributions|
-        contributions.nil? || contributions.any? {|item, contributed| contributed && lookaheads[item].include?(token) }
-      }.map {|action, _| action }
-      return nil if a.empty?
-      a.reject {|action|
-        if action.is_a?(State::Shift)
-          action.not_selected
-        elsif action.is_a?(State::Reduce)
-          action.not_selected_symbols.include?(token)
-        end
-      }
     end
 
     # Definition 3.27 (inadequacy_lists)
@@ -236,14 +210,14 @@ module Lrama
         next unless shift.next_sym.term?
 
         @inadequacy_list[shift.next_sym] ||= []
-        @inadequacy_list[shift.next_sym] << shift
+        @inadequacy_list[shift.next_sym] << shift.dup
       end
       reduces.each do |reduce|
         next if reduce.look_ahead.nil?
 
         reduce.look_ahead.each do |token|
           @inadequacy_list[token] ||= []
-          @inadequacy_list[token] << reduce
+          @inadequacy_list[token] << reduce.dup
         end
       end
 
@@ -251,25 +225,38 @@ module Lrama
     end
 
     def annotate_manifestation
-      @annotation_list = inadequacy_list.map {|token, actions|
-        actions.map {|action|
+      inadequacy_list.each {|token, actions|
+        contribution_matrix = actions.map {|action|
           if action.is_a?(Shift)
-            InadequacyAnnotation.new(self, token, action, nil)
-          elsif action.is_a?(Reduce)
-            if action.rule.empty_rule?
-              InadequacyAnnotation.new(self, token, action, lhs_contributions(action.rule.lhs, token))
-            else
-              contributions = kernels.map {|kernel| [kernel, kernel.rule == action.rule && kernel.end_of_rule?] }.to_h
-              InadequacyAnnotation.new(self, token, action, contributions)
-            end
+            [action, nil]
+          else
+            [action, action.rule.empty_rule? ? lhs_contributions(action.rule.lhs, token) : kernels.map {|k| [k, k.end_of_rule?] }.to_h]
           end
-        }
-      }.flatten
+        }.to_h
+        @annotation_list.add(InadequacyAnnotation.new(self, token, actions, contribution_matrix))
+      }
     end
 
-    def merge_annotation_list(other)
-      other.each do |annotation|
-        @annotation_list << annotation unless @annotation_list.include?(annotation)
+    # Definition 3.32 (annotate_predecessor)
+    def annotate_predecessor(next_state)
+      next_state.annotation_list.each do |annotation|
+        contribution_matrix = annotation.contribution_matrix.map {|action, contributions|
+          if contributions.nil?
+            [action, nil]
+          elsif next_state.kernels.any? {|k| contributions[k] && k.position == 1 && lhs_contributions(k.lhs, annotation.token).nil? }
+            [action, nil]
+          else
+            cs = kernels.map {|k|
+              c = contributions.any? {|item, contributed| contributed && (
+                   (item.rule == k.rule && item.position == k.position + 1) ||
+                   (item.position == 1 && lhs_contributions(item.lhs, annotation.token).nil?)
+              ) }
+              [k, c]
+            }.to_h
+            [action, cs]
+          end
+        }.to_h
+        @annotation_list.add(InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix))
       end
     end
 
@@ -379,7 +366,7 @@ module Lrama
       syms = @items.select {|i|
         i.next_sym == shift.next_sym && i.symbols_after_transition.all?(&:nullable) && i.position == 0
       }.map(&:lhs).uniq
-      @internal_dependencies[[shift, next_state]] = nterm_transitions.select {|sh, _| syms.include?(sh.next_sym) }.map {|goto| [self, *goto] }
+      @internal_dependencies[[shift, next_state]] = nterm_transitions.select {|goto, _| syms.include?(goto.next_sym) }.map {|goto| [self, *goto] }
     end
 
     # Definition 3.5 (Goto Follows Successor Relation)
