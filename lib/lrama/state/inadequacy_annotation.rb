@@ -30,6 +30,15 @@ module Lrama
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
       end
 
+      def merge_matrix(another_matrix)
+        @contribution_matrix.merge(another_matrix) {|action, contributions, another_contributions|
+          next contributions if another_contributions.nil?
+          next another_contributions if contributions.nil?
+
+          contributions.merge(another_contributions) {|_, contributed, another_contributed| contributed || another_contributed }
+        }
+      end
+
       # Definition 3.42 (dominant_contribution)
       def dominant_contribution(lookaheads)
         actions = @actions.select {|action|

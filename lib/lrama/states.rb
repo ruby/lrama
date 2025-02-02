@@ -604,9 +604,11 @@ module Lrama
         s.ielr_isocores.each do |st|
           st.ielr_isocores = s.ielr_isocores
         end
+        new_state.lookaheads_recomputed = true
         new_state.item_lookahead_set = propagating_lookaheads
         state.update_transition(shift, new_state)
       elsif(!s.lookaheads_recomputed)
+        s.lookaheads_recomputed = true
         s.item_lookahead_set = propagating_lookaheads
       else
         state.update_transition(shift, s)

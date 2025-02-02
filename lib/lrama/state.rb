@@ -11,7 +11,7 @@ module Lrama
   class State
     attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
                 :default_reduction_rule, :closure, :items, :annotation_list, :predecessors
-    attr_accessor :shifts, :reduces, :ielr_isocores, :lalr_isocore
+    attr_accessor :shifts, :reduces, :ielr_isocores, :lalr_isocore, :lookaheads_recomputed
 
     def initialize(id, accessing_symbol, kernels)
       @id = id
@@ -30,7 +30,8 @@ module Lrama
       @internal_dependencies = {}
       @successor_dependencies = {}
       @always_follows = {}
-      @annotation_list = Set.new
+      @annotation_list = []
+      @lookaheads_recomputed = false
     end
 
     def closure=(closure)
@@ -178,11 +179,6 @@ module Lrama
       }.to_h
     end
 
-    # Definition 3.41 (lookaheads_recomputed)
-    def lookaheads_recomputed
-      !@item_lookahead_set.nil?
-    end
-
     # Definition 3.43 (is_compatible)
     def is_compatible?(filtered_lookahead)
       !lookaheads_recomputed ||
@@ -233,7 +229,11 @@ module Lrama
             [action, action.rule.empty_rule? ? lhs_contributions(action.rule.lhs, token) : kernels.map {|k| [k, k.end_of_rule?] }.to_h]
           end
         }.to_h
-        @annotation_list.add(InadequacyAnnotation.new(self, token, actions, contribution_matrix))
+        if (annotation = @annotation_list.find {|a| a.state == self && a.token == token && a.actions == actions })
+          annotation.merge_matrix(contribution_matrix)
+        else
+          @annotation_list << InadequacyAnnotation.new(self, token, actions, contribution_matrix)
+        end
       }
     end
 
@@ -248,15 +248,19 @@ module Lrama
           else
             cs = kernels.map {|k|
               c = contributions.any? {|item, contributed| contributed && (
-                   (item.rule == k.rule && item.position == k.position + 1) ||
-                   (item.position == 1 && lhs_contributions(item.lhs, annotation.token).nil?)
+                (item.rule == k.rule && item.position == k.position + 1) ||
+                (item.position == 1 && lhs_contributions(item.lhs, annotation.token).nil?)
               ) }
               [k, c]
             }.to_h
             [action, cs]
           end
         }.to_h
-        @annotation_list.add(InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix))
+        if (at = @annotation_list.find {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions })
+          at.merge_matrix(contribution_matrix)
+        else
+          @annotation_list << InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
+        end
       end
     end
 
@@ -285,19 +289,20 @@ module Lrama
     def item_lookahead_set
       return @item_lookahead_set if @item_lookahead_set
 
-      kernels.map {|item|
+      @item_lookahead_set = kernels.map {|k| [k, []] }.to_h
+      @item_lookahead_set.map {|kernel, _|
         value =
-          if item.lhs.accept_symbol?
+          if kernel.lhs.accept_symbol?
             []
-          elsif item.position > 1
-            prev_items = predecessors_with_item(item)
+          elsif kernel.position > 1
+            prev_items = predecessors_with_item(kernel)
             prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce([]) {|acc, syms| acc |= syms }
-          elsif item.position == 1
-            prev_state = @predecessors.find {|p| p.shifts.any? {|shift| shift.next_sym == item.lhs } }
-            shift, next_state = prev_state.nterm_transitions.find {|shift, _| shift.next_sym == item.lhs }
+          elsif kernel.position == 1
+            prev_state = @predecessors.find {|p| p.shifts.any? {|shift| shift.next_sym == kernel.lhs } }
+            shift, next_state = prev_state.nterm_transitions.find {|shift, _| shift.next_sym == kernel.lhs }
             prev_state.goto_follows(shift, next_state)
           end
-        [item, value]
+        [kernel, value]
       }.to_h
     end
 
