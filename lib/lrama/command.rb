@@ -8,7 +8,9 @@ module Lrama
     def run(argv)
       parser_options(argv)
       Lrama::Report::Profile::CallStack.report(@options.profile_opts[:call_stack]) do
-        _run
+        Lrama::Report::Profile::Memory.report(@options.profile_opts[:memory]) do
+          _run
+        end
       end
     end
 

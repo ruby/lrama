@@ -101,6 +101,7 @@ module Lrama
         o.on_tail ''
         o.on_tail 'PROFILES is a list of comma-separated words that can include:'
         o.on_tail '    call-stack                       use sampling call-stack profiler (stackprof gem)'
+        o.on_tail '    memory                           use memory profiler (memory_profiler gem)'
         o.on('-v', '--verbose', "same as '--report=state'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
@@ -176,7 +177,7 @@ module Lrama
       return h
     end
 
-    VALID_PROFILES = %w[call-stack].freeze
+    VALID_PROFILES = %w[call-stack memory].freeze
 
     def validate_profile(profile)
       h = {}
