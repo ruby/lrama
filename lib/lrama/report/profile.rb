@@ -3,7 +3,7 @@
 module Lrama
   class Report
     module Profile
-      # See "Profiling Lrama" in README.md for how to use.
+      # See "Call-stack Profiling Lrama" in README.md for how to use.
       def self.report_profile(enabled)
         if enabled && require_stackprof
           StackProf.run(mode: :cpu, raw: true, out: 'tmp/stackprof-cpu-myapp.dump') do
