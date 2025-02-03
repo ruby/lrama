@@ -8,6 +8,12 @@ Lrama provides an API for generating HTML syntax diagrams. These visual diagrams
 
 ![Syntax Diagrams](https://github.com/user-attachments/assets/5d9bca77-93fd-4416-bc24-9a0f70693a22)
 
+If you use syntax diagrams, you add `--diagram` option.
+
+```console
+$ exe/lrama --diagram sample.y
+```
+
 ## Lrama 0.7.0 (2025-01-21)
 
 ### [EXPERIMENTAL] Support the generation of the IELR(1) parser described in this paper
