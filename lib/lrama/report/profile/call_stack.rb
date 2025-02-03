@@ -10,7 +10,7 @@ module Lrama
         # @rbs enabled: bool
         # @rbs &: -> void
         # @rbs return: StackProf::result | void
-        def self.report_profile(enabled)
+        def self.report(enabled)
           if enabled && require_stackprof
             StackProf.run(mode: :cpu, raw: true, out: 'tmp/stackprof-cpu-myapp.dump') do
               yield
