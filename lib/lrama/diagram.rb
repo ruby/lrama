@@ -1,20 +1,28 @@
 # frozen_string_literal: true
 
 require "erb"
-begin
-  require "railroad_diagrams"
-rescue LoadError
-  warn "railroad_diagrams is not installed. Please run `bundle install`."
-end
 
 module Lrama
   class Diagram
+    class << self
+      def render(out:, grammar:, template_name: 'diagram/diagram.html')
+        return unless require_railroad_diagrams
+        new(out: out, grammar: grammar, template_name: template_name).render
+      end
+
+      def require_railroad_diagrams
+        require "railroad_diagrams"
+        true
+      rescue LoadError
+        warn "railroad_diagrams is not installed. Please run `bundle install`."
+        false
+      end
+    end
+
     def initialize(out:, grammar:, template_name: 'diagram/diagram.html')
       @grammar = grammar
       @out = out
       @template_name = template_name
-      return unless defined?(RailroadDiagrams) # Skip rendering if railroad_diagrams is not installed
-      RailroadDiagrams::TextDiagram.set_formatting(RailroadDiagrams::TextDiagram::PARTS_UNICODE)
     end
 
     if ERB.instance_method(:initialize).parameters.last.first == :key
@@ -28,7 +36,7 @@ module Lrama
     end
 
     def render
-      return unless defined?(RailroadDiagrams) # Skip rendering if railroad_diagrams is not installed
+      RailroadDiagrams::TextDiagram.set_formatting(RailroadDiagrams::TextDiagram::PARTS_UNICODE)
       @out << render_template(template_file)
     end
 

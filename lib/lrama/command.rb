@@ -49,7 +49,7 @@ module Lrama
 
       if options.diagram
         File.open(options.diagram_file, "w+") do |f|
-          Lrama::Diagram.new(out: f, grammar: grammar).render
+          Lrama::Diagram.render(out: f, grammar: grammar)
         end
       end
 
