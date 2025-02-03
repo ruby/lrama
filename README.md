@@ -168,30 +168,13 @@ $ ruby tool/id2token.rb parse.y > parse.tmp.y
 $ cp parse.tmp.y dir/lrama/tmp
 ```
 
-#### 2. Enable Profiler
-
-```diff
-diff --git a/exe/lrama b/exe/lrama
-index ba5fb06..2497178 100755
---- a/exe/lrama
-+++ b/exe/lrama
-@@ -3,4 +3,6 @@
- $LOAD_PATH << File.join(__dir__, "../lib")
- require "lrama"
-
--Lrama::Command.new.run(ARGV.dup)
-+Lrama::Report::Profile.report_profile do
-+  Lrama::Command.new.run(ARGV.dup)
-+end
-```
-
-#### 3. Run Lrama
+#### 2. Run Lrama
 
 ```shell
-$ exe/lrama -o parse.tmp.c --header=parse.tmp.h tmp/parse.tmp.y
+$ exe/lrama -o parse.tmp.c --header=parse.tmp.h --profile=call-stack tmp/parse.tmp.y
 ```
 
-#### 4. Generate Flamegraph
+#### 3. Generate Flamegraph
 
 ```shell
 $ stackprof --d3-flamegraph tmp/stackprof-cpu-myapp.dump > tmp/flamegraph.html

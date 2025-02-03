@@ -7,7 +7,9 @@ module Lrama
 
     def run(argv)
       parser_options(argv)
-      _run
+      Lrama::Report::Profile.report_profile(@options.profile_opts[:call_stack]) do
+        _run
+      end
     end
 
     private

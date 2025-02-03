@@ -1,8 +1,8 @@
 module Lrama
   class Report
     module Profile
-      def self.report_profile: { -> void } -> StackProf::result
-      def self.require_stackprof: () -> void
+      def self.report_profile: (bool enabled) { -> void } -> (StackProf::result | void)
+      def self.require_stackprof: () -> bool
     end
   end
 end

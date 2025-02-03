@@ -8,7 +8,7 @@ module Lrama
                   :error_recovery, :grammar_file,
                   :trace_opts, :report_opts,
                   :diagnostic, :y, :debug, :define,
-                  :diagram, :diagram_file
+                  :diagram, :diagram_file, :profile_opts
 
     def initialize
       @skeleton = "bison/yacc.c"
@@ -26,6 +26,7 @@ module Lrama
       @debug = false
       @diagram = false
       @diagram_file = "diagram.html"
+      @profile_opts = nil
     end
   end
 end
