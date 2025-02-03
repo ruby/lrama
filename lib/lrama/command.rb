@@ -47,6 +47,12 @@ module Lrama
       reporter = Lrama::TraceReporter.new(grammar)
       reporter.report(**options.trace_opts)
 
+      if options.diagram
+        File.open(options.diagram_file, "w+") do |f|
+          Lrama::Diagram.render(out: f, grammar: grammar)
+        end
+      end
+
       File.open(options.outfile, "w+") do |f|
         Lrama::Output.new(
           out: f,

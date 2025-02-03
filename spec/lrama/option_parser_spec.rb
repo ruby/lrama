@@ -58,6 +58,7 @@ RSpec.describe Lrama::OptionParser do
                   --report-file=FILE           also produce details on the automaton output to a file named FILE
               -o, --output=FILE                leave output to FILE
                   --trace=TRACES               also output trace logs at runtime
+                  --diagram=[FILE]             generate a diagram of the rules
               -v, --verbose                    same as '--report=state'
 
           Diagnostics:

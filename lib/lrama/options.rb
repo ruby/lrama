@@ -7,7 +7,8 @@ module Lrama
                   :report_file, :outfile,
                   :error_recovery, :grammar_file,
                   :trace_opts, :report_opts,
-                  :diagnostic, :y, :debug, :define
+                  :diagnostic, :y, :debug, :define,
+                  :diagram, :diagram_file
 
     def initialize
       @skeleton = "bison/yacc.c"
@@ -23,6 +24,8 @@ module Lrama
       @diagnostic = false
       @y = STDIN
       @debug = false
+      @diagram = false
+      @diagram_file = "diagram.html"
     end
   end
 end

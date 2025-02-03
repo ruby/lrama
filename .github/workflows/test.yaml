@@ -26,7 +26,9 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true
+          # NOTE: If this cache is present, the following will fail at Ruby 2.5:
+          #   see: https://github.com/ruby/lrama/actions/runs/13088401502/job/36522284488
+          # bundler-cache: true
       - run: flex --help
       - run: bundle install
       - run: bundle exec rspec

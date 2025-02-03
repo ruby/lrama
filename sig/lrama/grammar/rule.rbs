@@ -36,6 +36,8 @@ module Lrama
 
       def contains_at_reference?: -> bool
 
+      def rhs_to_diagram: -> Array[(RailroadDiagrams::Terminal | RailroadDiagrams::NonTerminal)]
+
       interface _DelegatedMethods
         def lhs: -> Grammar::Symbol
         def rhs: -> Array[Grammar::Symbol]
