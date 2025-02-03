@@ -9,6 +9,7 @@ module Lrama
       @options = Options.new
       @trace = []
       @report = []
+      @profile = []
     end
 
     def parse(argv)
@@ -16,6 +17,7 @@ module Lrama
 
       @options.trace_opts = validate_trace(@trace)
       @options.report_opts = validate_report(@report)
+      @options.profile_opts = validate_profile(@profile)
       @options.grammar_file = argv.shift
 
       unless @options.grammar_file
@@ -95,6 +97,11 @@ module Lrama
           @options.diagram = true
           @options.diagram_file = v if v
         end
+        o.on('--profile=PROFILES', Array, 'profiles parser generation parts') {|v| @profile = v }
+        o.on_tail ''
+        o.on_tail 'PROFILES is a list of comma-separated words that can include:'
+        o.on_tail '    call-stack                       use sampling call-stack profiler (stackprof gem)'
+        o.on_tail '    memory                           use memory profiler (memory_profiler gem)'
         o.on('-v', '--verbose', "same as '--report=state'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
@@ -164,6 +171,23 @@ module Lrama
           h[t.gsub(/-/, '_').to_sym] = true
         else
           raise "Invalid trace option \"#{t}\"."
+        end
+      end
+
+      return h
+    end
+
+    VALID_PROFILES = %w[call-stack memory].freeze
+
+    def validate_profile(profile)
+      h = {}
+      return h if profile.empty?
+
+      profile.each do |t|
+        if VALID_PROFILES.include?(t)
+          h[t.gsub(/-/, '_').to_sym] = true
+        else
+          raise "Invalid profile option \"#{t}\"."
         end
       end
 

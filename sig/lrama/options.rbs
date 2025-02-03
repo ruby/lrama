@@ -13,6 +13,7 @@ module Lrama
     attr_accessor diagnostic: bool
     attr_accessor y: IO
     attr_accessor debug: bool
+    attr_accessor profile_opts: Hash[Symbol, bool]?
 
     def initialize: () -> void
   end

@@ -1,7 +1,0 @@
-module Lrama
-  class Report
-    module Profile
-      def self.report_profile: { -> void } -> StackProf::result
-    end
-  end
-end

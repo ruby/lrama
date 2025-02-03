@@ -59,6 +59,7 @@ RSpec.describe Lrama::OptionParser do
               -o, --output=FILE                leave output to FILE
                   --trace=TRACES               also output trace logs at runtime
                   --diagram=[FILE]             generate a diagram of the rules
+                  --profile=PROFILES           profiles parser generation parts
               -v, --verbose                    same as '--report=state'
 
           Diagnostics:
@@ -92,6 +93,10 @@ RSpec.describe Lrama::OptionParser do
               time                             display generation time
               all                              include all the above traces
               none                             disable all traces
+
+          PROFILES is a list of comma-separated words that can include:
+              call-stack                       use sampling call-stack profiler (stackprof gem)
+              memory                           use memory profiler (memory_profiler gem)
 
         HELP
       end
