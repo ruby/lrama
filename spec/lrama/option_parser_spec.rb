@@ -343,4 +343,24 @@ RSpec.describe Lrama::OptionParser do
       end
     end
   end
+
+  describe "@define" do
+    context "when define option is not passed" do
+      it "returns empty array" do
+        option_parser = Lrama::OptionParser.new
+        option_parser.send(:parse, [fixture_path("command/basic.y")])
+        options = option_parser.instance_variable_get(:@options)
+        expect(options.define).to eq([])
+      end
+    end
+
+    context "when define option is passed" do
+      it "returns array of define options" do
+        option_parser = Lrama::OptionParser.new
+        option_parser.send(:parse, ["--define=YYDEBUG=1", fixture_path("command/basic.y")])
+        options = option_parser.instance_variable_get(:@options)
+        expect(options.define).to eq(["YYDEBUG=1"])
+      end
+    end
+  end
 end
