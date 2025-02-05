@@ -1,15 +1,27 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 module Lrama
   # Command line options.
   class Options
-    attr_accessor :skeleton, :header, :header_file,
-                  :report_file, :outfile,
-                  :error_recovery, :grammar_file,
-                  :trace_opts, :report_opts,
-                  :diagnostic, :y, :debug, :define,
-                  :diagram, :diagram_file, :profile_opts
+    attr_accessor :skeleton #: String
+    attr_accessor :header #: bool
+    attr_accessor :header_file #: String
+    attr_accessor :report_file #: String
+    attr_accessor :outfile #: String
+    attr_accessor :error_recovery #: bool
+    attr_accessor :grammar_file #: String
+    attr_accessor :trace_opts #: Hash[Symbol, bool]?
+    attr_accessor :report_opts #: Hash[Symbol, bool]?
+    attr_accessor :diagnostic #: bool
+    attr_accessor :y #: IO
+    attr_accessor :debug #: bool
+    attr_accessor :define #: Hash[String, String]
+    attr_accessor :diagram #: bool
+    attr_accessor :diagram_file #: String
+    attr_accessor :profile_opts #: Hash[Symbol, bool]?
 
+    # @rbs () -> void
     def initialize
       @skeleton = "bison/yacc.c"
       @define = {}
