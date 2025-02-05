@@ -6,11 +6,11 @@ module Lrama
   class Options
     attr_accessor :skeleton #: String
     attr_accessor :header #: bool
-    attr_accessor :header_file #: String
-    attr_accessor :report_file #: String
+    attr_accessor :header_file #: String?
+    attr_accessor :report_file #: String?
     attr_accessor :outfile #: String
     attr_accessor :error_recovery #: bool
-    attr_accessor :grammar_file #: String
+    attr_accessor :grammar_file #: String?
     attr_accessor :trace_opts #: Hash[Symbol, bool]?
     attr_accessor :report_opts #: Hash[Symbol, bool]?
     attr_accessor :diagnostic #: bool
