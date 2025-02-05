@@ -12,7 +12,7 @@ module Lrama
 
     def initialize
       @skeleton = "bison/yacc.c"
-      @define = []
+      @define = {}
       @header = false
       @header_file = nil
       @report_file = nil
