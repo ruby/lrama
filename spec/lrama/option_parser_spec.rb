@@ -355,11 +355,22 @@ RSpec.describe Lrama::OptionParser do
     end
 
     context "when define option is passed" do
-      it "returns hash of define options" do
-        option_parser = Lrama::OptionParser.new
-        option_parser.send(:parse, ["--define=YYDEBUG=1", fixture_path("command/basic.y")])
-        options = option_parser.instance_variable_get(:@options)
-        expect(options.define).to eq({'YYDEBUG' => "1"})
+      context "when value includes equal sign" do
+        it "returns hash of define options" do
+          option_parser = Lrama::OptionParser.new
+          option_parser.send(:parse, ["--define=foo=1", fixture_path("command/basic.y")])
+          options = option_parser.instance_variable_get(:@options)
+          expect(options.define).to eq({'foo' => "1"})
+        end
+      end
+
+      context "when value doesn't include equal sign" do
+        it "returns hash of define options" do
+          option_parser = Lrama::OptionParser.new
+          option_parser.send(:parse, ["--define=foo", fixture_path("command/basic.y")])
+          options = option_parser.instance_variable_get(:@options)
+          expect(options.define).to eq({'foo' => nil})
+        end
       end
     end
   end
