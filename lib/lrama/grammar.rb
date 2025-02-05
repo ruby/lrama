@@ -57,7 +57,7 @@ module Lrama
       @aux = Auxiliary.new
       @no_stdlib = false
       @locations = false
-      @define = define.map {|d| d.split('=') }.to_h
+      @define = define
 
       append_special_symbols
     end
