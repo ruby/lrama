@@ -42,6 +42,64 @@ RSpec.describe Lrama::Parser do
     HEADER
   end
 
+  describe "#initialize" do
+    context 'when debug is true and define is not include `parse.trace`' do
+      context 'with define is not specified' do
+        it '@yydebug is true' do
+          parser = Lrama::Parser.new("", "", true)
+          yydebug = parser.instance_variable_get(:@yydebug)
+          expect(yydebug).to be_truthy
+        end
+      end
+
+      context 'with define is specified' do
+        context 'with `api.pure`' do
+          it '@yydebug is false' do
+            parser = Lrama::Parser.new("", "", true, {'api.pure' => nil})
+            yydebug = parser.instance_variable_get(:@yydebug)
+            expect(yydebug).to be_truthy
+          end
+        end
+
+        context 'with `parse.trace`' do
+          it '@yydebug is true' do
+            parser = Lrama::Parser.new("", "", true, {'parse.trace' => nil})
+            yydebug = parser.instance_variable_get(:@yydebug)
+            expect(yydebug).to be_truthy
+          end
+        end
+      end
+    end
+
+    context 'when debug is false and define is not include `parse.trace`' do
+      context 'with define is not specified' do
+        it '@yydebug is false' do
+          parser = Lrama::Parser.new("", "", false)
+          yydebug = parser.instance_variable_get(:@yydebug)
+          expect(yydebug).to be_falsey
+        end
+      end
+
+      context 'with define is specified' do
+        context 'with `api.pure`' do
+          it '@yydebug is false' do
+            parser = Lrama::Parser.new("", "", false, {'api.pure' => nil})
+            yydebug = parser.instance_variable_get(:@yydebug)
+            expect(yydebug).to be_falsey
+          end
+        end
+
+        context 'with `parse.trace`' do
+          it '@yydebug is true' do
+            parser = Lrama::Parser.new("", "", false, {'parse.trace' => nil})
+            yydebug = parser.instance_variable_get(:@yydebug)
+            expect(yydebug).to be_truthy
+          end
+        end
+      end
+    end
+  end
+
   describe '#parse' do
     it "basic" do
       path = "common/basic.y"
