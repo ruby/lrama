@@ -430,7 +430,7 @@ include Lrama::Report::Duration
 
 def initialize(text, path, debug = false, define = {})
   @grammar_file = Lrama::Lexer::GrammarFile.new(path, text)
-  @yydebug = debug
+  @yydebug = debug || define.key?('parse.trace')
   @rule_counter = Lrama::Grammar::Counter.new(0)
   @midrule_action_counter = Lrama::Grammar::Counter.new(1)
   @define = define
