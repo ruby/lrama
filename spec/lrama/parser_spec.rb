@@ -54,7 +54,7 @@ RSpec.describe Lrama::Parser do
 
       context 'with define is specified' do
         context 'with `api.pure`' do
-          it '@yydebug is false' do
+          it '@yydebug is true' do
             parser = Lrama::Parser.new("", "", true, {'api.pure' => nil})
             yydebug = parser.instance_variable_get(:@yydebug)
             expect(yydebug).to be_truthy
