@@ -1,0 +1,22 @@
+module Lrama
+  class State
+	  class	InadequacyAnnotation
+      @state: State
+      @token: Grammar::Symbol
+      @actions: Array[Shift|Reduce]
+      @contributions: Hash[Shift|Reduce, Hash[States::Item, bool]]
+
+      attr_accessor state: State
+      attr_accessor token: Grammar::Symbol
+      attr_accessor actions: Array[Shift|Reduce]
+
+      def initialize: (State state, Grammar::Symbol token, Array[Shift|Reduce] actions, Hash[Shift|Reduce, Hash[States::Item, bool]] contributions) -> void
+      def ==: (InadequacyAnnotation other) -> bool
+      def mergeable?: (InadequacyAnnotation other) -> bool
+      def merge: (InadequacyAnnotation other) -> void
+      def contributed?: (States::Item item) -> bool
+      def to_s: -> String
+      def actions_to_s: -> String
+    end
+  end
+end

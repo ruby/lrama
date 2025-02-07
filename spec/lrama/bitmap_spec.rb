@@ -20,4 +20,16 @@ RSpec.describe Lrama::Bitmap do
       expect(Lrama::Bitmap.to_array(0b1010000)).to eq([4, 6])
     end
   end
+
+  describe '.to_bool_array' do
+    it 'converts bitmap integer into array of boolean' do
+      expect(Lrama::Bitmap.to_bool_array(0b0, 1)).to eq([false])
+      expect(Lrama::Bitmap.to_bool_array(0b1, 1)).to eq([true])
+      expect(Lrama::Bitmap.to_bool_array(0b1, 2)).to eq([true, false])
+      expect(Lrama::Bitmap.to_bool_array(0b10, 2)).to eq([false, true])
+      expect(Lrama::Bitmap.to_bool_array(0b1100, 4)).to eq([false, false, true, true])
+      expect(Lrama::Bitmap.to_bool_array(0b1100, 7)).to eq([false, false, true, true, false, false, false])
+      expect(Lrama::Bitmap.to_bool_array(0b1010000, 7)).to eq([false, false, false, false, true, false, true])
+    end
+  end
 end

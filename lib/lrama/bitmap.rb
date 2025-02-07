@@ -30,5 +30,15 @@ module Lrama
 
       a
     end
+
+    def self.to_bool_array(int, size)
+      a = Array.new(size) #: Array[bool]
+
+      size.times do |i|
+        a[i] = int[i] == 1
+      end
+
+      a
+    end
   end
 end

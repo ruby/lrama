@@ -11,7 +11,8 @@ module Lrama
   class State
     attr_reader :id, :accessing_symbol, :kernels, :conflicts, :resolved_conflicts,
                 :default_reduction_rule, :closure, :items, :annotation_list, :predecessors
-    attr_accessor :shifts, :reduces, :ielr_isocores, :lalr_isocore, :lookaheads_recomputed
+    attr_accessor :shifts, :reduces, :ielr_isocores, :lalr_isocore, :lookaheads_recomputed,
+                  :follow_kernel_items, :always_follows
 
     def initialize(id, accessing_symbol, kernels)
       @id = id
@@ -32,6 +33,8 @@ module Lrama
       @always_follows = {}
       @annotation_list = []
       @lookaheads_recomputed = false
+      @follow_kernel_items = {}
+      @always_follows = {}
     end
 
     def closure=(closure)
@@ -266,23 +269,12 @@ module Lrama
 
     # Definition 3.31 (compute_lhs_contributions)
     def lhs_contributions(sym, token)
-      shift, next_state = nterm_transitions.find {|sh, _| sh.next_sym == sym }
-      if always_follows(shift, next_state).include?(token)
+      transition = nterm_transitions.find {|goto, _| goto.next_sym == sym }
+      if always_follows[transition].include?(token)
         nil
       else
-        kernels.map {|kernel| [kernel, follow_kernel_items(shift, next_state, kernel) && item_lookahead_set[kernel].include?(token)] }.to_h
+        kernels.map {|kernel| [kernel, follow_kernel_items[transition][kernel] && item_lookahead_set[kernel].include?(token)] }.to_h
       end
-    end
-
-    # Definition 3.16 (follow_kernel_items)
-    def follow_kernel_items(shift, next_state, kernel)
-      queue = [[self, shift, next_state]]
-      until queue.empty?
-        st, sh, next_st = queue.pop
-        return true if kernel.next_sym == sh.next_sym && kernel.symbols_after_transition.all?(&:nullable)
-        st.internal_dependencies(sh, next_st).each {|v| queue << v }
-      end
-      false
     end
 
     # Definition 3.26 (item_lookahead_sets)
@@ -290,7 +282,7 @@ module Lrama
       return @item_lookahead_set if @item_lookahead_set
 
       @item_lookahead_set = kernels.map {|k| [k, []] }.to_h
-      @item_lookahead_set.map {|kernel, _|
+      @item_lookahead_set = kernels.map {|kernel|
         value =
           if kernel.lhs.accept_symbol?
             []
@@ -328,18 +320,18 @@ module Lrama
     # Definition 3.39 (compute_goto_follow_set)
     def goto_follow_set(nterm_token)
       return [] if nterm_token.accept_symbol?
-      shift, next_state = @lalr_isocore.nterm_transitions.find {|sh, _| sh.next_sym == nterm_token }
+      transition = @lalr_isocore.nterm_transitions.find {|goto, _| goto.next_sym == nterm_token }
 
       @kernels
-        .select {|kernel| follow_kernel_items(shift, next_state, kernel) }
+        .select {|kernel| @lalr_isocore.follow_kernel_items[transition][kernel] }
         .map {|kernel| item_lookahead_set[kernel] }
-        .reduce(always_follows(shift, next_state)) {|result, terms| result |= terms }
+        .reduce(@lalr_isocore.always_follows[transition]) {|result, terms| result |= terms }
     end
 
     # Definition 3.24 (goto_follows, via always_follows)
     def goto_follows(shift, next_state)
       queue = internal_dependencies(shift, next_state) + predecessor_dependencies(shift, next_state)
-      terms = always_follows(shift, next_state)
+      terms = always_follows[[shift, next_state]]
       until queue.empty?
         st, sh, next_st = queue.pop
         terms |= st.always_follows(sh, next_st)
@@ -347,21 +339,6 @@ module Lrama
         st.predecessor_dependencies(sh, next_st).each {|v| queue << v }
       end
       terms
-    end
-
-    # Definition 3.20 (always_follows, one closure)
-    def always_follows(shift, next_state)
-      return @always_follows[[shift, next_state]] if @always_follows[[shift, next_state]]
-
-      queue = internal_dependencies(shift, next_state) + successor_dependencies(shift, next_state)
-      terms = []
-      until queue.empty?
-        st, sh, next_st = queue.pop
-        terms |= next_st.term_transitions.map {|sh, _| sh.next_sym }
-        st.internal_dependencies(sh, next_st).each {|v| queue << v }
-        st.successor_dependencies(sh, next_st).each {|v| queue << v }
-      end
-      @always_follows[[shift, next_state]] = terms
     end
 
     # Definition 3.8 (Goto Follows Internal Relation)
