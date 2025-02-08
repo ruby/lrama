@@ -11,12 +11,6 @@ module Lrama
     # @rbs (IO out, Grammar grammar, String template_name) -> void
     def initialize: (IO out, Grammar grammar, String template_name) -> void
 
-    # @rbs (String input) -> ERB
-    def self.erb: (String input) -> ERB
-
-    # @rbs override
-    def self.erb: ...
-
     # @rbs () -> void
     def render: () -> void
 
@@ -27,9 +21,6 @@ module Lrama
     def diagrams: () -> string
 
     private
-
-    # @rbs (String file) -> string
-    def render_template: (String file) -> string
 
     # @rbs () -> string
     def template_dir: () -> string

@@ -1,8 +1,6 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
-require "erb"
-
 module Lrama
   class Diagram
     class << self
@@ -29,22 +27,10 @@ module Lrama
       @template_name = template_name
     end
 
-    if ERB.instance_method(:initialize).parameters.last.first == :key
-      # @rbs (String input) -> ERB
-      def self.erb(input)
-        ERB.new(input, trim_mode: nil)
-      end
-    else
-      # @rbs override
-      def self.erb(input)
-        ERB.new(input, nil, nil)
-      end
-    end
-
     # @rbs () -> void
     def render
       RailroadDiagrams::TextDiagram.set_formatting(RailroadDiagrams::TextDiagram::PARTS_UNICODE)
-      @out << render_template(template_file)
+      @out << ERB.render(template_file, output: self)
     end
 
     # @rbs () -> string
@@ -70,13 +56,6 @@ module Lrama
     end
 
     private
-
-    # @rbs (String file) -> string
-    def render_template(file)
-      erb = self.class.erb(File.read(file))
-      erb.filename = file
-      erb.result_with_hash(output: self)
-    end
 
     # @rbs () -> string
     def template_dir
