@@ -1,13 +1,21 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 module Lrama
   class StatesReporter
     include Lrama::Report::Duration
+    # TODO: rbs-inline 0.10.0 doesn't support instance variables.
+    #       Move these type declarations above instance variable definitions, once it's supported.
+    #
+    # @rbs!
+    #   @states: Lrama::States
 
+    # @rbs (Lrama::States states) -> void
     def initialize(states)
       @states = states
     end
 
+    # @rbs (IO io, **Hash[Symbol, bool] options) -> void
     def report(io, **options)
       report_duration(:report) do
         _report(io, **options)
@@ -16,6 +24,7 @@ module Lrama
 
     private
 
+    # @rbs (IO io, bool grammar, bool rules, bool terms, bool states, bool itemsets, bool lookaheads, bool solved, bool counterexamples, bool verbose) -> void
     def _report(io, grammar: false, rules: false, terms: false, states: false, itemsets: false, lookaheads: false, solved: false, counterexamples: false, verbose: false)
       report_unused_rules(io) if rules
       report_unused_terms(io) if terms
@@ -24,6 +33,7 @@ module Lrama
       report_states(io, itemsets, lookaheads, solved, counterexamples, verbose)
     end
 
+    # @rbs (IO io) -> void
     def report_unused_terms(io)
       look_aheads = @states.states.each do |state|
         state.reduces.flat_map do |reduce|
@@ -48,6 +58,7 @@ module Lrama
       end
     end
 
+    # @rbs (IO io) -> void
     def report_unused_rules(io)
       used_rules = @states.rules.flat_map(&:rhs)
 
@@ -64,6 +75,7 @@ module Lrama
       end
     end
 
+    # @rbs (IO io) -> void
     def report_conflicts(io)
       has_conflict = false
 
@@ -89,6 +101,7 @@ module Lrama
       end
     end
 
+    # @rbs (IO io) -> void
     def report_grammar(io)
       io << "Grammar\n"
       last_lhs = nil
@@ -112,6 +125,7 @@ module Lrama
       io << "\n\n"
     end
 
+    # @rbs (IO io, bool itemsets, bool lookaheads, bool solved, bool counterexamples, bool verbose) -> void
     def report_states(io, itemsets, lookaheads, solved, counterexamples, verbose)
       if counterexamples
         cex = Counterexamples.new(@states)
