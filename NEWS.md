@@ -14,6 +14,19 @@ If you use syntax diagrams, you add `--diagram` option.
 $ exe/lrama --diagram sample.y
 ```
 
+### Support `--profile` option
+
+You can profile parser generation process without modification for Lrama source code.
+Currently `--profile=call-stack` and `--profile=memory` are supported.
+
+```console
+$ exe/lrama --profile=call-stack sample/calc.y
+```
+
+Then "tmp/stackprof-cpu-myapp.dump" is generated.
+
+https://github.com/ruby/lrama/pull/525
+
 ## Lrama 0.7.0 (2025-01-21)
 
 ### [EXPERIMENTAL] Support the generation of the IELR(1) parser described in this paper
