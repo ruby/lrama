@@ -1,0 +1,43 @@
+# Generated from lib/lrama/diagram.rb with RBS::Inline
+
+module Lrama
+  class Diagram
+    # @rbs (IO out, Grammar grammar, String template_name) -> void
+    def self.render: (IO out, Grammar grammar, String template_name) -> void
+
+    # @rbs () -> bool
+    def self.require_railroad_diagrams: () -> bool
+
+    # @rbs (IO out, Grammar grammar, String template_name) -> void
+    def initialize: (IO out, Grammar grammar, String template_name) -> void
+
+    # @rbs (String input) -> ERB
+    def self.erb: (String input) -> ERB
+
+    # @rbs override
+    def self.erb: ...
+
+    # @rbs () -> void
+    def render: () -> void
+
+    # @rbs () -> string
+    def default_style: () -> string
+
+    # @rbs () -> string
+    def diagrams: () -> string
+
+    private
+
+    # @rbs (String file) -> string
+    def render_template: (String file) -> string
+
+    # @rbs () -> string
+    def template_dir: () -> string
+
+    # @rbs () -> string
+    def template_file: () -> string
+
+    # @rbs (String name, RailroadDiagrams::Diagram diagram, String result) -> void
+    def add_diagram: (String name, RailroadDiagrams::Diagram diagram, String result) -> void
+  end
+end

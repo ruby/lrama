@@ -11,4 +11,6 @@ module RailroadDiagrams
   class Skip
     def initialize: (*untyped) -> void
   end
+  class Diagram
+  end
 end
