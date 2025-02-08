@@ -21,8 +21,8 @@ RSpec.describe Lrama::Diagram do
   describe ".render" do
     it "renders a diagram" do
       expect { Lrama::Diagram.render(out: out, grammar: grammar) }.not_to raise_error
-      expect(out.string).to include("<h2>$accept</h2>")
-      expect(out.string).to include("<h2>unused</h2>")
+      expect(out.string).to include('<h2 class="diagram-header">$accept</h2>')
+      expect(out.string).to include('<h2 class="diagram-header">unused</h2>')
       expect(out.string).to include("<svg")
     end
   end
@@ -52,8 +52,8 @@ RSpec.describe Lrama::Diagram do
 
     it "renders a diagram" do
       expect { diagram.render }.not_to raise_error
-      expect(out.string).to include("<h2>$accept</h2>")
-      expect(out.string).to include("<h2>unused</h2>")
+      expect(out.string).to include('<h2 class="diagram-header">$accept</h2>')
+      expect(out.string).to include('<h2 class="diagram-header">unused</h2>')
       expect(out.string).to include("<svg")
     end
   end
@@ -74,8 +74,8 @@ RSpec.describe Lrama::Diagram do
     end
 
     it "returns diagrams" do
-      expect(diagram.diagrams).to include("<h2>$accept</h2>")
-      expect(diagram.diagrams).to include("<h2>unused</h2>")
+      expect(diagram.diagrams).to include('<h2 class="diagram-header">$accept</h2>')
+      expect(diagram.diagrams).to include('<h2 class="diagram-header">unused</h2>')
       expect(diagram.diagrams).to include("<svg")
     end
   end

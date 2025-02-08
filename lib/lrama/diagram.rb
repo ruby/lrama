@@ -77,7 +77,7 @@ module Lrama
     end
 
     def add_diagram(name, diagram, result)
-      result << "\n<h2>#{RailroadDiagrams.escape_html(name)}</h2>"
+      result << "\n<h2 class=\"diagram-header\">#{RailroadDiagrams.escape_html(name)}</h2>"
       diagram.write_svg(result.method(:<<))
       result << "\n"
     end
