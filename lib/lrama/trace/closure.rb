@@ -14,16 +14,16 @@ module Lrama
       def trace(state)
         return unless @closure
 
-        logger.trace("Closure: input")
+        @logger.trace("Closure: input")
         state.kernels.each do |item|
-          logger.trace("  #{item.display_rest}")
+          @logger.trace("  #{item.display_rest}")
         end
-        logger.trace("\n")
-        logger.trace("Closure: output")
+        @logger.trace("\n")
+        @logger.trace("Closure: output")
         state.items.each do |item|
-          logger.trace("  #{item.display_rest}")
+          @logger.trace("  #{item.display_rest}")
         end
-        logger.trace("\n")
+        @logger.trace("\n")
       end
     end
   end

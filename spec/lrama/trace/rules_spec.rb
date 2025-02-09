@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Trace::Rules do
-  describe "#report" do
+  describe "#trace" do
     let(:path) { "common/basic.y" }
     let(:y) { File.read(fixture_path(path)) }
     let(:grammar) do
