@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Lrama::TraceReporter do
+RSpec.describe Lrama::Trace::OnlyExplicitRules do
   describe "#report" do
     let(:path) { "common/basic.y" }
     let(:y) { File.read(fixture_path(path)) }
@@ -11,38 +11,10 @@ RSpec.describe Lrama::TraceReporter do
       grammar
     end
 
-    context "when rules: true and only_explicit_rules: false" do
-      it "prints the all rules" do
-        expect do
-          described_class.new(grammar).report(rules: true, only_explicit_rules: false)
-        end.to output(<<~RULES).to_stdout
-          Grammar rules:
-          $accept -> program EOI
-          program -> class
-          program -> '+' strings_1
-          program -> '-' strings_2
-          class -> keyword_class tSTRING keyword_end
-          $@1 -> ε
-          $@2 -> ε
-          class -> keyword_class $@1 tSTRING '!' keyword_end $@2
-          $@3 -> ε
-          $@4 -> ε
-          class -> keyword_class $@3 tSTRING '?' keyword_end $@4
-          strings_1 -> string_1
-          strings_2 -> string_1
-          strings_2 -> string_2
-          string_1 -> string
-          string_2 -> string '+'
-          string -> tSTRING
-          unused -> tNUMBER
-        RULES
-      end
-    end
-
-    context "when rules: true and only_explicit_rules: true" do
+    context "when rules: true and only_explicit: true" do
       it "prints the only explicit rules" do
         expect do
-          described_class.new(grammar).report(rules: true, only_explicit_rules: true)
+          described_class.report(grammar, rules: true, only_explicit: true)
         end.to output(<<~RULES).to_stdout
           Grammar rules:
           $accept -> program EOI
@@ -63,38 +35,42 @@ RSpec.describe Lrama::TraceReporter do
       end
     end
 
-    context "when actions: true" do
-      it "prints the actions" do
+    context "when rules: false and only_explicit: true" do
+      it "prints the only explicit rules" do
         expect do
-          described_class.new(grammar).report(actions: true)
+          described_class.report(grammar, rules: false, only_explicit: true)
         end.to output(<<~RULES).to_stdout
-          Grammar rules with actions:
-          $accept -> program EOI {}
-          program -> class {}
-          program -> '+' strings_1 {}
-          program -> '-' strings_2 {}
-          class -> keyword_class tSTRING keyword_end { code 1 }
-          $@1 -> ε { code 2 }
-          $@2 -> ε { code 3 }
-          class -> keyword_class $@1 tSTRING '!' keyword_end $@2 {}
-          $@3 -> ε { code 4 }
-          $@4 -> ε { code 5 }
-          class -> keyword_class $@3 tSTRING '?' keyword_end $@4 {}
-          strings_1 -> string_1 {}
-          strings_2 -> string_1 {}
-          strings_2 -> string_2 {}
-          string_1 -> string {}
-          string_2 -> string '+' {}
-          string -> tSTRING {}
-          unused -> tNUMBER {}
+          Grammar rules:
+          $accept -> program EOI
+          program -> class
+          program -> '+' strings_1
+          program -> '-' strings_2
+          class -> keyword_class tSTRING keyword_end
+          class -> keyword_class tSTRING '!' keyword_end
+          class -> keyword_class tSTRING '?' keyword_end
+          strings_1 -> string_1
+          strings_2 -> string_1
+          strings_2 -> string_2
+          string_1 -> string
+          string_2 -> string '+'
+          string -> tSTRING
+          unused -> tNUMBER
         RULES
+      end
+    end
+
+    context "when only_explicit: false" do
+      it 'does not print anything' do
+        expect do
+          described_class.report(grammar, only_explicit: false)
+        end.to_not output.to_stdout
       end
     end
 
     context 'when empty options' do
       it 'does not print anything' do
         expect do
-          described_class.new(grammar).report
+          described_class.report(grammar)
         end.to_not output.to_stdout
       end
     end

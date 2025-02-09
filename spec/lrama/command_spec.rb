@@ -25,11 +25,11 @@ RSpec.describe Lrama::Command do
     end
 
     context "when `--trace=time` option specified" do
-      it "called Report::Duration.enable" do
-        allow(Lrama::Report::Duration).to receive(:enable)
+      it "called Trace::Duration.enable" do
+        allow(Lrama::Trace::Duration).to receive(:enable)
         command = Lrama::Command.new(o_option + [fixture_path("command/basic.y"), "--trace=time"])
         expect(command.run).to be_nil
-        expect(Lrama::Report::Duration).to have_received(:enable).once
+        expect(Lrama::Trace::Duration).to have_received(:enable).once
       end
     end
 

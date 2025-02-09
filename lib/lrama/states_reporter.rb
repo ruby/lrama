@@ -3,7 +3,7 @@
 
 module Lrama
   class StatesReporter
-    include Lrama::Report::Duration
+    include Lrama::Trace::Duration
     # TODO: rbs-inline 0.10.0 doesn't support instance variables.
     #       Move these type declarations above instance variable definitions, once it's supported.
     #

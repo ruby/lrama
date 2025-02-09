@@ -37,7 +37,7 @@ module Lrama
     end
 
     def enable_duration_tracing
-      Report::Duration.enable if @options.trace_opts[:time]
+      Trace::Duration.enable if @options.trace_opts[:time]
     end
 
     def read_input
@@ -95,7 +95,7 @@ module Lrama
     def trace_reports(states, grammar)
       write_reports(states) if @options.report_file
 
-      Lrama::TraceReporter.new(grammar).report(**@options.trace_opts)
+      Lrama::Trace.report(grammar, **@options.trace_opts)
     end
 
     def write_reports(states)

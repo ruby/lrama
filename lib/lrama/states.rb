@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "forwardable"
-require_relative "report/duration"
+require_relative "trace/duration"
 require_relative "states/item"
 
 module Lrama
@@ -11,7 +11,7 @@ module Lrama
   #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
     extend Forwardable
-    include Lrama::Report::Duration
+    include Lrama::Trace::Duration
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules,
       :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!

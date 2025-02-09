@@ -26,7 +26,7 @@ module Lrama
 
     extend Forwardable
 
-    include Lrama::Report::Duration
+    include Lrama::Trace::Duration
 
     attr_reader states: Array[State]
 

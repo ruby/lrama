@@ -426,7 +426,7 @@ end
 
 ---- inner
 
-include Lrama::Report::Duration
+include Lrama::Trace::Duration
 
 def initialize(text, path, debug = false, define = {})
   @grammar_file = Lrama::Lexer::GrammarFile.new(path, text)
