@@ -1,0 +1,13 @@
+# Generated from lib/lrama/reporter.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    include Lrama::Trace::Duration
+
+    # @rbs (Lrama::States states, File io, **untyped _) -> void
+    def self.call: (Lrama::States states, File io, **untyped _) -> void
+
+    # @rbs (Lrama::States states, File io, **untyped _) -> void
+    def call: (Lrama::States states, File io, **untyped _) -> void
+  end
+end

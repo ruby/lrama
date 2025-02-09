@@ -12,7 +12,7 @@ RSpec.describe Lrama::States do
       states.compute
 
       io = StringIO.new
-      Lrama::Report.report(states, io, grammar: true, rules: true, terms: true, states: true, itemsets: true, lookaheads: true)
+      Lrama::Reporter.call(states, io, grammar: true, rules: true, terms: true, states: true, itemsets: true, lookaheads: true)
 
       expect(io.string).to eq(<<~STR)
         1 Unused Rules
@@ -373,7 +373,7 @@ RSpec.describe Lrama::States do
       states.compute
 
       io = StringIO.new
-      Lrama::Report.report(states, io, states: true, itemsets: true, verbose: true)
+      Lrama::Reporter.call(states, io, states: true, itemsets: true, verbose: true)
 
       expect(io.string).to eq(<<~STR)
         State 0 conflicts: 1 shift/reduce
@@ -643,7 +643,7 @@ RSpec.describe Lrama::States do
       states.compute
 
       io = StringIO.new
-      Lrama::Report.report(states, io, states: true, itemsets: true, verbose: true)
+      Lrama::Reporter.call(states, io, states: true, itemsets: true, verbose: true)
 
       expect(io.string).to eq(<<~STR)
         State 0
@@ -944,7 +944,7 @@ RSpec.describe Lrama::States do
         states.compute
 
         io = StringIO.new
-        Lrama::Report.report(states, io, states: true, lookaheads: true)
+        Lrama::Reporter.call(states, io, states: true, lookaheads: true)
 
         expect(io.string).to eq(<<~STR)
           State 0
@@ -1015,7 +1015,7 @@ RSpec.describe Lrama::States do
         states.compute
 
         io = StringIO.new
-        Lrama::Report.report(states, io, states: true, lookaheads: true, itemsets: true)
+        Lrama::Reporter.call(states, io, states: true, lookaheads: true, itemsets: true)
 
         expect(io.string).to eq(<<~STR)
           State 0
@@ -1107,7 +1107,7 @@ RSpec.describe Lrama::States do
         states.compute
 
         io = StringIO.new
-        Lrama::Report.report(states, io, states: true, solved: true)
+        Lrama::Reporter.call(states, io, states: true, solved: true)
 
         expect(io.string).to eq(<<~STR)
           State 0
@@ -1226,7 +1226,7 @@ RSpec.describe Lrama::States do
         states.compute
 
         io = StringIO.new
-        Lrama::Report.report(states, io, states: true, solved: true)
+        Lrama::Reporter.call(states, io, states: true, solved: true)
 
         expect(io.string).to eq(<<~STR)
           State 0
@@ -1325,7 +1325,7 @@ RSpec.describe Lrama::States do
         states.compute
 
         io = StringIO.new
-        Lrama::Report.report(states, io, states: true, solved: true)
+        Lrama::Reporter.call(states, io, states: true, solved: true)
 
         expect(io.string).to eq(<<~STR)
           State 7 conflicts: 1 shift/reduce
@@ -1476,7 +1476,7 @@ RSpec.describe Lrama::States do
       states.compute
 
       io = StringIO.new
-      Lrama::Report.report(states, io, states: true)
+      Lrama::Reporter.call(states, io, states: true)
 
       expect(io.string).to eq(<<~STR)
         State 0
@@ -1650,7 +1650,7 @@ RSpec.describe Lrama::States do
       states.compute
 
       io = StringIO.new
-      Lrama::Report.report(states, io, states: true)
+      Lrama::Reporter.call(states, io, states: true)
 
       expect(io.string).to eq(<<~STR)
         State 0
@@ -1800,7 +1800,7 @@ RSpec.describe Lrama::States do
       states.compute_ielr
 
       io = StringIO.new
-      Lrama::Report.report(states, io, states: true)
+      Lrama::Reporter.call(states, io, states: true)
 
       expect(io.string).to eq(<<~STR)
         State 14 conflicts: 2 shift/reduce
@@ -2030,7 +2030,7 @@ RSpec.describe Lrama::States do
       states.compute_ielr
 
       io = StringIO.new
-      Lrama::Report.report(states, io, states: true)
+      Lrama::Reporter.call(states, io, states: true)
 
       expect(io.string).to eq(<<~STR)
         State 0
@@ -2137,7 +2137,7 @@ RSpec.describe Lrama::States do
       states.compute_ielr
 
       io = StringIO.new
-      Lrama::Report.report(states, io, states: true)
+      Lrama::Reporter.call(states, io, states: true)
 
       expect(io.string).to eq(<<~STR)
         State 0

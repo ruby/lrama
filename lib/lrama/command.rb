@@ -100,7 +100,7 @@ module Lrama
 
     def write_reports(states)
       File.open(@options.report_file, "w+") do |f|
-        Lrama::Report.report(states, f, **@options.report_opts)
+        Lrama::Reporter.call(states, f, **@options.report_opts)
       end
     end
 
