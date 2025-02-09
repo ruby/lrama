@@ -5,6 +5,10 @@ require 'optparse'
 module Lrama
   # Handle option parsing for the command line interface.
   class OptionParser
+    def self.parse(argv)
+      new.parse(argv)
+    end
+
     def initialize
       @options = Options.new
       @trace = []

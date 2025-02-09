@@ -7,7 +7,7 @@ module Lrama
 
     def initialize(argv)
       @logger = Lrama::Logger.new
-      @options = OptionParser.new.parse(argv)
+      @options = OptionParser.parse(argv)
     rescue => e
       message = e.message
       message = message.gsub(/.+/, "\e[1m\\&\e[m") if Exception.to_tty?
