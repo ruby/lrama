@@ -9,8 +9,8 @@ RSpec.describe Lrama::Command do
 
     context "when grammar file is specified" do
       it "ends successfully" do
-        command = Lrama::Command.new
-        expect(command.run(o_option + [fixture_path("command/basic.y")])).to be_nil
+        command = Lrama::Command.new(o_option + [fixture_path("command/basic.y")])
+        expect(command.run).to be_nil
       end
     end
 
@@ -18,8 +18,8 @@ RSpec.describe Lrama::Command do
       it "ends successfully" do
         File.open(fixture_path("command/basic.y")) do |f|
           allow(STDIN).to receive(:read).and_return(f.read)
-          command = Lrama::Command.new
-          expect(command.run(o_option + ["-", "test.y"])).to be_nil
+          command = Lrama::Command.new(o_option + ["-", "test.y"])
+          expect(command.run).to be_nil
         end
       end
     end
@@ -27,16 +27,16 @@ RSpec.describe Lrama::Command do
     context "when `--trace=time` option specified" do
       it "called Report::Duration.enable" do
         allow(Lrama::Report::Duration).to receive(:enable)
-        command = Lrama::Command.new
-        expect(command.run(o_option + [fixture_path("command/basic.y"), "--trace=time"])).to be_nil
+        command = Lrama::Command.new(o_option + [fixture_path("command/basic.y"), "--trace=time"])
+        expect(command.run).to be_nil
         expect(Lrama::Report::Duration).to have_received(:enable).once
       end
     end
 
     context "when `--trace=rules` option specified" do
       it "print grammar rules" do
-        command = Lrama::Command.new
-        expect { command.run(o_option + [fixture_path("command/basic.y"), "--trace=rules"]) }.to output(<<~OUTPUT).to_stdout
+        command = Lrama::Command.new(o_option + [fixture_path("command/basic.y"), "--trace=rules"])
+        expect { command.run }.to output(<<~OUTPUT).to_stdout
           Grammar rules:
           $accept -> list YYEOF
           list -> ε
@@ -54,8 +54,8 @@ RSpec.describe Lrama::Command do
 
     context "when `--trace=actions` option specified" do
       it "print grammar rules with actions" do
-        command = Lrama::Command.new
-        expect { command.run(o_option + [fixture_path("command/basic.y"), "--trace=actions"]) }.to output(<<~'OUTPUT').to_stdout
+        command = Lrama::Command.new(o_option + [fixture_path("command/basic.y"), "--trace=actions"])
+        expect { command.run }.to output(<<~'OUTPUT').to_stdout
           Grammar rules with actions:
           $accept -> list YYEOF {}
           list -> ε {}
@@ -74,8 +74,8 @@ RSpec.describe Lrama::Command do
     context "when `--report-file` option specified" do
       it "create report file" do
         allow(File).to receive(:open).and_call_original
-        command = Lrama::Command.new
-        expect(command.run(o_option + [fixture_path("command/basic.y"), "--report-file=report.output"])).to be_nil
+        command = Lrama::Command.new(o_option + [fixture_path("command/basic.y"), "--report-file=report.output"])
+        expect(command.run).to be_nil
         expect(File).to have_received(:open).with("report.output", "w+").once
         expect(File).to exist("report.output")
         File.delete("report.output")
