@@ -21,7 +21,7 @@ module Lrama
 
     attr_accessor report_opts: Hash[Symbol, bool]?
 
-    attr_accessor diagnostic: bool
+    attr_accessor warnings: bool
 
     attr_accessor y: IO
 

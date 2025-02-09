@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-RSpec.describe Lrama::Diagnostics do
-  describe "#run" do
+RSpec.describe Lrama::Warnings do
+  describe "#warn" do
     context "when rule has conflicts" do
       let(:y) do
         <<~STR
@@ -77,13 +77,13 @@ RSpec.describe Lrama::Diagnostics do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Diagnostics.new(grammar, states, logger).run(true)
+        Lrama::Warnings.new(logger, true).warn(grammar, states)
         expect(logger).to have_received(:warn).with("shift/reduce conflicts: 2 found")
         expect(logger).to have_received(:warn).with("reduce/reduce conflicts: 1 found")
       end
     end
 
-    context "when rule has parameterizing redefined" do
+    context "when rule has parameterizing rule redefined" do
       let(:y) do
         <<~STR
           %{
@@ -103,7 +103,7 @@ RSpec.describe Lrama::Diagnostics do
         STR
       end
 
-      it "has warns for parameterizing redefined" do
+      it "has warns for parameterizing rule redefined" do
         grammar = Lrama::Parser.new(y, "states/parameterizing_rule_redefined.y").parse
         grammar.prepare
         grammar.validate!
@@ -111,7 +111,7 @@ RSpec.describe Lrama::Diagnostics do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Diagnostics.new(grammar, states, logger).run(true)
+        Lrama::Warnings.new(logger, true).warn(grammar, states)
         expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(X)")
         expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(Y)")
       end

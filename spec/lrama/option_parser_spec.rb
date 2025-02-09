@@ -314,23 +314,23 @@ RSpec.describe Lrama::OptionParser do
     end
   end
 
-  describe "@diagnostic" do
-    context "when diagnostic option is not passed" do
+  describe "@warnings" do
+    context "when warnings option is not passed" do
       it "returns false" do
         option_parser = Lrama::OptionParser.new
         option_parser.send(:parse, [fixture_path("command/basic.y")])
         options = option_parser.instance_variable_get(:@options)
-        expect(options.diagnostic).to be false
+        expect(options.warnings).to be false
       end
     end
 
-    context "when diagnostic option is passed" do
+    context "when warnings option is passed" do
       context "when --warnings is passed" do
         it "returns true" do
           option_parser = Lrama::OptionParser.new
           option_parser.send(:parse, ["--warnings", fixture_path("command/basic.y")])
           options = option_parser.instance_variable_get(:@options)
-          expect(options.diagnostic).to be true
+          expect(options.warnings).to be true
         end
       end
 
@@ -339,7 +339,7 @@ RSpec.describe Lrama::OptionParser do
           option_parser = Lrama::OptionParser.new
           option_parser.send(:parse, ["-W", fixture_path("command/basic.y")])
           options = option_parser.instance_variable_get(:@options)
-          expect(options.diagnostic).to be true
+          expect(options.warnings).to be true
         end
       end
     end

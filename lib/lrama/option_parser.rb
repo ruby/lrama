@@ -115,7 +115,7 @@ module Lrama
         o.on('-v', '--verbose', "same as '--report=state'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
-        o.on('-W', '--warnings', 'report the warnings') {|v| @options.diagnostic = true }
+        o.on('-W', '--warnings', 'report the warnings') {|v| @options.warnings = true }
         o.separator ''
         o.separator 'Error Recovery:'
         o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }

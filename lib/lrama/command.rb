@@ -10,6 +10,7 @@ module Lrama
       @options = OptionParser.parse(argv)
       @tracer = Tracer.new(@logger, **@options.trace_opts)
       @reporter = Reporter.new(**@options.report_opts)
+      @warnings = Warnings.new(@logger, @options.warnings)
     rescue => e
       message = e.message
       message = message.gsub(/.+/, "\e[1m\\&\e[m") if Exception.to_tty?
@@ -31,11 +32,12 @@ module Lrama
       text = read_input
       grammar = build_grammar(text)
       states, context = compute(grammar)
-      trace_reports(states, grammar)
+      render_reports(states) if @options.report_file
+      @tracer.trace(grammar)
       render_diagram(grammar)
       render_output(context, grammar)
       validate_grammar(grammar, states)
-      Lrama::Diagnostics.new(grammar, states, @logger).run(@options.diagnostic)
+      @warnings.warn(grammar, states)
     end
 
     def read_input
@@ -86,13 +88,7 @@ module Lrama
       [states, Lrama::Context.new(states)]
     end
 
-    def trace_reports(states, grammar)
-      write_reports(states) if @options.report_file
-
-      @tracer.trace(grammar)
-    end
-
-    def write_reports(states)
+    def render_reports(states)
       File.open(@options.report_file, "w+") do |f|
         @reporter.report(states, f)
       end
