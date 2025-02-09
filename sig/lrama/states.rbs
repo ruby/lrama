@@ -40,8 +40,6 @@ module Lrama
 
     def compute: () -> untyped
 
-    def reporter: () -> untyped
-
     def states_count: () -> untyped
 
     def direct_read_sets: () -> untyped

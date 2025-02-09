@@ -110,10 +110,6 @@ module Lrama
       report_duration(:compute_default_reduction) { compute_default_reduction }
     end
 
-    def reporter
-      StatesReporter.new(self)
-    end
-
     def states_count
       @states.count
     end

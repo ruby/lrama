@@ -1,0 +1,16 @@
+# Generated from lib/lrama/report/rules.rb with RBS::Inline
+
+module Lrama
+  class Report
+    class Rules
+      # @rbs (Lrama::States states, File io, rules: bool, **untyped _) -> void
+      def self.report: (Lrama::States states, File io, rules: bool, **untyped _) -> void
+
+      # @rbs (Lrama::States states, File io) -> void
+      def initialize: (Lrama::States states, File io) -> void
+
+      # @rbs () -> void
+      def report: () -> void
+    end
+  end
+end
