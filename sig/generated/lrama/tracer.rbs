@@ -1,0 +1,11 @@
+# Generated from lib/lrama/tracer.rb with RBS::Inline
+
+module Lrama
+  class Tracer
+    # @rbs (Lrama::Grammar grammar, **untyped _) -> void
+    def self.call: (Lrama::Grammar grammar, **untyped _) -> void
+
+    # @rbs (**Hash[Symbol, bool] options) -> void
+    def call: (**Hash[Symbol, bool] options) -> void
+  end
+end

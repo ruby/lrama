@@ -95,7 +95,7 @@ module Lrama
     def trace_reports(states, grammar)
       write_reports(states) if @options.report_file
 
-      Lrama::Trace.report(grammar, **@options.trace_opts)
+      Lrama::Tracer.call(grammar, **@options.trace_opts)
     end
 
     def write_reports(states)
