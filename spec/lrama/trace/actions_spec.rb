@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Trace::Actions do
-  describe "#report" do
+  describe "#trace" do
     let(:path) { "common/basic.y" }
     let(:y) { File.read(fixture_path(path)) }
     let(:grammar) do
@@ -14,8 +14,8 @@ RSpec.describe Lrama::Trace::Actions do
     context "when actions: true" do
       it "prints the actions" do
         expect do
-          described_class.report(grammar, actions: true)
-        end.to output(<<~RULES).to_stdout
+          described_class.new(Lrama::Logger.new, actions: true).trace(grammar)
+        end.to output(<<~RULES).to_stderr_from_any_process
           Grammar rules with actions:
           $accept -> program EOI {}
           program -> class {}
@@ -42,16 +42,16 @@ RSpec.describe Lrama::Trace::Actions do
     context "when actions: false" do
       it 'does not print anything' do
         expect do
-          described_class.report(grammar, actions: false)
-        end.to_not output.to_stdout
+          described_class.new(Lrama::Logger.new, actions: false).trace(grammar)
+        end.to_not output.to_stderr_from_any_process
       end
     end
 
     context 'when empty options' do
       it 'does not print anything' do
         expect do
-          described_class.report(grammar)
-        end.to_not output.to_stdout
+          described_class.new(Lrama::Logger.new).trace(grammar)
+        end.to_not output.to_stderr_from_any_process
       end
     end
   end

@@ -36,7 +36,7 @@ RSpec.describe Lrama::Command do
     context "when `--trace=rules` option specified" do
       it "print grammar rules" do
         command = Lrama::Command.new(o_option + [fixture_path("command/basic.y"), "--trace=rules"])
-        expect { command.run }.to output(<<~OUTPUT).to_stdout
+        expect { command.run }.to output(<<~OUTPUT).to_stderr_from_any_process
           Grammar rules:
           $accept -> list YYEOF
           list -> ε
@@ -55,7 +55,7 @@ RSpec.describe Lrama::Command do
     context "when `--trace=actions` option specified" do
       it "print grammar rules with actions" do
         command = Lrama::Command.new(o_option + [fixture_path("command/basic.y"), "--trace=actions"])
-        expect { command.run }.to output(<<~'OUTPUT').to_stdout
+        expect { command.run }.to output(<<~'OUTPUT').to_stderr_from_any_process
           Grammar rules with actions:
           $accept -> list YYEOF {}
           list -> ε {}

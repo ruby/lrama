@@ -8,6 +8,8 @@ module Lrama
     def initialize(argv)
       @logger = Lrama::Logger.new
       @options = OptionParser.parse(argv)
+      @tracer = Tracer.new(@logger, **@options.trace_opts)
+      @reporter = Reporter.new(**@options.report_opts)
     rescue => e
       message = e.message
       message = message.gsub(/.+/, "\e[1m\\&\e[m") if Exception.to_tty?
@@ -25,7 +27,7 @@ module Lrama
     private
 
     def execute_command_workflow
-      enable_duration_tracing
+      @tracer.enable_duration
       text = read_input
       grammar = build_grammar(text)
       states, context = compute(grammar)
@@ -34,10 +36,6 @@ module Lrama
       render_output(context, grammar)
       validate_grammar(grammar, states)
       Lrama::Diagnostics.new(grammar, states, @logger).run(@options.diagnostic)
-    end
-
-    def enable_duration_tracing
-      Trace::Duration.enable if @options.trace_opts[:time]
     end
 
     def read_input
@@ -82,25 +80,21 @@ module Lrama
     end
 
     def compute(grammar)
-      states = Lrama::States.new(grammar, trace_state: trace_state?)
+      states = Lrama::States.new(grammar, @tracer)
       states.compute
       states.compute_ielr if grammar.ielr_defined?
       [states, Lrama::Context.new(states)]
     end
 
-    def trace_state?
-      @options.trace_opts[:automaton] || @options.trace_opts[:closure]
-    end
-
     def trace_reports(states, grammar)
       write_reports(states) if @options.report_file
 
-      Lrama::Tracer.call(grammar, **@options.trace_opts)
+      @tracer.trace(grammar)
     end
 
     def write_reports(states)
       File.open(@options.report_file, "w+") do |f|
-        Lrama::Reporter.call(states, f, **@options.report_opts)
+        @reporter.report(states, f)
       end
     end
 

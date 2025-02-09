@@ -3,14 +3,11 @@
 module Lrama
   class Report
     class States
-      # @rbs (Lrama::States states, File io, rules: bool, **untyped _) -> void
-      def self.report: (Lrama::States states, File io, rules: bool, **untyped _) -> void
+      # @rbs (itemsets: bool, lookaheads: bool, solved: bool, counterexamples: bool, verbose: bool, **untyped _) -> void
+      def initialize: (itemsets: bool, lookaheads: bool, solved: bool, counterexamples: bool, verbose: bool, **untyped _) -> void
 
-      # @rbs (Lrama::States states, File io) -> void
-      def initialize: (Lrama::States states, File io) -> void
-
-      # @rbs (bool itemsets, bool lookaheads, bool solved, bool counterexamples, bool verboses) -> void
-      def report: (bool itemsets, bool lookaheads, bool solved, bool counterexamples, bool verboses) -> void
+      # @rbs (Lrama::States states, Lrama::Logger logger) -> void
+      def report: (Lrama::States states, Lrama::Logger logger) -> void
     end
   end
 end

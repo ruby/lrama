@@ -4,22 +4,11 @@
 module Lrama
   class Report
     class Conflicts
-      # @rbs (Lrama::States states, File io, **untyped _) -> void
-      def self.report(states, io, **_)
-        new(states, io).report
-      end
-
-      # @rbs (Lrama::States states, File io) -> void
-      def initialize(states, io)
-        @states = states
-        @io = io
-      end
-
-      # @rbs () -> void
-      def report
+      # (Lrama::States states, Lrama::Logger logger) -> void
+      def report(states, logger)
         has_conflict = false
 
-        @states.states.each do |state|
+        states.states.each do |state|
           messages = [] #: Array[string]
           cs = state.conflicts.group_by(&:type)
           if cs[:shift_reduce]
@@ -32,12 +21,12 @@ module Lrama
 
           unless messages.empty?
             has_conflict = true
-            @io << "State #{state.id} conflicts: #{messages.join(', ')}\n"
+            logger.trace("State #{state.id} conflicts: #{messages.join(', ')}")
           end
         end
 
         if has_conflict
-          @io << "\n\n"
+          logger.trace("\n")
         end
       end
     end

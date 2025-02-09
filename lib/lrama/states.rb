@@ -18,9 +18,9 @@ module Lrama
 
     attr_reader :states, :reads_relation, :includes_relation, :lookback_relation
 
-    def initialize(grammar, trace_state: false)
+    def initialize(grammar, tracer)
       @grammar = grammar
-      @trace_state = trace_state
+      @tracer = tracer
 
       @states = []
 
@@ -148,12 +148,6 @@ module Lrama
 
     private
 
-    def trace_state
-      if @trace_state
-        yield STDERR
-      end
-    end
-
     def create_state(accessing_symbol, kernels, states_created)
       # A item can appear in some states,
       # so need to use `kernels` (not `kernels.first`) as a key.
@@ -228,18 +222,7 @@ module Lrama
       state.closure = closure.sort_by {|i| i.rule.id }
 
       # Trace
-      trace_state do |out|
-        out << "Closure: input\n"
-        state.kernels.each do |item|
-          out << "  #{item.display_rest}\n"
-        end
-        out << "\n\n"
-        out << "Closure: output\n"
-        state.items.each do |item|
-          out << "  #{item.display_rest}\n"
-        end
-        out << "\n\n"
-      end
+      @tracer.trace_closure(state)
 
       # shift & reduce
       state.compute_shifts_reduces
@@ -247,11 +230,7 @@ module Lrama
 
     def enqueue_state(states, state)
       # Trace
-      previous = state.kernels.first.previous_sym
-      trace_state do |out|
-        out << sprintf("state_list_append (state = %d, symbol = %d (%s))\n",
-          @states.count, previous.number, previous.display_name)
-      end
+      @tracer.trace_state_list_append(@states.count, state)
 
       states << state
     end
@@ -266,13 +245,7 @@ module Lrama
 
       while (state = states.shift) do
         # Trace
-        #
-        # Bison 3.8.2 renders "(reached by "end-of-input")" for State 0 but
-        # I think it is not correct...
-        previous = state.kernels.first.previous_sym
-        trace_state do |out|
-          out << "Processing state #{state.id} (reached by #{previous.display_name})\n"
-        end
+        @tracer.trace_state(state)
 
         setup_state(state)
 

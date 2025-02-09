@@ -3,14 +3,11 @@
 module Lrama
   class Report
     class Terms
-      # @rbs (Lrama::States states, File io, terms: bool, **untyped _) -> void
-      def self.report: (Lrama::States states, File io, terms: bool, **untyped _) -> void
+      # @rbs (terms: bool, **untyped _) -> void
+      def initialize: (terms: bool, **untyped _) -> void
 
-      # @rbs (Lrama::States states, File io) -> void
-      def initialize: (Lrama::States states, File io) -> void
-
-      # @rbs () -> void
-      def report: () -> void
+      # @rbs (Lrama::States states, Lrama::Logger logger) -> void
+      def report: (Lrama::States states, Lrama::Logger logger) -> void
     end
   end
 end

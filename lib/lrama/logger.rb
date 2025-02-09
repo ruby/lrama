@@ -8,6 +8,16 @@ module Lrama
       @out = out
     end
 
+    # @rbs () -> void
+    def line_break
+      @out << "\n"
+    end
+
+    # @rbs (String message) -> void
+    def trace(message)
+      @out << message << "\n"
+    end
+
     # @rbs (String message) -> void
     def warn(message)
       @out << message << "\n"

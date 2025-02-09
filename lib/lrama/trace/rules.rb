@@ -4,12 +4,19 @@
 module Lrama
   class Trace
     class Rules
-      # @rbs (Lrama::Grammar grammar, bool rules, bool only_explicit, **untyped _) -> void
-      def self.report(grammar, rules: false, only_explicit: false, **_)
-        return if !rules || only_explicit
+      # @rbs (Lrama::Logger logger, bool rules, bool only_explicit, **untyped _) -> void
+      def initialize(logger, rules: false, only_explicit: false, **_)
+        @logger = logger
+        @rules = rules
+        @only_explicit = only_explicit
+      end
 
-        puts "Grammar rules:"
-        grammar.rules.each { |rule| puts rule.display_name }
+      # @rbs (Lrama::Grammar grammar) -> void
+      def trace(grammar)
+        return if !@rules || @only_explicit
+
+        @logger.trace("Grammar rules:")
+        grammar.rules.each { |rule| @logger.trace(rule.display_name) }
       end
     end
   end

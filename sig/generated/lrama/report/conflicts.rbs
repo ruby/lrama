@@ -3,14 +3,8 @@
 module Lrama
   class Report
     class Conflicts
-      # @rbs (Lrama::States states, File io, **untyped _) -> void
-      def self.report: (Lrama::States states, File io, **untyped _) -> void
-
-      # @rbs (Lrama::States states, File io) -> void
-      def initialize: (Lrama::States states, File io) -> void
-
-      # @rbs () -> void
-      def report: () -> void
+      # (Lrama::States states, Lrama::Logger logger) -> void
+      def report: (untyped states, untyped logger) -> untyped
     end
   end
 end

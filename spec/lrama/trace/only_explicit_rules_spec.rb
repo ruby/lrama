@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Trace::OnlyExplicitRules do
-  describe "#report" do
+  describe "#trace" do
     let(:path) { "common/basic.y" }
     let(:y) { File.read(fixture_path(path)) }
     let(:grammar) do
@@ -14,8 +14,8 @@ RSpec.describe Lrama::Trace::OnlyExplicitRules do
     context "when rules: true and only_explicit: true" do
       it "prints the only explicit rules" do
         expect do
-          described_class.report(grammar, rules: true, only_explicit: true)
-        end.to output(<<~RULES).to_stdout
+          described_class.new(Lrama::Logger.new, rules: true, only_explicit: true).trace(grammar)
+        end.to output(<<~RULES).to_stderr_from_any_process
           Grammar rules:
           $accept -> program EOI
           program -> class
@@ -38,8 +38,8 @@ RSpec.describe Lrama::Trace::OnlyExplicitRules do
     context "when rules: false and only_explicit: true" do
       it "prints the only explicit rules" do
         expect do
-          described_class.report(grammar, rules: false, only_explicit: true)
-        end.to output(<<~RULES).to_stdout
+          described_class.new(Lrama::Logger.new, rules: false, only_explicit: true).trace(grammar)
+        end.to output(<<~RULES).to_stderr_from_any_process
           Grammar rules:
           $accept -> program EOI
           program -> class
@@ -62,16 +62,16 @@ RSpec.describe Lrama::Trace::OnlyExplicitRules do
     context "when only_explicit: false" do
       it 'does not print anything' do
         expect do
-          described_class.report(grammar, only_explicit: false)
-        end.to_not output.to_stdout
+          described_class.new(Lrama::Logger.new, only_explicit: false).trace(grammar)
+        end.to_not output.to_stderr_from_any_process
       end
     end
 
     context 'when empty options' do
       it 'does not print anything' do
         expect do
-          described_class.report(grammar)
-        end.to_not output.to_stdout
+          described_class.new(Lrama::Logger.new).trace(grammar)
+        end.to_not output.to_stderr_from_any_process
       end
     end
   end

@@ -5,19 +5,25 @@ module Lrama
   class Reporter
     include Lrama::Trace::Duration
 
-    # @rbs (Lrama::States states, File io, **untyped _) -> void
-    def self.call(states, grammar, **options)
-      new.call(states, grammar, **options)
+    # @rbs (**Hash[Symbol, bool] options) -> void
+    def initialize(**options)
+      @options = options
+      @rules = Lrama::Report::Rules.new(**options)
+      @terms = Lrama::Report::Terms.new(**options)
+      @conflicts = Lrama::Report::Conflicts.new
+      @grammar = Lrama::Report::Grammar.new(**options)
+      @states = Lrama::Report::States.new(**options)
     end
 
-    # @rbs (Lrama::States states, File io, **untyped _) -> void
-    def call(states, grammar, **options)
+    # @rbs (Lrama::States states, File io) -> void
+    def report(states, io)
       report_duration(:report) do
-        Lrama::Report::Rules.report(states, grammar, **options)
-        Lrama::Report::Terms.report(states, grammar, **options)
-        Lrama::Report::Conflicts.report(states, grammar, **options)
-        Lrama::Report::Grammar.report(states, grammar, **options)
-        Lrama::Report::States.report(states, grammar, **options)
+        logger = Lrama::Logger.new(io)
+        @rules.report(states, logger)
+        @terms.report(states, logger)
+        @conflicts.report(states, logger)
+        @grammar.report(states, logger)
+        @states.report(states, logger)
       end
     end
   end

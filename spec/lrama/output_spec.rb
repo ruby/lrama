@@ -24,7 +24,7 @@ RSpec.describe Lrama::Output do
     grammar.validate!
     grammar
   end
-  let(:states) { s = Lrama::States.new(grammar); s.compute; s }
+  let(:states) { s = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new)); s.compute; s }
   let(:context) { Lrama::Context.new(states) }
   let(:grammar_file_path) { fixture_path("common/basic.y") }
   let(:header_file_path) { "y.tab.h" }

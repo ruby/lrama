@@ -5,6 +5,12 @@ module Lrama
     # @rbs (IO out) -> void
     def initialize: (IO out) -> void
 
+    # @rbs () -> void
+    def line_break: () -> void
+
+    # @rbs (String message) -> void
+    def trace: (String message) -> void
+
     # @rbs (String message) -> void
     def warn: (String message) -> void
 

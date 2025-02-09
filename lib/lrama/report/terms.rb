@@ -4,39 +4,35 @@
 module Lrama
   class Report
     class Terms
-      # @rbs (Lrama::States states, File io, terms: bool, **untyped _) -> void
-      def self.report(states, io, terms: false, **_)
-        new(states, io).report if terms
+      # @rbs (terms: bool, **untyped _) -> void
+      def initialize(terms: false, **_)
+        @terms = terms
       end
 
-      # @rbs (Lrama::States states, File io) -> void
-      def initialize(states, io)
-        @states = states
-        @io = io
-      end
+      # @rbs (Lrama::States states, Lrama::Logger logger) -> void
+      def report(states, logger)
+        return unless @terms
 
-      # @rbs () -> void
-      def report
-        look_aheads = @states.states.each do |state|
+        look_aheads = states.states.each do |state|
           state.reduces.flat_map do |reduce|
             reduce.look_ahead unless reduce.look_ahead.nil?
           end
         end
 
-        next_terms = @states.states.flat_map do |state|
+        next_terms = states.states.flat_map do |state|
           state.shifts.map(&:next_sym).select(&:term?)
         end
 
-        unused_symbols = @states.terms.select do |term|
+        unused_symbols = states.terms.select do |term|
           !(look_aheads + next_terms).include?(term)
         end
 
         unless unused_symbols.empty?
-          @io << "#{unused_symbols.count} Unused Terms\n\n"
+          logger.trace("#{unused_symbols.count} Unused Terms\n")
           unused_symbols.each_with_index do |term, index|
-            @io << sprintf("%5d %s\n", index, term.id.s_value)
+            logger.trace(sprintf("%5d %s", index, term.id.s_value))
           end
-          @io << "\n\n"
+          logger.trace("\n")
         end
       end
     end
