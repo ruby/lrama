@@ -124,9 +124,9 @@ nterm.y:6:7: symbol EOI redeclared as a nonterminal
 
 ## Lrama 0.6.10 (2024-09-11)
 
-### Aliased Named References for actions of RHS in parameterizing rules
+### Aliased Named References for actions of RHS in parameterized rules
 
-Allow to use aliased named references for actions of RHS in parameterizing rules.
+Allow to use aliased named references for actions of RHS in parameterized rules.
 
 ```yacc
 %rule sum(X, Y): X[summand] '+' Y[addend] { $$ = $summand + $addend }
@@ -136,9 +136,9 @@ Allow to use aliased named references for actions of RHS in parameterizing rules
 https://github.com/ruby/lrama/pull/410
 
 
-### Named References for actions of RHS in parameterizing rules caller side
+### Named References for actions of RHS in parameterized rules caller side
 
-Allow to use named references for actions of RHS in parameterizing rules caller side.
+Allow to use named references for actions of RHS in parameterized rules caller side.
 
 ```yacc
 opt_nl: '\n'?[nl] <str> { $$ = $nl; }
@@ -147,9 +147,9 @@ opt_nl: '\n'?[nl] <str> { $$ = $nl; }
 
 https://github.com/ruby/lrama/pull/414
 
-### Widen the definable position of parameterizing rules
+### Widen the definable position of parameterized rules
 
-Allow to define parameterizing rules in the middle of the grammar.
+Allow to define parameterized rules in the middle of the grammar.
 
 ```yacc
 %rule defined_option(X): /* empty */
@@ -213,15 +213,15 @@ Change to `%locations` directive not set by default.
 
 https://github.com/ruby/lrama/pull/446
 
-### Diagnostics report for parameterizing rules redefine
+### Diagnostics report for parameterized rules redefine
 
-Support to warning redefined parameterizing rules.
-Run `exe/lrama -W` or  `exe/lrama --warnings` to show redefined parameterizing rules.
+Support to warning redefined parameterized rules.
+Run `exe/lrama -W` or  `exe/lrama --warnings` to show redefined parameterized rules.
 
 ```console
 $ exe/lrama -W sample/calc.y
-parameterizing rule redefined: redefined_method(X)
-parameterizing rule redefined: redefined_method(X)
+parameterized rule redefined: redefined_method(X)
+parameterized rule redefined: redefined_method(X)
 ```
 
 https://github.com/ruby/lrama/pull/448
@@ -235,9 +235,9 @@ https://github.com/ruby/lrama/pull/457
 
 ## Lrama 0.6.9 (2024-05-02)
 
-### Callee side tag specification of parameterizing rules
+### Callee side tag specification of parameterized rules
 
-Allow to specify tag on callee side of parameterizing rules.
+Allow to specify tag on callee side of parameterized rules.
 
 ```yacc
 %union {
@@ -248,9 +248,9 @@ Allow to specify tag on callee side of parameterizing rules.
                      ;
 ```
 
-### Named References for actions of RHS in parameterizing rules
+### Named References for actions of RHS in parameterized rules
 
-Allow to use named references for actions of RHS in parameterizing rules.
+Allow to use named references for actions of RHS in parameterized rules.
 
 ```yacc
 %rule option(number): /* empty */
@@ -260,9 +260,9 @@ Allow to use named references for actions of RHS in parameterizing rules.
 
 ## Lrama 0.6.8 (2024-04-29)
 
-### Nested parameterizing rules with tag
+### Nested parameterized rules with tag
 
-Allow to nested parameterizing rules with tag.
+Allow to nested parameterized rules with tag.
 
 ```yacc
 %union {
@@ -284,9 +284,9 @@ Allow to nested parameterizing rules with tag.
 
 ## Lrama 0.6.7 (2024-04-28)
 
-### RHS of user defined parameterizing rules contains `'symbol'?`, `'symbol'+` and `'symbol'*`.
+### RHS of user defined parameterized rules contains `'symbol'?`, `'symbol'+` and `'symbol'*`.
 
-User can use `'symbol'?`, `'symbol'+` and `'symbol'*` in RHS of user defined parameterizing rules.
+User can use `'symbol'?`, `'symbol'+` and `'symbol'*` in RHS of user defined parameterized rules.
 
 ```
 %rule with_word_seps(X): /* empty */
@@ -384,7 +384,7 @@ Bison supports this feature from 3.1.
 
 ## Lrama 0.6.4 (2024-03-22)
 
-### Parameterizing rules (preceded, terminated, delimited)
+### Parameterized rules (preceded, terminated, delimited)
 
 Support `preceded`, `terminated` and `delimited` rules.
 
@@ -487,15 +487,15 @@ https://github.com/ruby/lrama/pull/367
 ### %no-stdlib directive
 
 If `%no-stdlib` directive is set, Lrama doesn't load Lrama standard library for
-parameterizing rules, stdlib.y.
+parameterized rules, stdlib.y.
 
 https://github.com/ruby/lrama/pull/344
 
 ## Lrama 0.6.1 (2024-01-13)
 
-### Nested parameterizing rules
+### Nested parameterized rules
 
-Allow to pass an instantiated rule to other parameterizing rules.
+Allow to pass an instantiated rule to other parameterized rules.
 
 ```yacc
 %rule constant(X) : X
@@ -512,7 +512,7 @@ program         : option(constant(number)) // Nested rule
 %%
 ```
 
-Allow to use nested parameterizing rules when define parameterizing rules.
+Allow to use nested parameterized rules when define parameterized rules.
 
 ```yacc
 %rule option(x) : /* empty */
@@ -537,9 +537,9 @@ https://github.com/ruby/lrama/pull/337
 
 ## Lrama 0.6.0 (2023-12-25)
 
-### User defined parameterizing rules
+### User defined parameterized rules
 
-Allow to define parameterizing rule by `%rule` directive.
+Allow to define parameterized rule by `%rule` directive.
 
 ```yacc
 %rule pair(X, Y): X Y { $$ = $1 + $2; }
@@ -559,7 +559,7 @@ https://github.com/ruby/lrama/pull/285
 
 ## Lrama 0.5.11 (2023-12-02)
 
-### Type specification of parameterizing rules
+### Type specification of parameterized rules
 
 Allow to specify type of rules by specifying tag, `<i>` in below example.
 Tag is post-modification style.
@@ -581,15 +581,15 @@ https://github.com/ruby/lrama/pull/272
 
 ## Lrama 0.5.10 (2023-11-18)
 
-### Parameterizing rules (option, nonempty_list, list)
+### Parameterized rules (option, nonempty_list, list)
 
-Support function call style parameterizing rules for `option`, `nonempty_list` and `list`.
+Support function call style parameterized rules for `option`, `nonempty_list` and `list`.
 
 https://github.com/ruby/lrama/pull/197
 
-### Parameterizing rules (separated_list)
+### Parameterized rules (separated_list)
 
-Support `separated_list` and `separated_nonempty_list` parameterizing rules.
+Support `separated_list` and `separated_nonempty_list` parameterized rules.
 
 ```text
 program: separated_list(',', number)
@@ -617,9 +617,9 @@ https://github.com/ruby/lrama/pull/204
 
 ## Lrama 0.5.9 (2023-11-05)
 
-### Parameterizing rules (suffix)
+### Parameterized rules (suffix)
 
-Parameterizing rules are template of rules.
+Parameterized rules are template of rules.
 It's very common pattern to write "list" grammar rule like:
 
 ```yacc
@@ -637,7 +637,7 @@ Lrama supports these suffixes:
 * `+`: nonempty list
 * `*`: list
 
-Idea of Parameterizing rules comes from Menhir LR(1) parser generator (https://gallium.inria.fr/~fpottier/menhir/manual.html#sec32).
+Idea of Parameterized rules comes from Menhir LR(1) parser generator (https://gallium.inria.fr/~fpottier/menhir/manual.html#sec32).
 
 https://github.com/ruby/lrama/pull/181
 
