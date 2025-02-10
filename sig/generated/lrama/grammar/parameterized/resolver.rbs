@@ -12,7 +12,7 @@ module Lrama
         def initialize: () -> void
 
         # @rbs (Rule rule) -> Array[Rule]
-        def add_parameterizing_rule: (Rule rule) -> Array[Rule]
+        def add_rule: (Rule rule) -> Array[Rule]
 
         # @rbs (Lexer::Token::InstantiateRule token) -> Rule?
         def find_rule: (Lexer::Token::InstantiateRule token) -> Rule?

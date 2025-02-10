@@ -116,7 +116,7 @@ module Lrama
     end
 
     def add_parameterizing_rule(rule)
-      @parameterizing_rule_resolver.add_parameterizing_rule(rule)
+      @parameterizing_rule_resolver.add_rule(rule)
     end
 
     def parameterizing_rules

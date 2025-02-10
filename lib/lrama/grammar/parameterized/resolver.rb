@@ -15,7 +15,7 @@ module Lrama
         end
 
         # @rbs (Rule rule) -> Array[Rule]
-        def add_parameterizing_rule(rule)
+        def add_rule(rule)
           @rules << rule
         end
 
