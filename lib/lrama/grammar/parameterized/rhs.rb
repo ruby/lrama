@@ -1,17 +1,22 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 module Lrama
   class Grammar
     class Parameterized
       class Rhs
-        attr_accessor :symbols, :user_code, :precedence_sym
+        attr_accessor :symbols #: Array[Lexer::Token]
+        attr_accessor :user_code #: Lexer::Token::UserCode?
+        attr_accessor :precedence_sym #: Grammar::Symbol?
 
+        # @rbs () -> void
         def initialize
           @symbols = []
           @user_code = nil
           @precedence_sym = nil
         end
 
+        # @rbs (Grammar::Binding bindings) -> Lexer::Token::UserCode?
         def resolve_user_code(bindings)
           return unless user_code
 

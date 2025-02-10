@@ -1,0 +1,42 @@
+# Generated from lib/lrama/grammar/parameterized/resolver.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Parameterized
+      class Resolver
+        attr_accessor rules: Array[Rule]
+
+        attr_accessor created_lhs_list: Array[Lexer::Token]
+
+        # @rbs () -> void
+        def initialize: () -> void
+
+        # @rbs (Rule rule) -> Array[Rule]
+        def add_parameterizing_rule: (Rule rule) -> Array[Rule]
+
+        # @rbs (Lexer::Token::InstantiateRule token) -> Rule?
+        def find_rule: (Lexer::Token::InstantiateRule token) -> Rule?
+
+        # @rbs (Lexer::Token token) -> Rule?
+        def find_inline: (Lexer::Token token) -> Rule?
+
+        # @rbs (String lhs_s_value) -> Lexer::Token?
+        def created_lhs: (String lhs_s_value) -> Lexer::Token?
+
+        # @rbs () -> Array[Rule]
+        def redefined_rules: () -> Array[Rule]
+
+        private
+
+        # @rbs (Array[Rule] rules, Lexer::Token::InstantiateRule token) -> Array[Rule]
+        def select_rules: (Array[Rule] rules, Lexer::Token::InstantiateRule token) -> Array[Rule]
+
+        # @rbs (Array[Rule] rules) -> Array[Rule]
+        def reject_inline_rules: (Array[Rule] rules) -> Array[Rule]
+
+        # @rbs (Array[Rule] rules, String rule_name) -> Array[Rule]
+        def select_rules_by_name: (Array[Rule] rules, String rule_name) -> Array[Rule]
+      end
+    end
+  end
+end
