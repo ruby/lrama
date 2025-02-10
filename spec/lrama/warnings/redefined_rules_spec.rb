@@ -31,8 +31,8 @@ RSpec.describe Lrama::Warnings::RedefinedRules do
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
         Lrama::Warnings.new(logger, true).warn(grammar, states)
-        expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(X)")
-        expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(Y)")
+        expect(logger).to have_received(:warn).with("parameterized rule redefined: foo(X)")
+        expect(logger).to have_received(:warn).with("parameterized rule redefined: foo(Y)")
       end
     end
 
@@ -46,8 +46,8 @@ RSpec.describe Lrama::Warnings::RedefinedRules do
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
         Lrama::Warnings.new(logger, false).warn(grammar, states)
-        expect(logger).not_to have_received(:warn).with("parameterizing rule redefined: foo(X)")
-        expect(logger).not_to have_received(:warn).with("parameterizing rule redefined: foo(Y)")
+        expect(logger).not_to have_received(:warn).with("parameterized rule redefined: foo(X)")
+        expect(logger).not_to have_received(:warn).with("parameterized rule redefined: foo(Y)")
       end
     end
   end

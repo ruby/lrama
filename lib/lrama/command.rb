@@ -71,7 +71,7 @@ module Lrama
         @options.debug
       ).parse
 
-      grammar.prepend_parameterized_rules(stdlib_grammar.parameterizing_rules)
+      grammar.prepend_parameterized_rules(stdlib_grammar.parameterized_rules)
     end
 
     def prepare_grammar(grammar)
