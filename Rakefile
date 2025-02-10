@@ -26,10 +26,11 @@ desc "steep check"
 task :steep do
   sh "bundle exec steep check"
 end
+task :steep => :rbs_inline
 
 desc "Run rbs-inline"
 task :rbs_inline do
   sh "bundle exec rbs-inline --output lib/"
 end
 
-task default: %i[spec rbs_inline steep]
+task default: %i[spec steep]
