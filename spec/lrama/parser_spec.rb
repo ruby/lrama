@@ -647,7 +647,7 @@ RSpec.describe Lrama::Parser do
       let(:grammar) do
         grammar = Lrama::Parser.new(y, path).parse
         stdlib_grammar = Lrama::Parser.new(File.read("lib/lrama/grammar/stdlib.y"), "lib/lrama/grammar/stdlib.y").parse
-        grammar.insert_before_parameterizing_rules(stdlib_grammar.parameterizing_rules)
+        grammar.prepend_parameterized_rules(stdlib_grammar.parameterizing_rules)
         grammar.prepare
         grammar.validate!
         grammar

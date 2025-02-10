@@ -123,7 +123,7 @@ module Lrama
       @parameterizing_rule_resolver.rules
     end
 
-    def insert_before_parameterizing_rules(rules)
+    def prepend_parameterized_rules(rules)
       @parameterizing_rule_resolver.rules = rules + @parameterizing_rule_resolver.rules
     end
 
