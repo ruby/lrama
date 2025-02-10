@@ -7,16 +7,16 @@ module Lrama
       class Rule
         attr_reader :name #: String
         attr_reader :parameters #: Array[Lexer::Token]
-        attr_reader :rhs_list #: Array[Rhs]
+        attr_reader :rhs #: Array[Rhs]
         attr_reader :required_parameters_count #: Integer
         attr_reader :tag #: Lexer::Token::Tag?
         attr_reader :is_inline #: bool
 
-        # @rbs (String name, Array[Lexer::Token] parameters, Array[Rhs] rhs_list, tag: Lexer::Token::Tag?, is_inline: bool) -> void
-        def initialize(name, parameters, rhs_list, tag: nil, is_inline: false)
+        # @rbs (String name, Array[Lexer::Token] parameters, Array[Rhs] rhs, tag: Lexer::Token::Tag?, is_inline: bool) -> void
+        def initialize(name, parameters, rhs, tag: nil, is_inline: false)
           @name = name
           @parameters = parameters
-          @rhs_list = rhs_list
+          @rhs = rhs
           @tag = tag
           @is_inline = is_inline
           @required_parameters_count = parameters.count

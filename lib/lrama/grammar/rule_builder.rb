@@ -70,7 +70,7 @@ module Lrama
         resolved_builders = [] #: Array[RuleBuilder]
         rhs.each_with_index do |token, i|
           if (inline_rule = @parameterizing_rule_resolver.find_inline(token))
-            inline_rule.rhs_list.each do |inline_rhs|
+            inline_rule.rhs.each do |inline_rhs|
               rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: lhs_tag)
               if token.is_a?(Lexer::Token::InstantiateRule)
                 resolve_inline_rhs(rule_builder, inline_rhs, i, Binding.new(inline_rule.parameters, token.args))
@@ -143,7 +143,7 @@ module Lrama
               lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: token.location)
               @replaced_rhs << lhs_token
               @parameterizing_rule_resolver.created_lhs_list << lhs_token
-              parameterizing_rule.rhs_list.each do |r|
+              parameterizing_rule.rhs.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterizing_rule_resolver, lhs_tag: token.lhs_tag || parameterizing_rule.tag)
                 rule_builder.lhs = lhs_token
                 r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
