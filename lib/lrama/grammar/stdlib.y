@@ -3,7 +3,7 @@
   stdlib.y
 
   This is lrama's standard library. It provides a number of
-  parameterizing rule definitions, such as options and lists,
+  parameterized rule definitions, such as options and lists,
   that should be useful in a number of situations.
 
 **********************************************************************/

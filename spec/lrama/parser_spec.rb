@@ -643,7 +643,7 @@ RSpec.describe Lrama::Parser do
       ])
     end
 
-    context 'when parameterizing rules' do
+    context 'when parameterized rules' do
       let(:grammar) do
         grammar = Lrama::Parser.new(y, path).parse
         stdlib_grammar = Lrama::Parser.new(File.read("lib/lrama/grammar/stdlib.y"), "lib/lrama/grammar/stdlib.y").parse
@@ -656,9 +656,9 @@ RSpec.describe Lrama::Parser do
 
       context "when stdlib" do
         context "when option" do
-          let(:path) { "parameterizing_rules/stdlib/option.y" }
+          let(:path) { "parameterized/stdlib/option.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
@@ -744,13 +744,13 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when option with whitespece before parentheses" do
-          let(:path) { "parameterizing_rules/stdlib/option.y" }
+          let(:path) { "parameterized/stdlib/option.y" }
           let(:y) do
             y = File.read(fixture_path(path))
             y.sub('option(', 'option  (')
           end
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
@@ -836,9 +836,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when option between rhs" do
-          let(:path) { "parameterizing_rules/stdlib/option_between_rhs.y" }
+          let(:path) { "parameterized/stdlib/option_between_rhs.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "option_bar"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: true),
@@ -896,9 +896,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when option with tag" do
-          let(:path) { "parameterizing_rules/stdlib/option_with_tag.y" }
+          let(:path) { "parameterized/stdlib/option_with_tag.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
@@ -988,9 +988,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when preceded" do
-          let(:path) { "parameterizing_rules/stdlib/preceded.y" }
+          let(:path) { "parameterized/stdlib/preceded.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "preceded_'('_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
@@ -1038,9 +1038,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when terminated" do
-          let(:path) { "parameterizing_rules/stdlib/terminated.y" }
+          let(:path) { "parameterized/stdlib/terminated.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "terminated_number_')'"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
@@ -1088,9 +1088,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when delimited" do
-          let(:path) { "parameterizing_rules/stdlib/delimited.y" }
+          let(:path) { "parameterized/stdlib/delimited.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "delimited_'('_number_')'"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
@@ -1139,9 +1139,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when nonempty list" do
-          let(:path) { "parameterizing_rules/stdlib/nonempty_list.y" }
+          let(:path) { "parameterized/stdlib/nonempty_list.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "nonempty_list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
@@ -1233,9 +1233,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when list" do
-          let(:path) { "parameterizing_rules/stdlib/list.y" }
+          let(:path) { "parameterized/stdlib/list.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
@@ -1323,9 +1323,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when separated_nonempty_list" do
-          let(:path) { "parameterizing_rules/stdlib/separated_nonempty_list.y" }
+          let(:path) { "parameterized/stdlib/separated_nonempty_list.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
@@ -1385,9 +1385,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when separated_list" do
-          let(:path) { "parameterizing_rules/stdlib/separated_list.y" }
+          let(:path) { "parameterized/stdlib/separated_list.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "option_separated_nonempty_list_','_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
@@ -1482,9 +1482,9 @@ RSpec.describe Lrama::Parser do
 
       context "when user defined rules" do
         context "when basic" do
-          let(:path) { "parameterizing_rules/user_defined/basic.y" }
+          let(:path) { "parameterized/user_defined/basic.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "defined_option_number"), alias_name: nil, number: 5, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
@@ -1577,9 +1577,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "with tag" do
-          let(:path) { "parameterizing_rules/user_defined/with_tag.y" }
+          let(:path) { "parameterized/user_defined/with_tag.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "with_tag_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: false),
@@ -1651,9 +1651,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when multi arguments" do
-          let(:path) { "parameterizing_rules/user_defined/multi_arguments.y" }
+          let(:path) { "parameterized/user_defined/multi_arguments.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "pair_number_string"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: false),
@@ -1751,9 +1751,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "with action" do
-          let(:path) { "parameterizing_rules/user_defined/with_action.y" }
+          let(:path) { "parameterized/user_defined/with_action.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "pair_number_string"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
@@ -1803,9 +1803,9 @@ RSpec.describe Lrama::Parser do
           end
 
           context "with named references" do
-            let(:path) { "parameterizing_rules/user_defined/with_action_and_named_references.y" }
+            let(:path) { "parameterized/user_defined/with_action_and_named_references.y" }
 
-            it "expands parameterizing rules" do
+            it "expands parameterized rules" do
               expect(grammar.nterms.sort_by(&:number)).to match_symbols([
                 Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
                 Sym.new(id: T::Ident.new(s_value: "sum_number_number"), alias_name: nil, number: 6, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: false),
@@ -1857,9 +1857,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when nested rules" do
-          let(:path) { "parameterizing_rules/user_defined/nested_rules.y" }
+          let(:path) { "parameterized/user_defined/nested_rules.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
@@ -1957,9 +1957,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when nested rules with tag" do
-          let(:path) { "parameterizing_rules/user_defined/nested_rules_with_tag.y" }
+          let(:path) { "parameterized/user_defined/nested_rules_with_tag.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "option_number"), alias_name: nil, number: 5, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 1, nullable: true),
@@ -2062,10 +2062,10 @@ RSpec.describe Lrama::Parser do
           end
         end
 
-        context "when nested rules with symbols and parameterizing rules suffix" do
-          let(:path) { "parameterizing_rules/user_defined/nested_rules_symbols.y" }
+        context "when nested rules with symbols and parameterized rules suffix" do
+          let(:path) { "parameterized/user_defined/nested_rules_symbols.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "with_word_seps_string"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
@@ -2146,9 +2146,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when nested multi arguments rules" do
-          let(:path) { "parameterizing_rules/user_defined/nested_rules_multi_arguments.y" }
+          let(:path) { "parameterized/user_defined/nested_rules_multi_arguments.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "multi_option_number_string"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
@@ -2258,9 +2258,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when nested rules in rhs" do
-          let(:path) { "parameterizing_rules/user_defined/nested_rules_in_rhs.y" }
+          let(:path) { "parameterized/user_defined/nested_rules_in_rhs.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "option_constant_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
@@ -2326,9 +2326,9 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when recursive" do
-          let(:path) { "parameterizing_rules/user_defined/recursive.y" }
+          let(:path) { "parameterized/user_defined/recursive.y" }
 
-          it "expands parameterizing rules" do
+          it "expands parameterized rules" do
             expect(grammar.nterms.sort_by(&:number)).to match_symbols([
               Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
               Sym.new(id: T::Ident.new(s_value: "list_number"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
@@ -2397,7 +2397,7 @@ RSpec.describe Lrama::Parser do
 
       context 'when error case' do
         context "when invalid argument number" do
-          let(:path) { "parameterizing_rules/error/invalid_argument_number.y" }
+          let(:path) { "parameterized/error/invalid_argument_number.y" }
 
           it "raise an error" do
             expect {grammar}.to raise_error(/Invalid number of arguments\. `list`/)
@@ -2405,7 +2405,7 @@ RSpec.describe Lrama::Parser do
         end
 
         context "when invalid rule name" do
-          let(:path) { "parameterizing_rules/error/invalid_rule_name.y" }
+          let(:path) { "parameterized/error/invalid_rule_name.y" }
 
           it "raise an error" do
             expect {grammar}.to raise_error(/Parameterizing rule does not exist\. `invalid`/)
@@ -2528,8 +2528,8 @@ RSpec.describe Lrama::Parser do
         end
       end
 
-      context 'when inline have rhs include parameterizing rule' do
-        let(:path) { "inlining/inline_parameterizing_rhs.y" }
+      context 'when inline have rhs include parameterized rule' do
+        let(:path) { "inlining/inline_parameterized_rhs.y" }
 
         it "expands inlining rules" do
           expect(grammar.nterms.sort_by(&:number)).to match_symbols([
@@ -2613,8 +2613,8 @@ RSpec.describe Lrama::Parser do
         end
       end
 
-      context 'when inline with parameterizing rule' do
-        let(:path) { "inlining/with_parameterizing.y" }
+      context 'when inline with parameterized rule' do
+        let(:path) { "inlining/with_parameterized.y" }
 
         it "expands inlining rules" do
           expect(grammar.nterms.sort_by(&:number)).to match_symbols([

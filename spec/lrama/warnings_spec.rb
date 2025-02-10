@@ -83,7 +83,7 @@ RSpec.describe Lrama::Warnings do
       end
     end
 
-    context "when rule has parameterizing rule redefined" do
+    context "when rule has parameterized rule redefined" do
       let(:y) do
         <<~STR
           %{
@@ -103,8 +103,8 @@ RSpec.describe Lrama::Warnings do
         STR
       end
 
-      it "has warns for parameterizing rule redefined" do
-        grammar = Lrama::Parser.new(y, "states/parameterizing_rule_redefined.y").parse
+      it "has warns for parameterized rule redefined" do
+        grammar = Lrama::Parser.new(y, "states/parameterized_rule_redefined.y").parse
         grammar.prepare
         grammar.validate!
         states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))

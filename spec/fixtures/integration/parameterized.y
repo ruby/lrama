@@ -4,8 +4,8 @@
 
 #include <stdio.h>
 
-#include "user_defined_parameterizing_rules.h"
-#include "user_defined_parameterizing_rules-lexer.h"
+#include "parameterized.h"
+#include "parameterized-lexer.h"
 
 static int yyerror(YYLTYPE *loc, const char *str);
 
@@ -15,20 +15,13 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %union {
     int num;
+    char* str;
 }
 
 %token <num> ODD EVEN
 
 %type <num> stmt
-
-%rule pair(X, Y): X Y
-                    {
-                        $$ = $1 + $2;
-                        printf("(%d, %d)\n", $1, $2);
-                        printf("(%d, %d)\n", $X, $2);
-                        printf("(%d, %d)\n", $:1, $:2);
-                    }
-                ;
+%type <str> opt_nl
 
 %locations
 
@@ -37,12 +30,21 @@ static int yyerror(YYLTYPE *loc, const char *str);
 program: stmts
        ;
 
-stmts: separated_list(';', stmt)
+stmts: stmt+
      ;
 
-stmt: pair(ODD, EVEN) <num> { printf("pair odd even: %d\n", $1); }
-    | pair(EVEN, ODD)[result] <num> { printf("pair even odd: %d\n", $result); }
+stmt: ODD opt_nl { printf("odd: %d\n", $1); }
+    | EVEN opt_semicolon { printf("even: %d\n", $1); }
     ;
+
+opt_nl: '\n'?[nl] <str> { $$ = $nl; }
+      ;
+
+opt_semicolon: semicolon?
+             ;
+
+semicolon: ';'
+         ;
 
 %%
 
