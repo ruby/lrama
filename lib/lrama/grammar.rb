@@ -7,6 +7,7 @@ require_relative "grammar/code"
 require_relative "grammar/counter"
 require_relative "grammar/destructor"
 require_relative "grammar/error_token"
+require_relative "grammar/inline"
 require_relative "grammar/parameterized"
 require_relative "grammar/percent_code"
 require_relative "grammar/precedence"
@@ -310,7 +311,7 @@ module Lrama
       while @rule_builders.any?(&:has_inline_rules?) do
         @rule_builders = @rule_builders.flat_map do |builder|
           if builder.has_inline_rules?
-            builder.resolve_inline_rules
+            Inline::Resolver.new(builder).resolve
           else
             builder
           end
