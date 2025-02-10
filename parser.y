@@ -185,18 +185,18 @@ rule
 
   rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" TAG? ":" rule_rhs_list
                       {
-                        rule = Grammar::ParameterizingRule::Rule.new(val[1].s_value, val[3], val[7], tag: val[5])
+                        rule = Grammar::Parameterized::Rule.new(val[1].s_value, val[3], val[7], tag: val[5])
                         @grammar.add_parameterizing_rule(rule)
                       }
 
   inline_declaration: "%rule" "%inline" IDENT_COLON ":" rule_rhs_list
                       {
-                        rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, [], val[4], is_inline: true)
+                        rule = Grammar::Parameterized::Rule.new(val[2].s_value, [], val[4], is_inline: true)
                         @grammar.add_parameterizing_rule(rule)
                       }
                     | "%rule" "%inline" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
                       {
-                        rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, val[4], val[7], is_inline: true)
+                        rule = Grammar::Parameterized::Rule.new(val[2].s_value, val[4], val[7], is_inline: true)
                         @grammar.add_parameterizing_rule(rule)
                       }
 
@@ -217,7 +217,7 @@ rule
   rule_rhs: "%empty"?
             {
               reset_precs
-              result = Grammar::ParameterizingRule::Rhs.new
+              result = Grammar::Parameterized::Rhs.new
             }
           | rule_rhs symbol named_ref?
             {

@@ -2,7 +2,7 @@
 
 module Lrama
   class Grammar
-    class ParameterizingRule
+    class Parameterized
       class Rule
         attr_reader :name, :parameters, :rhs_list, :required_parameters_count, :tag, :is_inline
 

@@ -10,7 +10,7 @@ module Lrama
 
       @rule_counter: Counter
       @midrule_action_counter: Counter
-      @parameterizing_rule_resolver: Grammar::ParameterizingRule::Resolver
+      @parameterizing_rule_resolver: Grammar::Parameterized::Resolver
       @position_in_original_rule_rhs: Integer?
       @skip_preprocess_references: bool
       @user_code: Lexer::Token::UserCode?
@@ -21,7 +21,7 @@ module Lrama
       @parameterizing_rules: Array[Rule]
       @midrule_action_rules: Array[Rule]
 
-      def initialize: (Counter rule_counter, Counter midrule_action_counter, Grammar::ParameterizingRule::Resolver parameterizing_rule_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
+      def initialize: (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterizing_rule_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
       def add_rhs: (Lexer::Token rhs) -> void
       def has_inline_rules?: -> bool
       def resolve_inline_rules: -> Array[RuleBuilder]
@@ -38,8 +38,8 @@ module Lrama
       def build_rules: () -> void
       def process_rhs: () -> void
       def resolve_inline: () -> void
-      def resolve_inline_rhs: (RuleBuilder rule_builder, Grammar::ParameterizingRule::Rhs inline_rhs, Integer index, ?Binding bindings) -> void
-      def replace_inline_user_code: (Grammar::ParameterizingRule::Rhs inline_rhs, Integer index) -> Lexer::Token::UserCode?
+      def resolve_inline_rhs: (RuleBuilder rule_builder, Grammar::Parameterized::Rhs inline_rhs, Integer index, ?Binding bindings) -> void
+      def replace_inline_user_code: (Grammar::Parameterized::Rhs inline_rhs, Integer index) -> Lexer::Token::UserCode?
       def numberize_references: () -> void
       def flush_user_code: () -> void
     end

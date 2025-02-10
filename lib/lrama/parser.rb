@@ -1648,7 +1648,7 @@ module_eval(<<'.,.,', 'parser.y', 183)
 
 module_eval(<<'.,.,', 'parser.y', 187)
   def _reduce_59(val, _values, result)
-                            rule = Grammar::ParameterizingRule::Rule.new(val[1].s_value, val[3], val[7], tag: val[5])
+                            rule = Grammar::Parameterized::Rule.new(val[1].s_value, val[3], val[7], tag: val[5])
                         @grammar.add_parameterizing_rule(rule)
 
     result
@@ -1657,7 +1657,7 @@ module_eval(<<'.,.,', 'parser.y', 187)
 
 module_eval(<<'.,.,', 'parser.y', 193)
   def _reduce_60(val, _values, result)
-                            rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, [], val[4], is_inline: true)
+                            rule = Grammar::Parameterized::Rule.new(val[2].s_value, [], val[4], is_inline: true)
                         @grammar.add_parameterizing_rule(rule)
 
     result
@@ -1666,7 +1666,7 @@ module_eval(<<'.,.,', 'parser.y', 193)
 
 module_eval(<<'.,.,', 'parser.y', 198)
   def _reduce_61(val, _values, result)
-                            rule = Grammar::ParameterizingRule::Rule.new(val[2].s_value, val[4], val[7], is_inline: true)
+                            rule = Grammar::Parameterized::Rule.new(val[2].s_value, val[4], val[7], is_inline: true)
                         @grammar.add_parameterizing_rule(rule)
 
     result
@@ -1716,7 +1716,7 @@ module_eval(<<'.,.,', 'parser.y', 212)
 module_eval(<<'.,.,', 'parser.y', 218)
   def _reduce_70(val, _values, result)
                   reset_precs
-              result = Grammar::ParameterizingRule::Rhs.new
+              result = Grammar::Parameterized::Rhs.new
 
     result
   end

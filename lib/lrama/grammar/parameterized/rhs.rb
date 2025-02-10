@@ -2,7 +2,7 @@
 
 module Lrama
   class Grammar
-    class ParameterizingRule
+    class Parameterized
       class Rhs
         attr_accessor :symbols, :user_code, :precedence_sym
 

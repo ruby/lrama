@@ -7,7 +7,7 @@ require_relative "grammar/code"
 require_relative "grammar/counter"
 require_relative "grammar/destructor"
 require_relative "grammar/error_token"
-require_relative "grammar/parameterizing_rule"
+require_relative "grammar/parameterized"
 require_relative "grammar/percent_code"
 require_relative "grammar/precedence"
 require_relative "grammar/printer"
@@ -48,7 +48,7 @@ module Lrama
       @rule_builders = []
       @rules = []
       @sym_to_rules = {}
-      @parameterizing_rule_resolver = ParameterizingRule::Resolver.new
+      @parameterizing_rule_resolver = Parameterized::Resolver.new
       @empty_symbol = nil
       @eof_symbol = nil
       @error_symbol = nil

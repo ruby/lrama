@@ -2,7 +2,7 @@
 
 module Lrama
   class Grammar
-    class ParameterizingRule
+    class Parameterized
       class Resolver
         attr_accessor :rules, :created_lhs_list
 
