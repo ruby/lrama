@@ -2408,7 +2408,7 @@ RSpec.describe Lrama::Parser do
           let(:path) { "parameterized/error/invalid_rule_name.y" }
 
           it "raise an error" do
-            expect {grammar}.to raise_error(/Parameterizing rule does not exist\. `invalid`/)
+            expect {grammar}.to raise_error(/Parameterized rule does not exist\. `invalid`/)
           end
         end
       end

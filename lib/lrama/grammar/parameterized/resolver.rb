@@ -62,7 +62,7 @@ module Lrama
         def select_rules_by_name(rules, rule_name)
           rules = rules.select { |rule| rule.name == rule_name }
           if rules.empty?
-            raise "Parameterizing rule does not exist. `#{rule_name}`"
+            raise "Parameterized rule does not exist. `#{rule_name}`"
           else
             rules
           end
