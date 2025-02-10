@@ -1,35 +1,28 @@
+# rbs_inline: enabled
+
 module Lrama
   class State
     class InadequacyAnnotation
+      # @rbs @state: State
+      # @rbs @token: Symbol
+      # @rbs @actions: Array[Shift | Reduce]
+      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
       attr_accessor :state, :token, :actions, :contribution_matrix
 
+      # @rbs (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
       def initialize(state, token, actions, contribution_matrix)
         @state = state
         @token = token
-        @actions = Set.new(actions)
+        @actions = actions
         @contribution_matrix = contribution_matrix
       end
 
-      def eql?(other)
-        %i(state token actions contribution_matrix).all? {|attr| send(attr) == other.send(attr) }
-      end
-
-      def hash
-        to_s.hash
-      end
-
-      def mergeable?(other)
-        @state == other.state && @token == other.token
-      end
-
-      def merge(other)
-        @actions += other.actions
-      end
-
+      # @rbs (States::Item item) -> bool
       def contributed?(item)
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
       end
 
+      # @rbs (Hash[Shift | Reduce, Hash[States::Item, bool]] another_matrix) -> void
       def merge_matrix(another_matrix)
         @contribution_matrix.merge(another_matrix) {|action, contributions, another_contributions|
           next contributions if another_contributions.nil?
@@ -40,6 +33,7 @@ module Lrama
       end
 
       # Definition 3.42 (dominant_contribution)
+      # @rbs (Hash[States::Item, Array[Symbol]] lookaheads) -> Array[Shift | Reduce]?
       def dominant_contribution(lookaheads)
         actions = @actions.select {|action|
           contribution_matrix[action].nil? || contribution_matrix[action].any? {|item, contributed| contributed && lookaheads[item].include?(@token) }
@@ -105,10 +99,14 @@ module Lrama
         actions
       end
 
+      # @rbs () -> String
       def to_s
         "State: #{@state.id}, Token: #{@token.id.s_value}, Actions: #{actions_to_s}, Contributions: #{contribution_matrix_to_s}"
       end
 
+      private
+
+      # @rbs () -> String
       def actions_to_s
         '[' + @actions.map {|action|
           if action.is_a?(Shift)
@@ -119,6 +117,7 @@ module Lrama
         }.join(', ') + ']'
       end
 
+      # @rbs () -> String
       def contribution_matrix_to_s
         '[' + @contribution_matrix.map {|action, contributions|
           "#{action.is_a?(Shift) ? action.class.name : "#{action.class.name}: (#{action.item.to_s})"}: " + contributions&.transform_keys(&:to_s).to_s

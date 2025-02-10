@@ -1,0 +1,55 @@
+# Generated from lib/lrama/state/inadequacy_annotation.rb with RBS::Inline
+
+module Lrama
+  class State
+    class InadequacyAnnotation
+      # @rbs @state: State
+      # @rbs @token: Symbol
+      # @rbs @actions: Array[Shift | Reduce]
+      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
+      attr_accessor state: untyped
+
+      # @rbs @state: State
+      # @rbs @token: Symbol
+      # @rbs @actions: Array[Shift | Reduce]
+      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
+      attr_accessor token: untyped
+
+      # @rbs @state: State
+      # @rbs @token: Symbol
+      # @rbs @actions: Array[Shift | Reduce]
+      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
+      attr_accessor actions: untyped
+
+      # @rbs @state: State
+      # @rbs @token: Symbol
+      # @rbs @actions: Array[Shift | Reduce]
+      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
+      attr_accessor contribution_matrix: untyped
+
+      # @rbs (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
+      def initialize: (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
+
+      # @rbs (States::Item item) -> bool
+      def contributed?: (States::Item item) -> bool
+
+      # @rbs (Hash[Shift | Reduce, Hash[States::Item, bool]] another_matrix) -> void
+      def merge_matrix: (Hash[Shift | Reduce, Hash[States::Item, bool]] another_matrix) -> void
+
+      # Definition 3.42 (dominant_contribution)
+      # @rbs (Hash[States::Item, Array[Symbol]] lookaheads) -> Array[Shift | Reduce]?
+      def dominant_contribution: (Hash[States::Item, Array[Symbol]] lookaheads) -> Array[Shift | Reduce]?
+
+      # @rbs () -> String
+      def to_s: () -> String
+
+      private
+
+      # @rbs () -> String
+      def actions_to_s: () -> String
+
+      # @rbs () -> String
+      def contribution_matrix_to_s: () -> String
+    end
+  end
+end

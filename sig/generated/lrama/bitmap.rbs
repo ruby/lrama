@@ -7,5 +7,8 @@ module Lrama
 
     # @rbs (Integer int) -> Array[Integer]
     def self.to_array: (Integer int) -> Array[Integer]
+
+    # @rbs (Integer int, Integer size) -> Array[bool]
+    def self.to_bool_array: (Integer int, Integer size) -> Array[bool]
   end
 end

@@ -31,6 +31,7 @@ module Lrama
       a
     end
 
+    # @rbs (Integer int, Integer size) -> Array[bool]
     def self.to_bool_array(int, size)
       a = Array.new(size) #: Array[bool]
 
