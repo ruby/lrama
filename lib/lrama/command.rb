@@ -58,7 +58,7 @@ module Lrama
     end
 
     def format_error_message(message)
-      return message unless $stderr.tty?
+      return message unless Exception.to_tty?
 
       message.gsub(/.+/, "\e[1m\\&\e[m")
     end
