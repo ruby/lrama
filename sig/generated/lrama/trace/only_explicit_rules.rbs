@@ -3,8 +3,8 @@
 module Lrama
   class Trace
     class OnlyExplicitRules
-      # @rbs (Lrama::Logger logger, only_explicit: false, **untyped _) -> void
-      def initialize: (Lrama::Logger logger, only_explicit: false, **untyped _) -> void
+      # @rbs (IO io, only_explicit: false, **untyped _) -> void
+      def initialize: (IO io, only_explicit: false, **untyped _) -> void
 
       # @rbs (Lrama::Grammar grammar) -> void
       def trace: (Lrama::Grammar grammar) -> void

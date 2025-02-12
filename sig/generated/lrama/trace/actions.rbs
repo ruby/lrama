@@ -3,8 +3,8 @@
 module Lrama
   class Trace
     class Actions
-      # @rbs (Lrama::Logger logger, **untyped _) -> void
-      def initialize: (Lrama::Logger logger, **untyped _) -> void
+      # @rbs (IO io, **untyped _) -> void
+      def initialize: (IO io, **untyped _) -> void
 
       # @rbs (Lrama::Grammar grammar) -> void
       def trace: (Lrama::Grammar grammar) -> void

@@ -14,7 +14,7 @@ RSpec.describe Lrama::Trace::Actions do
     context "when actions: true" do
       it "prints the actions" do
         expect do
-          described_class.new(Lrama::Logger.new, actions: true).trace(grammar)
+          described_class.new(STDERR, actions: true).trace(grammar)
         end.to output(<<~RULES).to_stderr_from_any_process
           Grammar rules with actions:
           $accept -> program EOI {}
@@ -42,7 +42,7 @@ RSpec.describe Lrama::Trace::Actions do
     context "when actions: false" do
       it 'does not print anything' do
         expect do
-          described_class.new(Lrama::Logger.new, actions: false).trace(grammar)
+          described_class.new(STDERR, actions: false).trace(grammar)
         end.to_not output.to_stderr_from_any_process
       end
     end
@@ -50,7 +50,7 @@ RSpec.describe Lrama::Trace::Actions do
     context 'when empty options' do
       it 'does not print anything' do
         expect do
-          described_class.new(Lrama::Logger.new).trace(grammar)
+          described_class.new(STDERR).trace(grammar)
         end.to_not output.to_stderr_from_any_process
       end
     end

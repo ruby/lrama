@@ -11,7 +11,7 @@ RSpec.describe Lrama::Trace::Closure do
       grammar
     end
     let(:states) do
-      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(STDERR))
       states.compute
       states
     end
@@ -19,7 +19,7 @@ RSpec.describe Lrama::Trace::Closure do
     context "when automaton: true" do
       it "prints the all rules" do
         expect do
-          described_class.new(Lrama::Logger.new, automaton: true).trace(states.states.first)
+          described_class.new(STDERR, automaton: true).trace(states.states.first)
         end.to output(<<~RULES).to_stderr_from_any_process
           Closure: input
             . program "EOI"  (rule 0)
@@ -42,7 +42,7 @@ RSpec.describe Lrama::Trace::Closure do
     context "when closure: true" do
       it "prints the all rules" do
         expect do
-          described_class.new(Lrama::Logger.new, closure: true).trace(states.states.first)
+          described_class.new(STDERR, closure: true).trace(states.states.first)
         end.to output(<<~RULES).to_stderr_from_any_process
           Closure: input
             . program "EOI"  (rule 0)
@@ -65,7 +65,7 @@ RSpec.describe Lrama::Trace::Closure do
     context "when automaton: false and closure: false" do
       it 'does not print anything' do
         expect do
-          described_class.new(Lrama::Logger.new, state: false).trace(states.states.first)
+          described_class.new(STDERR, state: false).trace(states.states.first)
         end.to_not output.to_stderr_from_any_process
       end
     end
@@ -73,7 +73,7 @@ RSpec.describe Lrama::Trace::Closure do
     context 'when empty options' do
       it 'does not print anything' do
         expect do
-          described_class.new(Lrama::Logger.new).trace(states.states.first)
+          described_class.new(STDERR).trace(states.states.first)
         end.to_not output.to_stderr_from_any_process
       end
     end

@@ -3,15 +3,15 @@
 
 module Lrama
   class Tracer
-    # @rbs (Logger logger, **Hash[Symbol, bool] options) -> void
-    def initialize(logger, **options)
-      @logger = logger
+    # @rbs (IO io, **Hash[Symbol, bool] options) -> void
+    def initialize(io, **options)
+      @io = io
       @options = options
-      @only_explicit_rules = Lrama::Trace::OnlyExplicitRules.new(logger, **options)
-      @rules = Lrama::Trace::Rules.new(logger, **options)
-      @actions = Lrama::Trace::Actions.new(logger, **options)
-      @closure = Lrama::Trace::Closure.new(logger, **options)
-      @state = Lrama::Trace::State.new(logger, **options)
+      @only_explicit_rules = Lrama::Trace::OnlyExplicitRules.new(io, **options)
+      @rules = Lrama::Trace::Rules.new(io, **options)
+      @actions = Lrama::Trace::Actions.new(io, **options)
+      @closure = Lrama::Trace::Closure.new(io, **options)
+      @state = Lrama::Trace::State.new(io, **options)
     end
 
     # @rbs (Lrama::Grammar grammar) -> void

@@ -8,7 +8,7 @@ module Lrama
     def initialize(argv)
       @logger = Lrama::Logger.new
       @options = OptionParser.parse(argv)
-      @tracer = Tracer.new(@logger, **@options.trace_opts)
+      @tracer = Tracer.new(STDERR, **@options.trace_opts)
       @reporter = Reporter.new(**@options.report_opts)
       @warnings = Warnings.new(@logger, @options.warnings)
     rescue => e

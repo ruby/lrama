@@ -14,7 +14,7 @@ RSpec.describe Lrama::Trace::Rules do
     context "when rules: true and only_explicit: false" do
       it "prints the all rules" do
         expect do
-          described_class.new(Lrama::Logger.new, rules: true, only_explicit: false).trace(grammar)
+          described_class.new(STDERR, rules: true, only_explicit: false).trace(grammar)
         end.to output(<<~RULES).to_stderr_from_any_process
           Grammar rules:
           $accept -> program EOI
@@ -42,7 +42,7 @@ RSpec.describe Lrama::Trace::Rules do
     context "when rules: true and only_explicit: true" do
       it 'does not print anything' do
         expect do
-          described_class.new(Lrama::Logger.new, rules: true, only_explicit: true).trace(grammar)
+          described_class.new(STDERR, rules: true, only_explicit: true).trace(grammar)
         end.to_not output.to_stderr_from_any_process
       end
     end
@@ -50,7 +50,7 @@ RSpec.describe Lrama::Trace::Rules do
     context "when rules: false" do
       it 'does not print anything' do
         expect do
-          described_class.new(Lrama::Logger.new, rules: false).trace(grammar)
+          described_class.new(STDERR, rules: false).trace(grammar)
         end.to_not output.to_stderr_from_any_process
       end
     end
@@ -58,7 +58,7 @@ RSpec.describe Lrama::Trace::Rules do
     context 'when empty options' do
       it 'does not print anything' do
         expect do
-          described_class.new(Lrama::Logger.new).trace(grammar)
+          described_class.new(STDERR).trace(grammar)
         end.to_not output.to_stderr_from_any_process
       end
     end

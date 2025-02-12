@@ -4,9 +4,9 @@
 module Lrama
   class Trace
     class State
-      # @rbs (Lrama::Logger logger, bool automaton, bool closure, **untyped _) -> void
-      def initialize(logger, automaton: false, closure: false, **_)
-        @logger = logger
+      # @rbs (IO io, bool automaton, bool closure, **untyped _) -> void
+      def initialize(io, automaton: false, closure: false, **_)
+        @io = io
         @state = automaton || closure
       end
 
@@ -17,7 +17,7 @@ module Lrama
         # Bison 3.8.2 renders "(reached by "end-of-input")" for State 0 but
         # I think it is not correct...
         previous = state.kernels.first.previous_sym
-        @logger.trace("Processing state #{state.id} (reached by #{previous.display_name})")
+        @io << "Processing state #{state.id} (reached by #{previous.display_name})" << "\n"
       end
 
       # @rbs (Integer state_count, Lrama::State state) -> void
@@ -25,10 +25,8 @@ module Lrama
         return unless @state
 
         previous = state.kernels.first.previous_sym
-        @logger.trace(
-          sprintf("state_list_append (state = %d, symbol = %d (%s))",
-          state_count, previous.number, previous.display_name)
-        )
+        @io << sprintf("state_list_append (state = %d, symbol = %d (%s))",
+                        state_count, previous.number, previous.display_name) << "\n"
       end
     end
   end

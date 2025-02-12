@@ -2,8 +2,8 @@
 
 module Lrama
   class Tracer
-    # @rbs (Logger logger, **Hash[Symbol, bool] options) -> void
-    def initialize: (Logger logger, **Hash[Symbol, bool] options) -> void
+    # @rbs (IO io, **Hash[Symbol, bool] options) -> void
+    def initialize: (IO io, **Hash[Symbol, bool] options) -> void
 
     # @rbs (Lrama::Grammar grammar) -> void
     def trace: (Lrama::Grammar grammar) -> void

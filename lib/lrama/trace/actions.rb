@@ -4,9 +4,9 @@
 module Lrama
   class Trace
     class Actions
-      # @rbs (Lrama::Logger logger, **untyped _) -> void
-      def initialize(logger, **options)
-        @logger = logger
+      # @rbs (IO io, **untyped _) -> void
+      def initialize(io, **options)
+        @io = io
         @actions = options[:actions]
       end
 
@@ -14,8 +14,8 @@ module Lrama
       def trace(grammar)
         return unless @actions
 
-        @logger.trace("Grammar rules with actions:")
-        grammar.rules.each { |rule| @logger.trace(rule.with_actions) }
+        @io << "Grammar rules with actions:" << "\n"
+        grammar.rules.each { |rule| @io << rule.with_actions << "\n" }
       end
     end
   end

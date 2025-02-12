@@ -4,9 +4,9 @@
 module Lrama
   class Trace
     class Closure
-      # @rbs (Lrama::Logger logger, bool automaton, bool closure, **untyped _) -> void
-      def initialize(logger, automaton: false, closure: false, **options)
-        @logger = logger
+      # @rbs (IO io, bool automaton, bool closure, **untyped _) -> void
+      def initialize(io, automaton: false, closure: false, **options)
+        @io = io
         @closure = automaton || closure
       end
 
@@ -14,16 +14,16 @@ module Lrama
       def trace(state)
         return unless @closure
 
-        @logger.trace("Closure: input")
+        @io << "Closure: input" << "\n"
         state.kernels.each do |item|
-          @logger.trace("  #{item.display_rest}")
+          @io << "  #{item.display_rest}" << "\n"
         end
-        @logger.trace("\n")
-        @logger.trace("Closure: output")
+        @io << "\n\n"
+        @io << "Closure: output" << "\n"
         state.items.each do |item|
-          @logger.trace("  #{item.display_rest}")
+          @io << "  #{item.display_rest}" << "\n"
         end
-        @logger.trace("\n")
+        @io << "\n\n"
       end
     end
   end

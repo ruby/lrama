@@ -4,9 +4,9 @@
 module Lrama
   class Trace
     class OnlyExplicitRules
-      # @rbs (Lrama::Logger logger, only_explicit: false, **untyped _) -> void
-      def initialize(logger, only_explicit: false, **_)
-        @logger = logger
+      # @rbs (IO io, only_explicit: false, **untyped _) -> void
+      def initialize(io, only_explicit: false, **_)
+        @io = io
         @only_explicit = only_explicit
       end
 
@@ -14,9 +14,9 @@ module Lrama
       def trace(grammar)
         return unless @only_explicit
 
-        @logger.trace("Grammar rules:")
+        @io << "Grammar rules:" << "\n"
         grammar.rules.each do |rule|
-          @logger.trace(rule.display_name_without_action) if rule.lhs.first_set.any?
+          @io << rule.display_name_without_action << "\n" if rule.lhs.first_set.any?
         end
       end
     end

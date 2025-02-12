@@ -3,8 +3,8 @@
 module Lrama
   class Trace
     class Rules
-      # @rbs (Lrama::Logger logger, bool rules, bool only_explicit, **untyped _) -> void
-      def initialize: (Lrama::Logger logger, bool rules, bool only_explicit, **untyped _) -> void
+      # @rbs (IO io, bool rules, bool only_explicit, **untyped _) -> void
+      def initialize: (IO io, bool rules, bool only_explicit, **untyped _) -> void
 
       # @rbs (Lrama::Grammar grammar) -> void
       def trace: (Lrama::Grammar grammar) -> void
