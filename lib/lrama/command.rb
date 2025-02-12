@@ -12,9 +12,7 @@ module Lrama
       @reporter = Reporter.new(**@options.report_opts)
       @warnings = Warnings.new(@logger, @options.warnings)
     rescue => e
-      message = e.message
-      message = message.gsub(/.+/, "\e[1m\\&\e[m") if Exception.to_tty?
-      abort message
+      abort format_error_message(e.message)
     end
 
     def run
