@@ -29,7 +29,7 @@ module Lrama
       @tracer.enable_duration
       text = read_input
       grammar = build_grammar(text)
-      states, context = compute(grammar)
+      states, context = compute_status(grammar)
       render_reports(states) if @options.report_file
       @tracer.trace(grammar)
       render_diagram(grammar)
@@ -79,7 +79,7 @@ module Lrama
       grammar.validate!
     end
 
-    def compute(grammar)
+    def compute_status(grammar)
       states = Lrama::States.new(grammar, @tracer)
       states.compute
       states.compute_ielr if grammar.ielr_defined?
