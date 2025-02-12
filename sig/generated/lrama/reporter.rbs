@@ -7,7 +7,7 @@ module Lrama
     # @rbs (**Hash[Symbol, bool] options) -> void
     def initialize: (**Hash[Symbol, bool] options) -> void
 
-    # @rbs (Lrama::States states, File io) -> void
-    def report: (Lrama::States states, File io) -> void
+    # @rbs (File io, Lrama::States states) -> void
+    def report: (File io, Lrama::States states) -> void
   end
 end

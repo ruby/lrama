@@ -9,11 +9,11 @@ module Lrama
         @grammar = grammar
       end
 
-      # @rbs (Lrama::States states, Lrama::Logger logger) -> void
-      def report(states, logger)
+      # @rbs (IO io, Lrama::States states) -> void
+      def report(io, states)
         return unless @grammar
 
-        logger.trace("Grammar")
+        io << "Grammar\n"
         last_lhs = nil
 
         states.rules.each do |rule|
@@ -24,15 +24,15 @@ module Lrama
           end
 
           if rule.lhs == last_lhs
-            logger.trace(sprintf("%5d %s| %s", rule.id, " " * rule.lhs.display_name.length, r))
+            io << sprintf("%5d %s| %s", rule.id, " " * rule.lhs.display_name.length, r) << "\n"
           else
-            logger.line_break
-            logger.trace(sprintf("%5d %s: %s", rule.id, rule.lhs.display_name, r))
+            io << "\n"
+            io << sprintf("%5d %s: %s", rule.id, rule.lhs.display_name, r) << "\n"
           end
 
           last_lhs = rule.lhs
         end
-        logger.trace("\n")
+        io << "\n\n"
       end
     end
   end

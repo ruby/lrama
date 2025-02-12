@@ -88,7 +88,7 @@ module Lrama
 
     def render_reports(states)
       File.open(@options.report_file, "w+") do |f|
-        @reporter.report(states, f)
+        @reporter.report(f, states)
       end
     end
 

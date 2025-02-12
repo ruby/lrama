@@ -15,15 +15,14 @@ module Lrama
       @states = Lrama::Report::States.new(**options)
     end
 
-    # @rbs (Lrama::States states, File io) -> void
-    def report(states, io)
+    # @rbs (File io, Lrama::States states) -> void
+    def report(io, states)
       report_duration(:report) do
-        logger = Lrama::Logger.new(io)
-        @rules.report(states, logger)
-        @terms.report(states, logger)
-        @conflicts.report(states, logger)
-        @grammar.report(states, logger)
-        @states.report(states, logger)
+        @rules.report(io, states)
+        @terms.report(io, states)
+        @conflicts.report(io, states)
+        @grammar.report(io, states)
+        @states.report(io, states)
       end
     end
   end

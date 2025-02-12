@@ -9,8 +9,8 @@ module Lrama
         @terms = terms
       end
 
-      # @rbs (Lrama::States states, Lrama::Logger logger) -> void
-      def report(states, logger)
+      # @rbs (IO io, Lrama::States states) -> void
+      def report(io, states)
         return unless @terms
 
         look_aheads = states.states.each do |state|
@@ -28,11 +28,11 @@ module Lrama
         end
 
         unless unused_symbols.empty?
-          logger.trace("#{unused_symbols.count} Unused Terms\n")
+          io << "#{unused_symbols.count} Unused Terms\n\n"
           unused_symbols.each_with_index do |term, index|
-            logger.trace(sprintf("%5d %s", index, term.id.s_value))
+            io << sprintf("%5d %s", index, term.id.s_value) << "\n"
           end
-          logger.trace("\n")
+          io << "\n\n"
         end
       end
     end

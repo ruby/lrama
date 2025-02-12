@@ -3,8 +3,8 @@
 module Lrama
   class Report
     class Conflicts
-      # (Lrama::States states, Lrama::Logger logger) -> void
-      def report: (untyped states, untyped logger) -> untyped
+      # (IO io, Lrama::States states) -> void
+      def report: (untyped io, untyped states) -> untyped
     end
   end
 end

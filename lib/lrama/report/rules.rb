@@ -9,8 +9,8 @@ module Lrama
         @rules = rules
       end
 
-      # @rbs (Lrama::States states, Lrama::Logger logger) -> void
-      def report(states, logger)
+      # @rbs (IO io, Lrama::States states) -> void
+      def report(io, states)
         return unless @rules
 
         used_rules = states.rules.flat_map(&:rhs)
@@ -20,11 +20,11 @@ module Lrama
         end
 
         unless unused_rules.empty?
-          logger.trace("#{unused_rules.count} Unused Rules\n")
+          io << "#{unused_rules.count} Unused Rules\n\n"
           unused_rules.each_with_index do |rule, index|
-            logger.trace(sprintf("%5d %s", index, rule.display_name))
+            io << sprintf("%5d %s", index, rule.display_name) << "\n"
           end
-          logger.trace("\n")
+          io << "\n\n"
         end
       end
     end

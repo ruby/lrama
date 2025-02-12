@@ -13,15 +13,15 @@ module Lrama
         @verbose = verbose
       end
 
-      # @rbs (Lrama::States states, Lrama::Logger logger) -> void
-      def report(states, logger)
+      # @rbs (IO io, Lrama::States states) -> void
+      def report(io, states)
         if @counterexamples
           cex = Counterexamples.new(states)
         end
 
         states.states.each do |state|
           # Report State
-          logger.trace("State #{state.id}\n")
+          io << "State #{state.id}\n\n"
 
           # Report item
           last_lhs = nil
@@ -47,9 +47,9 @@ module Lrama
             end
             last_lhs = item.lhs
 
-            logger.trace(sprintf("%5i %s %s%s", item.rule_id, l, r, la))
+            io << sprintf("%5i %s %s%s", item.rule_id, l, r, la) << "\n"
           end
-          logger.line_break
+          io << "\n"
 
           # Report shifts
           tmp = state.term_transitions.reject do |shift, _|
@@ -59,9 +59,9 @@ module Lrama
           end
           max_len = tmp.map(&:first).map(&:display_name).map(&:length).max
           tmp.each do |term, state_id|
-            logger.trace("    #{term.display_name.ljust(max_len)}  shift, and go to state #{state_id}")
+            io << "    #{term.display_name.ljust(max_len)}  shift, and go to state #{state_id}\n"
           end
-          logger.line_break unless tmp.empty?
+          io << "\n" unless tmp.empty?
 
           # Report error caused by %nonassoc
           nl = false
@@ -73,9 +73,9 @@ module Lrama
           max_len = tmp.map(&:length).max
           tmp.each do |name|
             nl = true
-            logger.trace("    #{name.ljust(max_len)}  error (nonassociative)")
+            io << "    #{name.ljust(max_len)}  error (nonassociative)\n"
           end
-          logger.line_break unless tmp.empty?
+          io << "\n" unless tmp.empty?
 
           # Report reduces
           nl = false
@@ -93,7 +93,7 @@ module Lrama
             term.number
           end.each do |term, reduce|
             rule = reduce.item.rule
-            logger.trace("    #{term.display_name.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.display_name})")
+            io << "    #{term.display_name.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.display_name})\n"
             nl = true
           end
 
@@ -102,12 +102,12 @@ module Lrama
             s = "$default".ljust(max_len)
 
             if r.initial_rule?
-              logger.trace("    #{s}  accept")
+              io << "    #{s}  accept\n"
             else
-                logger.trace("    #{s}  reduce using rule #{r.id} (#{r.lhs.display_name})")
+                io << "    #{s}  reduce using rule #{r.id} (#{r.lhs.display_name})\n"
             end
           end
-          logger.line_break if nl
+          io << "\n" if nl
 
           # Report nonterminal transitions
           tmp = [] #: Array[[Lrama::Grammar::Symbol, Integer]]
@@ -122,16 +122,16 @@ module Lrama
             nterm.number
           end
           tmp.each do |nterm, state_id|
-            logger.trace("    #{nterm.id.s_value.ljust(max_len)}  go to state #{state_id}")
+            io << "    #{nterm.id.s_value.ljust(max_len)}  go to state #{state_id}\n"
           end
-          logger.line_break unless tmp.empty?
+          io << "\n" unless tmp.empty?
 
           if @solved
             # Report conflict resolutions
             state.resolved_conflicts.each do |resolved|
-              logger.trace("    #{resolved.report_message}")
+              io << "    #{resolved.report_message}\n"
             end
-            logger.line_break unless state.resolved_conflicts.empty?
+            io << "\n" unless state.resolved_conflicts.empty?
           end
 
           if @counterexamples && state.has_conflicts?
@@ -143,23 +143,23 @@ module Lrama
               label1 = example.type == :shift_reduce ? "Shift derivation"  : "First Reduce derivation"
               label2 = example.type == :shift_reduce ? "Reduce derivation" : "Second Reduce derivation"
 
-              logger.trace("    #{label0} conflict on token #{example.conflict_symbol.id.s_value}:")
-              logger.trace("        #{example.path1_item}")
-              logger.trace("        #{example.path2_item}")
-              logger.trace("      #{label1}")
+              io << "    #{label0} conflict on token #{example.conflict_symbol.id.s_value}:\n"
+              io << "        #{example.path1_item}\n"
+              io << "        #{example.path2_item}\n"
+              io << "      #{label1}\n"
               example.derivations1.render_strings_for_report.each do |str|
-                logger.trace("        #{str}")
+                io << "        #{str}\n"
               end
-              logger.trace("      #{label2}")
+              io << "      #{label2}\n"
               example.derivations2.render_strings_for_report.each do |str|
-                logger.trace("        #{str}")
+                io << "        #{str}\n"
               end
             end
           end
 
           if @verbose
             # Report direct_read_sets
-            logger.trace("  [Direct Read sets]")
+            io << "  [Direct Read sets]\n"
             direct_read_sets = states.direct_read_sets
             states.nterms.each do |nterm|
               terms = direct_read_sets[[state.id, nterm.token_id]]
@@ -167,25 +167,25 @@ module Lrama
               next if terms.empty?
 
               str = terms.map {|sym| sym.id.s_value }.join(", ")
-              logger.trace("    read #{nterm.id.s_value}  shift #{str}")
+              io << "    read #{nterm.id.s_value}  shift #{str}\n"
             end
-            logger.line_break
+            io << "\n"
 
             # Report reads_relation
-            logger.trace("  [Reads Relation]")
+            io << "  [Reads Relation]\n"
             states.nterms.each do |nterm|
               a = states.reads_relation[[state.id, nterm.token_id]]
               next unless a
 
               a.each do |state_id2, nterm_id2|
                 n = states.nterms.find {|n| n.token_id == nterm_id2 }
-                logger.trace("    (State #{state_id2}, #{n&.id&.s_value})")
+                io << "    (State #{state_id2}, #{n&.id&.s_value})\n"
               end
             end
-            logger.line_break
+            io << "\n"
 
             # Report read_sets
-            logger.trace("  [Read sets]")
+            io << "  [Read sets]\n"
             read_sets = states.read_sets
             states.nterms.each do |nterm|
               terms = read_sets[[state.id, nterm.token_id]]
@@ -193,39 +193,39 @@ module Lrama
               next if terms.empty?
 
               terms.each do |sym|
-                logger.trace("    #{sym.id.s_value}")
+                io << "    #{sym.id.s_value}\n"
               end
             end
-            logger.line_break
+            io << "\n"
 
             # Report includes_relation
-            logger.trace("  [Includes Relation]")
+            io << "  [Includes Relation]\n"
             states.nterms.each do |nterm|
               a = states.includes_relation[[state.id, nterm.token_id]]
               next unless a
 
               a.each do |state_id2, nterm_id2|
                 n = states.nterms.find {|n| n.token_id == nterm_id2 }
-                logger.trace("    (State #{state.id}, #{nterm.id.s_value}) -> (State #{state_id2}, #{n&.id&.s_value})")
+                io << "    (State #{state.id}, #{nterm.id.s_value}) -> (State #{state_id2}, #{n&.id&.s_value})\n"
               end
             end
-            logger.line_break
+            io << "\n"
 
             # Report lookback_relation
-            logger.trace("  [Lookback Relation]")
+            io << "  [Lookback Relation]\n"
             states.rules.each do |rule|
               a = states.lookback_relation[[state.id, rule.id]]
               next unless a
 
               a.each do |state_id2, nterm_id2|
                 n = states.nterms.find {|n| n.token_id == nterm_id2 }
-                logger.trace("    (Rule: #{rule.display_name}) -> (State #{state_id2}, #{n&.id&.s_value})")
+                io << "    (Rule: #{rule.display_name}) -> (State #{state_id2}, #{n&.id&.s_value})\n"
               end
             end
-            logger.line_break
+            io << "\n"
 
             # Report follow_sets
-            logger.trace("  [Follow sets]")
+            io << "  [Follow sets]\n"
             follow_sets = states.follow_sets
             states.nterms.each do |nterm|
               terms = follow_sets[[state.id, nterm.token_id]]
@@ -233,13 +233,13 @@ module Lrama
               next unless terms
 
               terms.each do |sym|
-                logger.trace("    #{nterm.id.s_value} -> #{sym.id.s_value}")
+                io << "    #{nterm.id.s_value} -> #{sym.id.s_value}\n"
               end
             end
-            logger.line_break
+            io << "\n"
 
             # Report LA
-            logger.trace("  [Look-Ahead Sets]")
+            io << "  [Look-Ahead Sets]\n"
             tmp = [] #: Array[[Lrama::Grammar::Rule, Array[Lrama::Grammar::Symbol]]]
             max_len = 0
             states.rules.each do |rule|
@@ -251,14 +251,14 @@ module Lrama
             end
             tmp.each do |rule, syms|
               syms.each do |sym|
-                logger.trace("    #{sym.id.s_value.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.id.s_value})")
+                io << "    #{sym.id.s_value.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.id.s_value})\n"
               end
             end
-            logger.line_break unless tmp.empty?
+            io << "\n" unless tmp.empty?
           end
 
           # End of Report State
-          logger.line_break
+          io << "\n"
         end
       end
     end

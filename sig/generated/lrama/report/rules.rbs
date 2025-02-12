@@ -6,8 +6,8 @@ module Lrama
       # @rbs (rules: bool, **untyped _) -> void
       def initialize: (rules: bool, **untyped _) -> void
 
-      # @rbs (Lrama::States states, Lrama::Logger logger) -> void
-      def report: (Lrama::States states, Lrama::Logger logger) -> void
+      # @rbs (IO io, Lrama::States states) -> void
+      def report: (IO io, Lrama::States states) -> void
     end
   end
 end

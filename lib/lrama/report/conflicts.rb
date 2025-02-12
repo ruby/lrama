@@ -4,8 +4,8 @@
 module Lrama
   class Report
     class Conflicts
-      # (Lrama::States states, Lrama::Logger logger) -> void
-      def report(states, logger)
+      # (IO io, Lrama::States states) -> void
+      def report(io, states)
         has_conflict = false
 
         states.states.each do |state|
@@ -21,12 +21,12 @@ module Lrama
 
           unless messages.empty?
             has_conflict = true
-            logger.trace("State #{state.id} conflicts: #{messages.join(', ')}")
+            io << "State #{state.id} conflicts: #{messages.join(', ')}\n"
           end
         end
 
         if has_conflict
-          logger.trace("\n")
+          io << "\n\n"
         end
       end
     end
