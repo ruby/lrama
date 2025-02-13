@@ -146,6 +146,10 @@ module Lrama
       @rr_conflicts_count ||= @states.flat_map(&:rr_conflicts).count
     end
 
+    def validate!(logger)
+      validate_conflicts_within_threshold!(logger)
+    end
+
     private
 
     def create_state(accessing_symbol, kernels, states_created)
@@ -559,6 +563,30 @@ module Lrama
         state.update_transition(shift, s)
         merge_lookaheads(s, filtered_lookaheads)
       end
+    end
+
+    def validate_conflicts_within_threshold!(logger)
+      exit false unless conflicts_within_threshold?(logger)
+    end
+
+    def conflicts_within_threshold?(logger)
+      return true unless @grammar.expect
+
+      [sr_conflicts_within_threshold?(logger), rr_conflicts_within_threshold?(logger)].all?
+    end
+
+    def sr_conflicts_within_threshold?(logger)
+      return true if @grammar.expect == sr_conflicts_count
+
+      logger.error("shift/reduce conflicts: #{sr_conflicts_count} found, #{@grammar.expect} expected")
+      false
+    end
+
+    def rr_conflicts_within_threshold?(logger, expected: 0)
+      return true if expected == rr_conflicts_count
+
+      logger.error("reduce/reduce conflicts: #{rr_conflicts_count} found, #{expected} expected")
+      false
     end
   end
 end
