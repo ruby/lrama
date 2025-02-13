@@ -1,0 +1,13 @@
+# Generated from lib/lrama/reporter.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    include Lrama::Tracer::Duration
+
+    # @rbs (**Hash[Symbol, bool] options) -> void
+    def initialize: (**Hash[Symbol, bool] options) -> void
+
+    # @rbs (File io, Lrama::States states) -> void
+    def report: (File io, Lrama::States states) -> void
+  end
+end

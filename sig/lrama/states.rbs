@@ -26,7 +26,7 @@ module Lrama
 
     extend Forwardable
 
-    include Lrama::Report::Duration
+    include Lrama::Tracer::Duration
 
     attr_reader states: Array[State]
 
@@ -39,8 +39,6 @@ module Lrama
     def initialize: (untyped grammar, untyped warning, ?trace_state: bool) -> void
 
     def compute: () -> untyped
-
-    def reporter: () -> untyped
 
     def states_count: () -> untyped
 

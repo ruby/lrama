@@ -1,0 +1,23 @@
+# Generated from lib/lrama/tracer.rb with RBS::Inline
+
+module Lrama
+  class Tracer
+    # @rbs (IO io, **Hash[Symbol, bool] options) -> void
+    def initialize: (IO io, **Hash[Symbol, bool] options) -> void
+
+    # @rbs (Lrama::Grammar grammar) -> void
+    def trace: (Lrama::Grammar grammar) -> void
+
+    # @rbs (Lrama::State state) -> void
+    def trace_closure: (Lrama::State state) -> void
+
+    # @rbs (Lrama::State state) -> void
+    def trace_state: (Lrama::State state) -> void
+
+    # @rbs (Integer state_count, Lrama::State state) -> void
+    def trace_state_list_append: (Integer state_count, Lrama::State state) -> void
+
+    # @rbs () -> void
+    def enable_duration: () -> void
+  end
+end

@@ -78,7 +78,7 @@ RSpec.describe Lrama::GrammarValidator do
           grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
           grammar.prepare
           grammar.validate!
-          states = Lrama::States.new(grammar)
+          states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
           states.compute
           logger = Lrama::Logger.new
           allow(logger).to receive(:error)
@@ -103,7 +103,7 @@ RSpec.describe Lrama::GrammarValidator do
           grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
           grammar.prepare
           grammar.validate!
-          states = Lrama::States.new(grammar)
+          states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
           states.compute
           logger = Lrama::Logger.new
           allow(logger).to receive(:error)
@@ -128,7 +128,7 @@ RSpec.describe Lrama::GrammarValidator do
         grammar = Lrama::Parser.new(header + y, "states/check_conflicts.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar)
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:error)

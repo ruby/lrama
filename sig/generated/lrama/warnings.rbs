@@ -1,0 +1,11 @@
+# Generated from lib/lrama/warnings.rb with RBS::Inline
+
+module Lrama
+  class Warnings
+    # @rbs (Logger logger, bool warnings) -> void
+    def initialize: (Logger logger, bool warnings) -> void
+
+    # @rbs (Lrama::Grammar grammar, Lrama::States states) -> void
+    def warn: (Lrama::Grammar grammar, Lrama::States states) -> void
+  end
+end

@@ -5,6 +5,10 @@ require 'optparse'
 module Lrama
   # Handle option parsing for the command line interface.
   class OptionParser
+    def self.parse(argv)
+      new.parse(argv)
+    end
+
     def initialize
       @options = Options.new
       @trace = []
@@ -111,7 +115,7 @@ module Lrama
         o.on('-v', '--verbose', "same as '--report=state'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
-        o.on('-W', '--warnings', 'report the warnings') {|v| @options.diagnostic = true }
+        o.on('-W', '--warnings', 'report the warnings') {|v| @options.warnings = true }
         o.separator ''
         o.separator 'Error Recovery:'
         o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }

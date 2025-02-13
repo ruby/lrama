@@ -35,7 +35,7 @@ RSpec.describe "integration" do
         debug = true
       end
 
-      Lrama::Command.new.run(%W[-H#{parser_h_path} -o#{parser_c_path}] + lrama_command_args + %W[#{grammar_file_path}])
+      Lrama::Command.new(%W[-H#{parser_h_path} -o#{parser_c_path}] + lrama_command_args + %W[#{grammar_file_path}]).run
       exec_command("flex --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
       exec_command("#{compiler} -Wall -ggdb3 -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
 
@@ -57,7 +57,7 @@ RSpec.describe "integration" do
     end
 
     def generate_object(grammar_file_path, c_path, obj_path, command_args: [])
-      Lrama::Command.new.run(%W[-d -o #{c_path}] + command_args + %W[#{grammar_file_path}])
+      Lrama::Command.new(%W[-d -o #{c_path}] + command_args + %W[#{grammar_file_path}]).run
       exec_command("#{compiler} -Wall #{c_path} -o #{obj_path}")
     end
   end

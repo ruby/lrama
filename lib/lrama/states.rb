@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "forwardable"
-require_relative "report/duration"
+require_relative "tracer/duration"
 require_relative "states/item"
 
 module Lrama
@@ -11,16 +11,16 @@ module Lrama
   #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
     extend Forwardable
-    include Lrama::Report::Duration
+    include Lrama::Tracer::Duration
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules,
       :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!
 
     attr_reader :states, :reads_relation, :includes_relation, :lookback_relation
 
-    def initialize(grammar, trace_state: false)
+    def initialize(grammar, tracer)
       @grammar = grammar
-      @trace_state = trace_state
+      @tracer = tracer
 
       @states = []
 
@@ -110,10 +110,6 @@ module Lrama
       report_duration(:compute_default_reduction) { compute_default_reduction }
     end
 
-    def reporter
-      StatesReporter.new(self)
-    end
-
     def states_count
       @states.count
     end
@@ -151,12 +147,6 @@ module Lrama
     end
 
     private
-
-    def trace_state
-      if @trace_state
-        yield STDERR
-      end
-    end
 
     def create_state(accessing_symbol, kernels, states_created)
       # A item can appear in some states,
@@ -232,18 +222,7 @@ module Lrama
       state.closure = closure.sort_by {|i| i.rule.id }
 
       # Trace
-      trace_state do |out|
-        out << "Closure: input\n"
-        state.kernels.each do |item|
-          out << "  #{item.display_rest}\n"
-        end
-        out << "\n\n"
-        out << "Closure: output\n"
-        state.items.each do |item|
-          out << "  #{item.display_rest}\n"
-        end
-        out << "\n\n"
-      end
+      @tracer.trace_closure(state)
 
       # shift & reduce
       state.compute_shifts_reduces
@@ -251,11 +230,7 @@ module Lrama
 
     def enqueue_state(states, state)
       # Trace
-      previous = state.kernels.first.previous_sym
-      trace_state do |out|
-        out << sprintf("state_list_append (state = %d, symbol = %d (%s))\n",
-          @states.count, previous.number, previous.display_name)
-      end
+      @tracer.trace_state_list_append(@states.count, state)
 
       states << state
     end
@@ -270,13 +245,7 @@ module Lrama
 
       while (state = states.shift) do
         # Trace
-        #
-        # Bison 3.8.2 renders "(reached by "end-of-input")" for State 0 but
-        # I think it is not correct...
-        previous = state.kernels.first.previous_sym
-        trace_state do |out|
-          out << "Processing state #{state.id} (reached by #{previous.display_name})\n"
-        end
+        @tracer.trace_state(state)
 
         setup_state(state)
 

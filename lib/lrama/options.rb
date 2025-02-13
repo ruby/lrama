@@ -13,7 +13,7 @@ module Lrama
     attr_accessor :grammar_file #: String?
     attr_accessor :trace_opts #: Hash[Symbol, bool]?
     attr_accessor :report_opts #: Hash[Symbol, bool]?
-    attr_accessor :diagnostic #: bool
+    attr_accessor :warnings #: bool
     attr_accessor :y #: IO
     attr_accessor :debug #: bool
     attr_accessor :define #: Hash[String, String]
@@ -33,7 +33,7 @@ module Lrama
       @grammar_file = nil
       @trace_opts = nil
       @report_opts = nil
-      @diagnostic = false
+      @warnings = false
       @y = STDIN
       @debug = false
       @diagram = false

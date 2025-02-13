@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "forwardable"
-require_relative "report/duration"
+require_relative "tracer/duration"
 
 module Lrama
   class Output
     extend Forwardable
-    include Report::Duration
+    include Tracer::Duration
 
     attr_reader :grammar_file_path, :context, :grammar, :error_recovery, :include_header
 

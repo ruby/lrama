@@ -1,0 +1,18 @@
+# Generated from lib/lrama/tracer/duration.rb with RBS::Inline
+
+module Lrama
+  class Tracer
+    module Duration
+      @_report_duration_enabled: bool
+
+      # @rbs () -> void
+      def self.enable: () -> void
+
+      # @rbs () -> bool
+      def self.enabled?: () -> bool
+
+      # @rbs [T] (_ToS method_name) { -> T } -> T
+      def report_duration: [T] (_ToS method_name) { () -> T } -> T
+    end
+  end
+end

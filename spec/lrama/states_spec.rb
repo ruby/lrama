@@ -8,11 +8,11 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, path).parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
 
       io = StringIO.new
-      states.reporter.report(io, grammar: true, rules: true, terms: true, states: true, itemsets: true, lookaheads: true)
+      Lrama::Reporter.new(grammar: true, rules: true, terms: true, states: true, itemsets: true, lookaheads: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
         1 Unused Rules
@@ -326,7 +326,7 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, path).parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
 
       expect(states.states.map(&:accessing_symbol)).to eq([
@@ -369,11 +369,11 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, path).parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
 
       io = StringIO.new
-      states.reporter.report(io, states: true, itemsets: true, verbose: true)
+      Lrama::Reporter.new(states: true, itemsets: true, verbose: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
         State 0 conflicts: 1 shift/reduce
@@ -639,11 +639,11 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, path).parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
 
       io = StringIO.new
-      states.reporter.report(io, states: true, itemsets: true, verbose: true)
+      Lrama::Reporter.new(states: true, itemsets: true, verbose: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
         State 0
@@ -940,11 +940,11 @@ RSpec.describe Lrama::States do
         grammar = Lrama::Parser.new(y, "states/compute_look_ahead_sets.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar)
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
 
         io = StringIO.new
-        states.reporter.report(io, states: true, lookaheads: true)
+        Lrama::Reporter.new(states: true, lookaheads: true).report(io, states)
 
         expect(io.string).to eq(<<~STR)
           State 0
@@ -1011,11 +1011,11 @@ RSpec.describe Lrama::States do
         grammar = Lrama::Parser.new(y, "states/compute_look_ahead_sets.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar)
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
 
         io = StringIO.new
-        states.reporter.report(io, states: true, lookaheads: true, itemsets: true)
+        Lrama::Reporter.new(states: true, lookaheads: true, itemsets: true).report(io, states)
 
         expect(io.string).to eq(<<~STR)
           State 0
@@ -1103,11 +1103,11 @@ RSpec.describe Lrama::States do
         grammar = Lrama::Parser.new(y, "states/compute_conflicts.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar)
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
 
         io = StringIO.new
-        states.reporter.report(io, states: true, solved: true)
+        Lrama::Reporter.new(states: true, solved: true).report(io, states)
 
         expect(io.string).to eq(<<~STR)
           State 0
@@ -1222,11 +1222,11 @@ RSpec.describe Lrama::States do
         grammar = Lrama::Parser.new(y, "states/compute_conflicts.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar)
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
 
         io = StringIO.new
-        states.reporter.report(io, states: true, solved: true)
+        Lrama::Reporter.new(states: true, solved: true).report(io, states)
 
         expect(io.string).to eq(<<~STR)
           State 0
@@ -1321,11 +1321,11 @@ RSpec.describe Lrama::States do
         grammar = Lrama::Parser.new(y, "states/compute_conflicts.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar)
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
 
         io = StringIO.new
-        states.reporter.report(io, states: true, solved: true)
+        Lrama::Reporter.new(states: true, solved: true).report(io, states)
 
         expect(io.string).to eq(<<~STR)
           State 7 conflicts: 1 shift/reduce
@@ -1472,11 +1472,11 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, "states/compute_default_reduction.y").parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
 
       io = StringIO.new
-      states.reporter.report(io, states: true)
+      Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
         State 0
@@ -1646,11 +1646,11 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, "states/compute_default_reduction.y").parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
 
       io = StringIO.new
-      states.reporter.report(io, states: true)
+      Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
         State 0
@@ -1795,12 +1795,12 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, path).parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
       states.compute_ielr
 
       io = StringIO.new
-      states.reporter.report(io, states: true)
+      Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
         State 14 conflicts: 2 shift/reduce
@@ -2025,12 +2025,12 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, "states/ielr_nonassoc.y").parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
       states.compute_ielr
 
       io = StringIO.new
-      states.reporter.report(io, states: true)
+      Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
         State 0
@@ -2132,12 +2132,12 @@ RSpec.describe Lrama::States do
       grammar = Lrama::Parser.new(y, "states/ielr_prec.y").parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
       states.compute_ielr
 
       io = StringIO.new
-      states.reporter.report(io, states: true)
+      Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
         State 0

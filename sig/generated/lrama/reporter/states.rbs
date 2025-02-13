@@ -1,0 +1,13 @@
+# Generated from lib/lrama/reporter/states.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    class States
+      # @rbs (itemsets: bool, lookaheads: bool, solved: bool, counterexamples: bool, verbose: bool, **untyped _) -> void
+      def initialize: (itemsets: bool, lookaheads: bool, solved: bool, counterexamples: bool, verbose: bool, **untyped _) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report: (IO io, Lrama::States states) -> void
+    end
+  end
+end

@@ -8,7 +8,7 @@ RSpec.describe Lrama::Context do
       grammar = Lrama::Parser.new(y, path).parse
       grammar.prepare
       grammar.validate!
-      states = Lrama::States.new(grammar)
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       states.compute
       context = Lrama::Context.new(states)
 
@@ -186,7 +186,7 @@ RSpec.describe Lrama::Context do
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar)
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
         context = Lrama::Context.new(states)
 
@@ -237,7 +237,7 @@ RSpec.describe Lrama::Context do
         grammar = Lrama::Parser.new(y, "parse.y").parse
         grammar.prepare
         grammar.validate!
-        states = Lrama::States.new(grammar)
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
         context = Lrama::Context.new(states)
 

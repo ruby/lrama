@@ -1,0 +1,13 @@
+# Generated from lib/lrama/tracer/rules.rb with RBS::Inline
+
+module Lrama
+  class Tracer
+    class Rules
+      # @rbs (IO io, bool rules, bool only_explicit, **untyped _) -> void
+      def initialize: (IO io, bool rules, bool only_explicit, **untyped _) -> void
+
+      # @rbs (Lrama::Grammar grammar) -> void
+      def trace: (Lrama::Grammar grammar) -> void
+    end
+  end
+end

@@ -1,0 +1,13 @@
+# Generated from lib/lrama/tracer/only_explicit_rules.rb with RBS::Inline
+
+module Lrama
+  class Tracer
+    class OnlyExplicitRules
+      # @rbs (IO io, only_explicit: false, **untyped _) -> void
+      def initialize: (IO io, only_explicit: false, **untyped _) -> void
+
+      # @rbs (Lrama::Grammar grammar) -> void
+      def trace: (Lrama::Grammar grammar) -> void
+    end
+  end
+end
