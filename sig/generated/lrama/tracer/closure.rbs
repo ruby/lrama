@@ -1,0 +1,13 @@
+# Generated from lib/lrama/tracer/closure.rb with RBS::Inline
+
+module Lrama
+  class Tracer
+    class Closure
+      # @rbs (IO io, bool automaton, bool closure, **untyped _) -> void
+      def initialize: (IO io, bool automaton, bool closure, **untyped _) -> void
+
+      # @rbs (Lrama::State state) -> void
+      def trace: (Lrama::State state) -> void
+    end
+  end
+end

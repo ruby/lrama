@@ -656,7 +656,7 @@ module Lrama
 
 module_eval(<<'...end parser.y/module_eval...', 'parser.y', 428)
 
-include Lrama::Trace::Duration
+include Lrama::Tracer::Duration
 
 def initialize(text, path, debug = false, define = {})
   @grammar_file = Lrama::Lexer::GrammarFile.new(path, text)

@@ -1,18 +1,25 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
+require_relative 'reporter/conflicts'
+require_relative 'reporter/grammar'
+require_relative 'reporter/profile'
+require_relative 'reporter/rules'
+require_relative 'reporter/states'
+require_relative 'reporter/terms'
+
 module Lrama
   class Reporter
-    include Lrama::Trace::Duration
+    include Lrama::Tracer::Duration
 
     # @rbs (**Hash[Symbol, bool] options) -> void
     def initialize(**options)
       @options = options
-      @rules = Lrama::Report::Rules.new(**options)
-      @terms = Lrama::Report::Terms.new(**options)
-      @conflicts = Lrama::Report::Conflicts.new
-      @grammar = Lrama::Report::Grammar.new(**options)
-      @states = Lrama::Report::States.new(**options)
+      @rules = Rules.new(**options)
+      @terms = Terms.new(**options)
+      @conflicts = Conflicts.new
+      @grammar = Grammar.new(**options)
+      @states = States.new(**options)
     end
 
     # @rbs (File io, Lrama::States states) -> void

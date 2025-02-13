@@ -16,8 +16,8 @@ module Lrama
     end
 
     def run
-      Lrama::Report::Profile::CallStack.report(@options.profile_opts[:call_stack]) do
-        Lrama::Report::Profile::Memory.report(@options.profile_opts[:memory]) do
+      Lrama::Reporter::Profile::CallStack.report(@options.profile_opts[:call_stack]) do
+        Lrama::Reporter::Profile::Memory.report(@options.profile_opts[:memory]) do
           execute_command_workflow
         end
       end

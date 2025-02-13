@@ -2,7 +2,7 @@
 
 module Lrama
   class Reporter
-    include Lrama::Trace::Duration
+    include Lrama::Tracer::Duration
 
     # @rbs (**Hash[Symbol, bool] options) -> void
     def initialize: (**Hash[Symbol, bool] options) -> void

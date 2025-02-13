@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "trace/duration"
+require_relative "tracer/duration"
 
 module Lrama
   # This is passed to a template
   class Context
-    include Trace::Duration
+    include Tracer::Duration
 
     ErrorActionNumber = -Float::INFINITY
     BaseMin = -Float::INFINITY

@@ -1,0 +1,13 @@
+# Generated from lib/lrama/reporter/rules.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    class Rules
+      # @rbs (rules: bool, **untyped _) -> void
+      def initialize: (rules: bool, **untyped _) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report: (IO io, Lrama::States states) -> void
+    end
+  end
+end

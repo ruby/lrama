@@ -1,17 +1,24 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
+require_relative "tracer/actions"
+require_relative "tracer/closure"
+require_relative "tracer/duration"
+require_relative "tracer/only_explicit_rules"
+require_relative "tracer/rules"
+require_relative "tracer/state"
+
 module Lrama
   class Tracer
     # @rbs (IO io, **Hash[Symbol, bool] options) -> void
     def initialize(io, **options)
       @io = io
       @options = options
-      @only_explicit_rules = Lrama::Trace::OnlyExplicitRules.new(io, **options)
-      @rules = Lrama::Trace::Rules.new(io, **options)
-      @actions = Lrama::Trace::Actions.new(io, **options)
-      @closure = Lrama::Trace::Closure.new(io, **options)
-      @state = Lrama::Trace::State.new(io, **options)
+      @only_explicit_rules = OnlyExplicitRules.new(io, **options)
+      @rules = Rules.new(io, **options)
+      @actions = Actions.new(io, **options)
+      @closure = Closure.new(io, **options)
+      @state = State.new(io, **options)
     end
 
     # @rbs (Lrama::Grammar grammar) -> void
@@ -38,7 +45,7 @@ module Lrama
 
     # @rbs () -> void
     def enable_duration
-      Lrama::Trace::Duration.enable if @options[:time]
+      Duration.enable if @options[:time]
     end
   end
 end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Lrama::Trace::State do
+RSpec.describe Lrama::Tracer::State do
   describe "#trace" do
     let(:path) { "common/basic.y" }
     let(:y) { File.read(fixture_path(path)) }
