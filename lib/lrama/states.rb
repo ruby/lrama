@@ -514,6 +514,7 @@ module Lrama
       end
     end
 
+    # Definition 3.16 (follow_kernel_items)
     def compute_follow_kernel_items
       set = nterm_transitions
       relation = compute_goto_internal_relation
@@ -541,6 +542,7 @@ module Lrama
       }.to_h
     end
 
+    # Definition 3.20 (always_follows, one closure)
     def compute_always_follows
       set = nterm_transitions
       relation = compute_goto_successor_or_internal_relation
@@ -567,6 +569,7 @@ module Lrama
       }.to_h
     end
 
+    # Definition 3.8 (Goto Follows Internal Relation)
     def has_internal_relation?(goto1, goto2)
       state1, sym1, next_state1 = goto1
       state2, sym2, next_state2 = goto2
@@ -575,6 +578,7 @@ module Lrama
       }
     end
 
+    # Definition 3.5 (Goto Follows Successor Relation)
     def has_successor_relation?(goto1, goto2)
       state1, sym1, next_state1 = goto1
       state2, sym2, next_state2 = goto2
