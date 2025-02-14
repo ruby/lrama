@@ -46,7 +46,7 @@ module Lrama
 
     def build_grammar(text)
       grammar =
-        Lrama::Parser.new(text, @options.grammar_file, @options.debug, @options.define).parse
+        Lrama::Parser.new(text, @options.grammar_file, @options.debug, @options.locations, @options.define).parse
       merge_stdlib(grammar)
       prepare_grammar(grammar)
       grammar
@@ -68,7 +68,9 @@ module Lrama
       stdlib_grammar = Lrama::Parser.new(
         stdlib_text,
         STDLIB_FILE_PATH,
-        @options.debug
+        @options.debug,
+        @options.locations,
+        @options.define,
       ).parse
 
       grammar.prepend_parameterized_rules(stdlib_grammar.parameterized_rules)

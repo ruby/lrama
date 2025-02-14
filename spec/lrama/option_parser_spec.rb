@@ -50,6 +50,7 @@ RSpec.describe Lrama::OptionParser do
               -S, --skeleton=FILE              specify the skeleton to use
               -t, --debug                      display debugging outputs of internal parser
                                                same as '-Dparse.trace'
+                  --locations                  enable location support
               -D, --define=NAME[=VALUE]        similar to '%define NAME VALUE'
 
           Output:

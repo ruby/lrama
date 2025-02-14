@@ -126,8 +126,8 @@ module Lrama
 
     attr_accessor required: bool
 
-    # @rbs (Counter rule_counter) -> void
-    def initialize: (Counter rule_counter) -> void
+    # @rbs (Counter rule_counter, bool locations, Hash[String, String] define) -> void
+    def initialize: (Counter rule_counter, bool locations, Hash[String, String] define) -> void
 
     # @rbs (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
     def create_rule_builder: (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
