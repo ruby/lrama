@@ -3,29 +3,13 @@
 module Lrama
   class State
     class InadequacyAnnotation
-      # @rbs @state: State
-      # @rbs @token: Symbol
-      # @rbs @actions: Array[Shift | Reduce]
-      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
-      attr_accessor state: untyped
+      attr_accessor state: State
 
-      # @rbs @state: State
-      # @rbs @token: Symbol
-      # @rbs @actions: Array[Shift | Reduce]
-      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
-      attr_accessor token: untyped
+      attr_accessor token: Grammar::Symbol
 
-      # @rbs @state: State
-      # @rbs @token: Symbol
-      # @rbs @actions: Array[Shift | Reduce]
-      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
       attr_accessor actions: untyped
 
-      # @rbs @state: State
-      # @rbs @token: Symbol
-      # @rbs @actions: Array[Shift | Reduce]
-      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
-      attr_accessor contribution_matrix: untyped
+      attr_accessor contribution_matrix: Hash[Shift | Reduce, Hash[States::Item, bool]]
 
       # @rbs (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
       def initialize: (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
@@ -37,8 +21,8 @@ module Lrama
       def merge_matrix: (Hash[Shift | Reduce, Hash[States::Item, bool]] another_matrix) -> void
 
       # Definition 3.42 (dominant_contribution)
-      # @rbs (Hash[States::Item, Array[Symbol]] lookaheads) -> Array[Shift | Reduce]?
-      def dominant_contribution: (Hash[States::Item, Array[Symbol]] lookaheads) -> Array[Shift | Reduce]?
+      # @rbs (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Shift | Reduce]?
+      def dominant_contribution: (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Shift | Reduce]?
 
       # @rbs () -> String
       def to_s: () -> String
