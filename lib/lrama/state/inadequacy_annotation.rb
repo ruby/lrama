@@ -3,11 +3,10 @@
 module Lrama
   class State
     class InadequacyAnnotation
-      # @rbs @state: State
-      # @rbs @token: Symbol
-      # @rbs @actions: Array[Shift | Reduce]
-      # @rbs @contribution_matrix: Hash[Shift | Reduce, Hash[Item, bool]]
-      attr_accessor :state, :token, :actions, :contribution_matrix
+      attr_accessor :state #: State
+      attr_accessor :token #: Grammar::Symbol
+      attr_accessor :actions # :Array[Shift | Reduce]
+      attr_accessor :contribution_matrix #: Hash[Shift | Reduce, Hash[States::Item, bool]]
 
       # @rbs (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
       def initialize(state, token, actions, contribution_matrix)
@@ -33,7 +32,7 @@ module Lrama
       end
 
       # Definition 3.42 (dominant_contribution)
-      # @rbs (Hash[States::Item, Array[Symbol]] lookaheads) -> Array[Shift | Reduce]?
+      # @rbs (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Shift | Reduce]?
       def dominant_contribution(lookaheads)
         actions = @actions.select {|action|
           contribution_matrix[action].nil? || contribution_matrix[action].any? {|item, contributed| contributed && lookaheads[item].include?(@token) }
