@@ -97,6 +97,8 @@ module Lrama
     end
 
     def compute_ielr
+      report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
+      report_duration(:compute_always_follows) { compute_always_follows }
       report_duration(:split_states) { split_states }
       report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
       report_duration(:compute_reads_relation) { compute_reads_relation }
@@ -252,10 +254,7 @@ module Lrama
         state.shifts.each do |shift|
           new_state, created = create_state(shift.next_sym, shift.next_items, states_created)
           state.set_items_to_state(shift.next_items, new_state)
-          if created
-            enqueue_state(states, new_state)
-            new_state.append_predecessor(state)
-          end
+          enqueue_state(states, new_state) if created
         end
       end
     end
@@ -515,10 +514,102 @@ module Lrama
       end
     end
 
+    def compute_follow_kernel_items
+      set = nterm_transitions
+      relation = compute_goto_internal_relation
+      base_function = compute_goto_bitmaps
+      Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
+        state, nterm, next_state = goto
+        transition = state.nterm_transitions.find {|shift, _| shift.next_sym == nterm }
+        state.follow_kernel_items[transition] = state.kernels.map.with_index {|kernel, i|
+          [kernel, Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)]
+        }.to_h
+      end
+    end
+
+    def compute_goto_internal_relation
+      nterm_transitions.map {|goto1|
+        related_gotos = nterm_transitions.select {|goto2| has_internal_relation?(goto1, goto2) }
+        [goto1, related_gotos]
+      }.to_h
+    end
+
+    def compute_goto_bitmaps
+      nterm_transitions.map {|state, sym, next_state|
+        bools = state.kernels.map.with_index {|kernel, i| i if kernel.next_sym == sym && kernel.symbols_after_transition.all?(&:nullable) }.compact
+        [[state, sym, next_state], Bitmap.from_array(bools)]
+      }.to_h
+    end
+
+    def compute_always_follows
+      set = nterm_transitions
+      relation = compute_goto_successor_or_internal_relation
+      base_function = compute_transition_bitmaps
+      Digraph.new(set, relation, base_function).compute.each do |goto, always_follows_bitmap|
+        state, nterm, next_state = goto
+        transition = state.nterm_transitions.find {|shift, _| shift.next_sym == nterm }
+        state.always_follows[transition] = bitmap_to_terms(always_follows_bitmap)
+      end
+    end
+
+    def compute_goto_successor_or_internal_relation
+      nterm_transitions.map {|goto1|
+        related_gotos = nterm_transitions.select {|goto2|
+          has_internal_relation?(goto1, goto2) || has_successor_relation?(goto1, goto2)
+        }
+        [goto1, related_gotos]
+      }.to_h
+    end
+
+    def compute_transition_bitmaps
+      nterm_transitions.map {|goto|
+        [goto, Bitmap.from_array(goto[2].shifts.map {|shift| shift.next_sym.number }) ]
+      }.to_h
+    end
+
+    def has_internal_relation?(goto1, goto2)
+      state1, sym1, next_state1 = goto1
+      state2, sym2, next_state2 = goto2
+      state1 == state2 && state1.items.any? {|item|
+        item.next_sym == sym1 && item.lhs == sym2 && item.symbols_after_transition.all?(&:nullable)
+      }
+    end
+
+    def has_successor_relation?(goto1, goto2)
+      state1, sym1, next_state1 = goto1
+      state2, sym2, next_state2 = goto2
+      next_state1 == state2 && sym2.nullable
+    end
+
     def split_states
       @states.each do |state|
         state.transitions.each do |shift, next_state|
+          next_state.append_predecessor(state)
+        end
+      end
+
+      compute_inadequacy_annotations
+
+      @states.each do |state|
+        state.transitions.each do |shift, next_state|
           compute_state(state, shift, next_state)
+        end
+      end
+    end
+
+    def compute_inadequacy_annotations
+      @states.each do |state|
+        state.annotate_manifestation
+      end
+
+      @states.reverse.each do |state|
+        queue = [state]
+        while (curr = queue.shift) do
+          curr.predecessors.each do |pred|
+            cache = pred.annotation_list.dup
+            pred.annotate_predecessor(curr)
+            queue << pred if cache != pred.annotation_list
+          end
         end
       end
     end
@@ -534,8 +625,8 @@ module Lrama
     end
 
     def compute_state(state, shift, next_state)
-      filtered_lookaheads = state.propagate_lookaheads(next_state)
-      s = next_state.ielr_isocores.find {|st| st.compatible_lookahead?(filtered_lookaheads) }
+      propagating_lookaheads = state.propagate_lookaheads(next_state)
+      s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
 
       if s.nil?
         s = next_state.ielr_isocores.last
@@ -551,13 +642,17 @@ module Lrama
         s.ielr_isocores.each do |st|
           st.ielr_isocores = s.ielr_isocores
         end
-        new_state.item_lookahead_set = filtered_lookaheads
+        new_state.lookaheads_recomputed = true
+        new_state.item_lookahead_set = propagating_lookaheads
         state.update_transition(shift, new_state)
+        compute_follow_kernel_items
+        compute_always_follows
       elsif(!s.lookaheads_recomputed)
-        s.item_lookahead_set = filtered_lookaheads
+        s.lookaheads_recomputed = true
+        s.item_lookahead_set = propagating_lookaheads
       else
         state.update_transition(shift, s)
-        merge_lookaheads(s, filtered_lookaheads)
+        merge_lookaheads(s, propagating_lookaheads)
       end
     end
   end

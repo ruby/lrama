@@ -16,16 +16,26 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %token c
 %define lr.type ielr
 
+%precedence tLOWEST
+%precedence a
+%precedence tHIGHEST
+
 %%
+
 S: a A B a
  | b A B b
+
 A: a C D E
+
 B: c
  | // empty
+
 C: D
+
 D: a
+
 E: a
- | // empty
+ | %prec tHIGHEST // empty
 
 %%
 
