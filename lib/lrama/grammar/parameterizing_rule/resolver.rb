@@ -34,7 +34,7 @@ module Lrama
         private
 
         def select_rules(rules, token)
-          rules = select_not_inline_rules(rules)
+          rules = reject_inline_rules(rules)
           rules = select_rules_by_name(rules, token.rule_name)
           rules = rules.select { |rule| rule.required_parameters_count == token.args_count }
           if rules.empty?
@@ -44,8 +44,8 @@ module Lrama
           end
         end
 
-        def select_not_inline_rules(rules)
-          rules.select { |rule| !rule.is_inline }
+        def reject_inline_rules(rules)
+          rules.reject(&:is_inline)
         end
 
         def select_rules_by_name(rules, rule_name)

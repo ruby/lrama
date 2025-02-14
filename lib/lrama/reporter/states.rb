@@ -104,7 +104,7 @@ module Lrama
             if r.initial_rule?
               io << "    #{s}  accept\n"
             else
-                io << "    #{s}  reduce using rule #{r.id} (#{r.lhs.display_name})\n"
+              io << "    #{s}  reduce using rule #{r.id} (#{r.lhs.display_name})\n"
             end
           end
           io << "\n" if nl

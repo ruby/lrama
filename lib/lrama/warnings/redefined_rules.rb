@@ -5,7 +5,7 @@ module Lrama
   class Warnings
     class RedefinedRules
       # @rbs (Lrama::Logger logger, bool warnings) -> void
-      def initialize(logger, warnings = false)
+      def initialize(logger, warnings)
         @logger = logger
         @warnings = warnings
       end

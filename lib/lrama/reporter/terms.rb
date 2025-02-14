@@ -23,8 +23,8 @@ module Lrama
           state.shifts.map(&:next_sym).select(&:term?)
         end
 
-        unused_symbols = states.terms.select do |term|
-          !(look_aheads + next_terms).include?(term)
+        unused_symbols = states.terms.reject do |term|
+          (look_aheads + next_terms).include?(term)
         end
 
         unless unused_symbols.empty?
