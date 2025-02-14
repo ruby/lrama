@@ -112,7 +112,7 @@ module Lrama
           if action.is_a?(Shift)
             action.class.name
           elsif action.is_a?(Reduce)
-            "#{action.class.name}: (#{action.item.to_s})"
+            "#{action.class.name}: (#{action.item})"
           end
         }.join(', ') + ']'
       end
@@ -120,7 +120,7 @@ module Lrama
       # @rbs () -> String
       def contribution_matrix_to_s
         '[' + @contribution_matrix.map {|action, contributions|
-          "#{action.is_a?(Shift) ? action.class.name : "#{action.class.name}: (#{action.item.to_s})"}: " + contributions&.transform_keys(&:to_s).to_s
+          "#{action.is_a?(Shift) ? action.class.name : "#{action.class.name}: (#{action.item})"}: " + contributions&.transform_keys(&:to_s).to_s
         }.join(', ') + ']'
       end
     end
