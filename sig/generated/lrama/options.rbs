@@ -5,6 +5,8 @@ module Lrama
   class Options
     attr_accessor skeleton: String
 
+    attr_accessor locations: bool
+
     attr_accessor header: bool
 
     attr_accessor header_file: String?
