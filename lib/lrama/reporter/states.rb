@@ -51,6 +51,28 @@ module Lrama
           end
           io << "\n"
 
+          # Report conflicts
+          unless state.conflicts.empty?
+            state.conflicts.each do |conflict|
+              syms = conflict.symbols.map do |sym|
+                sym.id.s_value
+              end
+
+              io << "    Conflict on #{syms.join(", ")}. "
+
+              case conflict.type
+              when :shift_reduce
+                io << "shift/reduce(#{conflict.reduce.item.rule.lhs.display_name})\n"
+              when :reduce_reduce
+                io << "reduce(#{conflict.reduce1.item.rule.lhs.display_name})/reduce(#{conflict.reduce2.item.rule.lhs.display_name})\n"
+              else
+                raise "Unknown conflict type #{conflict.type}"
+              end
+            end
+
+            io << "\n"
+          end
+
           # Report shifts
           tmp = state.term_transitions.reject do |shift, _|
             shift.not_selected
