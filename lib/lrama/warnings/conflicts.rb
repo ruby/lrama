@@ -5,7 +5,7 @@ module Lrama
   class Warnings
     class Conflicts
       # @rbs (Lrama::Logger logger, bool warnings) -> void
-      def initialize(logger, warnings = false, **_)
+      def initialize(logger, warnings)
         @logger = logger
         @warnings = warnings
       end
