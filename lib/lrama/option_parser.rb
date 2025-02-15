@@ -180,7 +180,7 @@ module Lrama
         if SUPPORTED_TRACES.include?(t)
           h[t.gsub(/-/, '_').to_sym] = true
         else
-          raise "Invalid trace option \"#{t}\"."
+          raise "Invalid trace option \"#{t}\".\nValid options are [#{SUPPORTED_TRACES.join(", ")}]."
         end
       end
 
@@ -197,7 +197,7 @@ module Lrama
         if VALID_PROFILES.include?(t)
           h[t.gsub(/-/, '_').to_sym] = true
         else
-          raise "Invalid profile option \"#{t}\"."
+          raise "Invalid profile option \"#{t}\".\nValid options are [#{VALID_PROFILES.join(", ")}]."
         end
       end
 
