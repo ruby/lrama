@@ -97,9 +97,12 @@ module Lrama
     end
 
     def compute_ielr
+      # Phase 1
       report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
       report_duration(:compute_always_follows) { compute_always_follows }
+      # Phase 3
       report_duration(:split_states) { split_states }
+      # Phase 4
       report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
       report_duration(:compute_reads_relation) { compute_reads_relation }
       report_duration(:compute_read_sets) { compute_read_sets }
@@ -107,8 +110,8 @@ module Lrama
       report_duration(:compute_lookback_relation) { compute_lookback_relation }
       report_duration(:compute_follow_sets) { compute_follow_sets }
       report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
+      # Phase 5
       report_duration(:compute_conflicts) { compute_conflicts }
-
       report_duration(:compute_default_reduction) { compute_default_reduction }
     end
 
