@@ -15,7 +15,7 @@ module Lrama
         return unless @warnings
 
         if grammar.required
-          @logger.warn("%require is provided for compatibility with bison and can be removed after migration to lrama")
+          @logger.warn("currently, %require is simply valid as a grammar but does nothing")
         end
       end
     end

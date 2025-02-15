@@ -28,7 +28,7 @@ RSpec.describe Lrama::Warnings::Required do
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
         Lrama::Warnings.new(logger, true).warn(grammar, states)
-        expect(logger).to have_received(:warn).with("%require is provided for compatibility with bison and can be removed after migration to lrama")
+        expect(logger).to have_received(:warn).with("currently, %require is simply valid as a grammar but does nothing")
       end
     end
 
@@ -42,7 +42,7 @@ RSpec.describe Lrama::Warnings::Required do
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
         Lrama::Warnings.new(logger, false).warn(grammar, states)
-        expect(logger).not_to have_received(:warn).with("%require is provided for compatibility with bison and can be removed after migration to lrama")
+        expect(logger).not_to have_received(:warn).with("currently, %require is simply valid as a grammar but does nothing")
       end
     end
   end
