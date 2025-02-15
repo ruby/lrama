@@ -21,7 +21,7 @@ rule
                           {
                             @grammar.prologue = val[2].s_value
                           }
-                      | "%require" STRING
+                      | "%require" STRING { @grammar.required = true }
 
   bison_declaration: grammar_declaration
                    | "%expect" INTEGER { @grammar.expect = val[1] }

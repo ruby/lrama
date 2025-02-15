@@ -910,7 +910,7 @@ racc_reduce_table = [
   0, 67, :_reduce_10,
   0, 68, :_reduce_11,
   5, 59, :_reduce_12,
-  2, 59, :_reduce_none,
+  2, 59, :_reduce_13,
   1, 73, :_reduce_14,
   2, 73, :_reduce_15,
   1, 60, :_reduce_none,
@@ -1304,7 +1304,12 @@ module_eval(<<'.,.,', 'parser.y', 21)
   end
 .,.,
 
-# reduce 13 omitted
+module_eval(<<'.,.,', 'parser.y', 23)
+  def _reduce_13(val, _values, result)
+     @grammar.required = true
+    result
+  end
+.,.,
 
 module_eval(<<'.,.,', 'parser.y', 54)
   def _reduce_14(val, _values, result)
