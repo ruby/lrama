@@ -13,8 +13,8 @@ module Lrama
         @verbose = verbose
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report(io, states)
+      # @rbs (IO io, Lrama::States states, ielr: bool) -> void
+      def report(io, states, ielr: false)
         if @counterexamples
           cex = Counterexamples.new(states)
         end
@@ -177,6 +177,43 @@ module Lrama
                 io << "        #{str}\n"
               end
             end
+          end
+
+          if ielr && !state.annotation_list.empty?
+            state.annotation_list.each do |annotation|
+              # binding.irb
+              io << "    inadequacy annotation manifesting state #{annotation.state.id}, token #{annotation.token.id.s_value}\n"
+
+              annotation.contribution_matrix.each do |action, contributions|
+                case action
+                when State::Shift
+                  io << "      state #{state.id} always contributes to shift by #{action.next_sym.id.s_value}\n"
+                when State::Reduce
+                  reduce_rule = action.item.rule
+                  reduce_rule_text = "#{reduce_rule.lhs.display_name}: #{reduce_rule.rhs.map(&:display_name).join(" ")}"
+
+                  if contributions
+                    contributions.each do |item, contribution|
+                      if item.empty_rule?
+                        r = "ε •"
+                      else
+                        r = item.rhs.map(&:display_name).insert(item.position, "•").join(" ")
+                      end
+
+                      if contribution
+                        io << "      '#{r}' potentially contributes to reduce by '#{reduce_rule_text}'\n"
+                      else
+                        io << "      '#{r}' never contributes to reduce by '#{reduce_rule_text}'\n"
+                      end
+                    end
+                  else
+                    io << "      state #{state.id} always contributes to reduce by '#{reduce_rule_text}'\n"
+                  end
+                end
+              end
+            end
+
+            io << "\n"
           end
 
           if @verbose

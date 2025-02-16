@@ -14,7 +14,7 @@ module Lrama
     include Lrama::Tracer::Duration
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules,
-      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!
+      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?
 
     attr_reader :states, :reads_relation, :includes_relation, :lookback_relation
 
