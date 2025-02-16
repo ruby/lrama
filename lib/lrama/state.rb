@@ -334,7 +334,7 @@ module Lrama
       terms = always_follows[[shift, next_state]]
       until queue.empty?
         st, sh, next_st = queue.pop
-        terms |= st.always_follows(sh, next_st)
+        terms |= st.always_follows[[sh, next_st]]
         st.internal_dependencies(sh, next_st).each {|v| queue << v }
         st.predecessor_dependencies(sh, next_st).each {|v| queue << v }
       end

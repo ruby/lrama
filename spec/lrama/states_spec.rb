@@ -2316,6 +2316,255 @@ RSpec.describe Lrama::States do
 
       STR
     end
+
+    it 'recompute states' do
+      y = <<~INPUT
+        %{
+        // Prologue
+        %}
+
+        %token a
+        %token b
+        %token c
+
+        %precedence tLOWEST
+        %precedence a
+        %precedence tHIGHEST
+
+        %%
+
+        S: S2
+         ;
+
+        S2: a A B a
+          | b A B b
+          ;
+
+        A: a C D E
+         ;
+
+        B: c
+         | // empty
+         ;
+
+        C: D
+         ;
+
+        D: a
+         ;
+
+        E: a
+         | %prec tHIGHEST // empty
+         ;
+
+        %%
+      INPUT
+      grammar = Lrama::Parser.new(y, "states/ArgumentError_on_goto_follows.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      expect { states.compute_ielr }.not_to raise_error
+
+      io = StringIO.new
+      Lrama::Reporter.new(states: true).report(io, states)
+
+      expect(io.string).to eq(<<~STR)
+        State 0
+
+            0 $accept: • S "end of file"
+
+            a  shift, and go to state 1
+            b  shift, and go to state 2
+
+            S   go to state 3
+            S2  go to state 4
+
+
+        State 1
+
+            2 S2: a • A B a
+
+            a  shift, and go to state 5
+
+            A  go to state 6
+
+
+        State 2
+
+            3 S2: b • A B b
+
+            a  shift, and go to state 20
+
+            A  go to state 7
+
+
+        State 3
+
+            0 $accept: S • "end of file"
+
+            "end of file"  shift, and go to state 8
+
+
+        State 4
+
+            1 S: S2 •
+
+            $default  reduce using rule 1 (S)
+
+
+        State 5
+
+            4 A: a • C D E
+
+            a  shift, and go to state 9
+
+            C  go to state 10
+            D  go to state 11
+
+
+        State 6
+
+            2 S2: a A • B a
+
+            c  shift, and go to state 12
+
+            $default  reduce using rule 6 (B)
+
+            B  go to state 13
+
+
+        State 7
+
+            3 S2: b A • B b
+
+            c  shift, and go to state 12
+
+            $default  reduce using rule 6 (B)
+
+            B  go to state 14
+
+
+        State 8
+
+            0 $accept: S "end of file" •
+
+            $default  accept
+
+
+        State 9
+
+            8 D: a •
+
+            $default  reduce using rule 8 (D)
+
+
+        State 10
+
+            4 A: a C • D E
+
+            a  shift, and go to state 9
+
+            D  go to state 15
+
+
+        State 11
+
+            7 C: D •
+
+            $default  reduce using rule 7 (C)
+
+
+        State 12
+
+            5 B: c •
+
+            $default  reduce using rule 5 (B)
+
+
+        State 13
+
+            2 S2: a A B • a
+
+            a  shift, and go to state 16
+
+
+        State 14
+
+            3 S2: b A B • b
+
+            b  shift, and go to state 17
+
+
+        State 15
+
+            4 A: a C D • E
+
+            $default  reduce using rule 10 (E)
+
+            E  go to state 19
+
+
+        State 16
+
+            2 S2: a A B a •
+
+            $default  reduce using rule 2 (S2)
+
+
+        State 17
+
+            3 S2: b A B b •
+
+            $default  reduce using rule 3 (S2)
+
+
+        State 18
+
+            9 E: a •
+
+            $default  reduce using rule 9 (E)
+
+
+        State 19
+
+            4 A: a C D E •
+
+            $default  reduce using rule 4 (A)
+
+
+        State 20
+
+            4 A: a • C D E
+
+            a  shift, and go to state 9
+
+            C  go to state 21
+            D  go to state 11
+
+
+        State 21
+
+            4 A: a C • D E
+
+            a  shift, and go to state 9
+
+            D  go to state 22
+
+
+        State 22
+
+            4 A: a C D • E
+
+            a  shift, and go to state 18
+
+            $default  reduce using rule 10 (E)
+
+            E  go to state 19
+
+
+      STR
+    end
   end
 
   describe "#validate!" do
