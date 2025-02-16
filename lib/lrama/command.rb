@@ -34,7 +34,7 @@ module Lrama
       @tracer.trace(grammar)
       render_diagram(grammar)
       render_output(context, grammar)
-      validate_grammar(grammar, states)
+      states.validate!(@logger)
       @warnings.warn(grammar, states)
     end
 
@@ -113,11 +113,6 @@ module Lrama
           error_recovery: @options.error_recovery,
         ).render
       end
-    end
-
-    def validate_grammar(grammar, states)
-      validator = Lrama::GrammarValidator.new(grammar, states, @logger)
-      exit false unless validator.valid?
     end
   end
 end
