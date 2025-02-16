@@ -48,6 +48,9 @@ Lrama is LALR (1) parser generator written by Ruby. The first goal of this proje
 * Inlining
   * The %inline directive causes all references to symbols to be replaced with its definition.
   * Resolve shift/reduce conflicts without artificially altering the grammar file.
+* Syntax Diagrams
+  * Easily generate syntax diagrams from the grammar file.
+  * These visual diagrams are an useful development tool for grammar development and can also function as automatic self-documentation.
 
 ## Installation
 
