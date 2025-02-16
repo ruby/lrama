@@ -3,7 +3,7 @@
 RSpec.describe Lrama::Grammar::RuleBuilder do
   let(:rule_counter) { Lrama::Grammar::Counter.new(1) }
   let(:midrule_action_counter) { Lrama::Grammar::Counter.new(1) }
-  let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(rule_counter, midrule_action_counter, Lrama::Grammar::ParameterizingRule::Resolver.new) }
+  let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(rule_counter, midrule_action_counter, Lrama::Grammar::Parameterized::Resolver.new) }
   let(:path) { "parse.y" }
 
   describe "#add_rhs" do

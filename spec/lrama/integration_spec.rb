@@ -96,7 +96,7 @@ RSpec.describe "integration" do
     end
   end
 
-  describe "parameterizing rules" do
+  describe "parameterized rules" do
     it "returns " do
       expected = <<~STR
         odd: 1
@@ -104,11 +104,11 @@ RSpec.describe "integration" do
         odd: 3
         even: 4
       STR
-      test_parser("parameterizing_rules", "1 \n 2; 3 4", expected)
+      test_parser("parameterized", "1 \n 2; 3 4", expected)
     end
   end
 
-  describe "user defined parameterizing rules" do
+  describe "user defined parameterized rules" do
     it "prints messages corresponding to rules" do
       expected = <<~STR
         (2, 3)
@@ -120,7 +120,7 @@ RSpec.describe "integration" do
         (-2, -1)
         pair odd even: 1
       STR
-      test_parser("user_defined_parameterizing_rules", "2 3 ; 1 0", expected)
+      test_parser("user_defined_parameterized", "2 3 ; 1 0", expected)
     end
   end
 

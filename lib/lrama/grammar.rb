@@ -7,7 +7,8 @@ require_relative "grammar/code"
 require_relative "grammar/counter"
 require_relative "grammar/destructor"
 require_relative "grammar/error_token"
-require_relative "grammar/parameterizing_rule"
+require_relative "grammar/inline"
+require_relative "grammar/parameterized"
 require_relative "grammar/percent_code"
 require_relative "grammar/precedence"
 require_relative "grammar/printer"
@@ -25,7 +26,7 @@ module Lrama
   class Grammar
     extend Forwardable
 
-    attr_reader :percent_codes, :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux, :parameterizing_rule_resolver
+    attr_reader :percent_codes, :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :aux, :parameterized_resolver
     attr_accessor :union, :expect, :printers, :error_tokens, :lex_param, :parse_param, :initial_action,
                   :after_shift, :before_reduce, :after_reduce, :after_shift_error_token, :after_pop_stack,
                   :symbols_resolver, :types, :rules, :rule_builders, :sym_to_rules, :no_stdlib, :locations, :define, :required
@@ -48,7 +49,7 @@ module Lrama
       @rule_builders = []
       @rules = []
       @sym_to_rules = {}
-      @parameterizing_rule_resolver = ParameterizingRule::Resolver.new
+      @parameterized_resolver = Parameterized::Resolver.new
       @empty_symbol = nil
       @eof_symbol = nil
       @error_symbol = nil
@@ -64,7 +65,7 @@ module Lrama
     end
 
     def create_rule_builder(rule_counter, midrule_action_counter)
-      RuleBuilder.new(rule_counter, midrule_action_counter, @parameterizing_rule_resolver)
+      RuleBuilder.new(rule_counter, midrule_action_counter, @parameterized_resolver)
     end
 
     def add_percent_code(id:, code:)
@@ -116,16 +117,16 @@ module Lrama
       @rule_builders << builder
     end
 
-    def add_parameterizing_rule(rule)
-      @parameterizing_rule_resolver.add_parameterizing_rule(rule)
+    def add_parameterized_rule(rule)
+      @parameterized_resolver.add_rule(rule)
     end
 
-    def parameterizing_rules
-      @parameterizing_rule_resolver.rules
+    def parameterized_rules
+      @parameterized_resolver.rules
     end
 
-    def insert_before_parameterizing_rules(rules)
-      @parameterizing_rule_resolver.rules = rules + @parameterizing_rule_resolver.rules
+    def prepend_parameterized_rules(rules)
+      @parameterized_resolver.rules = rules + @parameterized_resolver.rules
     end
 
     def prologue_first_lineno=(prologue_first_lineno)
@@ -311,7 +312,7 @@ module Lrama
       while @rule_builders.any?(&:has_inline_rules?) do
         @rule_builders = @rule_builders.flat_map do |builder|
           if builder.has_inline_rules?
-            builder.resolve_inline_rules
+            Inline::Resolver.new(builder).resolve
           else
             builder
           end

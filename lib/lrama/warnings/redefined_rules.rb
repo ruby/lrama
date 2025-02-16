@@ -14,8 +14,8 @@ module Lrama
       def warn(grammar)
         return unless @warnings
 
-        grammar.parameterizing_rule_resolver.redefined_rules.each do |rule|
-          @logger.warn("parameterizing rule redefined: #{rule}")
+        grammar.parameterized_resolver.redefined_rules.each do |rule|
+          @logger.warn("parameterized rule redefined: #{rule}")
         end
       end
     end

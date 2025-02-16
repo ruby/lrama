@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "parameterizing_rules.h"
+#include "parameterized.h"
 
 int yycolumn = 0;
 

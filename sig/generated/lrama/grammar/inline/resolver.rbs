@@ -1,0 +1,26 @@
+# Generated from lib/lrama/grammar/inline/resolver.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Inline
+      class Resolver
+        # @rbs (Lrama::Grammar::RuleBuilder rule_builder) -> void
+        def initialize: (Lrama::Grammar::RuleBuilder rule_builder) -> void
+
+        # @rbs () -> Array[Lrama::Grammar::RuleBuilder]
+        def resolve: () -> Array[Lrama::Grammar::RuleBuilder]
+
+        private
+
+        # @rbs (Lrama::Grammar::Parameterized::Rhs rhs, Lrama::Lexer::Token token, Integer index, Lrama::Grammar::Parameterized::Rule rule) -> Lrama::Grammar::RuleBuilder
+        def build_rule: (Lrama::Grammar::Parameterized::Rhs rhs, Lrama::Lexer::Token token, Integer index, Lrama::Grammar::Parameterized::Rule rule) -> Lrama::Grammar::RuleBuilder
+
+        # @rbs (Lrama::Grammar::RuleBuilder builder, Lrama::Grammar::Parameterized::Rhs rhs, Integer index, Lrama::Lexer::Token token, Lrama::Grammar::Parameterized::Rule rule) -> void
+        def resolve_rhs: (Lrama::Grammar::RuleBuilder builder, Lrama::Grammar::Parameterized::Rhs rhs, Integer index, Lrama::Lexer::Token token, Lrama::Grammar::Parameterized::Rule rule) -> void
+
+        # @rbs (Lrama::Grammar::Parameterized::Rhs rhs, Integer index) -> Lrama::Lexer::Token::UserCode
+        def replace_user_code: (Lrama::Grammar::Parameterized::Rhs rhs, Integer index) -> Lrama::Lexer::Token::UserCode
+      end
+    end
+  end
+end

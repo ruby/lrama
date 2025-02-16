@@ -22,8 +22,8 @@ RSpec.describe Lrama::Warnings::RedefinedRules do
     end
 
     context "when warnings true" do
-      it "has warns for parameterizing rule redefined" do
-        grammar = Lrama::Parser.new(y, "states/parameterizing_rule_redefined.y").parse
+      it "has warns for parameterized rule redefined" do
+        grammar = Lrama::Parser.new(y, "states/parameterized_rule_redefined.y").parse
         grammar.prepare
         grammar.validate!
         states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
@@ -31,14 +31,14 @@ RSpec.describe Lrama::Warnings::RedefinedRules do
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
         Lrama::Warnings.new(logger, true).warn(grammar, states)
-        expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(X)")
-        expect(logger).to have_received(:warn).with("parameterizing rule redefined: foo(Y)")
+        expect(logger).to have_received(:warn).with("parameterized rule redefined: foo(X)")
+        expect(logger).to have_received(:warn).with("parameterized rule redefined: foo(Y)")
       end
     end
 
     context "when warnings false" do
-      it "has not warns for parameterizing rule redefined" do
-        grammar = Lrama::Parser.new(y, "states/parameterizing_rule_redefined.y").parse
+      it "has not warns for parameterized rule redefined" do
+        grammar = Lrama::Parser.new(y, "states/parameterized_rule_redefined.y").parse
         grammar.prepare
         grammar.validate!
         states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
@@ -46,8 +46,8 @@ RSpec.describe Lrama::Warnings::RedefinedRules do
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
         Lrama::Warnings.new(logger, false).warn(grammar, states)
-        expect(logger).not_to have_received(:warn).with("parameterizing rule redefined: foo(X)")
-        expect(logger).not_to have_received(:warn).with("parameterizing rule redefined: foo(Y)")
+        expect(logger).not_to have_received(:warn).with("parameterized rule redefined: foo(X)")
+        expect(logger).not_to have_received(:warn).with("parameterized rule redefined: foo(Y)")
       end
     end
   end

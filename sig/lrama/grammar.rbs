@@ -12,7 +12,7 @@ module Lrama
     @rule_builders: Array[RuleBuilder]
     @rules: Array[Rule]
     @sym_to_rules: Hash[Integer, Array[Rule]]
-    @parameterizing_rule_resolver: ParameterizingRule::Resolver
+    @parameterized_resolver: Parameterized::Resolver
     @empty_symbol: Grammar::Symbol
     @eof_symbol: Grammar::Symbol
     @error_symbol: Grammar::Symbol
@@ -64,9 +64,9 @@ module Lrama
     def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_union: (Grammar::Code::NoReferenceCode code, Integer lineno) -> Union
     def add_rule_builder: (RuleBuilder builder) -> Array[RuleBuilder]
-    def add_parameterizing_rule: (ParameterizingRule::Rule rule) -> Array[ParameterizingRule::Rule]
-    def parameterizing_rules: () -> Array[ParameterizingRule::Rule]
-    def insert_before_parameterizing_rules: (Array[ParameterizingRule::Rule] rules) -> Array[ParameterizingRule::Rule]
+    def add_parameterized_rule: (Parameterized::Rule rule) -> Array[Parameterized::Rule]
+    def parameterized_rules: () -> Array[Parameterized::Rule]
+    def prepend_parameterized_rules: (Array[Parameterized::Rule] rules) -> Array[Parameterized::Rule]
     def prologue_first_lineno=: (Integer prologue_first_lineno) -> Integer
     def prologue=: (String prologue) -> String
     def epilogue_first_lineno=: (Integer epilogue_first_lineno) -> Integer
