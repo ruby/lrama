@@ -2379,7 +2379,7 @@ RSpec.describe Lrama::States do
       STR
     end
 
-    context "when expect is specified" do
+    context "when %expect is specified" do
       context "when the number of s/r conflicts is same with expect" do
         let(:header) do
           <<~STR
@@ -2432,7 +2432,7 @@ RSpec.describe Lrama::States do
       end
     end
 
-    describe "expect is not specified" do
+    describe "%expect is not specified" do
       let(:header) do
         <<~STR
           %{
