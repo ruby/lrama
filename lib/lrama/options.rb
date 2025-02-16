@@ -5,6 +5,7 @@ module Lrama
   # Command line options.
   class Options
     attr_accessor :skeleton #: String
+    attr_accessor :locations #: bool
     attr_accessor :header #: bool
     attr_accessor :header_file #: String?
     attr_accessor :report_file #: String?
@@ -24,6 +25,7 @@ module Lrama
     # @rbs () -> void
     def initialize
       @skeleton = "bison/yacc.c"
+      @locations = false
       @define = {}
       @header = false
       @header_file = nil
