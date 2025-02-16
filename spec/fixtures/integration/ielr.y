@@ -29,18 +29,24 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 S: a A B a
  | b A B b
+ ;
 
 A: a C D E
+ ;
 
 B: c
  | // empty
+ ;
 
 C: D
+ ;
 
 D: a
+ ;
 
 E: a
  | %prec tHIGHEST // empty
+ ;
 
 %%
 
