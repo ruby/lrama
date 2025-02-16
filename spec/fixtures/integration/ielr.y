@@ -1,3 +1,8 @@
+/*
+ * This grammar comes from "The IELR(1) algorithm for generating minimal LR(1) parser tables for
+non-LR(1) grammars with conflict resolution" Fig. 5. (P. 955)
+ */
+
 %{
 #include <stdio.h>
 #include <stdlib.h>
