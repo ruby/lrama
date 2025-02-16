@@ -6,8 +6,8 @@ module Lrama
       # @rbs (itemsets: bool, lookaheads: bool, solved: bool, counterexamples: bool, verbose: bool, **untyped _) -> void
       def initialize: (itemsets: bool, lookaheads: bool, solved: bool, counterexamples: bool, verbose: bool, **untyped _) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::States states, ielr: bool) -> void
+      def report: (IO io, Lrama::States states, ielr: bool) -> void
     end
   end
 end
