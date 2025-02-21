@@ -21,6 +21,9 @@ module Lrama
     @aux: Auxiliary
     @no_stdlib: bool
     @locations: bool
+    @define: Hash[String, String]
+    @required: bool
+    @categories: Hash[String, Lrama::Category]
     @union: Union
 
     extend Forwardable
@@ -63,6 +66,7 @@ module Lrama
     def add_precedence: (Grammar::Symbol sym, Integer precedence) -> Precedence
     def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_union: (Grammar::Code::NoReferenceCode code, Integer lineno) -> Union
+    def add_category: (id: Lrama::Lexer::Token::Ident, tokens: Array[Lrama::Lexer::Token::Ident], tag: Lexer::Token::Tag) -> void
     def add_rule_builder: (RuleBuilder builder) -> Array[RuleBuilder]
     def add_parameterized_rule: (Parameterized::Rule rule) -> Array[Parameterized::Rule]
     def parameterized_rules: () -> Array[Parameterized::Rule]
@@ -75,6 +79,7 @@ module Lrama
     def validate!: () -> void
     def find_rules_by_symbol!: (Grammar::Symbol sym) -> Array[Rule]
     def find_rules_by_symbol: (Grammar::Symbol sym) -> Array[Rule]?
+    def find_category: (String) -> Lrama::Category
 
     private
 
@@ -84,6 +89,7 @@ module Lrama
     def setup_rules: () -> Array[RuleBuilder]
     def append_special_symbols: () -> Grammar::Symbol
     def normalize_rules: () -> Array[Rule]
+    def expand_categories: () -> void
     def collect_symbols: () -> Array[Lexer::Token]
     def set_lhs_and_rhs: () -> void
     def fill_default_precedence: () -> void

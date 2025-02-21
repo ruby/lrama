@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "lrama/bitmap"
+require_relative "lrama/category"
 require_relative "lrama/command"
 require_relative "lrama/context"
 require_relative "lrama/counterexamples"
