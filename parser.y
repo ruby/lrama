@@ -167,6 +167,7 @@ rule
                           }
                           @precedence_number += 1
                         }
+                    | "%token-categories" token_categories_declarations
 
   token_declarations: TAG? token_declaration+
                         {
@@ -182,6 +183,11 @@ rule
                         }
 
   token_declaration: id INTEGER? alias { result = val }
+
+  token_categories_declarations: TAG? IDENT_COLON ":" id+
+                                {
+                                  @grammar.add_category(id: val[1], tokens: val[3], tag: val[0])
+                                }
 
   rule_declaration: "%rule" IDENTIFIER "(" rule_args ")" TAG? ":" rule_rhs_list
                       {

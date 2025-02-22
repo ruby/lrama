@@ -2869,6 +2869,87 @@ RSpec.describe Lrama::Parser do
       end
     end
 
+    context "when categories" do
+      let(:grammar) do
+        grammar = Lrama::Parser.new(y, path).parse
+        grammar.prepare
+        grammar.validate!
+        grammar
+      end
+      let(:y) { File.read(fixture_path(path)) }
+      let(:path) { "categories/basic.y" }
+
+      it "expands categories" do
+        expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+          Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 0, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 1, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "num"), alias_name: nil, number: 10, tag: nil, term: false, token_id: 2, nullable: false),
+          Sym.new(id: T::Ident.new(s_value: "str"), alias_name: nil, number: 11, tag: nil, term: false, token_id: 3, nullable: false),
+        ])
+
+        expect(grammar.rules).to eq([
+          Rule.new(
+            id: 0,
+            lhs: grammar.find_symbol_by_s_value!("$accept"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("program"),
+              grammar.find_symbol_by_s_value!("YYEOF"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+            lineno: 23,
+          ),
+          Rule.new(
+            id: 1,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("num"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: nil,
+            lineno: 23,
+          ),
+          Rule.new(
+            id: 2,
+            lhs: grammar.find_symbol_by_s_value!("program"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("str"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: nil,
+            lineno: 24,
+          ),
+          Rule.new(
+            id: 3,
+            lhs: grammar.find_symbol_by_s_value!("num"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("integer"),
+              grammar.find_symbol_by_s_value!("number"),
+              grammar.find_symbol_by_s_value!("count"),
+            ],
+            token_code: nil,
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("count"),
+            lineno: 18,
+          ),
+          Rule.new(
+            id: 4,
+            lhs: grammar.find_symbol_by_s_value!("str"),
+            rhs: [
+              grammar.find_symbol_by_s_value!("string"),
+              grammar.find_symbol_by_s_value!("identifier"),
+            ],
+            nullable: false,
+            precedence_sym: grammar.find_symbol_by_s_value!("identifier"),
+            lineno: 19,
+          )
+        ])
+      end
+    end
+
     it "; for rules is optional" do
       y = header + <<~INPUT
         %%

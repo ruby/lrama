@@ -60,6 +60,7 @@ module Lrama
       @locations = false
       @define = define
       @required = false
+      @categories = {}
 
       append_special_symbols
     end
@@ -111,6 +112,14 @@ module Lrama
 
     def set_union(code, lineno)
       @union = Union.new(code: code, lineno: lineno)
+    end
+
+    def add_category(id:, tokens:, tag:)
+      unless category = find_category(id.s_value)
+        category = Lrama::Category.new(id: id)
+        @categories[id.s_value] = category
+      end
+      category.add_tokens(tokens, tag)
     end
 
     def add_rule_builder(builder)
@@ -180,6 +189,10 @@ module Lrama
 
     def unique_rule_s_values
       @rules.map {|rule| rule.lhs.id.s_value }.uniq
+    end
+
+    def find_category(name)
+      @categories[name]
     end
 
     def ielr_defined?
@@ -335,7 +348,17 @@ module Lrama
         end
       end
 
+      expand_categories
+
       @rules.sort_by!(&:id)
+    end
+
+    def expand_categories
+      @categories.values.each do |category|
+        lhs = Lrama::Lexer::Token::Ident.new(s_value: category.name, location: category.id.location)
+        add_nterm(id: lhs, tag: category.tag)
+        @rules << Rule.new(id: @rule_counter.increment, _lhs: lhs, _rhs: category.tokens, lhs_tag: category.tag, token_code: nil, lineno: lhs.line)
+      end
     end
 
     # Collect symbols from rules
