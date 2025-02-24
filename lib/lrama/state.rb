@@ -14,39 +14,42 @@ module Lrama
     #       Move these type declarations above instance variable definitions, once it's supported.
     #
     # @rbs!
-    #   @id: untyped
-    #   @accessing_symbol: untyped
-    #   @kernels: untyped
+    #   type conflict = State::ShiftReduceConflict|State::ReduceReduceConflict
+    #   type transition = [Shift, State]
+    #
+    #   @id: Integer
+    #   @accessing_symbol: Grammar::Symbol
+    #   @kernels: Array[States::Item]
     #   @items: Array[States::Item]
-    #   @items_to_state: untyped
-    #   @conflicts: Array[State::ShiftReduceConflict|State::ReduceReduceConflict]
-    #   @resolved_conflicts: untyped
-    #   @default_reduction_rule: untyped
-    #   @closure: untyped
-    #   @nterm_transitions: untyped
-    #   @term_transitions: untyped
-    #   @transitions: Array[[Shift, State]]
+    #   @items_to_state: Hash[Array[States::Item], State]
+    #   @conflicts: Array[conflict]
+    #   @resolved_conflicts: Array[ResolvedConflict]
+    #   @default_reduction_rule: Grammar::Rule
+    #   @closure: Array[States::Item]
+    #   @nterm_transitions: Array[transition]
+    #   @term_transitions: Array[transition]
+    #   @transitions: Array[transition]
 
-    attr_reader :id #: untyped
-    attr_reader :accessing_symbol #: untyped
-    attr_reader :kernels #: untyped
-    attr_reader :conflicts #: Array[State::ShiftReduceConflict|State::ReduceReduceConflict]
-    attr_reader :resolved_conflicts #: untyped
+    attr_reader :id #: Integer
+    attr_reader :accessing_symbol #: Grammar::Symbol
+    attr_reader :kernels #: Array[States::Item]
+    attr_reader :conflicts #: Array[conflict]
+    attr_reader :resolved_conflicts #: Array[ResolvedConflict]
     attr_reader :default_reduction_rule #: untyped
-    attr_reader :closure #: untyped
+    attr_reader :closure #: Array[States::Item]
     attr_reader :items #: Array[States::Item]
     attr_reader :annotation_list
     attr_reader :predecessors
 
     attr_accessor :shifts #: Array[Shift]
-    attr_accessor :reduces #: untyped
+    attr_accessor :reduces #: Array[Reduce]
     attr_accessor :ielr_isocores
     attr_accessor :lalr_isocore
     attr_accessor :lookaheads_recomputed
     attr_accessor :follow_kernel_items
     attr_accessor :always_follows
 
-    # @rbs (untyped id, untyped accessing_symbol, Array[States::Item] kernels) -> void
+    # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
       @id = id
       @accessing_symbol = accessing_symbol
@@ -70,20 +73,20 @@ module Lrama
       @always_follows = {}
     end
 
-    # @rbs (untyped closure) -> untyped
+    # @rbs (Array[States::Item] closure) -> void
     def closure=(closure)
       @closure = closure
       @items = @kernels + @closure
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Array[Reduce]
     def non_default_reduces
       reduces.reject do |reduce|
         reduce.rule == @default_reduction_rule
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_shifts_reduces
       _shifts = {}
       reduces = []
@@ -108,12 +111,12 @@ module Lrama
       self.reduces = reduces.freeze
     end
 
-    # @rbs (untyped items, untyped next_state) -> untyped
+    # @rbs (Array[States::Item] items, State next_state) -> void
     def set_items_to_state(items, next_state)
       @items_to_state[items] = next_state
     end
 
-    # @rbs (untyped rule, untyped look_ahead) -> untyped
+    # @rbs (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
     def set_look_ahead(rule, look_ahead)
       reduce = reduces.find do |r|
         r.rule == rule
@@ -122,17 +125,17 @@ module Lrama
       reduce.look_ahead = look_ahead
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Array[transition]
     def nterm_transitions
       @nterm_transitions ||= transitions.select {|shift, _| shift.next_sym.nterm? }
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Array[transition]
     def term_transitions
       @term_transitions ||= transitions.select {|shift, _| shift.next_sym.term? }
     end
 
-    # @rbs () -> Array[[Shift, State]]
+    # @rbs () -> Array[transition]
     def transitions
       @transitions ||= shifts.map {|shift| [shift, @items_to_state[shift.next_items]] }
     end
@@ -143,13 +146,14 @@ module Lrama
       clear_transitions_cache
     end
 
+    # @rbs () -> void
     def clear_transitions_cache
       @nterm_transitions = nil
       @term_transitions = nil
       @transitions = nil
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Array[transition]
     def selected_term_transitions
       term_transitions.reject do |shift, next_state|
         shift.not_selected
@@ -158,7 +162,7 @@ module Lrama
 
     # Move to next state by sym
     #
-    # @rbs (untyped sym) -> untyped
+    # @rbs (Grammar::Symbol sym) -> State
     def transition(sym)
       result = nil
 
@@ -179,14 +183,14 @@ module Lrama
       result
     end
 
-    # @rbs (untyped item) -> untyped
+    # @rbs (States::Item item) -> Reduce
     def find_reduce_by_item!(item)
       reduces.find do |r|
         r.item == item
       end || (raise "reduce is not found. #{item}")
     end
 
-    # @rbs (untyped default_reduction_rule) -> untyped
+    # @rbs (Grammar::Rule default_reduction_rule) -> void
     def default_reduction_rule=(default_reduction_rule)
       @default_reduction_rule = default_reduction_rule
 
@@ -197,19 +201,19 @@ module Lrama
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> bool
     def has_conflicts?
       !@conflicts.empty?
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Array[conflict]
     def sr_conflicts
       @conflicts.select do |conflict|
         conflict.type == :shift_reduce
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Array[conflict]
     def rr_conflicts
       @conflicts.select do |conflict|
         conflict.type == :reduce_reduce

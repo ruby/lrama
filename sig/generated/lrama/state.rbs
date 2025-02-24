@@ -2,43 +2,47 @@
 
 module Lrama
   class State
-    @id: untyped
+    type conflict = State::ShiftReduceConflict | State::ReduceReduceConflict
 
-    @accessing_symbol: untyped
+    type transition = [ Shift, State ]
 
-    @kernels: untyped
+    @id: Integer
+
+    @accessing_symbol: Grammar::Symbol
+
+    @kernels: Array[States::Item]
 
     @items: Array[States::Item]
 
-    @items_to_state: untyped
+    @items_to_state: Hash[Array[States::Item], State]
 
-    @conflicts: Array[State::ShiftReduceConflict | State::ReduceReduceConflict]
+    @conflicts: Array[conflict]
 
-    @resolved_conflicts: untyped
+    @resolved_conflicts: Array[ResolvedConflict]
 
-    @default_reduction_rule: untyped
+    @default_reduction_rule: Grammar::Rule
 
-    @closure: untyped
+    @closure: Array[States::Item]
 
-    @nterm_transitions: untyped
+    @nterm_transitions: Array[transition]
 
-    @term_transitions: untyped
+    @term_transitions: Array[transition]
 
-    @transitions: Array[[ Shift, State ]]
+    @transitions: Array[transition]
 
-    attr_reader id: untyped
+    attr_reader id: Integer
 
-    attr_reader accessing_symbol: untyped
+    attr_reader accessing_symbol: Grammar::Symbol
 
-    attr_reader kernels: untyped
+    attr_reader kernels: Array[States::Item]
 
-    attr_reader conflicts: Array[State::ShiftReduceConflict | State::ReduceReduceConflict]
+    attr_reader conflicts: Array[conflict]
 
-    attr_reader resolved_conflicts: untyped
+    attr_reader resolved_conflicts: Array[ResolvedConflict]
 
     attr_reader default_reduction_rule: untyped
 
-    attr_reader closure: untyped
+    attr_reader closure: Array[States::Item]
 
     attr_reader items: Array[States::Item]
 
@@ -48,7 +52,7 @@ module Lrama
 
     attr_accessor shifts: Array[Shift]
 
-    attr_accessor reduces: untyped
+    attr_accessor reduces: Array[Reduce]
 
     attr_accessor ielr_isocores: untyped
 
@@ -60,59 +64,60 @@ module Lrama
 
     attr_accessor always_follows: untyped
 
-    # @rbs (untyped id, untyped accessing_symbol, Array[States::Item] kernels) -> void
-    def initialize: (untyped id, untyped accessing_symbol, Array[States::Item] kernels) -> void
+    # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
+    def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
 
-    # @rbs (untyped closure) -> untyped
-    def closure=: (untyped closure) -> untyped
+    # @rbs (Array[States::Item] closure) -> void
+    def closure=: (Array[States::Item] closure) -> void
 
-    # @rbs () -> untyped
-    def non_default_reduces: () -> untyped
+    # @rbs () -> Array[Reduce]
+    def non_default_reduces: () -> Array[Reduce]
 
-    # @rbs () -> untyped
-    def compute_shifts_reduces: () -> untyped
+    # @rbs () -> void
+    def compute_shifts_reduces: () -> void
 
-    # @rbs (untyped items, untyped next_state) -> untyped
-    def set_items_to_state: (untyped items, untyped next_state) -> untyped
+    # @rbs (Array[States::Item] items, State next_state) -> void
+    def set_items_to_state: (Array[States::Item] items, State next_state) -> void
 
-    # @rbs (untyped rule, untyped look_ahead) -> untyped
-    def set_look_ahead: (untyped rule, untyped look_ahead) -> untyped
+    # @rbs (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
+    def set_look_ahead: (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
 
-    # @rbs () -> untyped
-    def nterm_transitions: () -> untyped
+    # @rbs () -> Array[transition]
+    def nterm_transitions: () -> Array[transition]
 
-    # @rbs () -> untyped
-    def term_transitions: () -> untyped
+    # @rbs () -> Array[transition]
+    def term_transitions: () -> Array[transition]
 
-    # @rbs () -> Array[[Shift, State]]
-    def transitions: () -> Array[[ Shift, State ]]
+    # @rbs () -> Array[transition]
+    def transitions: () -> Array[transition]
 
     def update_transition: (untyped shift, untyped next_state) -> untyped
 
-    def clear_transitions_cache: () -> untyped
+    # @rbs () -> void
+    def clear_transitions_cache: () -> void
 
-    # @rbs () -> untyped
-    def selected_term_transitions: () -> untyped
+    # @rbs () -> Array[transition]
+    def selected_term_transitions: () -> Array[transition]
 
     # Move to next state by sym
     #
-    # @rbs (untyped sym) -> untyped
-    def transition: (untyped sym) -> untyped
+    # @rbs (Grammar::Symbol sym) -> State
+    def transition: (Grammar::Symbol sym) -> State
 
-    # @rbs (untyped item) -> untyped
-    def find_reduce_by_item!: (untyped item) -> untyped
+    # @rbs (States::Item item) -> Reduce
+    def find_reduce_by_item!: (States::Item item) -> Reduce
 
-    # @rbs (untyped default_reduction_rule) -> untyped
-    def default_reduction_rule=: (untyped default_reduction_rule) -> untyped
+    # @rbs (Grammar::Rule default_reduction_rule) -> void
+    def default_reduction_rule=: (Grammar::Rule default_reduction_rule) -> void
 
-    # @rbs () -> untyped
-    def has_conflicts?: () -> untyped
+    # @rbs () -> bool
+    def has_conflicts?: () -> bool
 
-    # @rbs () -> untyped
-    def sr_conflicts: () -> untyped
+    # @rbs () -> Array[conflict]
+    def sr_conflicts: () -> Array[conflict]
 
-    # @rbs () -> untyped
-    def rr_conflicts: () -> untyped
+    # @rbs () -> Array[conflict]
+    def rr_conflicts: () -> Array[conflict]
 
     # Definition 3.40 (propagate_lookaheads)
     def propagate_lookaheads: (untyped next_state) -> untyped
