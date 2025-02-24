@@ -1,3 +1,4 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 module Lrama
@@ -6,6 +7,15 @@ module Lrama
     # * reduce: A reduce under discussion
     # * which: For which a conflict is resolved. :shift, :reduce or :error (for nonassociative)
     class ResolvedConflict < Struct.new(:symbol, :reduce, :which, :same_prec, keyword_init: true)
+      # @rbs!
+      #   attr_accessor symbol: Grammar::Symbol
+      #   attr_accessor reduce: State::Reduce
+      #   attr_accessor which: (:reduce | :shift | :error)
+      #   attr_accessor same_prec: bool
+      #
+      #   def initialize: (?symbol: Grammar::Symbol, ?reduce: State::Reduce, ?which: (:reduce | :shift | :error), ?same_prec: bool) -> void
+
+      # @rbs () -> (::String | bot)
       def report_message
         s = symbol.display_name
         r = reduce.rule.precedence_sym&.display_name
