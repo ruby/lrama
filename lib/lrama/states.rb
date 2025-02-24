@@ -15,21 +15,28 @@ module Lrama
     #       Move these type declarations above instance variable definitions, once it's supported.
     #
     # @rbs!
+    #   type bitmap = Integer
+    #   type state_id = Integer
+    #   type nterm_id = Integer
+    #   type rule_id = Integer
+    #   type transition = [state_id, nterm_id]
+    #   type reduce = [state_id, rule_id]
+    #   type goto = [State, Grammar::Symbol, State]
+    #
     #   include Grammar::_DelegatedMethods
     #   extend Forwardable
     #   include Lrama::Tracer::Duration
     #
-    #   @grammar: untyped
-    #   @warning: untyped
-    #   @trace_state: untyped
+    #   @grammar: Grammar
+    #   @tracer: Tracer
     #   @states: Array[State]
-    #   @direct_read_sets: untyped
-    #   @reads_relation: untyped
-    #   @read_sets: untyped
-    #   @includes_relation: untyped
-    #   @lookback_relation: untyped
-    #   @follow_sets: untyped
-    #   @la: untyped
+    #   @direct_read_sets: Hash[transition, bitmap]
+    #   @reads_relation: Hash[transition, Array[transition]]
+    #   @read_sets: Hash[transition, bitmap]
+    #   @includes_relation: Hash[transition, Array[transition]]
+    #   @lookback_relation: Hash[reduce, Array[transition]]
+    #   @follow_sets: Hash[reduce, bitmap]
+    #   @la: Hash[reduce, bitmap]
 
     extend Forwardable
     include Lrama::Tracer::Duration
@@ -38,11 +45,11 @@ module Lrama
       :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!
 
     attr_reader :states #: Array[State]
-    attr_reader :reads_relation #: untyped
-    attr_reader :includes_relation #: untyped
-    attr_reader :lookback_relation #: untyped
+    attr_reader :reads_relation #: Hash[transition, Array[transition]]
+    attr_reader :includes_relation #: Hash[transition, Array[transition]]
+    attr_reader :lookback_relation #: Hash[[state_id, rule_id], Array[transition]]
 
-    # @rbs (untyped grammar, untyped warning, ?trace_state: bool) -> void
+    # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
       @grammar = grammar
       @tracer = tracer
@@ -104,7 +111,7 @@ module Lrama
       @la = {}
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute
       # Look Ahead Sets
       report_duration(:compute_lr0_states) { compute_lr0_states }
@@ -122,6 +129,7 @@ module Lrama
       report_duration(:compute_default_reduction) { compute_default_reduction }
     end
 
+    # @rbs () -> void
     def compute_ielr
       # Phase 1
       report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
@@ -141,54 +149,57 @@ module Lrama
       report_duration(:compute_default_reduction) { compute_default_reduction }
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Integer
     def states_count
       @states.count
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
     def direct_read_sets
       @direct_read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
     def read_sets
       @read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
     def follow_sets
       @follow_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
     def la
       @la.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
+    # @rbs () -> Integer
     def sr_conflicts_count
       @sr_conflicts_count ||= @states.flat_map(&:sr_conflicts).count
     end
 
+    # @rbs () -> Integer
     def rr_conflicts_count
       @rr_conflicts_count ||= @states.flat_map(&:rr_conflicts).count
     end
 
+    # @rbs (Logger logger) -> void
     def validate!(logger)
       validate_conflicts_within_threshold!(logger)
     end
 
     private
 
-    # @rbs (untyped accessing_symbol, untyped kernels, untyped states_created) -> (::Array[untyped | false] | ::Array[untyped | true])
+    # @rbs (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [State, bool]
     def create_state(accessing_symbol, kernels, states_created)
       # A item can appear in some states,
       # so need to use `kernels` (not `kernels.first`) as a key.
@@ -235,7 +246,7 @@ module Lrama
       return [state, true]
     end
 
-    # @rbs (untyped state) -> untyped
+    # @rbs (State state) -> void
     def setup_state(state)
       # closure
       closure = []
@@ -270,7 +281,7 @@ module Lrama
       state.compute_shifts_reduces
     end
 
-    # @rbs (untyped states, untyped state) -> untyped
+    # @rbs (Array[State] states, State state) -> void
     def enqueue_state(states, state)
       # Trace
       @tracer.trace_state_list_append(@states.count, state)
@@ -278,7 +289,7 @@ module Lrama
       states << state
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_lr0_states
       # State queue
       states = []
@@ -301,7 +312,7 @@ module Lrama
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> Array[goto]
     def nterm_transitions
       a = []
 
@@ -315,7 +326,7 @@ module Lrama
       a
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_direct_read_sets
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
@@ -325,13 +336,13 @@ module Lrama
             shift.next_sym.number
           end
 
-          key = [state.id, nterm.token_id]
+          key = [state.id, nterm.token_id] # @type var key: transition
           @direct_read_sets[key] = Bitmap.from_array(ary)
         end
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_reads_relation
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
@@ -339,7 +350,7 @@ module Lrama
           next_state.nterm_transitions.each do |shift2, _next_state2|
             nterm2 = shift2.next_sym
             if nterm2.nullable
-              key = [state.id, nterm.token_id]
+              key = [state.id, nterm.token_id] # @type var key: transition
               @reads_relation[key] ||= []
               @reads_relation[key] << [next_state.id, nterm2.token_id]
             end
@@ -348,7 +359,7 @@ module Lrama
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_read_sets
       sets = nterm_transitions.map do |state, nterm, next_state|
         [state.id, nterm.token_id]
@@ -360,7 +371,7 @@ module Lrama
     # Execute transition of state by symbols
     # then return final state.
     #
-    # @rbs (untyped state, untyped symbols) -> untyped
+    # @rbs (State state, Array[Grammar::Symbol] symbols) -> State
     def transition(state, symbols)
       symbols.each do |sym|
         state = state.transition(sym)
@@ -369,7 +380,7 @@ module Lrama
       state
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_includes_relation
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
@@ -383,7 +394,7 @@ module Lrama
               break if sym.term?
               state2 = transition(state, rule.rhs[0...i])
               # p' = state, B = nterm, p = state2, A = sym
-              key = [state2.id, sym.token_id]
+              key = [state2.id, sym.token_id] # @type var key: transition
               # TODO: need to omit if state == state2 ?
               @includes_relation[key] ||= []
               @includes_relation[key] << [state.id, nterm.token_id]
@@ -395,7 +406,7 @@ module Lrama
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_lookback_relation
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
@@ -403,7 +414,7 @@ module Lrama
           @grammar.find_rules_by_symbol!(nterm).each do |rule|
             state2 = transition(state, rule.rhs)
             # p = state, A = nterm, q = state2, A -> ω = rule
-            key = [state2.id, rule.id]
+            key = [state2.id, rule.id] # @type var key: reduce
             @lookback_relation[key] ||= []
             @lookback_relation[key] << [state.id, nterm.token_id]
           end
@@ -411,7 +422,7 @@ module Lrama
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_follow_sets
       sets = nterm_transitions.map do |state, nterm, next_state|
         [state.id, nterm.token_id]
@@ -420,7 +431,7 @@ module Lrama
       @follow_sets = Digraph.new(sets, @includes_relation, @read_sets).compute
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_look_ahead_sets
       @states.each do |state|
         rules.each do |rule|
@@ -433,7 +444,7 @@ module Lrama
 
             next if follows == 0
 
-            key = [state.id, rule.id]
+            key = [state.id, rule.id] # @type var key: reduce
             @la[key] ||= 0
             look_ahead = @la[key] | follows
             @la[key] |= look_ahead
@@ -449,7 +460,7 @@ module Lrama
       end
     end
 
-    # @rbs (untyped bit) -> untyped
+    # @rbs (bitmap bit) -> Array[Grammar::Symbol]
     def bitmap_to_terms(bit)
       ary = Bitmap.to_array(bit)
       ary.map do |i|
@@ -457,13 +468,13 @@ module Lrama
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_conflicts
       compute_shift_reduce_conflicts
       compute_reduce_reduce_conflicts
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_shift_reduce_conflicts
       states.each do |state|
         state.shifts.each do |shift|
@@ -531,7 +542,7 @@ module Lrama
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_reduce_reduce_conflicts
       states.each do |state|
         count = state.reduces.count
@@ -554,7 +565,7 @@ module Lrama
       end
     end
 
-    # @rbs () -> untyped
+    # @rbs () -> void
     def compute_default_reduction
       states.each do |state|
         next if state.reduces.empty?
@@ -572,6 +583,8 @@ module Lrama
     end
 
     # Definition 3.16 (follow_kernel_items)
+    #
+    # @rbs () -> void
     def compute_follow_kernel_items
       set = nterm_transitions
       relation = compute_goto_internal_relation
@@ -585,6 +598,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> Hash[goto, Array[goto]]
     def compute_goto_internal_relation
       nterm_transitions.map {|goto1|
         related_gotos = nterm_transitions.select {|goto2| has_internal_relation?(goto1, goto2) }
@@ -592,6 +606,7 @@ module Lrama
       }.to_h
     end
 
+    # @rbs () -> Hash[goto, bitmap]
     def compute_goto_bitmaps
       nterm_transitions.map {|state, sym, next_state|
         bools = state.kernels.map.with_index {|kernel, i| i if kernel.next_sym == sym && kernel.symbols_after_transition.all?(&:nullable) }.compact
@@ -600,6 +615,8 @@ module Lrama
     end
 
     # Definition 3.20 (always_follows, one closure)
+    #
+    # @rbs () -> void
     def compute_always_follows
       set = nterm_transitions
       relation = compute_goto_successor_or_internal_relation
@@ -611,6 +628,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> Hash[goto, Array[goto]]
     def compute_goto_successor_or_internal_relation
       nterm_transitions.map {|goto1|
         related_gotos = nterm_transitions.select {|goto2|
@@ -620,13 +638,16 @@ module Lrama
       }.to_h
     end
 
+    # @rbs () -> Hash[goto, bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto[2].shifts.map {|shift| shift.next_sym.number }) ]
+        [goto, Bitmap.from_array(goto[2].shifts.map {|shift| shift.next_sym.number })]
       }.to_h
     end
 
     # Definition 3.8 (Goto Follows Internal Relation)
+    #
+    # @rbs (goto goto1, goto goto2) -> bool
     def has_internal_relation?(goto1, goto2)
       state1, sym1, _next_state1 = goto1
       state2, sym2, _next_state2 = goto2
@@ -636,12 +657,15 @@ module Lrama
     end
 
     # Definition 3.5 (Goto Follows Successor Relation)
+    #
+    # @rbs (goto goto1, goto goto2) -> bool
     def has_successor_relation?(goto1, goto2)
       _state1, _sym1, next_state1 = goto1
       state2, sym2, _next_state2 = goto2
       next_state1 == state2 && sym2.nullable
     end
 
+    # @rbs () -> void
     def split_states
       @states.each do |state|
         state.transitions.each do |shift, next_state|
@@ -658,6 +682,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> void
     def compute_inadequacy_annotations
       @states.each do |state|
         state.annotate_manifestation
@@ -675,6 +700,7 @@ module Lrama
       end
     end
 
+    # @rbs (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
     def merge_lookaheads(state, filtered_lookaheads)
       return if state.kernels.all? {|item| (filtered_lookaheads[item] - state.item_lookahead_set[item]).empty? }
 
@@ -685,6 +711,7 @@ module Lrama
       end
     end
 
+    # @rbs (State state, State::Shift shift, State next_state) -> void
     def compute_state(state, shift, next_state)
       propagating_lookaheads = state.propagate_lookaheads(next_state)
       s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
@@ -717,16 +744,19 @@ module Lrama
       end
     end
 
+    # @rbs (Logger logger) -> void
     def validate_conflicts_within_threshold!(logger)
       exit false unless conflicts_within_threshold?(logger)
     end
 
+    # @rbs (Logger logger) -> bool
     def conflicts_within_threshold?(logger)
       return true unless @grammar.expect
 
       [sr_conflicts_within_threshold?(logger), rr_conflicts_within_threshold?(logger)].all?
     end
 
+    # @rbs (Logger logger) -> bool
     def sr_conflicts_within_threshold?(logger)
       return true if @grammar.expect == sr_conflicts_count
 
@@ -734,6 +764,7 @@ module Lrama
       false
     end
 
+    # @rbs (Logger logger) -> bool
     def rr_conflicts_within_threshold?(logger, expected: 0)
       return true if expected == rr_conflicts_count
 

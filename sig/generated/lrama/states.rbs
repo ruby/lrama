@@ -6,33 +6,45 @@ module Lrama
   # "Efficient Computation of LALR(1) Look-Ahead Sets"
   #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
+    type bitmap = Integer
+
+    type state_id = Integer
+
+    type nterm_id = Integer
+
+    type rule_id = Integer
+
+    type transition = [ state_id, nterm_id ]
+
+    type reduce = [ state_id, rule_id ]
+
+    type goto = [ State, Grammar::Symbol, State ]
+
     include Grammar::_DelegatedMethods
 
     extend Forwardable
 
     include Lrama::Tracer::Duration
 
-    @grammar: untyped
+    @grammar: Grammar
 
-    @warning: untyped
-
-    @trace_state: untyped
+    @tracer: Tracer
 
     @states: Array[State]
 
-    @direct_read_sets: untyped
+    @direct_read_sets: Hash[transition, bitmap]
 
-    @reads_relation: untyped
+    @reads_relation: Hash[transition, Array[transition]]
 
-    @read_sets: untyped
+    @read_sets: Hash[transition, bitmap]
 
-    @includes_relation: untyped
+    @includes_relation: Hash[transition, Array[transition]]
 
-    @lookback_relation: untyped
+    @lookback_relation: Hash[reduce, Array[transition]]
 
-    @follow_sets: untyped
+    @follow_sets: Hash[reduce, bitmap]
 
-    @la: untyped
+    @la: Hash[reduce, bitmap]
 
     extend Forwardable
 
@@ -40,134 +52,158 @@ module Lrama
 
     attr_reader states: Array[State]
 
-    attr_reader reads_relation: untyped
+    attr_reader reads_relation: Hash[transition, Array[transition]]
 
-    attr_reader includes_relation: untyped
+    attr_reader includes_relation: Hash[transition, Array[transition]]
 
-    attr_reader lookback_relation: untyped
+    attr_reader lookback_relation: Hash[[ state_id, rule_id ], Array[transition]]
 
-    # @rbs (untyped grammar, untyped warning, ?trace_state: bool) -> void
-    def initialize: (untyped grammar, untyped warning, ?trace_state: bool) -> void
+    # @rbs (Grammar grammar, Tracer tracer) -> void
+    def initialize: (Grammar grammar, Tracer tracer) -> void
 
-    # @rbs () -> untyped
-    def compute: () -> untyped
+    # @rbs () -> void
+    def compute: () -> void
 
-    def compute_ielr: () -> untyped
+    # @rbs () -> void
+    def compute_ielr: () -> void
 
-    # @rbs () -> untyped
-    def states_count: () -> untyped
+    # @rbs () -> Integer
+    def states_count: () -> Integer
 
-    # @rbs () -> untyped
-    def direct_read_sets: () -> untyped
+    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
+    def direct_read_sets: () -> Hash[transition, Array[Grammar::Symbol]]
 
-    # @rbs () -> untyped
-    def read_sets: () -> untyped
+    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
+    def read_sets: () -> Hash[transition, Array[Grammar::Symbol]]
 
-    # @rbs () -> untyped
-    def follow_sets: () -> untyped
+    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
+    def follow_sets: () -> Hash[reduce, Array[Grammar::Symbol]]
 
-    # @rbs () -> untyped
-    def la: () -> untyped
+    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
+    def la: () -> Hash[reduce, Array[Grammar::Symbol]]
 
-    def sr_conflicts_count: () -> untyped
+    # @rbs () -> Integer
+    def sr_conflicts_count: () -> Integer
 
-    def rr_conflicts_count: () -> untyped
+    # @rbs () -> Integer
+    def rr_conflicts_count: () -> Integer
 
-    def validate!: (untyped logger) -> untyped
+    # @rbs (Logger logger) -> void
+    def validate!: (Logger logger) -> void
 
     private
 
-    # @rbs (untyped accessing_symbol, untyped kernels, untyped states_created) -> (::Array[untyped | false] | ::Array[untyped | true])
-    def create_state: (untyped accessing_symbol, untyped kernels, untyped states_created) -> (::Array[untyped | false] | ::Array[untyped | true])
+    # @rbs (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [State, bool]
+    def create_state: (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [ State, bool ]
 
-    # @rbs (untyped state) -> untyped
-    def setup_state: (untyped state) -> untyped
+    # @rbs (State state) -> void
+    def setup_state: (State state) -> void
 
-    # @rbs (untyped states, untyped state) -> untyped
-    def enqueue_state: (untyped states, untyped state) -> untyped
+    # @rbs (Array[State] states, State state) -> void
+    def enqueue_state: (Array[State] states, State state) -> void
 
-    # @rbs () -> untyped
-    def compute_lr0_states: () -> untyped
+    # @rbs () -> void
+    def compute_lr0_states: () -> void
 
-    # @rbs () -> untyped
-    def nterm_transitions: () -> untyped
+    # @rbs () -> Array[goto]
+    def nterm_transitions: () -> Array[goto]
 
-    # @rbs () -> untyped
-    def compute_direct_read_sets: () -> untyped
+    # @rbs () -> void
+    def compute_direct_read_sets: () -> void
 
-    # @rbs () -> untyped
-    def compute_reads_relation: () -> untyped
+    # @rbs () -> void
+    def compute_reads_relation: () -> void
 
-    # @rbs () -> untyped
-    def compute_read_sets: () -> untyped
+    # @rbs () -> void
+    def compute_read_sets: () -> void
 
     # Execute transition of state by symbols
     # then return final state.
     #
-    # @rbs (untyped state, untyped symbols) -> untyped
-    def transition: (untyped state, untyped symbols) -> untyped
+    # @rbs (State state, Array[Grammar::Symbol] symbols) -> State
+    def transition: (State state, Array[Grammar::Symbol] symbols) -> State
 
-    # @rbs () -> untyped
-    def compute_includes_relation: () -> untyped
+    # @rbs () -> void
+    def compute_includes_relation: () -> void
 
-    # @rbs () -> untyped
-    def compute_lookback_relation: () -> untyped
+    # @rbs () -> void
+    def compute_lookback_relation: () -> void
 
-    # @rbs () -> untyped
-    def compute_follow_sets: () -> untyped
+    # @rbs () -> void
+    def compute_follow_sets: () -> void
 
-    # @rbs () -> untyped
-    def compute_look_ahead_sets: () -> untyped
+    # @rbs () -> void
+    def compute_look_ahead_sets: () -> void
 
-    # @rbs (untyped bit) -> untyped
-    def bitmap_to_terms: (untyped bit) -> untyped
+    # @rbs (bitmap bit) -> Array[Grammar::Symbol]
+    def bitmap_to_terms: (bitmap bit) -> Array[Grammar::Symbol]
 
-    # @rbs () -> untyped
-    def compute_conflicts: () -> untyped
+    # @rbs () -> void
+    def compute_conflicts: () -> void
 
-    # @rbs () -> untyped
-    def compute_shift_reduce_conflicts: () -> untyped
+    # @rbs () -> void
+    def compute_shift_reduce_conflicts: () -> void
 
-    # @rbs () -> untyped
-    def compute_reduce_reduce_conflicts: () -> untyped
+    # @rbs () -> void
+    def compute_reduce_reduce_conflicts: () -> void
 
-    # @rbs () -> untyped
-    def compute_default_reduction: () -> untyped
+    # @rbs () -> void
+    def compute_default_reduction: () -> void
 
     # Definition 3.16 (follow_kernel_items)
-    def compute_follow_kernel_items: () -> untyped
+    #
+    # @rbs () -> void
+    def compute_follow_kernel_items: () -> void
 
-    def compute_goto_internal_relation: () -> untyped
+    # @rbs () -> Hash[goto, Array[goto]]
+    def compute_goto_internal_relation: () -> Hash[goto, Array[goto]]
 
-    def compute_goto_bitmaps: () -> untyped
+    # @rbs () -> Hash[goto, bitmap]
+    def compute_goto_bitmaps: () -> Hash[goto, bitmap]
 
     # Definition 3.20 (always_follows, one closure)
-    def compute_always_follows: () -> untyped
+    #
+    # @rbs () -> void
+    def compute_always_follows: () -> void
 
-    def compute_goto_successor_or_internal_relation: () -> untyped
+    # @rbs () -> Hash[goto, Array[goto]]
+    def compute_goto_successor_or_internal_relation: () -> Hash[goto, Array[goto]]
 
-    def compute_transition_bitmaps: () -> untyped
+    # @rbs () -> Hash[goto, bitmap]
+    def compute_transition_bitmaps: () -> Hash[goto, bitmap]
 
     # Definition 3.8 (Goto Follows Internal Relation)
-    def has_internal_relation?: (untyped goto1, untyped goto2) -> untyped
+    #
+    # @rbs (goto goto1, goto goto2) -> bool
+    def has_internal_relation?: (goto goto1, goto goto2) -> bool
 
     # Definition 3.5 (Goto Follows Successor Relation)
-    def has_successor_relation?: (untyped goto1, untyped goto2) -> untyped
+    #
+    # @rbs (goto goto1, goto goto2) -> bool
+    def has_successor_relation?: (goto goto1, goto goto2) -> bool
 
-    def split_states: () -> untyped
+    # @rbs () -> void
+    def split_states: () -> void
 
-    def compute_inadequacy_annotations: () -> untyped
+    # @rbs () -> void
+    def compute_inadequacy_annotations: () -> void
 
-    def merge_lookaheads: (untyped state, untyped filtered_lookaheads) -> untyped
+    # @rbs (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
+    def merge_lookaheads: (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
 
-    def compute_state: (untyped state, untyped shift, untyped next_state) -> untyped
+    # @rbs (State state, State::Shift shift, State next_state) -> void
+    def compute_state: (State state, State::Shift shift, State next_state) -> void
 
-    def validate_conflicts_within_threshold!: (untyped logger) -> untyped
+    # @rbs (Logger logger) -> void
+    def validate_conflicts_within_threshold!: (Logger logger) -> void
 
-    def conflicts_within_threshold?: (untyped logger) -> untyped
+    # @rbs (Logger logger) -> bool
+    def conflicts_within_threshold?: (Logger logger) -> bool
 
-    def sr_conflicts_within_threshold?: (untyped logger) -> untyped
+    # @rbs (Logger logger) -> bool
+    def sr_conflicts_within_threshold?: (Logger logger) -> bool
 
-    def rr_conflicts_within_threshold?: (untyped logger, ?expected: untyped) -> untyped
+    # @rbs (Logger logger) -> bool
+    def rr_conflicts_within_threshold?: (Logger logger) -> bool
   end
 end
