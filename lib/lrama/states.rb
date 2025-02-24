@@ -1,3 +1,4 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 require "forwardable"
@@ -10,14 +11,38 @@ module Lrama
   # "Efficient Computation of LALR(1) Look-Ahead Sets"
   #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
+    # TODO: rbs-inline 0.10.0 doesn't support instance variables.
+    #       Move these type declarations above instance variable definitions, once it's supported.
+    #
+    # @rbs!
+    #   include Grammar::_DelegatedMethods
+    #   extend Forwardable
+    #   include Lrama::Tracer::Duration
+    #
+    #   @grammar: untyped
+    #   @warning: untyped
+    #   @trace_state: untyped
+    #   @states: Array[State]
+    #   @direct_read_sets: untyped
+    #   @reads_relation: untyped
+    #   @read_sets: untyped
+    #   @includes_relation: untyped
+    #   @lookback_relation: untyped
+    #   @follow_sets: untyped
+    #   @la: untyped
+
     extend Forwardable
     include Lrama::Tracer::Duration
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules,
       :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!
 
-    attr_reader :states, :reads_relation, :includes_relation, :lookback_relation
+    attr_reader :states #: Array[State]
+    attr_reader :reads_relation #: untyped
+    attr_reader :includes_relation #: untyped
+    attr_reader :lookback_relation #: untyped
 
+    # @rbs (untyped grammar, untyped warning, ?trace_state: bool) -> void
     def initialize(grammar, tracer)
       @grammar = grammar
       @tracer = tracer
@@ -79,6 +104,7 @@ module Lrama
       @la = {}
     end
 
+    # @rbs () -> untyped
     def compute
       # Look Ahead Sets
       report_duration(:compute_lr0_states) { compute_lr0_states }
@@ -115,28 +141,33 @@ module Lrama
       report_duration(:compute_default_reduction) { compute_default_reduction }
     end
 
+    # @rbs () -> untyped
     def states_count
       @states.count
     end
 
+    # @rbs () -> untyped
     def direct_read_sets
       @direct_read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
+    # @rbs () -> untyped
     def read_sets
       @read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
+    # @rbs () -> untyped
     def follow_sets
       @follow_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
+    # @rbs () -> untyped
     def la
       @la.transform_values do |v|
         bitmap_to_terms(v)
@@ -157,6 +188,7 @@ module Lrama
 
     private
 
+    # @rbs (untyped accessing_symbol, untyped kernels, untyped states_created) -> (::Array[untyped | false] | ::Array[untyped | true])
     def create_state(accessing_symbol, kernels, states_created)
       # A item can appear in some states,
       # so need to use `kernels` (not `kernels.first`) as a key.
@@ -203,6 +235,7 @@ module Lrama
       return [state, true]
     end
 
+    # @rbs (untyped state) -> untyped
     def setup_state(state)
       # closure
       closure = []
@@ -237,6 +270,7 @@ module Lrama
       state.compute_shifts_reduces
     end
 
+    # @rbs (untyped states, untyped state) -> untyped
     def enqueue_state(states, state)
       # Trace
       @tracer.trace_state_list_append(@states.count, state)
@@ -244,6 +278,7 @@ module Lrama
       states << state
     end
 
+    # @rbs () -> untyped
     def compute_lr0_states
       # State queue
       states = []
@@ -266,6 +301,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> untyped
     def nterm_transitions
       a = []
 
@@ -279,6 +315,7 @@ module Lrama
       a
     end
 
+    # @rbs () -> untyped
     def compute_direct_read_sets
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
@@ -294,6 +331,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> untyped
     def compute_reads_relation
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
@@ -310,6 +348,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> untyped
     def compute_read_sets
       sets = nterm_transitions.map do |state, nterm, next_state|
         [state.id, nterm.token_id]
@@ -320,6 +359,8 @@ module Lrama
 
     # Execute transition of state by symbols
     # then return final state.
+    #
+    # @rbs (untyped state, untyped symbols) -> untyped
     def transition(state, symbols)
       symbols.each do |sym|
         state = state.transition(sym)
@@ -328,6 +369,7 @@ module Lrama
       state
     end
 
+    # @rbs () -> untyped
     def compute_includes_relation
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
@@ -353,6 +395,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> untyped
     def compute_lookback_relation
       @states.each do |state|
         state.nterm_transitions.each do |shift, next_state|
@@ -368,6 +411,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> untyped
     def compute_follow_sets
       sets = nterm_transitions.map do |state, nterm, next_state|
         [state.id, nterm.token_id]
@@ -376,6 +420,7 @@ module Lrama
       @follow_sets = Digraph.new(sets, @includes_relation, @read_sets).compute
     end
 
+    # @rbs () -> untyped
     def compute_look_ahead_sets
       @states.each do |state|
         rules.each do |rule|
@@ -404,6 +449,7 @@ module Lrama
       end
     end
 
+    # @rbs (untyped bit) -> untyped
     def bitmap_to_terms(bit)
       ary = Bitmap.to_array(bit)
       ary.map do |i|
@@ -411,11 +457,13 @@ module Lrama
       end
     end
 
+    # @rbs () -> untyped
     def compute_conflicts
       compute_shift_reduce_conflicts
       compute_reduce_reduce_conflicts
     end
 
+    # @rbs () -> untyped
     def compute_shift_reduce_conflicts
       states.each do |state|
         state.shifts.each do |shift|
@@ -483,6 +531,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> untyped
     def compute_reduce_reduce_conflicts
       states.each do |state|
         count = state.reduces.count
@@ -505,6 +554,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> untyped
     def compute_default_reduction
       states.each do |state|
         next if state.reduces.empty?
