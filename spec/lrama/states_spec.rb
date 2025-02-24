@@ -1824,6 +1824,10 @@ RSpec.describe Lrama::States do
 
             S  go to state 3
 
+            inadequacy annotation manifesting state 14, token a
+              state 0 always contributes to shift by a
+              state 0 always contributes to reduce by 'E: '
+
 
         State 1
 
@@ -1833,6 +1837,10 @@ RSpec.describe Lrama::States do
 
             A  go to state 5
 
+            inadequacy annotation manifesting state 14, token a
+              state 1 always contributes to shift by a
+              state 1 always contributes to reduce by 'E: '
+
 
         State 2
 
@@ -1841,6 +1849,10 @@ RSpec.describe Lrama::States do
             a  shift, and go to state 19
 
             A  go to state 6
+
+            inadequacy annotation manifesting state 14, token a
+              state 2 always contributes to shift by a
+              'b • A B b' never contributes to reduce by 'E: '
 
 
         State 3
@@ -1858,6 +1870,10 @@ RSpec.describe Lrama::States do
 
             C  go to state 9
             D  go to state 10
+
+            inadequacy annotation manifesting state 14, token a
+              state 4 always contributes to shift by a
+              'a • C D E' potentially contributes to reduce by 'E: '
 
 
         State 5
@@ -1904,6 +1920,10 @@ RSpec.describe Lrama::States do
 
             D  go to state 14
 
+            inadequacy annotation manifesting state 14, token a
+              state 9 always contributes to shift by a
+              'a C • D E' potentially contributes to reduce by 'E: '
+
 
         State 10
 
@@ -1940,6 +1960,10 @@ RSpec.describe Lrama::States do
             $default  reduce using rule 9 (E)
 
             E  go to state 18
+
+            inadequacy annotation manifesting state 14, token a
+              state 14 always contributes to shift by a
+              'a C D • E' potentially contributes to reduce by 'E: '
 
 
         State 15
