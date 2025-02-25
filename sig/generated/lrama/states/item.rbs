@@ -1,30 +1,75 @@
+# Generated from lib/lrama/states/item.rb with RBS::Inline
+
 module Lrama
   class States
     class Item
       extend Forwardable
+
       include Grammar::Rule::_DelegatedMethods
 
       attr_accessor rule: Grammar::Rule
+
       attr_accessor position: Integer
 
       def initialize: (?rule: Grammar::Rule, ?position: Integer) -> void
 
+      extend Forwardable
+
+      # Optimization for States#setup_state
+      #
+      # @rbs () -> Integer
       def hash: () -> Integer
+
+      # @rbs () -> Integer
       def rule_id: () -> Integer
+
+      # @rbs () -> bool
       def empty_rule?: () -> bool
+
+      # @rbs () -> Integer
       def number_of_rest_symbols: () -> Integer
+
+      # @rbs () -> Grammar::Symbol
       def next_sym: () -> Grammar::Symbol
+
+      # @rbs () -> Grammar::Symbol
       def next_next_sym: () -> Grammar::Symbol
+
+      # @rbs () -> Grammar::Symbol
       def previous_sym: () -> Grammar::Symbol
+
+      # @rbs () -> bool
       def end_of_rule?: () -> bool
+
+      # @rbs () -> bool
       def beginning_of_rule?: () -> bool
+
+      # @rbs () -> bool
       def start_item?: () -> bool
+
+      # @rbs () -> States::Item
       def new_by_next_position: () -> States::Item
+
+      # @rbs () -> Array[Grammar::Symbol]
       def symbols_before_dot: () -> Array[Grammar::Symbol]
+
+      # @rbs () -> Array[Grammar::Symbol]
       def symbols_after_dot: () -> Array[Grammar::Symbol]
+
+      def symbols_after_transition: () -> untyped
+
+      # @rbs () -> ::String
       def to_s: () -> ::String
+
+      # @rbs () -> ::String
       def display_name: () -> ::String
+
+      # Right after position
+      #
+      # @rbs () -> ::String
       def display_rest: () -> ::String
+
+      def predecessor_item_of?: (untyped other_item) -> untyped
     end
   end
 end
