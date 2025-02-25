@@ -11,8 +11,8 @@ module Lrama
 
       attr_accessor contribution_matrix: Hash[Shift | Reduce, Hash[States::Item, bool]]
 
-      # @rbs (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
-      def initialize: (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
+      def initialize: (State state, Grammar::Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
 
       # @rbs (States::Item item) -> bool
       def contributed?: (States::Item item) -> bool
