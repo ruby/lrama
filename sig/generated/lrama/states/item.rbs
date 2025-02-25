@@ -56,7 +56,8 @@ module Lrama
       # @rbs () -> Array[Grammar::Symbol]
       def symbols_after_dot: () -> Array[Grammar::Symbol]
 
-      def symbols_after_transition: () -> untyped
+      # @rbs () -> Array[Grammar::Symbol]
+      def symbols_after_transition: () -> Array[Grammar::Symbol]
 
       # @rbs () -> ::String
       def to_s: () -> ::String
@@ -69,7 +70,8 @@ module Lrama
       # @rbs () -> ::String
       def display_rest: () -> ::String
 
-      def predecessor_item_of?: (untyped other_item) -> untyped
+      # @rbs (States::Item other_item) -> bool
+      def predecessor_item_of?: (States::Item other_item) -> bool
     end
   end
 end

@@ -88,7 +88,8 @@ module Lrama
         rhs[position..-1]
       end
 
-      def symbols_after_transition
+      # @rbs () -> Array[Grammar::Symbol]
+      def symbols_after_transition # steep:ignore
         rhs[position+1..-1]
       end
 
@@ -111,6 +112,7 @@ module Lrama
         ". #{r}  (rule #{rule_id})"
       end
 
+      # @rbs (States::Item other_item) -> bool
       def predecessor_item_of?(other_item)
         rule == other_item.rule && position == other_item.position - 1
       end
