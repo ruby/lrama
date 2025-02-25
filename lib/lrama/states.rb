@@ -527,7 +527,7 @@ module Lrama
       relation = compute_goto_internal_relation
       base_function = compute_goto_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
-        state, nterm, next_state = goto
+        state, nterm, _next_state = goto
         transition = state.nterm_transitions.find {|shift, _| shift.next_sym == nterm }
         state.follow_kernel_items[transition] = state.kernels.map.with_index {|kernel, i|
           [kernel, Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)]
@@ -555,7 +555,7 @@ module Lrama
       relation = compute_goto_successor_or_internal_relation
       base_function = compute_transition_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, always_follows_bitmap|
-        state, nterm, next_state = goto
+        state, nterm, _next_state = goto
         transition = state.nterm_transitions.find {|shift, _| shift.next_sym == nterm }
         state.always_follows[transition] = bitmap_to_terms(always_follows_bitmap)
       end
@@ -578,8 +578,8 @@ module Lrama
 
     # Definition 3.8 (Goto Follows Internal Relation)
     def has_internal_relation?(goto1, goto2)
-      state1, sym1, next_state1 = goto1
-      state2, sym2, next_state2 = goto2
+      state1, sym1, _next_state1 = goto1
+      state2, sym2, _next_state2 = goto2
       state1 == state2 && state1.items.any? {|item|
         item.next_sym == sym1 && item.lhs == sym2 && item.symbols_after_transition.all?(&:nullable)
       }
@@ -587,8 +587,8 @@ module Lrama
 
     # Definition 3.5 (Goto Follows Successor Relation)
     def has_successor_relation?(goto1, goto2)
-      state1, sym1, next_state1 = goto1
-      state2, sym2, next_state2 = goto2
+      _state1, _sym1, next_state1 = goto1
+      state2, sym2, _next_state2 = goto2
       next_state1 == state2 && sym2.nullable
     end
 
