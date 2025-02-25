@@ -66,7 +66,6 @@ module Lrama
       @ielr_isocores = [self]
       @internal_dependencies = {}
       @successor_dependencies = {}
-      @always_follows = {}
       @annotation_list = []
       @lookaheads_recomputed = false
       @follow_kernel_items = {}
