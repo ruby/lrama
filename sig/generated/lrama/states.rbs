@@ -1,0 +1,209 @@
+# Generated from lib/lrama/states.rb with RBS::Inline
+
+module Lrama
+  # States is passed to a template file
+  #
+  # "Efficient Computation of LALR(1) Look-Ahead Sets"
+  #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
+  class States
+    type bitmap = Integer
+
+    type state_id = Integer
+
+    type nterm_id = Integer
+
+    type rule_id = Integer
+
+    type transition = [ state_id, nterm_id ]
+
+    type reduce = [ state_id, rule_id ]
+
+    type goto = [ State, Grammar::Symbol, State ]
+
+    include Grammar::_DelegatedMethods
+
+    extend Forwardable
+
+    include Lrama::Tracer::Duration
+
+    @grammar: Grammar
+
+    @tracer: Tracer
+
+    @states: Array[State]
+
+    @direct_read_sets: Hash[transition, bitmap]
+
+    @reads_relation: Hash[transition, Array[transition]]
+
+    @read_sets: Hash[transition, bitmap]
+
+    @includes_relation: Hash[transition, Array[transition]]
+
+    @lookback_relation: Hash[reduce, Array[transition]]
+
+    @follow_sets: Hash[reduce, bitmap]
+
+    @la: Hash[reduce, bitmap]
+
+    extend Forwardable
+
+    include Lrama::Tracer::Duration
+
+    attr_reader states: Array[State]
+
+    attr_reader reads_relation: Hash[transition, Array[transition]]
+
+    attr_reader includes_relation: Hash[transition, Array[transition]]
+
+    attr_reader lookback_relation: Hash[[ state_id, rule_id ], Array[transition]]
+
+    # @rbs (Grammar grammar, Tracer tracer) -> void
+    def initialize: (Grammar grammar, Tracer tracer) -> void
+
+    # @rbs () -> void
+    def compute: () -> void
+
+    # @rbs () -> void
+    def compute_ielr: () -> void
+
+    # @rbs () -> Integer
+    def states_count: () -> Integer
+
+    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
+    def direct_read_sets: () -> Hash[transition, Array[Grammar::Symbol]]
+
+    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
+    def read_sets: () -> Hash[transition, Array[Grammar::Symbol]]
+
+    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
+    def follow_sets: () -> Hash[reduce, Array[Grammar::Symbol]]
+
+    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
+    def la: () -> Hash[reduce, Array[Grammar::Symbol]]
+
+    # @rbs () -> Integer
+    def sr_conflicts_count: () -> Integer
+
+    # @rbs () -> Integer
+    def rr_conflicts_count: () -> Integer
+
+    # @rbs (Logger logger) -> void
+    def validate!: (Logger logger) -> void
+
+    private
+
+    # @rbs (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [State, bool]
+    def create_state: (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [ State, bool ]
+
+    # @rbs (State state) -> void
+    def setup_state: (State state) -> void
+
+    # @rbs (Array[State] states, State state) -> void
+    def enqueue_state: (Array[State] states, State state) -> void
+
+    # @rbs () -> void
+    def compute_lr0_states: () -> void
+
+    # @rbs () -> Array[goto]
+    def nterm_transitions: () -> Array[goto]
+
+    # @rbs () -> void
+    def compute_direct_read_sets: () -> void
+
+    # @rbs () -> void
+    def compute_reads_relation: () -> void
+
+    # @rbs () -> void
+    def compute_read_sets: () -> void
+
+    # Execute transition of state by symbols
+    # then return final state.
+    #
+    # @rbs (State state, Array[Grammar::Symbol] symbols) -> State
+    def transition: (State state, Array[Grammar::Symbol] symbols) -> State
+
+    # @rbs () -> void
+    def compute_includes_relation: () -> void
+
+    # @rbs () -> void
+    def compute_lookback_relation: () -> void
+
+    # @rbs () -> void
+    def compute_follow_sets: () -> void
+
+    # @rbs () -> void
+    def compute_look_ahead_sets: () -> void
+
+    # @rbs (bitmap bit) -> Array[Grammar::Symbol]
+    def bitmap_to_terms: (bitmap bit) -> Array[Grammar::Symbol]
+
+    # @rbs () -> void
+    def compute_conflicts: () -> void
+
+    # @rbs () -> void
+    def compute_shift_reduce_conflicts: () -> void
+
+    # @rbs () -> void
+    def compute_reduce_reduce_conflicts: () -> void
+
+    # @rbs () -> void
+    def compute_default_reduction: () -> void
+
+    # Definition 3.16 (follow_kernel_items)
+    #
+    # @rbs () -> void
+    def compute_follow_kernel_items: () -> void
+
+    # @rbs () -> Hash[goto, Array[goto]]
+    def compute_goto_internal_relation: () -> Hash[goto, Array[goto]]
+
+    # @rbs () -> Hash[goto, bitmap]
+    def compute_goto_bitmaps: () -> Hash[goto, bitmap]
+
+    # Definition 3.20 (always_follows, one closure)
+    #
+    # @rbs () -> void
+    def compute_always_follows: () -> void
+
+    # @rbs () -> Hash[goto, Array[goto]]
+    def compute_goto_successor_or_internal_relation: () -> Hash[goto, Array[goto]]
+
+    # @rbs () -> Hash[goto, bitmap]
+    def compute_transition_bitmaps: () -> Hash[goto, bitmap]
+
+    # Definition 3.8 (Goto Follows Internal Relation)
+    #
+    # @rbs (goto goto1, goto goto2) -> bool
+    def has_internal_relation?: (goto goto1, goto goto2) -> bool
+
+    # Definition 3.5 (Goto Follows Successor Relation)
+    #
+    # @rbs (goto goto1, goto goto2) -> bool
+    def has_successor_relation?: (goto goto1, goto goto2) -> bool
+
+    # @rbs () -> void
+    def split_states: () -> void
+
+    # @rbs () -> void
+    def compute_inadequacy_annotations: () -> void
+
+    # @rbs (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
+    def merge_lookaheads: (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
+
+    # @rbs (State state, State::Shift shift, State next_state) -> void
+    def compute_state: (State state, State::Shift shift, State next_state) -> void
+
+    # @rbs (Logger logger) -> void
+    def validate_conflicts_within_threshold!: (Logger logger) -> void
+
+    # @rbs (Logger logger) -> bool
+    def conflicts_within_threshold?: (Logger logger) -> bool
+
+    # @rbs (Logger logger) -> bool
+    def sr_conflicts_within_threshold?: (Logger logger) -> bool
+
+    # @rbs (Logger logger) -> bool
+    def rr_conflicts_within_threshold?: (Logger logger) -> bool
+  end
+end
