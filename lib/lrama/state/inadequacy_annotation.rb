@@ -9,7 +9,7 @@ module Lrama
       attr_accessor :actions # :Array[Shift | Reduce]
       attr_accessor :contribution_matrix #: Hash[Shift | Reduce, Hash[States::Item, bool]]
 
-      # @rbs (State state, Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
       def initialize(state, token, actions, contribution_matrix)
         @state = state
         @token = token
