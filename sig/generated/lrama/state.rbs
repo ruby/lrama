@@ -6,6 +6,8 @@ module Lrama
 
     type transition = [ Shift, State ]
 
+    type goto = [ State, Shift, State ]
+
     @id: Integer
 
     @accessing_symbol: Grammar::Symbol
@@ -20,7 +22,7 @@ module Lrama
 
     @resolved_conflicts: Array[ResolvedConflict]
 
-    @default_reduction_rule: Grammar::Rule
+    @default_reduction_rule: Grammar::Rule?
 
     @closure: Array[States::Item]
 
@@ -29,6 +31,10 @@ module Lrama
     @term_transitions: Array[transition]
 
     @transitions: Array[transition]
+
+    @internal_dependencies: Hash[transition, Array[goto]]
+
+    @successor_dependencies: Hash[transition, Array[goto]]
 
     attr_reader id: Integer
 
@@ -40,29 +46,29 @@ module Lrama
 
     attr_reader resolved_conflicts: Array[ResolvedConflict]
 
-    attr_reader default_reduction_rule: untyped
+    attr_reader default_reduction_rule: Grammar::Rule?
 
     attr_reader closure: Array[States::Item]
 
     attr_reader items: Array[States::Item]
 
-    attr_reader annotation_list: untyped
+    attr_reader annotation_list: Array[InadequacyAnnotation]
 
-    attr_reader predecessors: untyped
+    attr_reader predecessors: Array[State]
 
     attr_accessor shifts: Array[Shift]
 
     attr_accessor reduces: Array[Reduce]
 
-    attr_accessor ielr_isocores: untyped
+    attr_accessor ielr_isocores: Array[State]
 
-    attr_accessor lalr_isocore: untyped
+    attr_accessor lalr_isocore: State
 
-    attr_accessor lookaheads_recomputed: untyped
+    attr_accessor lookaheads_recomputed: bool
 
-    attr_accessor follow_kernel_items: untyped
+    attr_accessor follow_kernel_items: Hash[transition, Hash[States::Item, bool]]
 
-    attr_accessor always_follows: untyped
+    attr_accessor always_follows: Hash[transition, Array[Grammar::Symbol]]
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
@@ -91,7 +97,8 @@ module Lrama
     # @rbs () -> Array[transition]
     def transitions: () -> Array[transition]
 
-    def update_transition: (untyped shift, untyped next_state) -> untyped
+    # @rbs (Shift shift, State next_state) -> void
+    def update_transition: (Shift shift, State next_state) -> void
 
     # @rbs () -> void
     def clear_transitions_cache: () -> void
@@ -120,47 +127,77 @@ module Lrama
     def rr_conflicts: () -> Array[conflict]
 
     # Definition 3.40 (propagate_lookaheads)
-    def propagate_lookaheads: (untyped next_state) -> untyped
+    #
+    # @rbs (State next_state) -> Hash[States::Item, Array[Grammar::Symbol]]
+    def propagate_lookaheads: (State next_state) -> Hash[States::Item, Array[Grammar::Symbol]]
 
     # Definition 3.43 (is_compatible)
-    def is_compatible?: (untyped filtered_lookahead) -> untyped
+    #
+    # @rbs (Hash[States::Item, Array[Grammar::Symbol]] filtered_lookahead) -> bool
+    def is_compatible?: (Hash[States::Item, Array[Grammar::Symbol]] filtered_lookahead) -> bool
 
     # Definition 3.38 (lookahead_set_filters)
-    def lookahead_set_filters: () -> untyped
+    #
+    # @rbs () -> Hash[States::Item, Array[Grammar::Symbol]]
+    def lookahead_set_filters: () -> Hash[States::Item, Array[Grammar::Symbol]]
 
     # Definition 3.27 (inadequacy_lists)
-    def inadequacy_list: () -> untyped
+    #
+    # @rbs () -> Hash[Grammar::Symbol, Array[Shift | Reduce]]
+    def inadequacy_list: () -> Hash[Grammar::Symbol, Array[Shift | Reduce]]
 
-    def annotate_manifestation: () -> untyped
+    # Definition 3.30 (annotate_manifestation)
+    #
+    # @rbs () -> void
+    def annotate_manifestation: () -> void
 
     # Definition 3.32 (annotate_predecessor)
-    def annotate_predecessor: (untyped next_state) -> untyped
+    #
+    # @rbs (State next_state) -> void
+    def annotate_predecessor: (State next_state) -> void
 
     # Definition 3.31 (compute_lhs_contributions)
-    def lhs_contributions: (untyped sym, untyped token) -> untyped
+    #
+    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> nil | Hash[States::Item, Array[bool]]
+    def lhs_contributions: (Grammar::Symbol sym, Grammar::Symbol token) -> nil
 
     # Definition 3.26 (item_lookahead_sets)
-    def item_lookahead_set: () -> untyped
+    #
+    # @rbs () -> Hash[States::Item, Array[Grammar::Symbol]]
+    def item_lookahead_set: () -> Hash[States::Item, Array[Grammar::Symbol]]
 
-    def item_lookahead_set=: (untyped k) -> untyped
+    # @rbs (Hash[States::Item, Array[Grammar::Symbol]] k) -> void
+    def item_lookahead_set=: (Hash[States::Item, Array[Grammar::Symbol]] k) -> void
 
-    def predecessors_with_item: (untyped item) -> untyped
+    # @rbs (States::Item item) -> Array[[State, States::Item]]
+    def predecessors_with_item: (States::Item item) -> Array[[ State, States::Item ]]
 
-    def append_predecessor: (untyped prev_state) -> untyped
+    # @rbs (State prev_state) -> void
+    def append_predecessor: (State prev_state) -> void
 
     # Definition 3.39 (compute_goto_follow_set)
-    def goto_follow_set: (untyped nterm_token) -> untyped
+    #
+    # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
+    def goto_follow_set: (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
 
     # Definition 3.24 (goto_follows, via always_follows)
-    def goto_follows: (untyped shift, untyped next_state) -> untyped
+    #
+    # @rbs (Shift shift, State next_state) -> Array[Grammar::Symbol]
+    def goto_follows: (Shift shift, State next_state) -> Array[Grammar::Symbol]
 
     # Definition 3.8 (Goto Follows Internal Relation)
-    def internal_dependencies: (untyped shift, untyped next_state) -> untyped
+    #
+    # @rbs (Shift shift, State next_state) -> Array[goto]
+    def internal_dependencies: (Shift shift, State next_state) -> Array[goto]
 
     # Definition 3.5 (Goto Follows Successor Relation)
-    def successor_dependencies: (untyped shift, untyped next_state) -> untyped
+    #
+    # @rbs (Shift shift, State next_state) -> Array[goto]
+    def successor_dependencies: (Shift shift, State next_state) -> Array[goto]
 
     # Definition 3.9 (Goto Follows Predecessor Relation)
-    def predecessor_dependencies: (untyped shift, untyped next_state) -> untyped
+    #
+    # @rbs (Shift shift, State next_state) -> Array[goto]
+    def predecessor_dependencies: (Shift shift, State next_state) -> Array[goto]
   end
 end

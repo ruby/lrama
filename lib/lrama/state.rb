@@ -16,6 +16,7 @@ module Lrama
     # @rbs!
     #   type conflict = State::ShiftReduceConflict|State::ReduceReduceConflict
     #   type transition = [Shift, State]
+    #   type goto = [State, Shift, State]
     #
     #   @id: Integer
     #   @accessing_symbol: Grammar::Symbol
@@ -24,30 +25,32 @@ module Lrama
     #   @items_to_state: Hash[Array[States::Item], State]
     #   @conflicts: Array[conflict]
     #   @resolved_conflicts: Array[ResolvedConflict]
-    #   @default_reduction_rule: Grammar::Rule
+    #   @default_reduction_rule: Grammar::Rule?
     #   @closure: Array[States::Item]
     #   @nterm_transitions: Array[transition]
     #   @term_transitions: Array[transition]
     #   @transitions: Array[transition]
+    #   @internal_dependencies: Hash[transition, Array[goto]]
+    #   @successor_dependencies: Hash[transition, Array[goto]]
 
     attr_reader :id #: Integer
     attr_reader :accessing_symbol #: Grammar::Symbol
     attr_reader :kernels #: Array[States::Item]
     attr_reader :conflicts #: Array[conflict]
     attr_reader :resolved_conflicts #: Array[ResolvedConflict]
-    attr_reader :default_reduction_rule #: untyped
+    attr_reader :default_reduction_rule #: Grammar::Rule?
     attr_reader :closure #: Array[States::Item]
     attr_reader :items #: Array[States::Item]
-    attr_reader :annotation_list
-    attr_reader :predecessors
+    attr_reader :annotation_list #: Array[InadequacyAnnotation]
+    attr_reader :predecessors #: Array[State]
 
     attr_accessor :shifts #: Array[Shift]
     attr_accessor :reduces #: Array[Reduce]
-    attr_accessor :ielr_isocores
-    attr_accessor :lalr_isocore
-    attr_accessor :lookaheads_recomputed
-    attr_accessor :follow_kernel_items
-    attr_accessor :always_follows
+    attr_accessor :ielr_isocores #: Array[State]
+    attr_accessor :lalr_isocore #: State
+    attr_accessor :lookaheads_recomputed #: bool
+    attr_accessor :follow_kernel_items #: Hash[transition, Hash[States::Item, bool]]
+    attr_accessor :always_follows #: Hash[transition, Array[Grammar::Symbol]]
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
@@ -139,6 +142,7 @@ module Lrama
       @transitions ||= shifts.map {|shift| [shift, @items_to_state[shift.next_items]] }
     end
 
+    # @rbs (Shift shift, State next_state) -> void
     def update_transition(shift, next_state)
       set_items_to_state(shift.next_items, next_state)
       next_state.append_predecessor(self)
@@ -220,6 +224,8 @@ module Lrama
     end
 
     # Definition 3.40 (propagate_lookaheads)
+    #
+    # @rbs (State next_state) -> Hash[States::Item, Array[Grammar::Symbol]]
     def propagate_lookaheads(next_state)
       next_state.kernels.map {|next_kernel|
         lookahead_sets =
@@ -235,6 +241,8 @@ module Lrama
     end
 
     # Definition 3.43 (is_compatible)
+    #
+    # @rbs (Hash[States::Item, Array[Grammar::Symbol]] filtered_lookahead) -> bool
     def is_compatible?(filtered_lookahead)
       !lookaheads_recomputed ||
         @lalr_isocore.annotation_list.all? {|annotation|
@@ -245,6 +253,8 @@ module Lrama
     end
 
     # Definition 3.38 (lookahead_set_filters)
+    #
+    # @rbs () -> Hash[States::Item, Array[Grammar::Symbol]]
     def lookahead_set_filters
       kernels.map {|kernel|
         [kernel, @lalr_isocore.annotation_list.select {|annotation| annotation.contributed?(kernel) }.map(&:token)]
@@ -252,6 +262,8 @@ module Lrama
     end
 
     # Definition 3.27 (inadequacy_lists)
+    #
+    # @rbs () -> Hash[Grammar::Symbol, Array[Shift | Reduce]]
     def inadequacy_list
       return @inadequacy_list if @inadequacy_list
 
@@ -275,6 +287,9 @@ module Lrama
       @inadequacy_list = @inadequacy_list.select {|token, actions| actions.size > 1 }
     end
 
+    # Definition 3.30 (annotate_manifestation)
+    #
+    # @rbs () -> void
     def annotate_manifestation
       inadequacy_list.each {|token, actions|
         contribution_matrix = actions.map {|action|
@@ -293,6 +308,8 @@ module Lrama
     end
 
     # Definition 3.32 (annotate_predecessor)
+    #
+    # @rbs (State next_state) -> void
     def annotate_predecessor(next_state)
       next_state.annotation_list.each do |annotation|
         contribution_matrix = annotation.contribution_matrix.map {|action, contributions|
@@ -320,6 +337,8 @@ module Lrama
     end
 
     # Definition 3.31 (compute_lhs_contributions)
+    #
+    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> nil | Hash[States::Item, Array[bool]]
     def lhs_contributions(sym, token)
       transition = nterm_transitions.find {|goto, _| goto.next_sym == sym }
       if always_follows[transition].include?(token)
@@ -330,6 +349,8 @@ module Lrama
     end
 
     # Definition 3.26 (item_lookahead_sets)
+    #
+    # @rbs () -> Hash[States::Item, Array[Grammar::Symbol]]
     def item_lookahead_set
       return @item_lookahead_set if @item_lookahead_set
 
@@ -350,10 +371,12 @@ module Lrama
       }.to_h
     end
 
+    # @rbs (Hash[States::Item, Array[Grammar::Symbol]] k) -> void
     def item_lookahead_set=(k)
       @item_lookahead_set = k
     end
 
+    # @rbs (States::Item item) -> Array[[State, States::Item]]
     def predecessors_with_item(item)
       result = []
       @predecessors.each do |pre|
@@ -364,12 +387,15 @@ module Lrama
       result
     end
 
+    # @rbs (State prev_state) -> void
     def append_predecessor(prev_state)
       @predecessors << prev_state
       @predecessors.uniq!
     end
 
     # Definition 3.39 (compute_goto_follow_set)
+    #
+    # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
     def goto_follow_set(nterm_token)
       return [] if nterm_token.accept_symbol?
       transition = @lalr_isocore.nterm_transitions.find {|goto, _| goto.next_sym == nterm_token }
@@ -381,6 +407,8 @@ module Lrama
     end
 
     # Definition 3.24 (goto_follows, via always_follows)
+    #
+    # @rbs (Shift shift, State next_state) -> Array[Grammar::Symbol]
     def goto_follows(shift, next_state)
       queue = internal_dependencies(shift, next_state) + predecessor_dependencies(shift, next_state)
       terms = always_follows[[shift, next_state]]
@@ -394,6 +422,8 @@ module Lrama
     end
 
     # Definition 3.8 (Goto Follows Internal Relation)
+    #
+    # @rbs (Shift shift, State next_state) -> Array[goto]
     def internal_dependencies(shift, next_state)
       return @internal_dependencies[[shift, next_state]] if @internal_dependencies[[shift, next_state]]
 
@@ -404,6 +434,8 @@ module Lrama
     end
 
     # Definition 3.5 (Goto Follows Successor Relation)
+    #
+    # @rbs (Shift shift, State next_state) -> Array[goto]
     def successor_dependencies(shift, next_state)
       return @successor_dependencies[[shift, next_state]] if @successor_dependencies[[shift, next_state]]
 
@@ -414,6 +446,8 @@ module Lrama
     end
 
     # Definition 3.9 (Goto Follows Predecessor Relation)
+    #
+    # @rbs (Shift shift, State next_state) -> Array[goto]
     def predecessor_dependencies(shift, next_state)
       state_items = []
       @kernels.select {|kernel|
