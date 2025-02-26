@@ -21,8 +21,9 @@ module Lrama
       def merge_matrix: (Hash[Shift | Reduce, Hash[States::Item, bool]] another_matrix) -> void
 
       # Definition 3.42 (dominant_contribution)
-      # @rbs (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Shift | Reduce]?
-      def dominant_contribution: (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Shift | Reduce]?
+      #
+      # @rbs (State::lookahead_set lookaheads) -> Array[Shift | Reduce]?
+      def dominant_contribution: (State::lookahead_set lookaheads) -> Array[Shift | Reduce]?
 
       # @rbs () -> String
       def to_s: () -> String

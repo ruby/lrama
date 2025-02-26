@@ -17,6 +17,7 @@ module Lrama
     #   type conflict = State::ShiftReduceConflict|State::ReduceReduceConflict
     #   type transition = [Shift, State]
     #   type goto = [State, Shift, State]
+    #   type lookahead_set = Hash[States::Item, Array[Grammar::Symbol]]
     #
     #   @id: Integer
     #   @accessing_symbol: Grammar::Symbol
@@ -225,7 +226,7 @@ module Lrama
 
     # Definition 3.40 (propagate_lookaheads)
     #
-    # @rbs (State next_state) -> Hash[States::Item, Array[Grammar::Symbol]]
+    # @rbs (State next_state) -> lookahead_set
     def propagate_lookaheads(next_state)
       next_state.kernels.map {|next_kernel|
         lookahead_sets =
@@ -242,7 +243,7 @@ module Lrama
 
     # Definition 3.43 (is_compatible)
     #
-    # @rbs (Hash[States::Item, Array[Grammar::Symbol]] filtered_lookahead) -> bool
+    # @rbs (lookahead_set filtered_lookahead) -> bool
     def is_compatible?(filtered_lookahead)
       !lookaheads_recomputed ||
         @lalr_isocore.annotation_list.all? {|annotation|
@@ -254,7 +255,7 @@ module Lrama
 
     # Definition 3.38 (lookahead_set_filters)
     #
-    # @rbs () -> Hash[States::Item, Array[Grammar::Symbol]]
+    # @rbs () -> lookahead_set
     def lookahead_set_filters
       kernels.map {|kernel|
         [kernel, @lalr_isocore.annotation_list.select {|annotation| annotation.contributed?(kernel) }.map(&:token)]
@@ -350,7 +351,7 @@ module Lrama
 
     # Definition 3.26 (item_lookahead_sets)
     #
-    # @rbs () -> Hash[States::Item, Array[Grammar::Symbol]]
+    # @rbs () -> lookahead_set
     def item_lookahead_set
       return @item_lookahead_set if @item_lookahead_set
 
@@ -371,7 +372,7 @@ module Lrama
       }.to_h
     end
 
-    # @rbs (Hash[States::Item, Array[Grammar::Symbol]] k) -> void
+    # @rbs (lookahead_set k) -> void
     def item_lookahead_set=(k)
       @item_lookahead_set = k
     end

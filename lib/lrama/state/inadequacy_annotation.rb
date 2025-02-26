@@ -33,7 +33,8 @@ module Lrama
       end
 
       # Definition 3.42 (dominant_contribution)
-      # @rbs (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Shift | Reduce]?
+      #
+      # @rbs (State::lookahead_set lookaheads) -> Array[Shift | Reduce]?
       def dominant_contribution(lookaheads)
         actions = @actions.select {|action|
           contribution_matrix[action].nil? || contribution_matrix[action].any? {|item, contributed| contributed && lookaheads[item].include?(@token) }

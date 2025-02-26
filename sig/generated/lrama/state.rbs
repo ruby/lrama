@@ -8,6 +8,8 @@ module Lrama
 
     type goto = [ State, Shift, State ]
 
+    type lookahead_set = Hash[States::Item, Array[Grammar::Symbol]]
+
     @id: Integer
 
     @accessing_symbol: Grammar::Symbol
@@ -128,18 +130,18 @@ module Lrama
 
     # Definition 3.40 (propagate_lookaheads)
     #
-    # @rbs (State next_state) -> Hash[States::Item, Array[Grammar::Symbol]]
-    def propagate_lookaheads: (State next_state) -> Hash[States::Item, Array[Grammar::Symbol]]
+    # @rbs (State next_state) -> lookahead_set
+    def propagate_lookaheads: (State next_state) -> lookahead_set
 
     # Definition 3.43 (is_compatible)
     #
-    # @rbs (Hash[States::Item, Array[Grammar::Symbol]] filtered_lookahead) -> bool
-    def is_compatible?: (Hash[States::Item, Array[Grammar::Symbol]] filtered_lookahead) -> bool
+    # @rbs (lookahead_set filtered_lookahead) -> bool
+    def is_compatible?: (lookahead_set filtered_lookahead) -> bool
 
     # Definition 3.38 (lookahead_set_filters)
     #
-    # @rbs () -> Hash[States::Item, Array[Grammar::Symbol]]
-    def lookahead_set_filters: () -> Hash[States::Item, Array[Grammar::Symbol]]
+    # @rbs () -> lookahead_set
+    def lookahead_set_filters: () -> lookahead_set
 
     # Definition 3.27 (inadequacy_lists)
     #
@@ -163,11 +165,11 @@ module Lrama
 
     # Definition 3.26 (item_lookahead_sets)
     #
-    # @rbs () -> Hash[States::Item, Array[Grammar::Symbol]]
-    def item_lookahead_set: () -> Hash[States::Item, Array[Grammar::Symbol]]
+    # @rbs () -> lookahead_set
+    def item_lookahead_set: () -> lookahead_set
 
-    # @rbs (Hash[States::Item, Array[Grammar::Symbol]] k) -> void
-    def item_lookahead_set=: (Hash[States::Item, Array[Grammar::Symbol]] k) -> void
+    # @rbs (lookahead_set k) -> void
+    def item_lookahead_set=: (lookahead_set k) -> void
 
     # @rbs (States::Item item) -> Array[[State, States::Item]]
     def predecessors_with_item: (States::Item item) -> Array[[ State, States::Item ]]
