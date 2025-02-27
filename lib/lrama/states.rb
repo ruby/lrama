@@ -477,7 +477,7 @@ module Lrama
     # @rbs () -> void
     def compute_shift_reduce_conflicts
       states.each do |state|
-        state.shifts.each do |shift|
+        state.term_transitions.each do |shift, _|
           state.reduces.each do |reduce|
             sym = shift.next_sym
 
