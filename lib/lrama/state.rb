@@ -273,7 +273,7 @@ module Lrama
 
       inadequacy_list = {}
 
-      _transitions.each do |shift|
+      transitions.each do |shift, _|
         next unless shift.next_sym.term?
 
         inadequacy_list[shift.next_sym] ||= []
@@ -367,7 +367,7 @@ module Lrama
             prev_items = predecessors_with_item(kernel)
             prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce([]) {|acc, syms| acc |= syms }
           elsif kernel.position == 1
-            prev_state = @predecessors.find {|p| p._transitions.any? {|shift| shift.next_sym == kernel.lhs } }
+            prev_state = @predecessors.find {|p| p.transitions.any? {|shift, _| shift.next_sym == kernel.lhs } }
             shift, next_state = prev_state.nterm_transitions.find {|shift, _| shift.next_sym == kernel.lhs }
             prev_state.goto_follows(shift, next_state)
           end

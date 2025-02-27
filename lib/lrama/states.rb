@@ -304,6 +304,8 @@ module Lrama
 
         setup_state(state)
 
+        # `State#transitions` can not be used here
+        # because `items_to_state` of the `state` is not set yet.
         state._transitions.each do |shift|
           new_state, created = create_state(shift.next_sym, shift.next_items, states_created)
           state.set_items_to_state(shift.next_items, new_state)
@@ -572,7 +574,7 @@ module Lrama
         # Do not set, if conflict exist
         next unless state.conflicts.empty?
         # Do not set, if shift with `error` exists.
-        next if state._transitions.map(&:next_sym).include?(@grammar.error_symbol)
+        next if state.transitions.map {|transition, _| transition.next_sym }.include?(@grammar.error_symbol)
 
         state.default_reduction_rule = state.reduces.map do |r|
           [r.rule, r.rule.id, (r.look_ahead || []).count]
@@ -641,7 +643,7 @@ module Lrama
     # @rbs () -> Hash[goto, bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto[2]._transitions.map {|shift| shift.next_sym.number })]
+        [goto, Bitmap.from_array(goto[2].transitions.map {|shift, _| shift.next_sym.number })]
       }.to_h
     end
 
