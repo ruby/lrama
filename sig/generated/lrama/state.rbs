@@ -58,7 +58,7 @@ module Lrama
 
     attr_reader predecessors: Array[State]
 
-    attr_accessor shifts: Array[Shift]
+    attr_accessor _transitions: Array[Shift]
 
     attr_accessor reduces: Array[Reduce]
 
@@ -82,7 +82,7 @@ module Lrama
     def non_default_reduces: () -> Array[Reduce]
 
     # @rbs () -> void
-    def compute_shifts_reduces: () -> void
+    def compute_transitions_and_reduces: () -> void
 
     # @rbs (Array[States::Item] items, State next_state) -> void
     def set_items_to_state: (Array[States::Item] items, State next_state) -> void

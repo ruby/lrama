@@ -278,7 +278,7 @@ module Lrama
       @tracer.trace_closure(state)
 
       # shift & reduce
-      state.compute_shifts_reduces
+      state.compute_transitions_and_reduces
     end
 
     # @rbs (Array[State] states, State state) -> void
@@ -304,7 +304,7 @@ module Lrama
 
         setup_state(state)
 
-        state.shifts.each do |shift|
+        state._transitions.each do |shift|
           new_state, created = create_state(shift.next_sym, shift.next_items, states_created)
           state.set_items_to_state(shift.next_items, new_state)
           enqueue_state(states, new_state) if created
@@ -572,7 +572,7 @@ module Lrama
         # Do not set, if conflict exist
         next unless state.conflicts.empty?
         # Do not set, if shift with `error` exists.
-        next if state.shifts.map(&:next_sym).include?(@grammar.error_symbol)
+        next if state._transitions.map(&:next_sym).include?(@grammar.error_symbol)
 
         state.default_reduction_rule = state.reduces.map do |r|
           [r.rule, r.rule.id, (r.look_ahead || []).count]
@@ -641,7 +641,7 @@ module Lrama
     # @rbs () -> Hash[goto, bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto[2].shifts.map {|shift| shift.next_sym.number })]
+        [goto, Bitmap.from_array(goto[2]._transitions.map {|shift| shift.next_sym.number })]
       }.to_h
     end
 
@@ -720,7 +720,7 @@ module Lrama
         s = next_state.ielr_isocores.last
         new_state = State.new(@states.count, s.accessing_symbol, s.kernels)
         new_state.closure = s.closure
-        new_state.compute_shifts_reduces
+        new_state.compute_transitions_and_reduces
         s.transitions.each do |sh, next_state|
           new_state.set_items_to_state(sh.next_items, next_state)
         end

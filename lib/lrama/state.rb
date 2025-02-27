@@ -45,7 +45,7 @@ module Lrama
     attr_reader :annotation_list #: Array[InadequacyAnnotation]
     attr_reader :predecessors #: Array[State]
 
-    attr_accessor :shifts #: Array[Shift]
+    attr_accessor :_transitions #: Array[Shift]
     attr_accessor :reduces #: Array[Reduce]
     attr_accessor :ielr_isocores #: Array[State]
     attr_accessor :lalr_isocore #: State
@@ -90,8 +90,8 @@ module Lrama
     end
 
     # @rbs () -> void
-    def compute_shifts_reduces
-      _shifts = {}
+    def compute_transitions_and_reduces
+      _transitions = {}
       reduces = []
       items.each do |item|
         # TODO: Consider what should be pushed
@@ -99,18 +99,18 @@ module Lrama
           reduces << Reduce.new(item)
         else
           key = item.next_sym
-          _shifts[key] ||= []
-          _shifts[key] << item.new_by_next_position
+          _transitions[key] ||= []
+          _transitions[key] << item.new_by_next_position
         end
       end
 
       # It seems Bison 3.8.2 iterates transitions order by symbol number
-      shifts = _shifts.sort_by do |next_sym, new_items|
+      transitions = _transitions.sort_by do |next_sym, new_items|
         next_sym.number
       end.map do |next_sym, new_items|
         Shift.new(next_sym, new_items.flatten)
       end
-      self.shifts = shifts.freeze
+      self._transitions = transitions.freeze
       self.reduces = reduces.freeze
     end
 
@@ -140,7 +140,7 @@ module Lrama
 
     # @rbs () -> Array[transition]
     def transitions
-      @transitions ||= shifts.map {|shift| [shift, @items_to_state[shift.next_items]] }
+      @transitions ||= _transitions.map {|shift| [shift, @items_to_state[shift.next_items]] }
     end
 
     # @rbs (Shift shift, State next_state) -> void
@@ -270,7 +270,7 @@ module Lrama
 
       inadequacy_list = {}
 
-      shifts.each do |shift|
+      _transitions.each do |shift|
         next unless shift.next_sym.term?
 
         inadequacy_list[shift.next_sym] ||= []
@@ -364,7 +364,7 @@ module Lrama
             prev_items = predecessors_with_item(kernel)
             prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce([]) {|acc, syms| acc |= syms }
           elsif kernel.position == 1
-            prev_state = @predecessors.find {|p| p.shifts.any? {|shift| shift.next_sym == kernel.lhs } }
+            prev_state = @predecessors.find {|p| p._transitions.any? {|shift| shift.next_sym == kernel.lhs } }
             shift, next_state = prev_state.nterm_transitions.find {|shift, _| shift.next_sym == kernel.lhs }
             prev_state.goto_follows(shift, next_state)
           end
