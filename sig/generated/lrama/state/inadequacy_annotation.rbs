@@ -7,7 +7,7 @@ module Lrama
 
       attr_accessor token: Grammar::Symbol
 
-      attr_accessor actions: untyped
+      attr_accessor actions: Array[Shift | Reduce]
 
       attr_accessor contribution_matrix: Hash[Shift | Reduce, Hash[States::Item, bool]]
 
