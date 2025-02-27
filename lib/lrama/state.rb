@@ -268,24 +268,24 @@ module Lrama
     def inadequacy_list
       return @inadequacy_list if @inadequacy_list
 
-      @inadequacy_list = {}
+      inadequacy_list = {}
 
       shifts.each do |shift|
         next unless shift.next_sym.term?
 
-        @inadequacy_list[shift.next_sym] ||= []
-        @inadequacy_list[shift.next_sym] << shift.dup
+        inadequacy_list[shift.next_sym] ||= []
+        inadequacy_list[shift.next_sym] << shift.dup
       end
       reduces.each do |reduce|
         next if reduce.look_ahead.nil?
 
         reduce.look_ahead.each do |token|
-          @inadequacy_list[token] ||= []
-          @inadequacy_list[token] << reduce.dup
+          inadequacy_list[token] ||= []
+          inadequacy_list[token] << reduce.dup
         end
       end
 
-      @inadequacy_list = @inadequacy_list.select {|token, actions| actions.size > 1 }
+      @inadequacy_list = inadequacy_list.select {|token, actions| actions.size > 1 }
     end
 
     # Definition 3.30 (annotate_manifestation)
