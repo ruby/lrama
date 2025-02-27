@@ -6,7 +6,7 @@ module Lrama
     class InadequacyAnnotation
       attr_accessor :state #: State
       attr_accessor :token #: Grammar::Symbol
-      attr_accessor :actions # :Array[Shift | Reduce]
+      attr_accessor :actions #: Array[Shift | Reduce]
       attr_accessor :contribution_matrix #: Hash[Shift | Reduce, Hash[States::Item, bool]]
 
       # @rbs (State state, Grammar::Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
