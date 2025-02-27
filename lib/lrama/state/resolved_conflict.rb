@@ -9,11 +9,11 @@ module Lrama
     class ResolvedConflict < Struct.new(:symbol, :reduce, :which, :same_prec, keyword_init: true)
       # @rbs!
       #   attr_accessor symbol: Grammar::Symbol
-      #   attr_accessor reduce: State::Reduce
+      #   attr_accessor reduce: State::Action::Reduce
       #   attr_accessor which: (:reduce | :shift | :error)
       #   attr_accessor same_prec: bool
       #
-      #   def initialize: (?symbol: Grammar::Symbol, ?reduce: State::Reduce, ?which: (:reduce | :shift | :error), ?same_prec: bool) -> void
+      #   def initialize: (?symbol: Grammar::Symbol, ?reduce: State::Action::Reduce, ?which: (:reduce | :shift | :error), ?same_prec: bool) -> void
 
       # @rbs () -> (::String | bot)
       def report_message

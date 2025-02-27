@@ -4,9 +4,9 @@ module Lrama
   class State
     type conflict = State::ShiftReduceConflict | State::ReduceReduceConflict
 
-    type transition = [ Shift, State ]
+    type transition = [ Action::Shift | Action::Goto, State ]
 
-    type goto = [ State, Shift, State ]
+    type goto = [ State, Action::Shift | Action::Goto, State ]
 
     type lookahead_set = Hash[States::Item, Array[Grammar::Symbol]]
 
@@ -58,9 +58,9 @@ module Lrama
 
     attr_reader predecessors: Array[State]
 
-    attr_accessor _transitions: Array[Shift]
+    attr_accessor _transitions: Array[Action::Shift | Action::Goto]
 
-    attr_accessor reduces: Array[Reduce]
+    attr_accessor reduces: Array[Action::Reduce]
 
     attr_accessor ielr_isocores: Array[State]
 
@@ -78,8 +78,8 @@ module Lrama
     # @rbs (Array[States::Item] closure) -> void
     def closure=: (Array[States::Item] closure) -> void
 
-    # @rbs () -> Array[Reduce]
-    def non_default_reduces: () -> Array[Reduce]
+    # @rbs () -> Array[Action::Reduce]
+    def non_default_reduces: () -> Array[Action::Reduce]
 
     # @rbs () -> void
     def compute_transitions_and_reduces: () -> void
@@ -99,8 +99,8 @@ module Lrama
     # @rbs () -> Array[transition]
     def transitions: () -> Array[transition]
 
-    # @rbs (Shift shift, State next_state) -> void
-    def update_transition: (Shift shift, State next_state) -> void
+    # @rbs (Action::Shift | Action::Goto shift, State next_state) -> void
+    def update_transition: (Action::Shift | Action::Goto shift, State next_state) -> void
 
     # @rbs () -> void
     def clear_transitions_cache: () -> void
@@ -113,8 +113,8 @@ module Lrama
     # @rbs (Grammar::Symbol sym) -> State
     def transition: (Grammar::Symbol sym) -> State
 
-    # @rbs (States::Item item) -> Reduce
-    def find_reduce_by_item!: (States::Item item) -> Reduce
+    # @rbs (States::Item item) -> Action::Reduce
+    def find_reduce_by_item!: (States::Item item) -> Action::Reduce
 
     # @rbs (Grammar::Rule default_reduction_rule) -> void
     def default_reduction_rule=: (Grammar::Rule default_reduction_rule) -> void
@@ -145,8 +145,8 @@ module Lrama
 
     # Definition 3.27 (inadequacy_lists)
     #
-    # @rbs () -> Hash[Grammar::Symbol, Array[Shift | Reduce]]
-    def inadequacy_list: () -> Hash[Grammar::Symbol, Array[Shift | Reduce]]
+    # @rbs () -> Hash[Grammar::Symbol, Array[Action::Shift | Action::Goto | Action::Reduce]]
+    def inadequacy_list: () -> Hash[Grammar::Symbol, Array[Action::Shift | Action::Goto | Action::Reduce]]
 
     # Definition 3.30 (annotate_manifestation)
     #
@@ -184,22 +184,22 @@ module Lrama
 
     # Definition 3.24 (goto_follows, via always_follows)
     #
-    # @rbs (Shift shift, State next_state) -> Array[Grammar::Symbol]
-    def goto_follows: (Shift shift, State next_state) -> Array[Grammar::Symbol]
+    # @rbs (Action::Shift | Action::Goto shift, State next_state) -> Array[Grammar::Symbol]
+    def goto_follows: (Action::Shift | Action::Goto shift, State next_state) -> Array[Grammar::Symbol]
 
     # Definition 3.8 (Goto Follows Internal Relation)
     #
-    # @rbs (Shift shift, State next_state) -> Array[goto]
-    def internal_dependencies: (Shift shift, State next_state) -> Array[goto]
+    # @rbs (Action::Shift | Action::Goto shift, State next_state) -> Array[goto]
+    def internal_dependencies: (Action::Shift | Action::Goto shift, State next_state) -> Array[goto]
 
     # Definition 3.5 (Goto Follows Successor Relation)
     #
-    # @rbs (Shift shift, State next_state) -> Array[goto]
-    def successor_dependencies: (Shift shift, State next_state) -> Array[goto]
+    # @rbs (Action::Shift | Action::Goto shift, State next_state) -> Array[goto]
+    def successor_dependencies: (Action::Shift | Action::Goto shift, State next_state) -> Array[goto]
 
     # Definition 3.9 (Goto Follows Predecessor Relation)
     #
-    # @rbs (Shift shift, State next_state) -> Array[goto]
-    def predecessor_dependencies: (Shift shift, State next_state) -> Array[goto]
+    # @rbs (Action::Shift | Action::Goto shift, State next_state) -> Array[goto]
+    def predecessor_dependencies: (Action::Shift | Action::Goto shift, State next_state) -> Array[goto]
   end
 end

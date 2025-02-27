@@ -711,7 +711,7 @@ module Lrama
       end
     end
 
-    # @rbs (State state, State::Shift shift, State next_state) -> void
+    # @rbs (State state, State::Action::Shift | State::Action::Goto shift, State next_state) -> void
     def compute_state(state, shift, next_state)
       propagating_lookaheads = state.propagate_lookaheads(next_state)
       s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }

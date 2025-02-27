@@ -191,8 +191,8 @@ module Lrama
     # @rbs (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
     def merge_lookaheads: (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
 
-    # @rbs (State state, State::Shift shift, State next_state) -> void
-    def compute_state: (State state, State::Shift shift, State next_state) -> void
+    # @rbs (State state, State::Action::Shift | State::Action::Goto shift, State next_state) -> void
+    def compute_state: (State state, State::Action::Shift | State::Action::Goto shift, State next_state) -> void
 
     # @rbs (Logger logger) -> void
     def validate_conflicts_within_threshold!: (Logger logger) -> void

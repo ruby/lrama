@@ -1,0 +1,39 @@
+# Generated from lib/lrama/state/action/reduce.rb with RBS::Inline
+
+module Lrama
+  class State
+    class Action
+      class Reduce
+        @item: States::Item
+
+        @look_ahead: Array[Grammar::Symbol]?
+
+        @not_selected_symbols: Array[Grammar::Symbol]
+
+        attr_reader item: States::Item
+
+        attr_reader look_ahead: Array[Grammar::Symbol]?
+
+        attr_reader not_selected_symbols: Array[Grammar::Symbol]
+
+        # https://www.gnu.org/software/bison/manual/html_node/Default-Reductions.html
+        attr_accessor default_reduction: bool
+
+        # @rbs (States::Item item) -> void
+        def initialize: (States::Item item) -> void
+
+        # @rbs () -> Grammar::Rule
+        def rule: () -> Grammar::Rule
+
+        # @rbs (Array[Grammar::Symbol] look_ahead) -> Array[Grammar::Symbol]
+        def look_ahead=: (Array[Grammar::Symbol] look_ahead) -> Array[Grammar::Symbol]
+
+        # @rbs (Grammar::Symbol sym) -> Array[Grammar::Symbol]
+        def add_not_selected_symbol: (Grammar::Symbol sym) -> Array[Grammar::Symbol]
+
+        # @rbs () -> (::Array[Grammar::Symbol?])
+        def selected_look_ahead: () -> ::Array[Grammar::Symbol?]
+      end
+    end
+  end
+end

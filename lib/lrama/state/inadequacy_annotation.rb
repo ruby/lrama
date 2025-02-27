@@ -6,10 +6,10 @@ module Lrama
     class InadequacyAnnotation
       attr_accessor :state #: State
       attr_accessor :token #: Grammar::Symbol
-      attr_accessor :actions #: Array[Shift | Reduce]
-      attr_accessor :contribution_matrix #: Hash[Shift | Reduce, Hash[States::Item, bool]]
+      attr_accessor :actions #: Array[Action::Shift | Action::Goto | Action::Reduce]
+      attr_accessor :contribution_matrix #: Hash[Action::Shift | Action::Goto | Action::Reduce, Hash[States::Item, bool]]
 
-      # @rbs (State state, Grammar::Symbol token, Array[Shift | Reduce] actions, Hash[Shift | Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[Action::Shift | Action::Goto | Action::Reduce] actions, Hash[Action::Shift | Action::Goto | Action::Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
       def initialize(state, token, actions, contribution_matrix)
         @state = state
         @token = token
@@ -22,7 +22,7 @@ module Lrama
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
       end
 
-      # @rbs (Hash[Shift | Reduce, Hash[States::Item, bool]] another_matrix) -> void
+      # @rbs (Hash[Action::Shift | Action::Goto | Action::Reduce, Hash[States::Item, bool]] another_matrix) -> void
       def merge_matrix(another_matrix)
         @contribution_matrix.merge(another_matrix) {|action, contributions, another_contributions|
           next contributions if another_contributions.nil?
@@ -34,16 +34,16 @@ module Lrama
 
       # Definition 3.42 (dominant_contribution)
       #
-      # @rbs (State::lookahead_set lookaheads) -> Array[Shift | Reduce]?
+      # @rbs (State::lookahead_set lookaheads) -> Array[Action::Shift | Action::Goto | Action::Reduce]?
       def dominant_contribution(lookaheads)
         actions = @actions.select {|action|
           contribution_matrix[action].nil? || contribution_matrix[action].any? {|item, contributed| contributed && lookaheads[item].include?(@token) }
         }
         return nil if actions.empty?
 
-        # @type var shifts: Array[Shift]
-        # @type var reduces: Array[Reduce]
-        shifts, reduces = actions.partition {|action| action.is_a?(Shift) }
+        # @type var shifts: Array[Action::Shift | Action::Goto]
+        # @type var reduces: Array[Action::Reduce]
+        shifts, reduces = actions.partition {|action| action.is_a?(Action::Shift) || action.is_a?(Action::Goto) }
 
         shifts.each do |shift|
           reduces.each do |reduce|
@@ -110,9 +110,9 @@ module Lrama
       # @rbs () -> String
       def actions_to_s
         '[' + @actions.map {|action|
-          if action.is_a?(Shift)
+          if action.is_a?(Action::Shift) || action.is_a?(Action::Goto)
             action.class.name
-          elsif action.is_a?(Reduce)
+          elsif action.is_a?(Action::Reduce)
             "#{action.class.name}: (#{action.item})"
           end
         }.join(', ') + ']'
@@ -121,7 +121,7 @@ module Lrama
       # @rbs () -> String
       def contribution_matrix_to_s
         '[' + @contribution_matrix.map {|action, contributions|
-          "#{action.is_a?(Shift) ? action.class.name : "#{action.class.name}: (#{action.item})"}: " + contributions&.transform_keys(&:to_s).to_s
+          "#{(action.is_a?(Action::Shift) || action.is_a?(Action::Goto)) ? action.class.name : "#{action.class.name}: (#{action.item})"}: " + contributions&.transform_keys(&:to_s).to_s
         }.join(', ') + ']'
       end
     end
