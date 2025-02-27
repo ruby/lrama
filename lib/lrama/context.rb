@@ -231,8 +231,8 @@ module Lrama
         end
 
         # Shift is selected when S/R conflict exists.
-        state.selected_term_transitions.each do |shift, next_state|
-          actions[shift.next_sym.number] = next_state.id
+        state.selected_term_transitions.each do |shift|
+          actions[shift.next_sym.number] = shift.next_state.id
         end
 
         state.resolved_conflicts.select do |conflict|
@@ -295,10 +295,10 @@ module Lrama
       nterm_to_next_states = {}
 
       @states.states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
+        state.nterm_transitions.each do |shift|
           key = shift.next_sym
           nterm_to_next_states[key] ||= []
-          nterm_to_next_states[key] << [state, next_state] # [from_state, to_state]
+          nterm_to_next_states[key] << [state, shift.next_state] # [from_state, to_state]
         end
       end
 

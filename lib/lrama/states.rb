@@ -306,9 +306,9 @@ module Lrama
 
         # `State#transitions` can not be used here
         # because `items_to_state` of the `state` is not set yet.
-        state._transitions.each do |shift|
-          new_state, created = create_state(shift.next_sym, shift.next_items, states_created)
-          state.set_items_to_state(shift.next_items, new_state)
+        state._transitions.each do |next_sym, next_items|
+          new_state, created = create_state(next_sym, next_items, states_created)
+          state.set_items_to_state(next_items, new_state)
           enqueue_state(states, new_state) if created
         end
       end
@@ -319,9 +319,9 @@ module Lrama
       a = []
 
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
+        state.nterm_transitions.each do |shift|
           nterm = shift.next_sym
-          a << [state, nterm, next_state]
+          a << [state, nterm, shift.next_state]
         end
       end
 
@@ -331,10 +331,10 @@ module Lrama
     # @rbs () -> void
     def compute_direct_read_sets
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
+        state.nterm_transitions.each do |shift|
           nterm = shift.next_sym
 
-          ary = next_state.term_transitions.map do |shift, _|
+          ary = shift.next_state.term_transitions.map do |shift|
             shift.next_sym.number
           end
 
@@ -347,14 +347,14 @@ module Lrama
     # @rbs () -> void
     def compute_reads_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
+        state.nterm_transitions.each do |shift|
           nterm = shift.next_sym
-          next_state.nterm_transitions.each do |shift2, _next_state2|
+          shift.next_state.nterm_transitions.each do |shift2|
             nterm2 = shift2.next_sym
             if nterm2.nullable
               key = [state.id, nterm.token_id] # @type var key: transition
               @reads_relation[key] ||= []
-              @reads_relation[key] << [next_state.id, nterm2.token_id]
+              @reads_relation[key] << [shift.next_state.id, nterm2.token_id]
             end
           end
         end
@@ -385,7 +385,7 @@ module Lrama
     # @rbs () -> void
     def compute_includes_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
+        state.nterm_transitions.each do |shift|
           nterm = shift.next_sym
           @grammar.find_rules_by_symbol!(nterm).each do |rule|
             i = rule.rhs.count - 1
@@ -411,7 +411,7 @@ module Lrama
     # @rbs () -> void
     def compute_lookback_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
+        state.nterm_transitions.each do |shift|
           nterm = shift.next_sym
           @grammar.find_rules_by_symbol!(nterm).each do |rule|
             state2 = transition(state, rule.rhs)
@@ -479,7 +479,7 @@ module Lrama
     # @rbs () -> void
     def compute_shift_reduce_conflicts
       states.each do |state|
-        state.term_transitions.each do |shift, _|
+        state.term_transitions.each do |shift|
           state.reduces.each do |reduce|
             sym = shift.next_sym
 
@@ -593,7 +593,7 @@ module Lrama
       base_function = compute_goto_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
         state, nterm, _next_state = goto
-        transition = state.nterm_transitions.find {|shift, _| shift.next_sym == nterm }
+        transition = state.nterm_transitions.find {|shift| shift.next_sym == nterm }
         state.follow_kernel_items[transition] = state.kernels.map.with_index {|kernel, i|
           [kernel, Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)]
         }.to_h
@@ -625,7 +625,7 @@ module Lrama
       base_function = compute_transition_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, always_follows_bitmap|
         state, nterm, _next_state = goto
-        transition = state.nterm_transitions.find {|shift, _| shift.next_sym == nterm }
+        transition = state.nterm_transitions.find {|shift| shift.next_sym == nterm }
         state.always_follows[transition] = bitmap_to_terms(always_follows_bitmap)
       end
     end
@@ -643,7 +643,7 @@ module Lrama
     # @rbs () -> Hash[goto, bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto[2].transitions.map {|shift, _| shift.next_sym.number })]
+        [goto, Bitmap.from_array(goto[2].transitions.map {|shift| shift.next_sym.number })]
       }.to_h
     end
 
@@ -670,16 +670,16 @@ module Lrama
     # @rbs () -> void
     def split_states
       @states.each do |state|
-        state.transitions.each do |shift, next_state|
-          next_state.append_predecessor(state)
+        state.transitions.each do |shift|
+          shift.next_state.append_predecessor(state)
         end
       end
 
       compute_inadequacy_annotations
 
       @states.each do |state|
-        state.transitions.each do |shift, next_state|
-          compute_state(state, shift, next_state)
+        state.transitions.each do |shift|
+          compute_state(state, shift, shift.next_state)
         end
       end
     end
@@ -707,14 +707,14 @@ module Lrama
       return if state.kernels.all? {|item| (filtered_lookaheads[item] - state.item_lookahead_set[item]).empty? }
 
       state.item_lookahead_set = state.item_lookahead_set.merge {|_, v1, v2| v1 | v2 }
-      state.transitions.each do |shift, next_state|
-        next if next_state.lookaheads_recomputed
-        compute_state(state, shift, next_state)
+      state.transitions.each do |transition|
+        next if transition.next_state.lookaheads_recomputed
+        compute_state(state, transition, transition.next_state)
       end
     end
 
-    # @rbs (State state, State::Action::Shift | State::Action::Goto shift, State next_state) -> void
-    def compute_state(state, shift, next_state)
+    # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
+    def compute_state(state, transition, next_state)
       propagating_lookaheads = state.propagate_lookaheads(next_state)
       s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
 
@@ -723,8 +723,8 @@ module Lrama
         new_state = State.new(@states.count, s.accessing_symbol, s.kernels)
         new_state.closure = s.closure
         new_state.compute_transitions_and_reduces
-        s.transitions.each do |sh, next_state|
-          new_state.set_items_to_state(sh.next_items, next_state)
+        s.transitions.each do |transition|
+          new_state.set_items_to_state(transition.next_items, transition.next_state)
         end
         @states << new_state
         new_state.lalr_isocore = s
@@ -734,14 +734,14 @@ module Lrama
         end
         new_state.lookaheads_recomputed = true
         new_state.item_lookahead_set = propagating_lookaheads
-        state.update_transition(shift, new_state)
+        state.update_transition(transition, new_state)
         compute_follow_kernel_items
         compute_always_follows
       elsif(!s.lookaheads_recomputed)
         s.lookaheads_recomputed = true
         s.item_lookahead_set = propagating_lookaheads
       else
-        state.update_transition(shift, s)
+        state.update_transition(transition, s)
         merge_lookaheads(s, propagating_lookaheads)
       end
     end

@@ -11,15 +11,18 @@ module Lrama
         # @rbs!
         #   @next_sym: Grammar::Symbol
         #   @next_items: Array[States::Item]
+        #   @next_state: State
 
         attr_reader :next_sym #: Grammar::Symbol
         attr_reader :next_items #: Array[States::Item]
+        attr_reader :next_state #: State
         attr_accessor :not_selected #: bool
 
-        # @rbs (Grammar::Symbol next_sym, Array[States::Item] next_items) -> void
-        def initialize(next_sym, next_items)
+        # @rbs (Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
+        def initialize(next_sym, next_items, next_state)
           @next_sym = next_sym
           @next_items = next_items
+          @next_state = next_state
         end
       end
     end
