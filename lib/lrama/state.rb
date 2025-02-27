@@ -339,7 +339,7 @@ module Lrama
 
     # Definition 3.31 (compute_lhs_contributions)
     #
-    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> nil | Hash[States::Item, Array[bool]]
+    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[States::Item, bool])
     def lhs_contributions(sym, token)
       transition = nterm_transitions.find {|goto, _| goto.next_sym == sym }
       if always_follows[transition].include?(token)
