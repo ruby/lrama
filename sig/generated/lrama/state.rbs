@@ -160,8 +160,8 @@ module Lrama
 
     # Definition 3.31 (compute_lhs_contributions)
     #
-    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> nil | Hash[States::Item, Array[bool]]
-    def lhs_contributions: (Grammar::Symbol sym, Grammar::Symbol token) -> nil
+    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[States::Item, bool])
+    def lhs_contributions: (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[States::Item, bool])
 
     # Definition 3.26 (item_lookahead_sets)
     #
