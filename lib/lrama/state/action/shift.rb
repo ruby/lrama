@@ -9,17 +9,20 @@ module Lrama
         #       Move these type declarations above instance variable definitions, once it's supported.
         #
         # @rbs!
+        #   @from_state: State
         #   @next_sym: Grammar::Symbol
         #   @next_items: Array[States::Item]
         #   @next_state: State
 
+        attr_reader :from_state #: State
         attr_reader :next_sym #: Grammar::Symbol
         attr_reader :next_items #: Array[States::Item]
         attr_reader :next_state #: State
         attr_accessor :not_selected #: bool
 
-        # @rbs (Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
-        def initialize(next_sym, next_items, next_state)
+        # @rbs (State from_state, Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
+        def initialize(from_state, next_sym, next_items, next_state)
+          @from_state = from_state
           @next_sym = next_sym
           @next_items = next_items
           @next_state = next_state

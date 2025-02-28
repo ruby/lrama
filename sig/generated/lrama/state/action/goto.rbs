@@ -4,11 +4,15 @@ module Lrama
   class State
     class Action
       class Goto
+        @from_state: State
+
         @next_sym: Grammar::Symbol
 
         @next_items: Array[States::Item]
 
         @next_state: State
+
+        attr_reader from_state: State
 
         attr_reader next_sym: Grammar::Symbol
 
@@ -18,8 +22,8 @@ module Lrama
 
         attr_accessor not_selected: bool
 
-        # @rbs (Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
-        def initialize: (Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
+        # @rbs (State from_state, Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
+        def initialize: (State from_state, Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
       end
     end
   end
