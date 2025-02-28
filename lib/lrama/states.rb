@@ -305,9 +305,9 @@ module Lrama
 
         # `State#transitions` can not be used here
         # because `items_to_state` of the `state` is not set yet.
-        state._transitions.each do |next_sym, next_items|
-          new_state, created = create_state(next_sym, next_items, states_created)
-          state.set_items_to_state(next_items, new_state)
+        state._transitions.each do |next_sym, to_items|
+          new_state, created = create_state(next_sym, to_items, states_created)
+          state.set_items_to_state(to_items, new_state)
           enqueue_state(states, new_state) if created
         end
       end
@@ -332,7 +332,7 @@ module Lrama
         state.nterm_transitions.each do |shift|
           nterm = shift.next_sym
 
-          ary = shift.next_state.term_transitions.map do |shift|
+          ary = shift.to_state.term_transitions.map do |shift|
             shift.next_sym.number
           end
 
@@ -347,12 +347,12 @@ module Lrama
       @states.each do |state|
         state.nterm_transitions.each do |shift|
           nterm = shift.next_sym
-          shift.next_state.nterm_transitions.each do |shift2|
+          shift.to_state.nterm_transitions.each do |shift2|
             nterm2 = shift2.next_sym
             if nterm2.nullable
               key = [state.id, nterm.token_id] # @type var key: transition
               @reads_relation[key] ||= []
-              @reads_relation[key] << [shift.next_state.id, nterm2.token_id]
+              @reads_relation[key] << [shift.to_state.id, nterm2.token_id]
             end
           end
         end
@@ -641,7 +641,7 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto.next_state.transitions.map {|shift| shift.next_sym.number })]
+        [goto, Bitmap.from_array(goto.to_state.transitions.map {|shift| shift.next_sym.number })]
       }.to_h
     end
 
@@ -660,14 +660,14 @@ module Lrama
     #
     # @rbs (State::Action::Goto goto1, State::Action::Goto goto2) -> bool
     def has_successor_relation?(goto1, goto2)
-      goto1.next_state == goto2.from_state && goto2.next_sym.nullable
+      goto1.to_state == goto2.from_state && goto2.next_sym.nullable
     end
 
     # @rbs () -> void
     def split_states
       @states.each do |state|
         state.transitions.each do |shift|
-          shift.next_state.append_predecessor(state)
+          shift.to_state.append_predecessor(state)
         end
       end
 
@@ -675,7 +675,7 @@ module Lrama
 
       @states.each do |state|
         state.transitions.each do |shift|
-          compute_state(state, shift, shift.next_state)
+          compute_state(state, shift, shift.to_state)
         end
       end
     end
@@ -704,8 +704,8 @@ module Lrama
 
       state.item_lookahead_set = state.item_lookahead_set.merge {|_, v1, v2| v1 | v2 }
       state.transitions.each do |transition|
-        next if transition.next_state.lookaheads_recomputed
-        compute_state(state, transition, transition.next_state)
+        next if transition.to_state.lookaheads_recomputed
+        compute_state(state, transition, transition.to_state)
       end
     end
 
@@ -720,7 +720,7 @@ module Lrama
         new_state.closure = s.closure
         new_state.compute_transitions_and_reduces
         s.transitions.each do |transition|
-          new_state.set_items_to_state(transition.next_items, transition.next_state)
+          new_state.set_items_to_state(transition.to_items, transition.to_state)
         end
         @states << new_state
         new_state.lalr_isocore = s

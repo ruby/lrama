@@ -77,7 +77,7 @@ module Lrama
           tmp = state.term_transitions.reject do |shift|
             shift.not_selected
           end.map do |shift|
-            [shift.next_sym, shift.next_state.id]
+            [shift.next_sym, shift.to_state.id]
           end
           max_len = tmp.map(&:first).map(&:display_name).map(&:length).max
           tmp.each do |term, state_id|
@@ -136,7 +136,7 @@ module Lrama
           max_len = 0
           state.nterm_transitions.each do |shift|
             nterm = shift.next_sym
-            tmp << [nterm, shift.next_state.id]
+            tmp << [nterm, shift.to_state.id]
             max_len = [max_len, nterm.id.s_value.length].max
           end
           tmp.uniq!

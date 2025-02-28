@@ -53,7 +53,7 @@ module Lrama
         trans = {} #: Hash[Grammar::Symbol, State]
 
         src_state.transitions.each do |shift|
-          trans[shift.next_sym] = shift.next_state
+          trans[shift.next_sym] = shift.to_state
         end
 
         src_state.items.each do |src_item|
@@ -257,9 +257,9 @@ module Lrama
         # transition
         triple.state.transitions.each do |shift|
           next unless triple.item.next_sym && triple.item.next_sym == shift.next_sym
-          shift.next_state.kernels.each do |kernel|
+          shift.to_state.kernels.each do |kernel|
             next if kernel.rule != triple.item.rule
-            t = Triple.new(shift.next_state, kernel, triple.l)
+            t = Triple.new(shift.to_state, kernel, triple.l)
             queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
           end
         end

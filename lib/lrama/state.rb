@@ -103,7 +103,7 @@ module Lrama
       end
 
       # It seems Bison 3.8.2 iterates transitions order by symbol number
-      transitions = _transitions.sort_by do |next_sym, next_items|
+      transitions = _transitions.sort_by do |next_sym, to_items|
         next_sym.number
       end
 
@@ -137,18 +137,18 @@ module Lrama
 
     # @rbs () -> Array[transition]
     def transitions
-      @transitions ||= _transitions.map do |next_sym, next_items|
+      @transitions ||= _transitions.map do |next_sym, to_items|
         if next_sym.term?
-          Action::Shift.new(self, next_sym, next_items.flatten, @items_to_state[next_items])
+          Action::Shift.new(self, next_sym, to_items.flatten, @items_to_state[to_items])
         else
-          Action::Goto.new(self, next_sym, next_items.flatten, @items_to_state[next_items])
+          Action::Goto.new(self, next_sym, to_items.flatten, @items_to_state[to_items])
         end
       end
     end
 
     # @rbs (Action::Shift | Action::Goto transition, State next_state) -> void
     def update_transition(transition, next_state)
-      set_items_to_state(transition.next_items, next_state)
+      set_items_to_state(transition.to_items, next_state)
       next_state.append_predecessor(self)
       clear_transitions_cache
     end
@@ -176,12 +176,12 @@ module Lrama
       if sym.term?
         term_transitions.each do |shift|
           term = shift.next_sym
-          result = shift.next_state if term == sym
+          result = shift.to_state if term == sym
         end
       else
         nterm_transitions.each do |goto|
           nterm = goto.next_sym
-          result = goto.next_state if nterm == sym
+          result = goto.to_state if nterm == sym
         end
       end
 
@@ -445,7 +445,7 @@ module Lrama
       return @successor_dependencies[goto] if @successor_dependencies[goto]
 
       @successor_dependencies[goto] =
-        goto.next_state.nterm_transitions
+        goto.to_state.nterm_transitions
           .select {|next_goto| next_goto.next_sym.nullable }
     end
 

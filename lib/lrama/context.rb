@@ -232,7 +232,7 @@ module Lrama
 
         # Shift is selected when S/R conflict exists.
         state.selected_term_transitions.each do |shift|
-          actions[shift.next_sym.number] = shift.next_state.id
+          actions[shift.next_sym.number] = shift.to_state.id
         end
 
         state.resolved_conflicts.select do |conflict|
@@ -292,18 +292,18 @@ module Lrama
       # of a default nterm transition destination.
       @yydefgoto = Array.new(@states.nterms.count, 0)
       # Mapping from nterm to next_states
-      nterm_to_next_states = {}
+      nterm_to_to_states = {}
 
       @states.states.each do |state|
         state.nterm_transitions.each do |shift|
           key = shift.next_sym
-          nterm_to_next_states[key] ||= []
-          nterm_to_next_states[key] << [state, shift.next_state] # [from_state, to_state]
+          nterm_to_to_states[key] ||= []
+          nterm_to_to_states[key] << [state, shift.to_state] # [from_state, to_state]
         end
       end
 
       @states.nterms.each do |nterm|
-        if (states = nterm_to_next_states[nterm])
+        if (states = nterm_to_to_states[nterm])
           default_state = states.map(&:last).group_by {|s| s }.max_by {|_, v| v.count }.first
           default_goto = default_state.id
           not_default_gotos = []

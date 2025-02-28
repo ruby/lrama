@@ -8,22 +8,22 @@ module Lrama
 
         @next_sym: Grammar::Symbol
 
-        @next_items: Array[States::Item]
+        @to_items: Array[States::Item]
 
-        @next_state: State
+        @to_state: State
 
         attr_reader from_state: State
 
         attr_reader next_sym: Grammar::Symbol
 
-        attr_reader next_items: Array[States::Item]
+        attr_reader to_items: Array[States::Item]
 
-        attr_reader next_state: State
+        attr_reader to_state: State
 
         attr_accessor not_selected: bool
 
-        # @rbs (State from_state, Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
-        def initialize: (State from_state, Grammar::Symbol next_sym, Array[States::Item] next_items, State next_state) -> void
+        # @rbs (State from_state, Grammar::Symbol next_sym, Array[States::Item] to_items, State to_state) -> void
+        def initialize: (State from_state, Grammar::Symbol next_sym, Array[States::Item] to_items, State to_state) -> void
       end
     end
   end
