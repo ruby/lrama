@@ -1,0 +1,19 @@
+# Generated from lib/lrama/category.rb with RBS::Inline
+
+module Lrama
+  class Category
+    attr_reader id: Lrama::Lexer::Token::Ident
+
+    attr_reader name: String
+
+    attr_reader tokens: Array[Lrama::Lexer::Token::Ident]
+
+    attr_reader tag: Lexer::Token::Tag
+
+    # @rbs (id: Lrama::Lexer::Token::Ident) -> void
+    def initialize: (id: Lrama::Lexer::Token::Ident) -> void
+
+    # @rbs (Array[Lrama::Lexer::Token::Ident] tokens, Lexer::Token::Tag tag) -> void
+    def add_tokens: (Array[Lrama::Lexer::Token::Ident] tokens, Lexer::Token::Tag tag) -> void
+  end
+end
