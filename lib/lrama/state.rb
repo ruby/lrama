@@ -435,7 +435,7 @@ module Lrama
       syms = @items.select {|i|
         i.next_sym == goto.next_sym && i.symbols_after_transition.all?(&:nullable) && i.position == 0
       }.map(&:lhs).uniq
-      @internal_dependencies[goto] = nterm_transitions.select {|next_goto| syms.include?(next_goto.next_sym) }
+      @internal_dependencies[goto] = nterm_transitions.select {|goto2| syms.include?(goto2.next_sym) }
     end
 
     # Definition 3.5 (Goto Follows Successor Relation)
