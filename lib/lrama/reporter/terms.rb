@@ -20,7 +20,7 @@ module Lrama
         end
 
         next_terms = states.states.flat_map do |state|
-          state.term_transitions.map {|shift, _| shift.next_sym }
+          state.term_transitions.map {|shift| shift.next_sym }
         end
 
         unused_symbols = states.terms.reject do |term|

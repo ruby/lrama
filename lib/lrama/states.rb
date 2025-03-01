@@ -21,7 +21,6 @@ module Lrama
     #   type rule_id = Integer
     #   type transition = [state_id, nterm_id]
     #   type reduce = [state_id, rule_id]
-    #   type goto = [State, Grammar::Symbol, State]
     #
     #   include Grammar::_DelegatedMethods
     #   extend Forwardable
@@ -278,7 +277,7 @@ module Lrama
       @tracer.trace_closure(state)
 
       # shift & reduce
-      state.compute_shifts_reduces
+      state.compute_transitions_and_reduces
     end
 
     # @rbs (Array[State] states, State state) -> void
@@ -304,22 +303,23 @@ module Lrama
 
         setup_state(state)
 
-        state.shifts.each do |shift|
-          new_state, created = create_state(shift.next_sym, shift.next_items, states_created)
-          state.set_items_to_state(shift.next_items, new_state)
+        # `State#transitions` can not be used here
+        # because `items_to_state` of the `state` is not set yet.
+        state._transitions.each do |next_sym, to_items|
+          new_state, created = create_state(next_sym, to_items, states_created)
+          state.set_items_to_state(to_items, new_state)
           enqueue_state(states, new_state) if created
         end
       end
     end
 
-    # @rbs () -> Array[goto]
+    # @rbs () -> Array[State::Action::Goto]
     def nterm_transitions
       a = []
 
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
-          nterm = shift.next_sym
-          a << [state, nterm, next_state]
+        state.nterm_transitions.each do |goto|
+          a << goto
         end
       end
 
@@ -329,10 +329,10 @@ module Lrama
     # @rbs () -> void
     def compute_direct_read_sets
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
-          nterm = shift.next_sym
+        state.nterm_transitions.each do |goto|
+          nterm = goto.next_sym
 
-          ary = next_state.term_transitions.map do |shift, _|
+          ary = goto.to_state.term_transitions.map do |shift|
             shift.next_sym.number
           end
 
@@ -345,14 +345,14 @@ module Lrama
     # @rbs () -> void
     def compute_reads_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
-          nterm = shift.next_sym
-          next_state.nterm_transitions.each do |shift2, _next_state2|
-            nterm2 = shift2.next_sym
+        state.nterm_transitions.each do |goto|
+          nterm = goto.next_sym
+          goto.to_state.nterm_transitions.each do |goto2|
+            nterm2 = goto2.next_sym
             if nterm2.nullable
               key = [state.id, nterm.token_id] # @type var key: transition
               @reads_relation[key] ||= []
-              @reads_relation[key] << [next_state.id, nterm2.token_id]
+              @reads_relation[key] << [goto.to_state.id, nterm2.token_id]
             end
           end
         end
@@ -361,8 +361,8 @@ module Lrama
 
     # @rbs () -> void
     def compute_read_sets
-      sets = nterm_transitions.map do |state, nterm, next_state|
-        [state.id, nterm.token_id]
+      sets = nterm_transitions.map do |goto|
+        [goto.from_state.id, goto.next_sym.token_id]
       end
 
       @read_sets = Digraph.new(sets, @reads_relation, @direct_read_sets).compute
@@ -383,8 +383,8 @@ module Lrama
     # @rbs () -> void
     def compute_includes_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
-          nterm = shift.next_sym
+        state.nterm_transitions.each do |goto|
+          nterm = goto.next_sym
           @grammar.find_rules_by_symbol!(nterm).each do |rule|
             i = rule.rhs.count - 1
 
@@ -409,8 +409,8 @@ module Lrama
     # @rbs () -> void
     def compute_lookback_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift, next_state|
-          nterm = shift.next_sym
+        state.nterm_transitions.each do |goto|
+          nterm = goto.next_sym
           @grammar.find_rules_by_symbol!(nterm).each do |rule|
             state2 = transition(state, rule.rhs)
             # p = state, A = nterm, q = state2, A -> ω = rule
@@ -424,8 +424,8 @@ module Lrama
 
     # @rbs () -> void
     def compute_follow_sets
-      sets = nterm_transitions.map do |state, nterm, next_state|
-        [state.id, nterm.token_id]
+      sets = nterm_transitions.map do |goto|
+        [goto.from_state.id, goto.next_sym.token_id]
       end
 
       @follow_sets = Digraph.new(sets, @includes_relation, @read_sets).compute
@@ -477,7 +477,7 @@ module Lrama
     # @rbs () -> void
     def compute_shift_reduce_conflicts
       states.each do |state|
-        state.term_transitions.each do |shift, _|
+        state.term_transitions.each do |shift|
           state.reduces.each do |reduce|
             sym = shift.next_sym
 
@@ -572,7 +572,7 @@ module Lrama
         # Do not set, if conflict exist
         next unless state.conflicts.empty?
         # Do not set, if shift with `error` exists.
-        next if state.shifts.map(&:next_sym).include?(@grammar.error_symbol)
+        next if state.transitions.map {|transition| transition.next_sym }.include?(@grammar.error_symbol)
 
         state.default_reduction_rule = state.reduces.map do |r|
           [r.rule, r.rule.id, (r.look_ahead || []).count]
@@ -590,15 +590,15 @@ module Lrama
       relation = compute_goto_internal_relation
       base_function = compute_goto_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
-        state, nterm, _next_state = goto
-        transition = state.nterm_transitions.find {|shift, _| shift.next_sym == nterm }
+        state, nterm = goto.from_state, goto.next_sym
+        transition = state.nterm_transitions.find {|goto| goto.next_sym == nterm }
         state.follow_kernel_items[transition] = state.kernels.map.with_index {|kernel, i|
           [kernel, Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)]
         }.to_h
       end
     end
 
-    # @rbs () -> Hash[goto, Array[goto]]
+    # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_internal_relation
       nterm_transitions.map {|goto1|
         related_gotos = nterm_transitions.select {|goto2| has_internal_relation?(goto1, goto2) }
@@ -606,11 +606,11 @@ module Lrama
       }.to_h
     end
 
-    # @rbs () -> Hash[goto, bitmap]
+    # @rbs () -> Hash[State::Action::Goto, bitmap]
     def compute_goto_bitmaps
-      nterm_transitions.map {|state, sym, next_state|
-        bools = state.kernels.map.with_index {|kernel, i| i if kernel.next_sym == sym && kernel.symbols_after_transition.all?(&:nullable) }.compact
-        [[state, sym, next_state], Bitmap.from_array(bools)]
+      nterm_transitions.map {|goto|
+        bools = goto.from_state.kernels.map.with_index {|kernel, i| i if kernel.next_sym == goto.next_sym && kernel.symbols_after_transition.all?(&:nullable) }.compact
+        [goto, Bitmap.from_array(bools)]
       }.to_h
     end
 
@@ -622,13 +622,13 @@ module Lrama
       relation = compute_goto_successor_or_internal_relation
       base_function = compute_transition_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, always_follows_bitmap|
-        state, nterm, _next_state = goto
-        transition = state.nterm_transitions.find {|shift, _| shift.next_sym == nterm }
+        state, nterm = goto.from_state, goto.next_sym
+        transition = state.nterm_transitions.find {|goto| goto.next_sym == nterm }
         state.always_follows[transition] = bitmap_to_terms(always_follows_bitmap)
       end
     end
 
-    # @rbs () -> Hash[goto, Array[goto]]
+    # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_successor_or_internal_relation
       nterm_transitions.map {|goto1|
         related_gotos = nterm_transitions.select {|goto2|
@@ -638,19 +638,19 @@ module Lrama
       }.to_h
     end
 
-    # @rbs () -> Hash[goto, bitmap]
+    # @rbs () -> Hash[State::Action::Goto, bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto[2].shifts.map {|shift| shift.next_sym.number })]
+        [goto, Bitmap.from_array(goto.to_state.transitions.map {|transition| transition.next_sym.number })]
       }.to_h
     end
 
     # Definition 3.8 (Goto Follows Internal Relation)
     #
-    # @rbs (goto goto1, goto goto2) -> bool
+    # @rbs (State::Action::Goto goto1, State::Action::Goto goto2) -> bool
     def has_internal_relation?(goto1, goto2)
-      state1, sym1, _next_state1 = goto1
-      state2, sym2, _next_state2 = goto2
+      state1, sym1 = goto1.from_state, goto1.next_sym
+      state2, sym2 = goto2.from_state, goto2.next_sym
       state1 == state2 && state1.items.any? {|item|
         item.next_sym == sym1 && item.lhs == sym2 && item.symbols_after_transition.all?(&:nullable)
       }
@@ -658,26 +658,24 @@ module Lrama
 
     # Definition 3.5 (Goto Follows Successor Relation)
     #
-    # @rbs (goto goto1, goto goto2) -> bool
+    # @rbs (State::Action::Goto goto1, State::Action::Goto goto2) -> bool
     def has_successor_relation?(goto1, goto2)
-      _state1, _sym1, next_state1 = goto1
-      state2, sym2, _next_state2 = goto2
-      next_state1 == state2 && sym2.nullable
+      goto1.to_state == goto2.from_state && goto2.next_sym.nullable
     end
 
     # @rbs () -> void
     def split_states
       @states.each do |state|
-        state.transitions.each do |shift, next_state|
-          next_state.append_predecessor(state)
+        state.transitions.each do |transition|
+          transition.to_state.append_predecessor(state)
         end
       end
 
       compute_inadequacy_annotations
 
       @states.each do |state|
-        state.transitions.each do |shift, next_state|
-          compute_state(state, shift, next_state)
+        state.transitions.each do |transition|
+          compute_state(state, transition, transition.to_state)
         end
       end
     end
@@ -705,14 +703,14 @@ module Lrama
       return if state.kernels.all? {|item| (filtered_lookaheads[item] - state.item_lookahead_set[item]).empty? }
 
       state.item_lookahead_set = state.item_lookahead_set.merge {|_, v1, v2| v1 | v2 }
-      state.transitions.each do |shift, next_state|
-        next if next_state.lookaheads_recomputed
-        compute_state(state, shift, next_state)
+      state.transitions.each do |transition|
+        next if transition.to_state.lookaheads_recomputed
+        compute_state(state, transition, transition.to_state)
       end
     end
 
-    # @rbs (State state, State::Shift shift, State next_state) -> void
-    def compute_state(state, shift, next_state)
+    # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
+    def compute_state(state, transition, next_state)
       propagating_lookaheads = state.propagate_lookaheads(next_state)
       s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
 
@@ -720,9 +718,9 @@ module Lrama
         s = next_state.ielr_isocores.last
         new_state = State.new(@states.count, s.accessing_symbol, s.kernels)
         new_state.closure = s.closure
-        new_state.compute_shifts_reduces
-        s.transitions.each do |sh, next_state|
-          new_state.set_items_to_state(sh.next_items, next_state)
+        new_state.compute_transitions_and_reduces
+        s.transitions.each do |transition|
+          new_state.set_items_to_state(transition.to_items, transition.to_state)
         end
         @states << new_state
         new_state.lalr_isocore = s
@@ -732,14 +730,14 @@ module Lrama
         end
         new_state.lookaheads_recomputed = true
         new_state.item_lookahead_set = propagating_lookaheads
-        state.update_transition(shift, new_state)
+        state.update_transition(transition, new_state)
         compute_follow_kernel_items
         compute_always_follows
       elsif(!s.lookaheads_recomputed)
         s.lookaheads_recomputed = true
         s.item_lookahead_set = propagating_lookaheads
       else
-        state.update_transition(shift, s)
+        state.update_transition(transition, s)
         merge_lookaheads(s, propagating_lookaheads)
       end
     end

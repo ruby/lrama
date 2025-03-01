@@ -74,10 +74,10 @@ module Lrama
           end
 
           # Report shifts
-          tmp = state.term_transitions.reject do |shift, _|
+          tmp = state.term_transitions.reject do |shift|
             shift.not_selected
-          end.map do |shift, next_state|
-            [shift.next_sym, next_state.id]
+          end.map do |shift|
+            [shift.next_sym, shift.to_state.id]
           end
           max_len = tmp.map(&:first).map(&:display_name).map(&:length).max
           tmp.each do |term, state_id|
@@ -134,9 +134,9 @@ module Lrama
           # Report nonterminal transitions
           tmp = [] #: Array[[Lrama::Grammar::Symbol, Integer]]
           max_len = 0
-          state.nterm_transitions.each do |shift, next_state|
-            nterm = shift.next_sym
-            tmp << [nterm, next_state.id]
+          state.nterm_transitions.each do |goto|
+            nterm = goto.next_sym
+            tmp << [nterm, goto.to_state.id]
             max_len = [max_len, nterm.id.s_value.length].max
           end
           tmp.uniq!

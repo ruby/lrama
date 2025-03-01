@@ -1,10 +1,9 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
-require_relative "state/reduce"
+require_relative "state/action"
 require_relative "state/reduce_reduce_conflict"
 require_relative "state/resolved_conflict"
-require_relative "state/shift"
 require_relative "state/shift_reduce_conflict"
 require_relative "state/inadequacy_annotation"
 
@@ -15,8 +14,7 @@ module Lrama
     #
     # @rbs!
     #   type conflict = State::ShiftReduceConflict|State::ReduceReduceConflict
-    #   type transition = [Shift, State]
-    #   type goto = [State, Shift, State]
+    #   type transition = Action::Shift | Action::Goto
     #   type lookahead_set = Hash[States::Item, Array[Grammar::Symbol]]
     #
     #   @id: Integer
@@ -28,11 +26,11 @@ module Lrama
     #   @resolved_conflicts: Array[ResolvedConflict]
     #   @default_reduction_rule: Grammar::Rule?
     #   @closure: Array[States::Item]
-    #   @nterm_transitions: Array[transition]
-    #   @term_transitions: Array[transition]
+    #   @nterm_transitions: Array[Action::Goto]
+    #   @term_transitions: Array[Action::Shift]
     #   @transitions: Array[transition]
-    #   @internal_dependencies: Hash[transition, Array[goto]]
-    #   @successor_dependencies: Hash[transition, Array[goto]]
+    #   @internal_dependencies: Hash[Action::Goto, Array[Action::Goto]]
+    #   @successor_dependencies: Hash[Action::Goto, Array[Action::Goto]]
 
     attr_reader :id #: Integer
     attr_reader :accessing_symbol #: Grammar::Symbol
@@ -45,13 +43,13 @@ module Lrama
     attr_reader :annotation_list #: Array[InadequacyAnnotation]
     attr_reader :predecessors #: Array[State]
 
-    attr_accessor :shifts #: Array[Shift]
-    attr_accessor :reduces #: Array[Reduce]
+    attr_accessor :_transitions #: Array[[Grammar::Symbol, Array[States::Item]]]
+    attr_accessor :reduces #: Array[Action::Reduce]
     attr_accessor :ielr_isocores #: Array[State]
     attr_accessor :lalr_isocore #: State
     attr_accessor :lookaheads_recomputed #: bool
-    attr_accessor :follow_kernel_items #: Hash[transition, Hash[States::Item, bool]]
-    attr_accessor :always_follows #: Hash[transition, Array[Grammar::Symbol]]
+    attr_accessor :follow_kernel_items #: Hash[Action::Goto, Hash[States::Item, bool]]
+    attr_accessor :always_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
@@ -82,7 +80,7 @@ module Lrama
       @items = @kernels + @closure
     end
 
-    # @rbs () -> Array[Reduce]
+    # @rbs () -> Array[Action::Reduce]
     def non_default_reduces
       reduces.reject do |reduce|
         reduce.rule == @default_reduction_rule
@@ -90,27 +88,26 @@ module Lrama
     end
 
     # @rbs () -> void
-    def compute_shifts_reduces
-      _shifts = {}
+    def compute_transitions_and_reduces
+      _transitions = {}
       reduces = []
       items.each do |item|
         # TODO: Consider what should be pushed
         if item.end_of_rule?
-          reduces << Reduce.new(item)
+          reduces << Action::Reduce.new(item)
         else
           key = item.next_sym
-          _shifts[key] ||= []
-          _shifts[key] << item.new_by_next_position
+          _transitions[key] ||= []
+          _transitions[key] << item.new_by_next_position
         end
       end
 
       # It seems Bison 3.8.2 iterates transitions order by symbol number
-      shifts = _shifts.sort_by do |next_sym, new_items|
+      transitions = _transitions.sort_by do |next_sym, to_items|
         next_sym.number
-      end.map do |next_sym, new_items|
-        Shift.new(next_sym, new_items.flatten)
       end
-      self.shifts = shifts.freeze
+
+      self._transitions = transitions.freeze
       self.reduces = reduces.freeze
     end
 
@@ -128,24 +125,30 @@ module Lrama
       reduce.look_ahead = look_ahead
     end
 
-    # @rbs () -> Array[transition]
-    def nterm_transitions
-      @nterm_transitions ||= transitions.select {|shift, _| shift.next_sym.nterm? }
+    # @rbs () -> Array[Action::Goto]
+    def nterm_transitions # steep:ignore
+      @nterm_transitions ||= transitions.select {|transition| transition.is_a?(Action::Goto) }
     end
 
-    # @rbs () -> Array[transition]
-    def term_transitions
-      @term_transitions ||= transitions.select {|shift, _| shift.next_sym.term? }
+    # @rbs () -> Array[Action::Shift]
+    def term_transitions # steep:ignore
+      @term_transitions ||= transitions.select {|transition| transition.is_a?(Action::Shift) }
     end
 
     # @rbs () -> Array[transition]
     def transitions
-      @transitions ||= shifts.map {|shift| [shift, @items_to_state[shift.next_items]] }
+      @transitions ||= _transitions.map do |next_sym, to_items|
+        if next_sym.term?
+          Action::Shift.new(self, next_sym, to_items.flatten, @items_to_state[to_items])
+        else
+          Action::Goto.new(self, next_sym, to_items.flatten, @items_to_state[to_items])
+        end
+      end
     end
 
-    # @rbs (Shift shift, State next_state) -> void
-    def update_transition(shift, next_state)
-      set_items_to_state(shift.next_items, next_state)
+    # @rbs (Action::Shift | Action::Goto transition, State next_state) -> void
+    def update_transition(transition, next_state)
+      set_items_to_state(transition.to_items, next_state)
       next_state.append_predecessor(self)
       clear_transitions_cache
     end
@@ -157,9 +160,9 @@ module Lrama
       @transitions = nil
     end
 
-    # @rbs () -> Array[transition]
+    # @rbs () -> Array[Action::Shift]
     def selected_term_transitions
-      term_transitions.reject do |shift, next_state|
+      term_transitions.reject do |shift|
         shift.not_selected
       end
     end
@@ -171,14 +174,14 @@ module Lrama
       result = nil
 
       if sym.term?
-        term_transitions.each do |shift, next_state|
+        term_transitions.each do |shift|
           term = shift.next_sym
-          result = next_state if term == sym
+          result = shift.to_state if term == sym
         end
       else
-        nterm_transitions.each do |shift, next_state|
-          nterm = shift.next_sym
-          result = next_state if nterm == sym
+        nterm_transitions.each do |goto|
+          nterm = goto.next_sym
+          result = goto.to_state if nterm == sym
         end
       end
 
@@ -187,7 +190,7 @@ module Lrama
       result
     end
 
-    # @rbs (States::Item item) -> Reduce
+    # @rbs (States::Item item) -> Action::Reduce
     def find_reduce_by_item!(item)
       reduces.find do |r|
         r.item == item
@@ -264,17 +267,17 @@ module Lrama
 
     # Definition 3.27 (inadequacy_lists)
     #
-    # @rbs () -> Hash[Grammar::Symbol, Array[Shift | Reduce]]
+    # @rbs () -> Hash[Grammar::Symbol, Array[Action::Shift | Action::Goto | Action::Reduce]]
     def inadequacy_list
       return @inadequacy_list if @inadequacy_list
 
       inadequacy_list = {}
 
-      shifts.each do |shift|
-        next unless shift.next_sym.term?
+      transitions.each do |transition|
+        next unless transition.next_sym.term?
 
-        inadequacy_list[shift.next_sym] ||= []
-        inadequacy_list[shift.next_sym] << shift.dup
+        inadequacy_list[transition.next_sym] ||= []
+        inadequacy_list[transition.next_sym] << transition.dup
       end
       reduces.each do |reduce|
         next if reduce.look_ahead.nil?
@@ -294,7 +297,7 @@ module Lrama
     def annotate_manifestation
       inadequacy_list.each {|token, actions|
         contribution_matrix = actions.map {|action|
-          if action.is_a?(Shift)
+          if action.is_a?(Action::Shift) || action.is_a?(Action::Goto)
             [action, nil]
           else
             [action, action.rule.empty_rule? ? lhs_contributions(action.rule.lhs, token) : kernels.map {|k| [k, k.end_of_rule?] }.to_h]
@@ -341,7 +344,7 @@ module Lrama
     #
     # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[States::Item, bool])
     def lhs_contributions(sym, token)
-      transition = nterm_transitions.find {|goto, _| goto.next_sym == sym }
+      transition = nterm_transitions.find {|goto| goto.next_sym == sym }
       if always_follows[transition].include?(token)
         nil
       else
@@ -364,9 +367,9 @@ module Lrama
             prev_items = predecessors_with_item(kernel)
             prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce([]) {|acc, syms| acc |= syms }
           elsif kernel.position == 1
-            prev_state = @predecessors.find {|p| p.shifts.any? {|shift| shift.next_sym == kernel.lhs } }
-            shift, next_state = prev_state.nterm_transitions.find {|shift, _| shift.next_sym == kernel.lhs }
-            prev_state.goto_follows(shift, next_state)
+            prev_state = @predecessors.find {|p| p.transitions.any? {|transition| transition.next_sym == kernel.lhs } }
+            goto = prev_state.nterm_transitions.find {|goto| goto.next_sym == kernel.lhs }
+            prev_state.goto_follows(goto)
           end
         [kernel, value]
       }.to_h
@@ -399,7 +402,7 @@ module Lrama
     # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
     def goto_follow_set(nterm_token)
       return [] if nterm_token.accept_symbol?
-      transition = @lalr_isocore.nterm_transitions.find {|goto, _| goto.next_sym == nterm_token }
+      transition = @lalr_isocore.nterm_transitions.find {|goto| goto.next_sym == nterm_token }
 
       @kernels
         .select {|kernel| @lalr_isocore.follow_kernel_items[transition][kernel] }
@@ -409,50 +412,50 @@ module Lrama
 
     # Definition 3.24 (goto_follows, via always_follows)
     #
-    # @rbs (Shift shift, State next_state) -> Array[Grammar::Symbol]
-    def goto_follows(shift, next_state)
-      queue = internal_dependencies(shift, next_state) + predecessor_dependencies(shift, next_state)
-      terms = always_follows[[shift, next_state]]
+    # @rbs (Action::Goto goto) -> Array[Grammar::Symbol]
+    def goto_follows(goto)
+      queue = internal_dependencies(goto) + predecessor_dependencies(goto)
+      terms = always_follows[goto]
       until queue.empty?
-        st, sh, next_st = queue.pop
-        terms |= st.always_follows[[sh, next_st]]
-        st.internal_dependencies(sh, next_st).each {|v| queue << v }
-        st.predecessor_dependencies(sh, next_st).each {|v| queue << v }
+        goto2 = queue.pop
+        st = goto2.from_state
+        terms |= st.always_follows[goto2]
+        st.internal_dependencies(goto2).each {|v| queue << v }
+        st.predecessor_dependencies(goto2).each {|v| queue << v }
       end
       terms
     end
 
     # Definition 3.8 (Goto Follows Internal Relation)
     #
-    # @rbs (Shift shift, State next_state) -> Array[goto]
-    def internal_dependencies(shift, next_state)
-      return @internal_dependencies[[shift, next_state]] if @internal_dependencies[[shift, next_state]]
+    # @rbs (Action::Goto goto) -> Array[Action::Goto]
+    def internal_dependencies(goto)
+      return @internal_dependencies[goto] if @internal_dependencies[goto]
 
       syms = @items.select {|i|
-        i.next_sym == shift.next_sym && i.symbols_after_transition.all?(&:nullable) && i.position == 0
+        i.next_sym == goto.next_sym && i.symbols_after_transition.all?(&:nullable) && i.position == 0
       }.map(&:lhs).uniq
-      @internal_dependencies[[shift, next_state]] = nterm_transitions.select {|goto, _| syms.include?(goto.next_sym) }.map {|goto| [self, *goto] }
+      @internal_dependencies[goto] = nterm_transitions.select {|goto2| syms.include?(goto2.next_sym) }
     end
 
     # Definition 3.5 (Goto Follows Successor Relation)
     #
-    # @rbs (Shift shift, State next_state) -> Array[goto]
-    def successor_dependencies(shift, next_state)
-      return @successor_dependencies[[shift, next_state]] if @successor_dependencies[[shift, next_state]]
+    # @rbs (Action::Goto goto) -> Array[Action::Goto]
+    def successor_dependencies(goto)
+      return @successor_dependencies[goto] if @successor_dependencies[goto]
 
-      @successor_dependencies[[shift, next_state]] =
-        next_state.nterm_transitions
-        .select {|next_shift, _| next_shift.next_sym.nullable }
-        .map {|transition| [next_state, *transition] }
+      @successor_dependencies[goto] =
+        goto.to_state.nterm_transitions
+          .select {|next_goto| next_goto.next_sym.nullable }
     end
 
     # Definition 3.9 (Goto Follows Predecessor Relation)
     #
-    # @rbs (Shift shift, State next_state) -> Array[goto]
-    def predecessor_dependencies(shift, next_state)
+    # @rbs (Action::Goto goto) -> Array[Action::Goto]
+    def predecessor_dependencies(goto)
       state_items = []
       @kernels.select {|kernel|
-        kernel.next_sym == shift.next_sym && kernel.symbols_after_transition.all?(&:nullable)
+        kernel.next_sym == goto.next_sym && kernel.symbols_after_transition.all?(&:nullable)
       }.each do |item|
         queue = predecessors_with_item(item)
         until queue.empty?
@@ -466,8 +469,7 @@ module Lrama
       end
 
       state_items.map {|state, item|
-        sh, next_st = state.nterm_transitions.find {|shi, _| shi.next_sym == item.lhs }
-        [state, sh, next_st]
+        state.nterm_transitions.find {|goto2| goto2.next_sym == item.lhs }
       }
     end
   end
