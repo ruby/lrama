@@ -60,6 +60,7 @@ module Lrama
       %inline
       %locations
       %categories
+      %start
     ).freeze #: Array[String]
 
     # @rbs (GrammarFile grammar_file) -> void
