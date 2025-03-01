@@ -1,9 +1,17 @@
+# Generated from lib/lrama/grammar/percent_code.rb with RBS::Inline
+
 module Lrama
   class Grammar
     class PercentCode
+      @name: String
+
+      @code: String
+
       attr_reader name: String
+
       attr_reader code: String
 
+      # @rbs (String name, String code) -> void
       def initialize: (String name, String code) -> void
     end
   end
