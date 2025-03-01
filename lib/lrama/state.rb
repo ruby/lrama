@@ -13,7 +13,7 @@ module Lrama
     #       Move these type declarations above instance variable definitions, once it's supported.
     #
     # @rbs!
-    #   type conflict = State::ShiftReduceConflict|State::ReduceReduceConflict
+    #   type conflict = State::ShiftReduceConflict | State::ReduceReduceConflict
     #   type transition = Action::Shift | Action::Goto
     #   type lookahead_set = Hash[States::Item, Array[Grammar::Symbol]]
     #
