@@ -4,7 +4,7 @@
 module Lrama
   class Tracer
     class Rules
-      # @rbs (IO io, bool rules, bool only_explicit, **untyped _) -> void
+      # @rbs (IO io, **Hash[Symbol, bool]) -> void
       def initialize(io, rules: false, only_explicit: false, **_)
         @io = io
         @rules = rules

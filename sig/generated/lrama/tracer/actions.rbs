@@ -3,8 +3,8 @@
 module Lrama
   class Tracer
     class Actions
-      # @rbs (IO io, **untyped _) -> void
-      def initialize: (IO io, **untyped _) -> void
+      # @rbs (IO io, **Hash[Symbol, bool]) -> void
+      def initialize: (IO io, **Hash[Symbol, bool]) -> void
 
       # @rbs (Lrama::Grammar grammar) -> void
       def trace: (Lrama::Grammar grammar) -> void

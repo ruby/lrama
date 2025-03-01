@@ -3,8 +3,8 @@
 module Lrama
   class Tracer
     class Closure
-      # @rbs (IO io, bool automaton, bool closure, **untyped _) -> void
-      def initialize: (IO io, bool automaton, bool closure, **untyped _) -> void
+      # @rbs (IO io, **Hash[Symbol, bool]) -> void
+      def initialize: (IO io, **Hash[Symbol, bool]) -> void
 
       # @rbs (Lrama::State state) -> void
       def trace: (Lrama::State state) -> void

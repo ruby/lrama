@@ -4,7 +4,7 @@
 module Lrama
   class Tracer
     class OnlyExplicitRules
-      # @rbs (IO io, only_explicit: false, **untyped _) -> void
+      # @rbs (IO io, **Hash[Symbol, bool]) -> void
       def initialize(io, only_explicit: false, **_)
         @io = io
         @only_explicit = only_explicit

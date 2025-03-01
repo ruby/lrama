@@ -32,6 +32,7 @@ module Lrama
     attr_reader error_symbol: Grammar::Symbol
     attr_reader undef_symbol: Grammar::Symbol
     attr_reader accept_symbol: Grammar::Symbol
+    attr_reader parameterized_resolver: Parameterized::Resolver
     attr_reader aux: Auxiliary
     attr_accessor union: Union
     attr_accessor expect: Integer
