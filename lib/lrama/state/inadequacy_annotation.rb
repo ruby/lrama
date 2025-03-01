@@ -27,11 +27,11 @@ module Lrama
 
       # @rbs (Hash[action, Hash[States::Item, bool]] another_matrix) -> void
       def merge_matrix(another_matrix)
-        @contribution_matrix.merge(another_matrix) {|action, contributions, another_contributions|
+        @contribution_matrix.merge!(another_matrix) {|action, contributions, another_contributions|
           next contributions if another_contributions.nil?
           next another_contributions if contributions.nil?
 
-          contributions.merge(another_contributions) {|_, contributed, another_contributed| contributed || another_contributed }
+          contributions.merge!(another_contributions) {|_, contributed, another_contributed| contributed || another_contributed }
         }
       end
 

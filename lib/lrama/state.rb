@@ -313,29 +313,29 @@ module Lrama
 
     # Definition 3.32 (annotate_predecessor)
     #
-    # @rbs (State next_state) -> void
-    def annotate_predecessor(next_state)
-      next_state.annotation_list.each do |annotation|
+    # @rbs (State predecessor) -> void
+    def annotate_predecessor(predecessor)
+      annotation_list.each do |annotation|
         contribution_matrix = annotation.contribution_matrix.map {|action, contributions|
           if contributions.nil?
             [action, nil]
-          elsif next_state.kernels.any? {|k| contributions[k] && k.position == 1 && lhs_contributions(k.lhs, annotation.token).nil? }
+          elsif kernels.any? {|kernel| contributions[kernel] && kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, annotation.token).nil? }
             [action, nil]
           else
-            cs = kernels.map {|k|
-              c = contributions.any? {|item, contributed| contributed && (
-                (item.rule == k.rule && item.position == k.position + 1) ||
-                (item.position == 1 && lhs_contributions(item.lhs, annotation.token).nil?)
+            cs = predecessor.kernels.map {|pred_kernel|
+              c = kernels.any? {|kernel| contributions[kernel] && (
+                (pred_kernel.predecessor_item_of?(kernel) && predecessor.item_lookahead_set[pred_kernel].include?(annotation.token)) ||
+                (kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, annotation.token)[pred_kernel])
               ) }
-              [k, c]
+              [pred_kernel, c]
             }.to_h
             [action, cs]
           end
         }.to_h
-        if (at = @annotation_list.find {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions })
+        if (at = predecessor.annotation_list.find {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions })
           at.merge_matrix(contribution_matrix)
         else
-          @annotation_list << InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
+          predecessor.annotation_list << InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
         end
       end
     end
@@ -402,12 +402,12 @@ module Lrama
     # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
     def goto_follow_set(nterm_token)
       return [] if nterm_token.accept_symbol?
-      transition = @lalr_isocore.nterm_transitions.find {|goto| goto.next_sym == nterm_token }
+      goto = @lalr_isocore.nterm_transitions.find {|g| g.next_sym == nterm_token }
 
       @kernels
-        .select {|kernel| @lalr_isocore.follow_kernel_items[transition][kernel] }
+        .select {|kernel| @lalr_isocore.follow_kernel_items[goto][kernel] }
         .map {|kernel| item_lookahead_set[kernel] }
-        .reduce(@lalr_isocore.always_follows[transition]) {|result, terms| result |= terms }
+        .reduce(@lalr_isocore.always_follows[goto]) {|result, terms| result |= terms }
     end
 
     # Definition 3.24 (goto_follows, via always_follows)
@@ -416,12 +416,16 @@ module Lrama
     def goto_follows(goto)
       queue = internal_dependencies(goto) + predecessor_dependencies(goto)
       terms = always_follows[goto]
+      visited = queue.dup
       until queue.empty?
-        goto2 = queue.pop
-        st = goto2.from_state
-        terms |= st.always_follows[goto2]
-        st.internal_dependencies(goto2).each {|v| queue << v }
-        st.predecessor_dependencies(goto2).each {|v| queue << v }
+        goto2 = queue.shift
+        next if visited.include?(goto)
+
+        state = goto2.from_state
+        terms |= state.always_follows[goto2]
+        state.internal_dependencies(goto2).each {|v| queue << v }
+        state.predecessor_dependencies(goto2).each {|v| queue << v }
+        visited << goto2
       end
       terms
     end
