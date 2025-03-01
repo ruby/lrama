@@ -21,6 +21,8 @@ module Lrama
     @aux: Auxiliary
     @no_stdlib: bool
     @locations: bool
+    @define: Hash[String, String]
+    @required: bool
     @union: Union
 
     extend Forwardable
@@ -49,6 +51,9 @@ module Lrama
     attr_accessor rule_builders: Array[RuleBuilder]
     attr_accessor sym_to_rules: Hash[Integer, Array[Rule]]
     attr_accessor no_stdlib: bool
+    attr_accessor locations: bool
+    attr_accessor define: Hash[String, String]
+    attr_accessor required: bool
 
     def initialize: (Counter rule_counter) -> void
     def create_rule_builder: (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
