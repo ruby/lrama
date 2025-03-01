@@ -46,7 +46,8 @@ module Lrama
 
         # @type var shifts: Array[Action::Shift | Action::Goto]
         # @type var reduces: Array[Action::Reduce]
-        shifts, reduces = actions.partition {|action| action.is_a?(Action::Shift) || action.is_a?(Action::Goto) }
+        shifts = actions.select {|action| action.is_a?(Action::Shift)}
+        reduces = actions.select {|action| action.is_a?(Action::Reduce) }
 
         shifts.each do |shift|
           reduces.each do |reduce|
