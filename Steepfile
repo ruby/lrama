@@ -6,9 +6,8 @@ target :lib do
   repo_path '.gem_rbs_collection/'
   signature "sig"
 
-  check "lib/lrama/grammar"
-
   check "lib/lrama/counterexamples"
+  check "lib/lrama/grammar"
   check "lib/lrama/lexer"
   check "lib/lrama/report"
   check "lib/lrama/state"
