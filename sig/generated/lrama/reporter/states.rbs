@@ -8,6 +8,59 @@ module Lrama
 
       # @rbs (IO io, Lrama::States states) -> void
       def report: (IO io, Lrama::States states) -> void
+
+      private
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_state_header: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_items: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_conflicts: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_shifts: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_nonassoc_errors: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_reduces: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_nterm_transitions: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_conflict_resolutions: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_counterexamples: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
+      def report_verbose_info: (IO io, Lrama::State state, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
+      def report_direct_read_sets: (IO io, Lrama::State state, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
+      def report_reads_relation: (IO io, Lrama::State state, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
+      def report_read_sets: (IO io, Lrama::State state, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
+      def report_includes_relation: (IO io, Lrama::State state, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
+      def report_lookback_relation: (IO io, Lrama::State state, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
+      def report_follow_sets: (IO io, Lrama::State state, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
+      def report_look_ahead_sets: (IO io, Lrama::State state, Lrama::States states) -> void
     end
   end
 end
