@@ -329,10 +329,10 @@ module Lrama
     # @rbs () -> void
     def compute_direct_read_sets
       @states.each do |state|
-        state.nterm_transitions.each do |shift|
-          nterm = shift.next_sym
+        state.nterm_transitions.each do |goto|
+          nterm = goto.next_sym
 
-          ary = shift.to_state.term_transitions.map do |shift|
+          ary = goto.to_state.term_transitions.map do |shift|
             shift.next_sym.number
           end
 
@@ -345,14 +345,14 @@ module Lrama
     # @rbs () -> void
     def compute_reads_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift|
-          nterm = shift.next_sym
-          shift.to_state.nterm_transitions.each do |shift2|
-            nterm2 = shift2.next_sym
+        state.nterm_transitions.each do |goto|
+          nterm = goto.next_sym
+          goto.to_state.nterm_transitions.each do |goto2|
+            nterm2 = goto2.next_sym
             if nterm2.nullable
               key = [state.id, nterm.token_id] # @type var key: transition
               @reads_relation[key] ||= []
-              @reads_relation[key] << [shift.to_state.id, nterm2.token_id]
+              @reads_relation[key] << [goto.to_state.id, nterm2.token_id]
             end
           end
         end
@@ -383,8 +383,8 @@ module Lrama
     # @rbs () -> void
     def compute_includes_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift|
-          nterm = shift.next_sym
+        state.nterm_transitions.each do |goto|
+          nterm = goto.next_sym
           @grammar.find_rules_by_symbol!(nterm).each do |rule|
             i = rule.rhs.count - 1
 
@@ -409,8 +409,8 @@ module Lrama
     # @rbs () -> void
     def compute_lookback_relation
       @states.each do |state|
-        state.nterm_transitions.each do |shift|
-          nterm = shift.next_sym
+        state.nterm_transitions.each do |goto|
+          nterm = goto.next_sym
           @grammar.find_rules_by_symbol!(nterm).each do |rule|
             state2 = transition(state, rule.rhs)
             # p = state, A = nterm, q = state2, A -> ω = rule
@@ -591,7 +591,7 @@ module Lrama
       base_function = compute_goto_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
         state, nterm = goto.from_state, goto.next_sym
-        transition = state.nterm_transitions.find {|shift| shift.next_sym == nterm }
+        transition = state.nterm_transitions.find {|goto| goto.next_sym == nterm }
         state.follow_kernel_items[transition] = state.kernels.map.with_index {|kernel, i|
           [kernel, Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)]
         }.to_h
@@ -623,7 +623,7 @@ module Lrama
       base_function = compute_transition_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, always_follows_bitmap|
         state, nterm = goto.from_state, goto.next_sym
-        transition = state.nterm_transitions.find {|shift| shift.next_sym == nterm }
+        transition = state.nterm_transitions.find {|goto| goto.next_sym == nterm }
         state.always_follows[transition] = bitmap_to_terms(always_follows_bitmap)
       end
     end

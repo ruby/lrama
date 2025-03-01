@@ -134,9 +134,9 @@ module Lrama
           # Report nonterminal transitions
           tmp = [] #: Array[[Lrama::Grammar::Symbol, Integer]]
           max_len = 0
-          state.nterm_transitions.each do |shift|
-            nterm = shift.next_sym
-            tmp << [nterm, shift.to_state.id]
+          state.nterm_transitions.each do |goto|
+            nterm = goto.next_sym
+            tmp << [nterm, goto.to_state.id]
             max_len = [max_len, nterm.id.s_value.length].max
           end
           tmp.uniq!

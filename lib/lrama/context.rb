@@ -295,10 +295,10 @@ module Lrama
       nterm_to_to_states = {}
 
       @states.states.each do |state|
-        state.nterm_transitions.each do |shift|
-          key = shift.next_sym
+        state.nterm_transitions.each do |goto|
+          key = goto.next_sym
           nterm_to_to_states[key] ||= []
-          nterm_to_to_states[key] << [state, shift.to_state] # [from_state, to_state]
+          nterm_to_to_states[key] << [state, goto.to_state] # [from_state, to_state]
         end
       end
 
