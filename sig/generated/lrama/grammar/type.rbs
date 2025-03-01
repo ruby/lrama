@@ -1,10 +1,20 @@
+# Generated from lib/lrama/grammar/type.rb with RBS::Inline
+
 module Lrama
   class Grammar
     class Type
+      @id: Lexer::Token
+
+      @tag: Lexer::Token::Tag
+
       attr_reader id: Lexer::Token
+
       attr_reader tag: Lexer::Token::Tag
 
+      # @rbs (id: Lexer::Token, tag: Lexer::Token::Tag) -> void
       def initialize: (id: Lexer::Token, tag: Lexer::Token::Tag) -> void
+
+      # @rbs (Grammar::Type other) -> bool
       def ==: (Grammar::Type other) -> bool
     end
   end
