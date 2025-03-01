@@ -153,8 +153,8 @@ module Lrama
 
     # Definition 3.32 (annotate_predecessor)
     #
-    # @rbs (State next_state) -> void
-    def annotate_predecessor: (State next_state) -> void
+    # @rbs (State predecessor) -> void
+    def annotate_predecessor: (State predecessor) -> void
 
     # Definition 3.31 (compute_lhs_contributions)
     #
