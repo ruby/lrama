@@ -469,7 +469,7 @@ module Lrama
       end
 
       state_items.map {|state, item|
-        state.nterm_transitions.find {|next_goto| next_goto.next_sym == item.lhs }
+        state.nterm_transitions.find {|goto2| goto2.next_sym == item.lhs }
       }
     end
   end
