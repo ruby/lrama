@@ -4,20 +4,21 @@
 module Lrama
   class Reporter
     class Conflicts
-      # (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::States states) -> void
       def report(io, states)
+        if report_conflicts(io, states)
+          io << "\n\n"
+        end
+      end
+
+      private
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_conflicts(io, states)
         has_conflict = false
 
         states.states.each do |state|
-          messages = [] #: Array[string]
-          cs = state.conflicts.group_by(&:type)
-          if cs[:shift_reduce]
-            messages << "#{cs[:shift_reduce].count} shift/reduce"
-          end
-
-          if cs[:reduce_reduce]
-            messages << "#{cs[:reduce_reduce].count} reduce/reduce"
-          end
+          messages = format_conflict_messages(state.conflicts)
 
           unless messages.empty?
             has_conflict = true
@@ -25,9 +26,20 @@ module Lrama
           end
         end
 
-        if has_conflict
-          io << "\n\n"
-        end
+        has_conflict
+      end
+
+      # @rbs (Array[(Lrama::State::ShiftReduceConflict | Lrama::State::ReduceReduceConflict)] conflicts) -> Array[String]
+      def format_conflict_messages(conflicts)
+        conflict_types = {
+          shift_reduce: "shift/reduce",
+          reduce_reduce: "reduce/reduce"
+        }
+
+        conflict_types.keys.map do |type|
+          type_conflicts = conflicts.select { |c| c.type == type }
+          "#{type_conflicts.count} #{conflict_types[type]}" unless type_conflicts.empty?
+        end.compact
       end
     end
   end
