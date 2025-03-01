@@ -1,0 +1,21 @@
+# Generated from lib/lrama/grammar/code/no_reference_code.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Code
+      class NoReferenceCode < Code
+        private
+
+        # * ($$) error
+        # * (@$) error
+        # * ($:$) error
+        # * ($1) error
+        # * (@1) error
+        # * ($:1) error
+        #
+        # reference_to_c: (Reference ref) -> bot
+        def reference_to_c: (untyped ref) -> untyped
+      end
+    end
+  end
+end

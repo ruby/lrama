@@ -1,0 +1,63 @@
+# Generated from lib/lrama/grammar/code/rule_action.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Code
+      class RuleAction < Code
+        @rule: Rule
+
+        # @rbs (type: ::Symbol, token_code: Grammar::Code, rule: Rule) -> void
+        def initialize: (type: ::Symbol, token_code: Grammar::Code, rule: Rule) -> void
+
+        private
+
+        # * ($$) yyval
+        # * (@$) yyloc
+        # * ($:$) error
+        # * ($1) yyvsp[i]
+        # * (@1) yylsp[i]
+        # * ($:1) i - 1
+        #
+        #
+        # Consider a rule like
+        #
+        #   class: keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
+        #
+        # For the semantic action of original rule:
+        #
+        # "Rule"                class: keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
+        # "Position in grammar"                   $1     $2      $3          $4          $5
+        # "Index for yyvsp"                       -4     -3      -2          -1           0
+        # "$:n"                                  $:1    $:2     $:3         $:4         $:5
+        # "index of $:n"                          -5     -4      -3          -2          -1
+        #
+        #
+        # For the first midrule action:
+        #
+        # "Rule"                class: keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
+        # "Position in grammar"                   $1
+        # "Index for yyvsp"                        0
+        # "$:n"                                  $:1
+        #
+        # @rbs (Reference ref) -> String
+        def reference_to_c: (Reference ref) -> String
+
+        # @rbs () -> Integer
+        def position_in_rhs: () -> Integer
+
+        # If this is midrule action, RHS is an RHS of the original rule.
+        #
+        # @rbs () -> Array[Grammar::Symbol]
+        def rhs: () -> Array[Grammar::Symbol]
+
+        # Unlike `rhs`, LHS is always an LHS of the rule.
+        #
+        # @rbs () -> Grammar::Symbol
+        def lhs: () -> Grammar::Symbol
+
+        # @rbs (Reference ref) -> bot
+        def raise_tag_not_found_error: (Reference ref) -> bot
+      end
+    end
+  end
+end
