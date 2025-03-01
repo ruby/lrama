@@ -1,10 +1,14 @@
+# Generated from lib/lrama/grammar/counter.rb with RBS::Inline
+
 module Lrama
   class Grammar
     class Counter
       @number: Integer
 
+      # @rbs (Integer number) -> void
       def initialize: (Integer number) -> void
 
+      # @rbs () -> Integer
       def increment: () -> Integer
     end
   end
