@@ -43,6 +43,7 @@ module Lrama
       %inline
       %locations
       %categories
+      %start
     ).freeze
 
     def initialize(grammar_file)

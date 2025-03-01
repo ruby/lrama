@@ -23,6 +23,7 @@ module Lrama
     @locations: bool
     @define: Hash[String, String]
     @required: bool
+    @start_nterms: Array[Lexer::Token::Ident]
     @union: Union
 
     extend Forwardable
@@ -66,6 +67,7 @@ module Lrama
     def add_left: (Grammar::Symbol sym, Integer precedence) -> Precedence
     def add_right: (Grammar::Symbol sym, Integer precedence) -> Precedence
     def add_precedence: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    def add_start_nterms: (Lexer::Token::Ident sym) -> Array[Lexer::Token::Ident]
     def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_union: (Grammar::Code::NoReferenceCode code, Integer lineno) -> Union
     def add_rule_builder: (RuleBuilder builder) -> Array[RuleBuilder]
@@ -89,6 +91,7 @@ module Lrama
     def setup_rules: () -> Array[RuleBuilder]
     def append_special_symbols: () -> Grammar::Symbol
     def normalize_rules: () -> Array[Rule]
+    def add_accept_rules: () -> void
     def collect_symbols: () -> Array[Lexer::Token]
     def set_lhs_and_rhs: () -> void
     def fill_default_precedence: () -> void

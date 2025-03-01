@@ -60,6 +60,7 @@ module Lrama
       @locations = false
       @define = define
       @required = false
+      @start_nterms = []
 
       append_special_symbols
     end
@@ -102,6 +103,10 @@ module Lrama
 
     def add_precedence(sym, precedence)
       set_precedence(sym, Precedence.new(type: :precedence, precedence: precedence))
+    end
+
+    def add_start_nterms(sym)
+      @start_nterms << sym
     end
 
     def set_precedence(sym, precedence)
@@ -321,21 +326,28 @@ module Lrama
     end
 
     def normalize_rules
-      # Add $accept rule to the top of rules
-      rule_builder = @rule_builders.first # : RuleBuilder
-      lineno = rule_builder ? rule_builder.line : 0
-      @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [rule_builder.lhs, @eof_symbol.id], token_code: nil, lineno: lineno)
-
+      add_accept_rules
       setup_rules
-
       @rule_builders.each do |builder|
         builder.rules.each do |rule|
           add_nterm(id: rule._lhs, tag: rule.lhs_tag)
           @rules << rule
         end
       end
-
       @rules.sort_by!(&:id)
+    end
+
+    # Add $accept rule to the top of rules
+    def add_accept_rules
+      if @start_nterms.empty?
+        rule_builder = @rule_builders.first # : RuleBuilder
+        lineno = rule_builder ? rule_builder.line : 0
+        @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [rule_builder.lhs, @eof_symbol.id], token_code: nil, lineno: lineno)
+      else
+        @start_nterms.each do |sym|
+          @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [sym, @eof_symbol.id], token_code: nil, lineno: sym.line)
+        end
+      end
     end
 
     # Collect symbols from rules
