@@ -572,7 +572,7 @@ module Lrama
         # Do not set, if conflict exist
         next unless state.conflicts.empty?
         # Do not set, if shift with `error` exists.
-        next if state.transitions.map {|transition, _| transition.next_sym }.include?(@grammar.error_symbol)
+        next if state.transitions.map {|transition| transition.next_sym }.include?(@grammar.error_symbol)
 
         state.default_reduction_rule = state.reduces.map do |r|
           [r.rule, r.rule.id, (r.look_ahead || []).count]
