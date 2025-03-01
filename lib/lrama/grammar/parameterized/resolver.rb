@@ -26,7 +26,7 @@ module Lrama
 
         # @rbs (Lexer::Token token) -> Rule?
         def find_inline(token)
-          @rules.reverse.find { |rule| rule.name == token.s_value && rule.is_inline }
+          @rules.reverse.find { |rule| rule.name == token.s_value && rule.inline? }
         end
 
         # @rbs (String lhs_s_value) -> Lexer::Token?
@@ -55,7 +55,7 @@ module Lrama
 
         # @rbs (Array[Rule] rules) -> Array[Rule]
         def reject_inline_rules(rules)
-          rules.reject(&:is_inline)
+          rules.reject(&:inline?)
         end
 
         # @rbs (Array[Rule] rules, String rule_name) -> Array[Rule]
