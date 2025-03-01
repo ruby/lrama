@@ -14,6 +14,7 @@ target :lib do
   check "lib/lrama/state"
   check "lib/lrama/states"
   check "lib/lrama/tracer"
+  check "lib/lrama/warnings"
   check "lib/lrama/bitmap.rb"
   check "lib/lrama/counterexamples.rb"
   check "lib/lrama/digraph.rb"
