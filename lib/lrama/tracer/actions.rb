@@ -4,10 +4,10 @@
 module Lrama
   class Tracer
     class Actions
-      # @rbs (IO io, **untyped _) -> void
-      def initialize(io, **options)
+      # @rbs (IO io, **Hash[Symbol, bool]) -> void
+      def initialize(io, actions: false, **options)
         @io = io
-        @actions = options[:actions]
+        @actions = actions
       end
 
       # @rbs (Lrama::Grammar grammar) -> void
