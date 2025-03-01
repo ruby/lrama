@@ -1,0 +1,26 @@
+# Generated from lib/lrama/grammar/code/destructor_code.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Code
+      class DestructorCode < Code
+        @tag: Lexer::Token::Tag
+
+        # @rbs (type: ::Symbol, token_code: Grammar::Code, tag: Lexer::Token::Tag) -> void
+        def initialize: (type: ::Symbol, token_code: Grammar::Code, tag: Lexer::Token::Tag) -> void
+
+        private
+
+        # * ($$) *yyvaluep
+        # * (@$) *yylocationp
+        # * ($:$) error
+        # * ($1) error
+        # * (@1) error
+        # * ($:1) error
+        #
+        # @rbs (Reference ref) -> (String | bot)
+        def reference_to_c: (Reference ref) -> (String | bot)
+      end
+    end
+  end
+end
