@@ -641,7 +641,7 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto.to_state.transitions.map {|shift| shift.next_sym.number })]
+        [goto, Bitmap.from_array(goto.to_state.transitions.map {|transition| transition.next_sym.number })]
       }.to_h
     end
 
@@ -666,16 +666,16 @@ module Lrama
     # @rbs () -> void
     def split_states
       @states.each do |state|
-        state.transitions.each do |shift|
-          shift.to_state.append_predecessor(state)
+        state.transitions.each do |transition|
+          transition.to_state.append_predecessor(state)
         end
       end
 
       compute_inadequacy_annotations
 
       @states.each do |state|
-        state.transitions.each do |shift|
-          compute_state(state, shift, shift.to_state)
+        state.transitions.each do |transition|
+          compute_state(state, transition, transition.to_state)
         end
       end
     end
