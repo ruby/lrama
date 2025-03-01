@@ -3,27 +3,29 @@
 module Lrama
   class State
     class InadequacyAnnotation
+      type action = Action::Shift | Action::Goto | Action::Reduce
+
       attr_accessor state: State
 
       attr_accessor token: Grammar::Symbol
 
-      attr_accessor actions: Array[Action::Shift | Action::Goto | Action::Reduce]
+      attr_accessor actions: Array[action]
 
-      attr_accessor contribution_matrix: Hash[Action::Shift | Action::Goto | Action::Reduce, Hash[States::Item, bool]]
+      attr_accessor contribution_matrix: Hash[action, Hash[States::Item, bool]]
 
-      # @rbs (State state, Grammar::Symbol token, Array[Action::Shift | Action::Goto | Action::Reduce] actions, Hash[Action::Shift | Action::Goto | Action::Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
-      def initialize: (State state, Grammar::Symbol token, Array[Action::Shift | Action::Goto | Action::Reduce] actions, Hash[Action::Shift | Action::Goto | Action::Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[States::Item, bool]] contribution_matrix) -> void
+      def initialize: (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[States::Item, bool]] contribution_matrix) -> void
 
       # @rbs (States::Item item) -> bool
       def contributed?: (States::Item item) -> bool
 
-      # @rbs (Hash[Action::Shift | Action::Goto | Action::Reduce, Hash[States::Item, bool]] another_matrix) -> void
-      def merge_matrix: (Hash[Action::Shift | Action::Goto | Action::Reduce, Hash[States::Item, bool]] another_matrix) -> void
+      # @rbs (Hash[action, Hash[States::Item, bool]] another_matrix) -> void
+      def merge_matrix: (Hash[action, Hash[States::Item, bool]] another_matrix) -> void
 
       # Definition 3.42 (dominant_contribution)
       #
-      # @rbs (State::lookahead_set lookaheads) -> Array[Action::Shift | Action::Goto | Action::Reduce]?
-      def dominant_contribution: (State::lookahead_set lookaheads) -> Array[Action::Shift | Action::Goto | Action::Reduce]?
+      # @rbs (State::lookahead_set lookaheads) -> Array[action]?
+      def dominant_contribution: (State::lookahead_set lookaheads) -> Array[action]?
 
       # @rbs () -> String
       def to_s: () -> String
