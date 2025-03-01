@@ -72,6 +72,8 @@ module Lrama
 
     @precedences: Array[Precedence]
 
+    @start_nterms: Array[Lrama::Lexer::Token]
+
     extend Forwardable
 
     attr_reader percent_codes: Array[PercentCode]
@@ -165,6 +167,9 @@ module Lrama
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_precedence: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
 
+    # @rbs (Lrama::Lexer::Token id) -> Array[Lrama::Lexer::Token]
+    def add_start_nterms: (Lrama::Lexer::Token id) -> Array[Lrama::Lexer::Token]
+
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
 
@@ -239,6 +244,9 @@ module Lrama
 
     # @rbs () -> void
     def normalize_rules: () -> void
+
+    # Add $accept rule to the top of rules
+    def add_accept_rules: () -> untyped
 
     # Collect symbols from rules
     #
