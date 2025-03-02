@@ -1,12 +1,30 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 module Lrama
   class Counterexamples
     class Example
-      attr_reader :path1, :path2, :conflict, :conflict_symbol
+      # TODO: rbs-inline 0.10.0 doesn't support instance variables.
+      #       Move these type declarations above instance variable definitions, once it's supported.
+      #
+      # @rbs!
+      #   @path1: ::Array[StartPath | TransitionPath | ProductionPath]
+      #   @path2: ::Array[StartPath | TransitionPath | ProductionPath]
+      #   @conflict: (State::ShiftReduceConflict | State::ReduceReduceConflict)
+      #   @conflict_symbol: Grammar::Symbol
+      #   @counterexamples: Counterexamples
+      #   @derivations1: Derivation
+      #   @derivations2: Derivation
+
+      attr_reader :path1 #: ::Array[StartPath | TransitionPath | ProductionPath]
+      attr_reader :path2 #: ::Array[StartPath | TransitionPath | ProductionPath]
+      attr_reader :conflict #: (State::ShiftReduceConflict | State::ReduceReduceConflict)
+      attr_reader :conflict_symbol #: Grammar::Symbol
 
       # path1 is shift conflict when S/R conflict
       # path2 is always reduce conflict
+      #
+      # @rbs (::Array[StartPath | TransitionPath | ProductionPath]? path1, ::Array[StartPath | TransitionPath | ProductionPath]? path2, (State::ShiftReduceConflict | State::ReduceReduceConflict) conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
       def initialize(path1, path2, conflict, conflict_symbol, counterexamples)
         @path1 = path1
         @path2 = path2
@@ -15,28 +33,34 @@ module Lrama
         @counterexamples = counterexamples
       end
 
+      # @rbs () -> (:shift_reduce | :reduce_reduce)
       def type
         @conflict.type
       end
 
+      # @rbs () -> States::Item
       def path1_item
         @path1.last.to.item
       end
 
+      # @rbs () -> States::Item
       def path2_item
         @path2.last.to.item
       end
 
+      # @rbs () -> Derivation
       def derivations1
         @derivations1 ||= _derivations(path1)
       end
 
+      # @rbs () -> Derivation
       def derivations2
         @derivations2 ||= _derivations(path2)
       end
 
       private
 
+      # @rbs (::Array[StartPath | TransitionPath | ProductionPath] paths) -> Derivation
       def _derivations(paths)
         derivation = nil #: Derivation
         current = :production
@@ -91,6 +115,7 @@ module Lrama
         derivation
       end
 
+      # @rbs (StateItem state_item, Grammar::Symbol sym) -> Derivation?
       def find_derivation_for_symbol(state_item, sym)
         queue = [] #: Array[Array[StateItem]]
         queue << [state_item]

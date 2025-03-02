@@ -1,0 +1,58 @@
+# Generated from lib/lrama/counterexamples/example.rb with RBS::Inline
+
+module Lrama
+  class Counterexamples
+    class Example
+      @path1: ::Array[StartPath | TransitionPath | ProductionPath]
+
+      @path2: ::Array[StartPath | TransitionPath | ProductionPath]
+
+      @conflict: State::ShiftReduceConflict | State::ReduceReduceConflict
+
+      @conflict_symbol: Grammar::Symbol
+
+      @counterexamples: Counterexamples
+
+      @derivations1: Derivation
+
+      @derivations2: Derivation
+
+      attr_reader path1: ::Array[StartPath | TransitionPath | ProductionPath]
+
+      attr_reader path2: ::Array[StartPath | TransitionPath | ProductionPath]
+
+      attr_reader conflict: State::ShiftReduceConflict | State::ReduceReduceConflict
+
+      attr_reader conflict_symbol: Grammar::Symbol
+
+      # path1 is shift conflict when S/R conflict
+      # path2 is always reduce conflict
+      #
+      # @rbs (::Array[StartPath | TransitionPath | ProductionPath]? path1, ::Array[StartPath | TransitionPath | ProductionPath]? path2, (State::ShiftReduceConflict | State::ReduceReduceConflict) conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      def initialize: (::Array[StartPath | TransitionPath | ProductionPath]? path1, ::Array[StartPath | TransitionPath | ProductionPath]? path2, State::ShiftReduceConflict | State::ReduceReduceConflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+
+      # @rbs () -> (:shift_reduce | :reduce_reduce)
+      def type: () -> (:shift_reduce | :reduce_reduce)
+
+      # @rbs () -> States::Item
+      def path1_item: () -> States::Item
+
+      # @rbs () -> States::Item
+      def path2_item: () -> States::Item
+
+      # @rbs () -> Derivation
+      def derivations1: () -> Derivation
+
+      # @rbs () -> Derivation
+      def derivations2: () -> Derivation
+
+      private
+
+      # @rbs (::Array[StartPath | TransitionPath | ProductionPath] paths) -> Derivation
+      def _derivations: (::Array[StartPath | TransitionPath | ProductionPath] paths) -> Derivation
+
+      # @rbs (StateItem state_item, Grammar::Symbol sym) -> Derivation?
+      def find_derivation_for_symbol: (StateItem state_item, Grammar::Symbol sym) -> Derivation?
+    end
+  end
+end
