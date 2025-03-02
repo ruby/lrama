@@ -267,7 +267,7 @@ module Lrama
 
     # Definition 3.27 (inadequacy_lists)
     #
-    # @rbs () -> Hash[Grammar::Symbol, Array[Action::Shift | Action::Goto | Action::Reduce]]
+    # @rbs () -> Hash[Grammar::Symbol, Array[Action::Shift | Action::Reduce]]
     def inadequacy_list
       return @inadequacy_list if @inadequacy_list
 
