@@ -9,7 +9,7 @@ module Lrama
 
       @path2: ::Array[path]
 
-      @conflict: State::ShiftReduceConflict | State::ReduceReduceConflict
+      @conflict: State::conflict
 
       @conflict_symbol: Grammar::Symbol
 
@@ -23,15 +23,15 @@ module Lrama
 
       attr_reader path2: ::Array[path]
 
-      attr_reader conflict: State::ShiftReduceConflict | State::ReduceReduceConflict
+      attr_reader conflict: State::conflict
 
       attr_reader conflict_symbol: Grammar::Symbol
 
       # path1 is shift conflict when S/R conflict
       # path2 is always reduce conflict
       #
-      # @rbs (::Array[path]? path1, ::Array[path]? path2, (State::ShiftReduceConflict | State::ReduceReduceConflict) conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
-      def initialize: (::Array[path]? path1, ::Array[path]? path2, State::ShiftReduceConflict | State::ReduceReduceConflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      # @rbs (::Array[path]? path1, ::Array[path]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      def initialize: (::Array[path]? path1, ::Array[path]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
 
       # @rbs () -> (:shift_reduce | :reduce_reduce)
       def type: () -> (:shift_reduce | :reduce_reduce)
