@@ -4,7 +4,7 @@
 module Lrama
   class Tracer
     class Closure
-      # @rbs (IO io, **Hash[Symbol, bool]) -> void
+      # @rbs (IO io, ?automaton: bool, ?closure: bool, **bool) -> void
       def initialize(io, automaton: false, closure: false, **_)
         @io = io
         @closure = automaton || closure
