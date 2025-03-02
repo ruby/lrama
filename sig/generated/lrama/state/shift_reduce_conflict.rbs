@@ -1,12 +1,17 @@
+# Generated from lib/lrama/state/shift_reduce_conflict.rb with RBS::Inline
+
 module Lrama
   class State
     class ShiftReduceConflict
       attr_accessor symbols: Array[Grammar::Symbol]
-      attr_accessor shift: State::Action::Shift | State::Action::Goto
+
+      attr_accessor shift: State::Action::Shift
+
       attr_accessor reduce: State::Action::Reduce
 
       def initialize: (?symbols: Array[Grammar::Symbol], ?shift: State::Action::Shift, ?reduce: State::Action::Reduce) -> void
 
+      # @rbs () -> :shift_reduce
       def type: () -> :shift_reduce
     end
   end
