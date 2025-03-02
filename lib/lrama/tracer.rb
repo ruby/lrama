@@ -10,7 +10,7 @@ require_relative "tracer/state"
 
 module Lrama
   class Tracer
-    # @rbs (IO io, **Hash[Symbol, bool] options) -> void
+    # @rbs (IO io, **bool options) -> void
     def initialize(io, **options)
       @io = io
       @options = options

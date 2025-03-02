@@ -3,8 +3,8 @@
 module Lrama
   class Tracer
     class OnlyExplicitRules
-      # @rbs (IO io, **Hash[Symbol, bool]) -> void
-      def initialize: (IO io, **Hash[Symbol, bool]) -> void
+      # @rbs (IO io, ?only_explicit: bool, **bool) -> void
+      def initialize: (IO io, ?only_explicit: bool, **bool) -> void
 
       # @rbs (Lrama::Grammar grammar) -> void
       def trace: (Lrama::Grammar grammar) -> void
