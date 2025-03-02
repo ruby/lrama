@@ -26,7 +26,7 @@ module Lrama
         # * (@1) error
         # * ($:1) error
         #
-        # (Reference ref) -> (String | bot)
+        # @rbs (Reference ref) -> (String | bot)
         def reference_to_c(ref)
           case
           when ref.type == :dollar && ref.name == "$" # $$

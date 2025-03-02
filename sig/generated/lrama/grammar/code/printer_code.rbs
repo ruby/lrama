@@ -18,8 +18,8 @@ module Lrama
         # * (@1) error
         # * ($:1) error
         #
-        # (Reference ref) -> (String | bot)
-        def reference_to_c: (untyped ref) -> untyped
+        # @rbs (Reference ref) -> (String | bot)
+        def reference_to_c: (Reference ref) -> (String | bot)
       end
     end
   end
