@@ -11,32 +11,32 @@ module Lrama
 
       private
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_state_header: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
+      def report_state_header: (IO io, Lrama::State state) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_items: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
+      def report_items: (IO io, Lrama::State state) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_conflicts: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
+      def report_conflicts: (IO io, Lrama::State state) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_shifts: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
+      def report_shifts: (IO io, Lrama::State state) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_nonassoc_errors: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
+      def report_nonassoc_errors: (IO io, Lrama::State state) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_reduces: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
+      def report_reduces: (IO io, Lrama::State state) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_nterm_transitions: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
+      def report_nterm_transitions: (IO io, Lrama::State state) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_conflict_resolutions: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
+      def report_conflict_resolutions: (IO io, Lrama::State state) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report_counterexamples: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state, Lrama::Counterexamples cex) -> void
+      def report_counterexamples: (IO io, Lrama::State state, Lrama::Counterexamples cex) -> void
 
       # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
       def report_verbose_info: (IO io, Lrama::State state, Lrama::States states) -> void

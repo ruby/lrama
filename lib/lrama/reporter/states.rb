@@ -15,8 +15,6 @@ module Lrama
 
       # @rbs (IO io, Lrama::States states) -> void
       def report(io, states)
-        cex = Counterexamples.new(states) if @counterexamples
-
         states.states.each do |state|
           report_state_header(io, state)
           report_items(io, state)
@@ -26,7 +24,7 @@ module Lrama
           report_reduces(io, state)
           report_nterm_transitions(io, state)
           report_conflict_resolutions(io, state) if @solved
-          report_counterexamples(io, state, cex) if @counterexamples && state.has_conflicts?
+          report_counterexamples(io, state, Counterexamples.new(states)) if @counterexamples && state.has_conflicts?
           report_verbose_info(io, state, states) if @verbose
           # End of Report State
           io << "\n"
@@ -35,12 +33,12 @@ module Lrama
 
       private
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
       def report_state_header(io, state)
         io << "State #{state.id}\n\n"
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
       def report_items(io, state)
         last_lhs = nil
         list = @itemsets ? state.items : state.kernels
@@ -59,7 +57,7 @@ module Lrama
             reduce = state.find_reduce_by_item!(item)
             look_ahead = reduce.selected_look_ahead
             unless look_ahead.empty?
-              la = "  [#{look_ahead.map(&:display_name).join(", ")}]"
+              la = "  [#{look_ahead.compact.map(&:display_name).join(", ")}]"
             end
           end
 
@@ -70,7 +68,7 @@ module Lrama
         io << "\n"
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
       def report_conflicts(io, state)
         return if state.conflicts.empty?
 
@@ -80,8 +78,10 @@ module Lrama
 
           case conflict.type
           when :shift_reduce
+            # @type var conflict: Lrama::State::ShiftReduceConflict
             io << "shift/reduce(#{conflict.reduce.item.rule.lhs.display_name})\n"
           when :reduce_reduce
+            # @type var conflict: Lrama::State::ReduceReduceConflict
             io << "reduce(#{conflict.reduce1.item.rule.lhs.display_name})/reduce(#{conflict.reduce2.item.rule.lhs.display_name})\n"
           else
             raise "Unknown conflict type #{conflict.type}"
@@ -91,7 +91,7 @@ module Lrama
         io << "\n"
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
       def report_shifts(io, state)
         shifts = state.term_transitions.reject(&:not_selected).map do |shift|
           [shift.next_sym, shift.to_state.id]
@@ -99,15 +99,18 @@ module Lrama
 
         return if shifts.empty?
 
-        max_len = shifts.map(&:first).map(&:display_name).map(&:length).max
+        # @type var next_syms: Array[Lrama::Grammar::Symbol]
+        next_syms =  shifts.map(&:first)
+        max_len = next_syms.map(&:display_name).map(&:length).max
         shifts.each do |term, state_id|
+          # @type var term: Lrama::Grammar::Symbol
           io << "    #{term.display_name.ljust(max_len)}  shift, and go to state #{state_id}\n"
         end
 
         io << "\n"
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
       def report_nonassoc_errors(io, state)
         error_symbols = state.resolved_conflicts.select { |resolved| resolved.which == :error }.map { |error| error.symbol.display_name }
 
@@ -121,12 +124,12 @@ module Lrama
         io << "\n"
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
       def report_reduces(io, state)
-        reduce_pairs = []
+        reduce_pairs = [] #: Array[[Lrama::Grammar::Symbol, Lrama::State::Action::Reduce]]
 
         state.non_default_reduces.each do |reduce|
-          reduce.look_ahead.each do |term|
+          reduce.look_ahead&.each do |term|
             reduce_pairs << [term, reduce]
           end
         end
@@ -156,23 +159,30 @@ module Lrama
         io << "\n"
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
       def report_nterm_transitions(io, state)
         goto_transitions = state.nterm_transitions.map do |goto|
           [goto.next_sym, goto.to_state.id]
-        end.uniq.sort_by { |nterm, _| nterm.number }
+        end.uniq.sort_by do |nterm, _|
+          # @type var nterm: Lrama::Grammar::Symbol
+          nterm.number
+        end
 
         return if goto_transitions.empty?
 
-        max_len = goto_transitions.map(&:first).map { |nterm| nterm.id.s_value.length }.max
+        max_len = goto_transitions.map(&:first).map do |nterm|
+          # @type var nterm: Lrama::Grammar::Symbol
+          nterm.id.s_value.length
+        end.max
         goto_transitions.each do |nterm, state_id|
+          # @type var nterm: Lrama::Grammar::Symbol
           io << "    #{nterm.id.s_value.ljust(max_len)}  go to state #{state_id}\n"
         end
 
         io << "\n"
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state) -> void
       def report_conflict_resolutions(io, state)
         return if state.resolved_conflicts.empty?
 
@@ -183,7 +193,7 @@ module Lrama
         io << "\n"
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::State state, Lrama::Counterexamples cex) -> void
       def report_counterexamples(io, state, cex)
         examples = cex.compute(state)
 
@@ -325,7 +335,7 @@ module Lrama
       # @rbs (IO io, Lrama::State state, Lrama::States states) -> void
       def report_look_ahead_sets(io, state, states)
         io << "  [Look-Ahead Sets]\n"
-        look_ahead_rules = []
+        look_ahead_rules = [] #: Array[[Lrama::Grammar::Rule, Array[Lrama::Grammar::Symbol]]]
 
         states.rules.each do |rule|
           syms = states.la[[state.id, rule.id]]
