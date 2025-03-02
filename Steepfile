@@ -17,6 +17,7 @@ target :lib do
   check "lib/lrama/bitmap.rb"
   check "lib/lrama/counterexamples.rb"
   check "lib/lrama/digraph.rb"
+  check "lib/lrama/erb.rb"
   check "lib/lrama/grammar.rb"
   check "lib/lrama/logger.rb"
   check "lib/lrama/options.rb"

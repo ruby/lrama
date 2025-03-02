@@ -2,13 +2,13 @@
 
 module Lrama
   class ERB
-    # @rbs (String file, Hash[Symbol, untyped]) -> string
-    def self.render: (String file, Hash[Symbol, untyped]) -> string
+    # @rbs (String file, **Hash[Symbol, untyped] kwargs) -> String
+    def self.render: (String file, **Hash[Symbol, untyped] kwargs) -> String
 
     # @rbs (String file) -> void
     def initialize: (String file) -> void
 
-    # @rbs (Hash[Symbol, untyped]) -> string
-    def render: (Hash[Symbol, untyped]) -> string
+    # @rbs (**Hash[Symbol, untyped] kwargs) -> String
+    def render: (**Hash[Symbol, untyped] kwargs) -> String
   end
 end
