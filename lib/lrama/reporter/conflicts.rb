@@ -6,9 +6,7 @@ module Lrama
     class Conflicts
       # @rbs (IO io, Lrama::States states) -> void
       def report(io, states)
-        if report_conflicts(io, states)
-          io << "\n\n"
-        end
+        report_conflicts(io, states)
       end
 
       private
@@ -26,7 +24,7 @@ module Lrama
           end
         end
 
-        has_conflict
+        io << "\n\n" if has_conflict
       end
 
       # @rbs (Array[(Lrama::State::ShiftReduceConflict | Lrama::State::ReduceReduceConflict)] conflicts) -> Array[String]
