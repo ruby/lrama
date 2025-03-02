@@ -8,23 +8,25 @@ module Lrama
       #       Move these type declarations above instance variable definitions, once it's supported.
       #
       # @rbs!
-      #   @path1: ::Array[StartPath | TransitionPath | ProductionPath]
-      #   @path2: ::Array[StartPath | TransitionPath | ProductionPath]
+      #   type path = StartPath | TransitionPath | ProductionPath
+      #
+      #   @path1: ::Array[path]
+      #   @path2: ::Array[path]
       #   @conflict: (State::ShiftReduceConflict | State::ReduceReduceConflict)
       #   @conflict_symbol: Grammar::Symbol
       #   @counterexamples: Counterexamples
       #   @derivations1: Derivation
       #   @derivations2: Derivation
 
-      attr_reader :path1 #: ::Array[StartPath | TransitionPath | ProductionPath]
-      attr_reader :path2 #: ::Array[StartPath | TransitionPath | ProductionPath]
+      attr_reader :path1 #: ::Array[path]
+      attr_reader :path2 #: ::Array[path]
       attr_reader :conflict #: (State::ShiftReduceConflict | State::ReduceReduceConflict)
       attr_reader :conflict_symbol #: Grammar::Symbol
 
       # path1 is shift conflict when S/R conflict
       # path2 is always reduce conflict
       #
-      # @rbs (::Array[StartPath | TransitionPath | ProductionPath]? path1, ::Array[StartPath | TransitionPath | ProductionPath]? path2, (State::ShiftReduceConflict | State::ReduceReduceConflict) conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      # @rbs (::Array[path]? path1, ::Array[path]? path2, (State::ShiftReduceConflict | State::ReduceReduceConflict) conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
       def initialize(path1, path2, conflict, conflict_symbol, counterexamples)
         @path1 = path1
         @path2 = path2
@@ -60,7 +62,7 @@ module Lrama
 
       private
 
-      # @rbs (::Array[StartPath | TransitionPath | ProductionPath] paths) -> Derivation
+      # @rbs (::Array[path] paths) -> Derivation
       def _derivations(paths)
         derivation = nil #: Derivation
         current = :production
