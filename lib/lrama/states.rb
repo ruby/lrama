@@ -590,9 +590,8 @@ module Lrama
       relation = compute_goto_internal_relation
       base_function = compute_goto_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
-        state, nterm = goto.from_state, goto.next_sym
-        transition = state.nterm_transitions.find {|goto| goto.next_sym == nterm }
-        state.follow_kernel_items[transition] = state.kernels.map.with_index {|kernel, i|
+        state = goto.from_state
+        state.follow_kernel_items[goto] = state.kernels.map {|kernel|
           [kernel, Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)]
         }.to_h
       end
@@ -631,9 +630,7 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_successor_or_internal_relation
       nterm_transitions.map {|goto1|
-        related_gotos = nterm_transitions.select {|goto2|
-          has_internal_relation?(goto1, goto2) || has_successor_relation?(goto1, goto2)
-        }
+        related_gotos = nterm_transitions.select {|goto2| has_internal_relation?(goto1, goto2) || has_successor_relation?(goto1, goto2) }
         [goto1, related_gotos]
       }.to_h
     end
@@ -641,7 +638,7 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto.to_state.transitions.map {|transition| transition.next_sym.number })]
+        [goto, Bitmap.from_array(goto.to_state.term_transitions.map {|shift| shift.next_sym.number })]
       }.to_h
     end
 
@@ -691,7 +688,7 @@ module Lrama
         while (curr = queue.shift) do
           curr.predecessors.each do |pred|
             cache = pred.annotation_list.dup
-            pred.annotate_predecessor(curr)
+            curr.annotate_predecessor(pred)
             queue << pred if cache != pred.annotation_list
           end
         end
@@ -715,7 +712,7 @@ module Lrama
       s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
 
       if s.nil?
-        s = next_state.ielr_isocores.last
+        s = next_state.lalr_isocore
         new_state = State.new(@states.count, s.accessing_symbol, s.kernels)
         new_state.closure = s.closure
         new_state.compute_transitions_and_reduces
@@ -739,6 +736,8 @@ module Lrama
       else
         state.update_transition(transition, s)
         merge_lookaheads(s, propagating_lookaheads)
+        compute_follow_kernel_items
+        compute_always_follows
       end
     end
 
