@@ -18,7 +18,6 @@ module Lrama
         cex = Counterexamples.new(states) if @counterexamples
 
         states.states.each do |state|
-          # Report State
           report_state_header(io, state)
           report_items(io, state)
           report_conflicts(io, state)
