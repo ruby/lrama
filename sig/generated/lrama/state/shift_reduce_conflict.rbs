@@ -5,7 +5,7 @@ module Lrama
     class ShiftReduceConflict
       attr_accessor symbols: Array[Grammar::Symbol]
 
-      attr_accessor shift: State::Action::Shift | State::Action::Goto
+      attr_accessor shift: State::Action::Shift
 
       attr_accessor reduce: State::Action::Reduce
 

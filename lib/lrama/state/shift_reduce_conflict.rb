@@ -6,7 +6,7 @@ module Lrama
     class ShiftReduceConflict < Struct.new(:symbols, :shift, :reduce, keyword_init: true)
       # @rbs!
       #   attr_accessor symbols: Array[Grammar::Symbol]
-      #   attr_accessor shift: State::Action::Shift | State::Action::Goto
+      #   attr_accessor shift: State::Action::Shift
       #   attr_accessor reduce: State::Action::Reduce
       #
       #   def initialize: (?symbols: Array[Grammar::Symbol], ?shift: State::Action::Shift, ?reduce: State::Action::Reduce) -> void
