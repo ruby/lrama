@@ -95,18 +95,14 @@ module Lrama
 
       # @rbs (IO io, Lrama::State state) -> void
       def report_shifts(io, state)
-        shifts = state.term_transitions.reject(&:not_selected).map do |shift|
-          [shift.next_sym, shift.to_state.id]
-        end
+        shifts = state.term_transitions.reject(&:not_selected)
 
         return if shifts.empty?
 
-        # @type var next_syms: Array[Lrama::Grammar::Symbol]
-        next_syms =  shifts.map(&:first)
+        next_syms = shifts.map(&:next_sym)
         max_len = next_syms.map(&:display_name).map(&:length).max
-        shifts.each do |term, state_id|
-          # @type var term: Lrama::Grammar::Symbol
-          io << "    #{term.display_name.ljust(max_len)}  shift, and go to state #{state_id}\n"
+        shifts.each do |shift|
+          io << "    #{shift.next_sym.display_name.ljust(max_len)}  shift, and go to state #{shift.to_state.id}\n"
         end
 
         io << "\n"
