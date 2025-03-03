@@ -9,7 +9,7 @@ target :lib do
   check "lib/lrama/counterexamples"
   check "lib/lrama/grammar"
   check "lib/lrama/lexer"
-  check "lib/lrama/report"
+  check "lib/lrama/reporter"
   check "lib/lrama/state"
   check "lib/lrama/states"
   check "lib/lrama/tracer"
