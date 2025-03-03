@@ -15,6 +15,8 @@ module Lrama
 
       # @rbs (IO io, Lrama::States states) -> void
       def report(io, states)
+        cex = Counterexamples.new(states) if @counterexamples
+
         states.states.each do |state|
           report_state_header(io, state)
           report_items(io, state)
@@ -24,7 +26,7 @@ module Lrama
           report_reduces(io, state)
           report_nterm_transitions(io, state)
           report_conflict_resolutions(io, state) if @solved
-          report_counterexamples(io, state, Counterexamples.new(states)) if @counterexamples && state.has_conflicts?
+          report_counterexamples(io, state, cex) if @counterexamples && state.has_conflicts? # @type var cex: Lrama::Counterexamples
           report_verbose_info(io, state, states) if @verbose
           # End of Report State
           io << "\n"
