@@ -161,7 +161,7 @@ module Lrama
       def report_nterm_transitions(io, state)
         goto_transitions = state.nterm_transitions.map do |goto|
           [goto.next_sym, goto.to_state.id]
-        end.uniq.sort_by do |nterm, _|
+        end.sort_by do |nterm, _|
           # @type var nterm: Lrama::Grammar::Symbol
           nterm.number
         end
