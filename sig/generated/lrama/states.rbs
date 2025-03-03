@@ -148,6 +148,11 @@ module Lrama
     # @rbs () -> void
     def compute_default_reduction: () -> void
 
+    # Definition 3.15 (Predecessors)
+    #
+    # @rbs () -> void
+    def compute_predecessors: () -> void
+
     # Definition 3.16 (follow_kernel_items)
     #
     # @rbs () -> void
