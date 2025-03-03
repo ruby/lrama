@@ -159,11 +159,11 @@ module Lrama
 
       # @rbs (IO io, Lrama::State state) -> void
       def report_nterm_transitions(io, state)
+        return if state.nterm_transitions.empty?
+
         goto_transitions = state.nterm_transitions.sort_by do |goto|
           goto.next_sym.number
         end
-
-        return if goto_transitions.empty?
 
         max_len = goto_transitions.map(&:next_sym).map do |nterm|
           nterm.id.s_value.length
