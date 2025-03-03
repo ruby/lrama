@@ -134,6 +134,8 @@ module Lrama
       report_duration(:compute_predecessors) { compute_predecessors }
       report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
       report_duration(:compute_always_follows) { compute_always_follows }
+      # Phase 2
+      report_duration(:compute_inadequacy_annotations) { compute_inadequacy_annotations }
       # Phase 3
       report_duration(:split_states) { split_states }
       # Phase 4
@@ -674,8 +676,6 @@ module Lrama
 
     # @rbs () -> void
     def split_states
-      compute_inadequacy_annotations
-
       @states.each do |state|
         state.transitions.each do |transition|
           compute_state(state, transition, transition.to_state)
