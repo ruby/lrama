@@ -267,17 +267,15 @@ module Lrama
 
     # Definition 3.27 (inadequacy_lists)
     #
-    # @rbs () -> Hash[Grammar::Symbol, Array[Action::Shift | Action::Goto | Action::Reduce]]
+    # @rbs () -> Hash[Grammar::Symbol, Array[Action::Shift | Action::Reduce]]
     def inadequacy_list
       return @inadequacy_list if @inadequacy_list
 
       inadequacy_list = {}
 
-      transitions.each do |transition|
-        next unless transition.next_sym.term?
-
-        inadequacy_list[transition.next_sym] ||= []
-        inadequacy_list[transition.next_sym] << transition.dup
+      term_transitions.each do |shift|
+        inadequacy_list[shift.next_sym] ||= []
+        inadequacy_list[shift.next_sym] << shift.dup
       end
       reduces.each do |reduce|
         next if reduce.look_ahead.nil?
@@ -297,7 +295,7 @@ module Lrama
     def annotate_manifestation
       inadequacy_list.each {|token, actions|
         contribution_matrix = actions.map {|action|
-          if action.is_a?(Action::Shift) || action.is_a?(Action::Goto)
+          if action.is_a?(Action::Shift)
             [action, nil]
           else
             [action, action.rule.empty_rule? ? lhs_contributions(action.rule.lhs, token) : kernels.map {|k| [k, k.end_of_rule?] }.to_h]
