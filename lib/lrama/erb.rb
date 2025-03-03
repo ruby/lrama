@@ -5,7 +5,7 @@ require "erb"
 
 module Lrama
   class ERB
-    # @rbs (String file, Hash[Symbol, untyped]) -> string
+    # @rbs (String file, **untyped kwargs) -> String
     def self.render(file, **kwargs)
       new(file).render(**kwargs)
     end
@@ -16,12 +16,12 @@ module Lrama
       if ::ERB.instance_method(:initialize).parameters.last.first == :key
         @erb = ::ERB.new(input, trim_mode: '-')
       else
-        @erb = ::ERB.new(input, nil, '-')
+        @erb = ::ERB.new(input, nil, '-') # steep:ignore UnexpectedPositionalArgument
       end
       @erb.filename = file
     end
 
-    # @rbs (Hash[Symbol, untyped]) -> string
+    # @rbs (**untyped kwargs) -> String
     def render(**kwargs)
       @erb.result_with_hash(kwargs)
     end
