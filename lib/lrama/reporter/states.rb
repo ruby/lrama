@@ -159,22 +159,17 @@ module Lrama
 
       # @rbs (IO io, Lrama::State state) -> void
       def report_nterm_transitions(io, state)
-        goto_transitions = state.nterm_transitions.map do |goto|
-          [goto.next_sym, goto.to_state.id]
-        end.sort_by do |nterm, _|
-          # @type var nterm: Lrama::Grammar::Symbol
-          nterm.number
+        goto_transitions = state.nterm_transitions.sort_by do |goto|
+          goto.next_sym.number
         end
 
         return if goto_transitions.empty?
 
-        max_len = goto_transitions.map(&:first).map do |nterm|
-          # @type var nterm: Lrama::Grammar::Symbol
+        max_len = goto_transitions.map(&:next_sym).map do |nterm|
           nterm.id.s_value.length
         end.max
-        goto_transitions.each do |nterm, state_id|
-          # @type var nterm: Lrama::Grammar::Symbol
-          io << "    #{nterm.id.s_value.ljust(max_len)}  go to state #{state_id}\n"
+        goto_transitions.each do |goto|
+          io << "    #{goto.next_sym.id.s_value.ljust(max_len)}  go to state #{goto.to_state.id}\n"
         end
 
         io << "\n"
