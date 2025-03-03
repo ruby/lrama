@@ -5,7 +5,7 @@ require "erb"
 
 module Lrama
   class ERB
-    # @rbs (String file, **Hash[Symbol, untyped] kwargs) -> String
+    # @rbs (String file, **untyped kwargs) -> String
     def self.render(file, **kwargs)
       new(file).render(**kwargs)
     end
@@ -21,7 +21,7 @@ module Lrama
       @erb.filename = file
     end
 
-    # @rbs (**Hash[Symbol, untyped] kwargs) -> String
+    # @rbs (**untyped kwargs) -> String
     def render(**kwargs)
       @erb.result_with_hash(kwargs)
     end
