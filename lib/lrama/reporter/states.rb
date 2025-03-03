@@ -95,18 +95,14 @@ module Lrama
 
       # @rbs (IO io, Lrama::State state) -> void
       def report_shifts(io, state)
-        shifts = state.term_transitions.reject(&:not_selected).map do |shift|
-          [shift.next_sym, shift.to_state.id]
-        end
+        shifts = state.term_transitions.reject(&:not_selected)
 
         return if shifts.empty?
 
-        # @type var next_syms: Array[Lrama::Grammar::Symbol]
-        next_syms =  shifts.map(&:first)
+        next_syms = shifts.map(&:next_sym)
         max_len = next_syms.map(&:display_name).map(&:length).max
-        shifts.each do |term, state_id|
-          # @type var term: Lrama::Grammar::Symbol
-          io << "    #{term.display_name.ljust(max_len)}  shift, and go to state #{state_id}\n"
+        shifts.each do |shift|
+          io << "    #{shift.next_sym.display_name.ljust(max_len)}  shift, and go to state #{shift.to_state.id}\n"
         end
 
         io << "\n"
@@ -163,22 +159,17 @@ module Lrama
 
       # @rbs (IO io, Lrama::State state) -> void
       def report_nterm_transitions(io, state)
-        goto_transitions = state.nterm_transitions.map do |goto|
-          [goto.next_sym, goto.to_state.id]
-        end.uniq.sort_by do |nterm, _|
-          # @type var nterm: Lrama::Grammar::Symbol
-          nterm.number
+        return if state.nterm_transitions.empty?
+
+        goto_transitions = state.nterm_transitions.sort_by do |goto|
+          goto.next_sym.number
         end
 
-        return if goto_transitions.empty?
-
-        max_len = goto_transitions.map(&:first).map do |nterm|
-          # @type var nterm: Lrama::Grammar::Symbol
+        max_len = goto_transitions.map(&:next_sym).map do |nterm|
           nterm.id.s_value.length
         end.max
-        goto_transitions.each do |nterm, state_id|
-          # @type var nterm: Lrama::Grammar::Symbol
-          io << "    #{nterm.id.s_value.ljust(max_len)}  go to state #{state_id}\n"
+        goto_transitions.each do |goto|
+          io << "    #{goto.next_sym.id.s_value.ljust(max_len)}  go to state #{goto.to_state.id}\n"
         end
 
         io << "\n"
