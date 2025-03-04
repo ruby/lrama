@@ -21,3 +21,4 @@ gems:
   - name: rbs
     ignore: true
   - name: forwardable
+  - name: optparse

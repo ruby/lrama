@@ -6,7 +6,7 @@ gems:
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 7651e7b92c15bd5b4bc11fd3dd455be0ea571fd0
+    revision: 95d9b83e2727af43d6dea2ffb9e9d2d350425fe9
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: erb
@@ -21,20 +21,28 @@ gems:
   version: '0'
   source:
     type: stdlib
+- name: optparse
+  version: '0'
+  source:
+    type: stdlib
 - name: rake
   version: '13.0'
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 7651e7b92c15bd5b4bc11fd3dd455be0ea571fd0
+    revision: 95d9b83e2727af43d6dea2ffb9e9d2d350425fe9
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
+- name: rdoc
+  version: '0'
+  source:
+    type: stdlib
 - name: stackprof
   version: '0.2'
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 7651e7b92c15bd5b4bc11fd3dd455be0ea571fd0
+    revision: 95d9b83e2727af43d6dea2ffb9e9d2d350425fe9
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: strscan
