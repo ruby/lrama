@@ -70,6 +70,8 @@ module Lrama
 
     attr_accessor always_follows: Hash[Action::Goto, Array[Grammar::Symbol]]
 
+    attr_accessor goto_follows: Hash[Action::Goto, Array[Grammar::Symbol]]
+
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
 
@@ -102,6 +104,9 @@ module Lrama
 
     # @rbs () -> void
     def clear_transitions_cache: () -> void
+
+    # @rbs () -> void
+    def clear_relations_cache: () -> void
 
     # @rbs () -> Array[Action::Shift]
     def selected_term_transitions: () -> Array[Action::Shift]
@@ -179,11 +184,6 @@ module Lrama
     #
     # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
     def goto_follow_set: (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
-
-    # Definition 3.24 (goto_follows, via always_follows)
-    #
-    # @rbs (Action::Goto goto) -> Array[Grammar::Symbol]
-    def goto_follows: (Action::Goto goto) -> Array[Grammar::Symbol]
 
     # Definition 3.8 (Goto Follows Internal Relation)
     #

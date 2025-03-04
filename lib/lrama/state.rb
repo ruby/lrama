@@ -50,6 +50,7 @@ module Lrama
     attr_accessor :lookaheads_recomputed #: bool
     attr_accessor :follow_kernel_items #: Hash[Action::Goto, Hash[States::Item, bool]]
     attr_accessor :always_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
+    attr_accessor :goto_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
@@ -72,6 +73,7 @@ module Lrama
       @lookaheads_recomputed = false
       @follow_kernel_items = {}
       @always_follows = {}
+      @goto_follows = {}
     end
 
     # @rbs (Array[States::Item] closure) -> void
@@ -150,7 +152,9 @@ module Lrama
     def update_transition(transition, next_state)
       set_items_to_state(transition.to_items, next_state)
       next_state.append_predecessor(self)
+      clear_relations_cache
       clear_transitions_cache
+      predecessors.each {|p| p.clear_relations_cache }
     end
 
     # @rbs () -> void
@@ -158,6 +162,12 @@ module Lrama
       @nterm_transitions = nil
       @term_transitions = nil
       @transitions = nil
+    end
+
+    # @rbs () -> void
+    def clear_relations_cache
+      @internal_dependencies.clear
+      @successor_dependencies.clear
     end
 
     # @rbs () -> Array[Action::Shift]
@@ -367,7 +377,7 @@ module Lrama
           elsif kernel.position == 1
             prev_state = @predecessors.find {|p| p.transitions.any? {|transition| transition.next_sym == kernel.lhs } }
             goto = prev_state.nterm_transitions.find {|goto| goto.next_sym == kernel.lhs }
-            prev_state.goto_follows(goto)
+            prev_state.goto_follows[goto]
           end
         [kernel, value]
       }.to_h
@@ -408,26 +418,6 @@ module Lrama
         .reduce(@lalr_isocore.always_follows[goto]) {|result, terms| result |= terms }
     end
 
-    # Definition 3.24 (goto_follows, via always_follows)
-    #
-    # @rbs (Action::Goto goto) -> Array[Grammar::Symbol]
-    def goto_follows(goto)
-      queue = internal_dependencies(goto) + predecessor_dependencies(goto)
-      terms = always_follows[goto]
-      visited = queue.dup
-      until queue.empty?
-        goto2 = queue.shift
-        next if visited.include?(goto)
-
-        state = goto2.from_state
-        terms |= state.always_follows[goto2]
-        state.internal_dependencies(goto2).each {|v| queue << v }
-        state.predecessor_dependencies(goto2).each {|v| queue << v }
-        visited << goto2
-      end
-      terms
-    end
-
     # Definition 3.8 (Goto Follows Internal Relation)
     #
     # @rbs (Action::Goto goto) -> Array[Action::Goto]
@@ -446,9 +436,7 @@ module Lrama
     def successor_dependencies(goto)
       return @successor_dependencies[goto] if @successor_dependencies[goto]
 
-      @successor_dependencies[goto] =
-        goto.to_state.nterm_transitions
-          .select {|next_goto| next_goto.next_sym.nullable }
+      @successor_dependencies[goto] = goto.to_state.nterm_transitions.select {|next_goto| next_goto.next_sym.nullable }
     end
 
     # Definition 3.9 (Goto Follows Predecessor Relation)
