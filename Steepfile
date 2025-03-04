@@ -20,6 +20,7 @@ target :lib do
   check "lib/lrama/erb.rb"
   check "lib/lrama/grammar.rb"
   check "lib/lrama/logger.rb"
+  check "lib/lrama/option_parser.rb"
   check "lib/lrama/options.rb"
   check "lib/lrama/tracer.rb"
 end

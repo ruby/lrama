@@ -10,7 +10,7 @@ module Lrama
     attr_accessor :report_file #: String?
     attr_accessor :outfile #: String
     attr_accessor :error_recovery #: bool
-    attr_accessor :grammar_file #: String?
+    attr_accessor :grammar_file #: String
     attr_accessor :trace_opts #: Hash[Symbol, bool]?
     attr_accessor :report_opts #: Hash[Symbol, bool]?
     attr_accessor :warnings #: bool
@@ -30,7 +30,7 @@ module Lrama
       @report_file = nil
       @outfile = "y.tab.c"
       @error_recovery = false
-      @grammar_file = nil
+      @grammar_file = ''
       @trace_opts = nil
       @report_opts = nil
       @warnings = false

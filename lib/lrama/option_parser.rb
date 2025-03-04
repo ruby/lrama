@@ -1,3 +1,4 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 require 'optparse'
@@ -5,10 +6,18 @@ require 'optparse'
 module Lrama
   # Handle option parsing for the command line interface.
   class OptionParser
+    # @rbs!
+    #   @options: Lrama::Options
+    #   @trace: Array[String]
+    #   @report: Array[String]
+    #   @profile: Array[String]
+
+    # @rbs (Array[String]) -> Lrama::Options
     def self.parse(argv)
       new.parse(argv)
     end
 
+    # @rbs () -> void
     def initialize
       @options = Options.new
       @trace = []
@@ -16,6 +25,7 @@ module Lrama
       @profile = []
     end
 
+    # @rbs (Array[String]) -> Lrama::Options
     def parse(argv)
       parse_by_option_parser(argv)
 
@@ -52,6 +62,7 @@ module Lrama
 
     private
 
+    # @rbs (Array[String]) -> void
     def parse_by_option_parser(argv)
       ::OptionParser.new do |o|
         o.banner = <<~BANNER
@@ -68,7 +79,7 @@ module Lrama
         o.on('-t', '--debug', 'display debugging outputs of internal parser') {|v| @options.debug = true }
         o.separator "                                     same as '-Dparse.trace'"
         o.on('-D', '--define=NAME[=VALUE]', Array, "similar to '%define NAME VALUE'") do |v|
-          @options.define = v.each_with_object({}) do |item, hash|
+          @options.define = v.each_with_object({}) do |item, hash| # steep:ignore UnannotatedEmptyCollection
             key, value = item.split('=', 2)
             hash[key] = value
           end
@@ -128,9 +139,10 @@ module Lrama
       end
     end
 
-    ALIASED_REPORTS = { cex: :counterexamples }.freeze
-    VALID_REPORTS = %i[states itemsets lookaheads solved counterexamples rules terms verbose].freeze
+    ALIASED_REPORTS = { cex: :counterexamples }.freeze #: Hash[Symbol, Symbol]
+    VALID_REPORTS = %i[states itemsets lookaheads solved counterexamples rules terms verbose].freeze #: Array[Symbol]
 
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
     def validate_report(report)
       h = { grammar: true }
       return h if report.empty?
@@ -152,6 +164,7 @@ module Lrama
       return h
     end
 
+    # @rbs (String) -> Symbol
     def aliased_report_option(opt)
       (ALIASED_REPORTS[opt.to_sym] || opt).to_sym
     end
@@ -160,15 +173,16 @@ module Lrama
       locations scan parse automaton bitsets closure
       grammar rules only-explicit-rules actions resource
       sets muscles tools m4-early m4 skeleton time ielr cex
-    ].freeze
+    ].freeze #: Array[String]
     NOT_SUPPORTED_TRACES = %w[
       locations scan parse bitsets grammar resource
       sets muscles tools m4-early m4 skeleton ielr cex
-    ].freeze
-    SUPPORTED_TRACES = VALID_TRACES - NOT_SUPPORTED_TRACES
+    ].freeze #: Array[String]
+    SUPPORTED_TRACES = VALID_TRACES - NOT_SUPPORTED_TRACES #: Array[String]
 
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
     def validate_trace(trace)
-      h = {}
+      h = {} #: Hash[Symbol, bool]
       return h if trace.empty? || trace == ['none']
       all_traces = SUPPORTED_TRACES - %w[only-explicit-rules]
       if trace == ['all']
@@ -187,10 +201,11 @@ module Lrama
       return h
     end
 
-    VALID_PROFILES = %w[call-stack memory].freeze
+    VALID_PROFILES = %w[call-stack memory].freeze #: Array[String]
 
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
     def validate_profile(profile)
-      h = {}
+      h = {} #: Hash[Symbol, bool]
       return h if profile.empty?
 
       profile.each do |t|

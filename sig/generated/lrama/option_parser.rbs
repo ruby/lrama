@@ -1,0 +1,52 @@
+# Generated from lib/lrama/option_parser.rb with RBS::Inline
+
+module Lrama
+  # Handle option parsing for the command line interface.
+  class OptionParser
+    @options: Lrama::Options
+
+    @trace: Array[String]
+
+    @report: Array[String]
+
+    @profile: Array[String]
+
+    # @rbs (Array[String]) -> Lrama::Options
+    def self.parse: (Array[String]) -> Lrama::Options
+
+    # @rbs () -> void
+    def initialize: () -> void
+
+    # @rbs (Array[String]) -> Lrama::Options
+    def parse: (Array[String]) -> Lrama::Options
+
+    private
+
+    # @rbs (Array[String]) -> void
+    def parse_by_option_parser: (Array[String]) -> void
+
+    ALIASED_REPORTS: Hash[Symbol, Symbol]
+
+    VALID_REPORTS: Array[Symbol]
+
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
+    def validate_report: (Array[String]) -> Hash[Symbol, bool]
+
+    # @rbs (String) -> Symbol
+    def aliased_report_option: (String) -> Symbol
+
+    VALID_TRACES: Array[String]
+
+    NOT_SUPPORTED_TRACES: Array[String]
+
+    SUPPORTED_TRACES: Array[String]
+
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
+    def validate_trace: (Array[String]) -> Hash[Symbol, bool]
+
+    VALID_PROFILES: Array[String]
+
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
+    def validate_profile: (Array[String]) -> Hash[Symbol, bool]
+  end
+end
