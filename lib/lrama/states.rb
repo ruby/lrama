@@ -131,8 +131,11 @@ module Lrama
     # @rbs () -> void
     def compute_ielr
       # Phase 1
+      report_duration(:compute_predecessors) { compute_predecessors }
       report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
       report_duration(:compute_always_follows) { compute_always_follows }
+      # Phase 2
+      report_duration(:compute_inadequacy_annotations) { compute_inadequacy_annotations }
       # Phase 3
       report_duration(:split_states) { split_states }
       # Phase 4
@@ -582,6 +585,17 @@ module Lrama
       end
     end
 
+    # Definition 3.15 (Predecessors)
+    #
+    # @rbs () -> void
+    def compute_predecessors
+      @states.each do |state|
+        state.transitions.each do |transition|
+          transition.to_state.append_predecessor(state)
+        end
+      end
+    end
+
     # Definition 3.16 (follow_kernel_items)
     #
     # @rbs () -> void
@@ -662,14 +676,6 @@ module Lrama
 
     # @rbs () -> void
     def split_states
-      @states.each do |state|
-        state.transitions.each do |transition|
-          transition.to_state.append_predecessor(state)
-        end
-      end
-
-      compute_inadequacy_annotations
-
       @states.each do |state|
         state.transitions.each do |transition|
           compute_state(state, transition, transition.to_state)
