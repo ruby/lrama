@@ -1,0 +1,5 @@
+# Generated from lib/lrama/version.rb with RBS::Inline
+
+module Lrama
+  VERSION: String
+end

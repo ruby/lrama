@@ -15,7 +15,7 @@ module Lrama
 
     attr_accessor error_recovery: bool
 
-    attr_accessor grammar_file: String?
+    attr_accessor grammar_file: String
 
     attr_accessor trace_opts: Hash[Symbol, bool]?
 
