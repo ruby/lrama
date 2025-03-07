@@ -56,7 +56,7 @@ module Lrama
     attr_accessor define: Hash[String, String]
     attr_accessor required: bool
 
-    def initialize: (Counter rule_counter) -> void
+    def initialize: (Counter rule_counter, bool locations) -> void
     def create_rule_builder: (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
     def add_percent_code: (id: Lexer::Token, code: Lexer::Token::UserCode) -> Array[PercentCode]
     def add_destructor: (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Destructor]

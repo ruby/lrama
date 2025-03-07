@@ -36,7 +36,7 @@ module Lrama
                                         :find_symbol_by_s_value!, :fill_symbol_number, :fill_nterm_type,
                                         :fill_printer, :fill_destructor, :fill_error_token, :sort_by_number!
 
-    def initialize(rule_counter, define = {})
+    def initialize(rule_counter, locations, define = {})
       @rule_counter = rule_counter
 
       # Code defined by "%code"
@@ -57,7 +57,7 @@ module Lrama
       @accept_symbol = nil
       @aux = Auxiliary.new
       @no_stdlib = false
-      @locations = false
+      @locations = locations
       @define = define
       @required = false
 
