@@ -19,5 +19,5 @@ gem "railroad_diagrams", "0.3.0"
 if !ENV['GITHUB_ACTION'] || ENV['INSTALL_STEEP'] == 'true'
   gem "rbs", "3.8.1", require: false
   gem "rbs-inline", require: false
-  gem "steep", "1.9.3", require: false
+  gem "steep", "1.9.4", require: false
 end
