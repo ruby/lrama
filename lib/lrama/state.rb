@@ -42,6 +42,7 @@ module Lrama
     attr_reader :items #: Array[States::Item]
     attr_reader :annotation_list #: Array[InadequacyAnnotation]
     attr_reader :predecessors #: Array[State]
+    attr_reader :items_to_state #: Hash[Array[States::Item], State]
 
     attr_accessor :_transitions #: Array[[Grammar::Symbol, Array[States::Item]]]
     attr_accessor :reduces #: Array[Action::Reduce]
@@ -74,6 +75,10 @@ module Lrama
       @follow_kernel_items = {}
       @always_follows = {}
       @goto_follows = {}
+    end
+
+    def ==(other)
+      self.id == other.id
     end
 
     # @rbs (Array[States::Item] closure) -> void
@@ -323,7 +328,9 @@ module Lrama
     #
     # @rbs (State predecessor) -> void
     def annotate_predecessor(predecessor)
-      annotation_list.each do |annotation|
+      propagating_list = annotation_list.map {|annotation|
+        next nil if annotation.only_always_or_never?
+
         contribution_matrix = annotation.contribution_matrix.map {|action, contributions|
           if contributions.nil?
             [action, nil]
@@ -340,12 +347,21 @@ module Lrama
             [action, cs]
           end
         }.to_h
-        if (at = predecessor.annotation_list.find {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions })
-          at.merge_matrix(contribution_matrix)
-        else
-          predecessor.annotation_list << InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
-        end
+
+        InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
+      }.compact
+      predecessor.append_annotation_list(propagating_list)
+    end
+
+    # @rbs (State predecessor) -> void
+    def append_annotation_list(propagating_list)
+      annotation_list.each do |annotation|
+        merging_list = propagating_list.select {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions }
+        annotation.merge_matrix(merging_list.map(&:contribution_matrix))
+        propagating_list -= merging_list
       end
+
+      @annotation_list += propagating_list
     end
 
     # Definition 3.31 (compute_lhs_contributions)

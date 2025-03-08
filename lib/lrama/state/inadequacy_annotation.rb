@@ -25,13 +25,21 @@ module Lrama
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
       end
 
-      # @rbs (Hash[action, Hash[States::Item, bool]] another_matrix) -> void
-      def merge_matrix(another_matrix)
-        @contribution_matrix.merge!(another_matrix) {|action, contributions, another_contributions|
-          next contributions if another_contributions.nil?
-          next another_contributions if contributions.nil?
+      # @rbs (Array[Hash[action, Hash[States::Item, bool]]] another_matrixes) -> void
+      def merge_matrix(another_matrixes)
+        another_matrixes.each do |another_matrix|
+          @contribution_matrix.merge!(another_matrix) {|action, contributions, another_contributions|
+            next contributions if another_contributions.nil?
+            next another_contributions if contributions.nil?
 
-          contributions.merge!(another_contributions) {|_, contributed, another_contributed| contributed || another_contributed }
+            contributions.merge!(another_contributions) {|_, contributed, another_contributed| contributed || another_contributed }
+          }
+        end
+      end
+
+      def only_always_or_never?
+        @contribution_matrix.all? {|_, contributions|
+          contributions.nil? || contributions.all? {|_, contributed| !contributed }
         }
       end
 
@@ -44,7 +52,11 @@ module Lrama
         }
         return nil if actions.empty?
 
-        # @type var shifts: Array[Action::Shift | Action::Goto]
+        resolve_conflict(actions)
+      end
+
+      def resolve_conflict(actions)
+        # @type var shifts: Array[Action::Shift]
         # @type var reduces: Array[Action::Reduce]
         shifts = actions.select {|action| action.is_a?(Action::Shift)}
         reduces = actions.select {|action| action.is_a?(Action::Reduce) }
