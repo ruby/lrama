@@ -56,6 +56,8 @@ module Lrama
 
     attr_reader predecessors: Array[State]
 
+    attr_reader items_to_state: Hash[Array[States::Item], State]
+
     attr_accessor _transitions: Array[[ Grammar::Symbol, Array[States::Item] ]]
 
     attr_accessor reduces: Array[Action::Reduce]
@@ -74,6 +76,8 @@ module Lrama
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
+
+    def ==: (untyped other) -> untyped
 
     # @rbs (Array[States::Item] closure) -> void
     def closure=: (Array[States::Item] closure) -> void
@@ -160,6 +164,9 @@ module Lrama
     #
     # @rbs (State predecessor) -> void
     def annotate_predecessor: (State predecessor) -> void
+
+    # @rbs (State predecessor) -> void
+    def append_annotation_list: (State predecessor) -> void
 
     # Definition 3.31 (compute_lhs_contributions)
     #
