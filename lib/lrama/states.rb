@@ -134,6 +134,7 @@ module Lrama
       report_duration(:compute_predecessors) { compute_predecessors }
       report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
       report_duration(:compute_always_follows) { compute_always_follows }
+      report_duration(:compute_goto_follows) { compute_goto_follows }
       # Phase 2
       report_duration(:compute_inadequacy_annotations) { compute_inadequacy_annotations }
       # Phase 3
@@ -613,10 +614,15 @@ module Lrama
 
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_internal_relation
-      nterm_transitions.map {|goto1|
-        related_gotos = nterm_transitions.select {|goto2| has_internal_relation?(goto1, goto2) }
-        [goto1, related_gotos]
-      }.to_h
+      relations = {}
+
+      @states.each do |state|
+        state.nterm_transitions.each do |goto|
+          relations[goto] = state.internal_dependencies(goto)
+        end
+      end
+
+      relations
     end
 
     # @rbs () -> Hash[State::Action::Goto, bitmap]
@@ -635,18 +641,21 @@ module Lrama
       relation = compute_goto_successor_or_internal_relation
       base_function = compute_transition_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, always_follows_bitmap|
-        state, nterm = goto.from_state, goto.next_sym
-        transition = state.nterm_transitions.find {|goto| goto.next_sym == nterm }
-        state.always_follows[transition] = bitmap_to_terms(always_follows_bitmap)
+        goto.from_state.always_follows[goto] = bitmap_to_terms(always_follows_bitmap)
       end
     end
 
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_successor_or_internal_relation
-      nterm_transitions.map {|goto1|
-        related_gotos = nterm_transitions.select {|goto2| has_internal_relation?(goto1, goto2) || has_successor_relation?(goto1, goto2) }
-        [goto1, related_gotos]
-      }.to_h
+      relations = {}
+
+      @states.each do |state|
+        state.nterm_transitions.each do |goto|
+          relations[goto] = state.successor_dependencies(goto) + state.internal_dependencies(goto)
+        end
+      end
+
+      relations
     end
 
     # @rbs () -> Hash[State::Action::Goto, bitmap]
@@ -656,22 +665,35 @@ module Lrama
       }.to_h
     end
 
-    # Definition 3.8 (Goto Follows Internal Relation)
-    #
-    # @rbs (State::Action::Goto goto1, State::Action::Goto goto2) -> bool
-    def has_internal_relation?(goto1, goto2)
-      state1, sym1 = goto1.from_state, goto1.next_sym
-      state2, sym2 = goto2.from_state, goto2.next_sym
-      state1 == state2 && state1.items.any? {|item|
-        item.next_sym == sym1 && item.lhs == sym2 && item.symbols_after_transition.all?(&:nullable)
-      }
+    def compute_goto_follows
+      set = nterm_transitions
+      relation = compute_goto_internal_or_predecessor_dependencies
+      base_function = compute_always_follows_bitmaps
+      Digraph.new(set, relation, base_function).compute.each do |goto, goto_follows_bitmap|
+        goto.from_state.goto_follows[goto] = bitmap_to_terms(goto_follows_bitmap)
+      end
     end
 
-    # Definition 3.5 (Goto Follows Successor Relation)
+    # Definition 3.24 (goto_follows, via always_follows)
     #
-    # @rbs (State::Action::Goto goto1, State::Action::Goto goto2) -> bool
-    def has_successor_relation?(goto1, goto2)
-      goto1.to_state == goto2.from_state && goto2.next_sym.nullable
+    # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
+    def compute_goto_internal_or_predecessor_dependencies
+      relations = {}
+
+      @states.each do |state|
+        state.nterm_transitions.each do |goto|
+          relations[goto] = state.internal_dependencies(goto) + state.predecessor_dependencies(goto)
+        end
+      end
+
+      relations
+    end
+
+    # @rbs () -> Hash[State::Action::Goto, bitmap]
+    def compute_always_follows_bitmaps
+      nterm_transitions.map {|goto|
+        [goto, Bitmap.from_array(goto.from_state.always_follows[goto].map(&:number))]
+      }.to_h
     end
 
     # @rbs () -> void
@@ -736,14 +758,18 @@ module Lrama
         state.update_transition(transition, new_state)
         compute_follow_kernel_items
         compute_always_follows
+        compute_goto_follows
       elsif(!s.lookaheads_recomputed)
         s.lookaheads_recomputed = true
         s.item_lookahead_set = propagating_lookaheads
       else
-        state.update_transition(transition, s)
         merge_lookaheads(s, propagating_lookaheads)
-        compute_follow_kernel_items
-        compute_always_follows
+        if state.items_to_state[transition.to_items].id != s.id
+          state.update_transition(transition, s)
+          compute_follow_kernel_items
+          compute_always_follows
+          compute_goto_follows
+        end
       end
     end
 

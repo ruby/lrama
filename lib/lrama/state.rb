@@ -42,6 +42,7 @@ module Lrama
     attr_reader :items #: Array[States::Item]
     attr_reader :annotation_list #: Array[InadequacyAnnotation]
     attr_reader :predecessors #: Array[State]
+    attr_reader :items_to_state #: Hash[Array[States::Item], State]
 
     attr_accessor :_transitions #: Array[[Grammar::Symbol, Array[States::Item]]]
     attr_accessor :reduces #: Array[Action::Reduce]
@@ -50,6 +51,7 @@ module Lrama
     attr_accessor :lookaheads_recomputed #: bool
     attr_accessor :follow_kernel_items #: Hash[Action::Goto, Hash[States::Item, bool]]
     attr_accessor :always_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
+    attr_accessor :goto_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
@@ -72,6 +74,11 @@ module Lrama
       @lookaheads_recomputed = false
       @follow_kernel_items = {}
       @always_follows = {}
+      @goto_follows = {}
+    end
+
+    def ==(other)
+      self.id == other.id
     end
 
     # @rbs (Array[States::Item] closure) -> void
@@ -150,7 +157,9 @@ module Lrama
     def update_transition(transition, next_state)
       set_items_to_state(transition.to_items, next_state)
       next_state.append_predecessor(self)
+      clear_relations_cache
       clear_transitions_cache
+      predecessors.each {|p| p.clear_relations_cache }
     end
 
     # @rbs () -> void
@@ -158,6 +167,12 @@ module Lrama
       @nterm_transitions = nil
       @term_transitions = nil
       @transitions = nil
+    end
+
+    # @rbs () -> void
+    def clear_relations_cache
+      @internal_dependencies.clear
+      @successor_dependencies.clear
     end
 
     # @rbs () -> Array[Action::Shift]
@@ -313,7 +328,9 @@ module Lrama
     #
     # @rbs (State predecessor) -> void
     def annotate_predecessor(predecessor)
-      annotation_list.each do |annotation|
+      propagating_list = annotation_list.map {|annotation|
+        next nil if annotation.only_always_or_never?
+
         contribution_matrix = annotation.contribution_matrix.map {|action, contributions|
           if contributions.nil?
             [action, nil]
@@ -330,12 +347,21 @@ module Lrama
             [action, cs]
           end
         }.to_h
-        if (at = predecessor.annotation_list.find {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions })
-          at.merge_matrix(contribution_matrix)
-        else
-          predecessor.annotation_list << InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
-        end
+
+        InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
+      }.compact
+      predecessor.append_annotation_list(propagating_list)
+    end
+
+    # @rbs (State predecessor) -> void
+    def append_annotation_list(propagating_list)
+      annotation_list.each do |annotation|
+        merging_list = propagating_list.select {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions }
+        annotation.merge_matrix(merging_list.map(&:contribution_matrix))
+        propagating_list -= merging_list
       end
+
+      @annotation_list += propagating_list
     end
 
     # Definition 3.31 (compute_lhs_contributions)
@@ -367,7 +393,7 @@ module Lrama
           elsif kernel.position == 1
             prev_state = @predecessors.find {|p| p.transitions.any? {|transition| transition.next_sym == kernel.lhs } }
             goto = prev_state.nterm_transitions.find {|goto| goto.next_sym == kernel.lhs }
-            prev_state.goto_follows(goto)
+            prev_state.goto_follows[goto]
           end
         [kernel, value]
       }.to_h
@@ -408,26 +434,6 @@ module Lrama
         .reduce(@lalr_isocore.always_follows[goto]) {|result, terms| result |= terms }
     end
 
-    # Definition 3.24 (goto_follows, via always_follows)
-    #
-    # @rbs (Action::Goto goto) -> Array[Grammar::Symbol]
-    def goto_follows(goto)
-      queue = internal_dependencies(goto) + predecessor_dependencies(goto)
-      terms = always_follows[goto]
-      visited = queue.dup
-      until queue.empty?
-        goto2 = queue.shift
-        next if visited.include?(goto)
-
-        state = goto2.from_state
-        terms |= state.always_follows[goto2]
-        state.internal_dependencies(goto2).each {|v| queue << v }
-        state.predecessor_dependencies(goto2).each {|v| queue << v }
-        visited << goto2
-      end
-      terms
-    end
-
     # Definition 3.8 (Goto Follows Internal Relation)
     #
     # @rbs (Action::Goto goto) -> Array[Action::Goto]
@@ -446,9 +452,7 @@ module Lrama
     def successor_dependencies(goto)
       return @successor_dependencies[goto] if @successor_dependencies[goto]
 
-      @successor_dependencies[goto] =
-        goto.to_state.nterm_transitions
-          .select {|next_goto| next_goto.next_sym.nullable }
+      @successor_dependencies[goto] = goto.to_state.nterm_transitions.select {|next_goto| next_goto.next_sym.nullable }
     end
 
     # Definition 3.9 (Goto Follows Predecessor Relation)

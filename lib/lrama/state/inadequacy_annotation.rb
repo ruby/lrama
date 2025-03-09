@@ -9,10 +9,10 @@ module Lrama
 
       attr_accessor :state #: State
       attr_accessor :token #: Grammar::Symbol
-      attr_accessor :actions #: Array[action]
-      attr_accessor :contribution_matrix #: Hash[action, Hash[States::Item, bool]]
+      attr_accessor :actions #: Array[Action::Shift | Action::Reduce]
+      attr_accessor :contribution_matrix #: Hash[Action::Shift | Action::Reduce, Hash[States::Item, bool]]
 
-      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[States::Item, bool]] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[Action::Shift | Action::Reduce] actions, Hash[Action::Shift | Action::Reduce, Hash[States::Item, bool]] contribution_matrix) -> void
       def initialize(state, token, actions, contribution_matrix)
         @state = state
         @token = token
@@ -25,26 +25,40 @@ module Lrama
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
       end
 
-      # @rbs (Hash[action, Hash[States::Item, bool]] another_matrix) -> void
-      def merge_matrix(another_matrix)
-        @contribution_matrix.merge!(another_matrix) {|action, contributions, another_contributions|
-          next contributions if another_contributions.nil?
-          next another_contributions if contributions.nil?
+      # @rbs (Array[Hash[Action::Shift | Action::Reduce, Hash[States::Item, bool]]] another_matrixes) -> void
+      def merge_matrix(another_matrixes)
+        another_matrixes.each do |another_matrix|
+          @contribution_matrix.merge!(another_matrix) {|action, contributions, another_contributions|
+            next contributions if another_contributions.nil?
+            next another_contributions if contributions.nil?
 
-          contributions.merge!(another_contributions) {|_, contributed, another_contributed| contributed || another_contributed }
+            contributions.merge!(another_contributions) {|_, contributed, another_contributed| contributed || another_contributed }
+          }
+        end
+      end
+
+      # @rbs () -> bool
+      def only_always_or_never?
+        @contribution_matrix.all? {|_, contributions|
+          contributions.nil? || contributions.all? {|_, contributed| !contributed }
         }
       end
 
       # Definition 3.42 (dominant_contribution)
       #
-      # @rbs (State::lookahead_set lookaheads) -> Array[action]?
+      # @rbs (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Action::Shift | Action::Reduce]?
       def dominant_contribution(lookaheads)
         actions = @actions.select {|action|
           contribution_matrix[action].nil? || contribution_matrix[action].any? {|item, contributed| contributed && lookaheads[item].include?(@token) }
         }
         return nil if actions.empty?
 
-        # @type var shifts: Array[Action::Shift | Action::Goto]
+        resolve_conflict(actions)
+      end
+
+      # @rbs (Array[Action::Shift | Action::Reduce] actions) -> Array[Action::Shift | Action::Reduce]
+      def resolve_conflict(actions)
+        # @type var shifts: Array[Action::Shift]
         # @type var reduces: Array[Action::Reduce]
         shifts = actions.select {|action| action.is_a?(Action::Shift)}
         reduces = actions.select {|action| action.is_a?(Action::Reduce) }
