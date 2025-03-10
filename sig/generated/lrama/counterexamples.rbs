@@ -43,17 +43,17 @@ module Lrama
     # @rbs (State conflict_state, State::ReduceReduceConflict conflict) -> Example
     def reduce_reduce_examples: (State conflict_state, State::ReduceReduceConflict conflict) -> Example
 
-    # @rbs (::Array[StartPath|TransitionPath|ProductionPath]? reduce_path, State conflict_state, States::Item conflict_item) -> ::Array[StartPath|TransitionPath|ProductionPath]
-    def find_shift_conflict_shortest_path: (::Array[StartPath | TransitionPath | ProductionPath]? reduce_path, State conflict_state, States::Item conflict_item) -> ::Array[StartPath | TransitionPath | ProductionPath]
+    # @rbs (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> ::Array[Path::path]
+    def find_shift_conflict_shortest_path: (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> ::Array[Path::path]
 
-    # @rbs (::Array[StartPath|TransitionPath|ProductionPath]? reduce_path, State conflict_state, States::Item conflict_item) -> Array[StateItem]
-    def find_shift_conflict_shortest_state_items: (::Array[StartPath | TransitionPath | ProductionPath]? reduce_path, State conflict_state, States::Item conflict_item) -> Array[StateItem]
+    # @rbs (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> Array[StateItem]
+    def find_shift_conflict_shortest_state_items: (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> Array[StateItem]
 
-    # @rbs (Array[StateItem] state_items) -> ::Array[StartPath|TransitionPath|ProductionPath]
-    def build_paths_from_state_items: (Array[StateItem] state_items) -> ::Array[StartPath | TransitionPath | ProductionPath]
+    # @rbs (Array[StateItem] state_items) -> ::Array[Path::path]
+    def build_paths_from_state_items: (Array[StateItem] state_items) -> ::Array[Path::path]
 
-    # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StartPath|TransitionPath|ProductionPath]?
-    def shortest_path: (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StartPath | TransitionPath | ProductionPath]?
+    # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
+    def shortest_path: (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
 
     # @rbs (States::Item item, Set[Grammar::Symbol] current_l) -> Set[Grammar::Symbol]
     def follow_l: (States::Item item, Set[Grammar::Symbol] current_l) -> Set[Grammar::Symbol]

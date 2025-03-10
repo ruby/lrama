@@ -5,6 +5,8 @@ module Lrama
   class Counterexamples
     class Path
       # @rbs!
+      #   type path = StartPath | TransitionPath | ProductionPath
+      #
       #   @from_state_item: StateItem?
       #   @to_state_item: StateItem
 
