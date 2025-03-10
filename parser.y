@@ -167,6 +167,12 @@ rule
                           }
                           @precedence_number += 1
                         }
+                    | "%start" IDENTIFIER+
+                        {
+                          val[1].each {|sym|
+                            @grammar.add_start_nterms(sym)
+                          }
+                        }
 
   token_declarations: TAG? token_declaration+
                         {
