@@ -665,6 +665,7 @@ module Lrama
       }.to_h
     end
 
+    # @rbs () -> void
     def compute_goto_follows
       set = nterm_transitions
       relation = compute_goto_internal_or_predecessor_dependencies
