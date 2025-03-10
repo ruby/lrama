@@ -77,6 +77,7 @@ module Lrama
       @goto_follows = {}
     end
 
+    # @rbs (State other) -> bool
     def ==(other)
       self.id == other.id
     end
@@ -353,7 +354,7 @@ module Lrama
       predecessor.append_annotation_list(propagating_list)
     end
 
-    # @rbs (State predecessor) -> void
+    # @rbs (Array[InadequacyAnnotation] propagating_list) -> void
     def append_annotation_list(propagating_list)
       annotation_list.each do |annotation|
         merging_list = propagating_list.select {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions }

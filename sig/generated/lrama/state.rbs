@@ -77,7 +77,8 @@ module Lrama
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
 
-    def ==: (untyped other) -> untyped
+    # @rbs (State other) -> bool
+    def ==: (State other) -> bool
 
     # @rbs (Array[States::Item] closure) -> void
     def closure=: (Array[States::Item] closure) -> void
@@ -165,8 +166,8 @@ module Lrama
     # @rbs (State predecessor) -> void
     def annotate_predecessor: (State predecessor) -> void
 
-    # @rbs (State predecessor) -> void
-    def append_annotation_list: (State predecessor) -> void
+    # @rbs (Array[InadequacyAnnotation] propagating_list) -> void
+    def append_annotation_list: (Array[InadequacyAnnotation] propagating_list) -> void
 
     # Definition 3.31 (compute_lhs_contributions)
     #
