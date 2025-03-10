@@ -77,7 +77,8 @@ module Lrama
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
     def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
 
-    def ==: (untyped other) -> untyped
+    # @rbs (State other) -> bool
+    def ==: (State other) -> bool
 
     # @rbs (Array[States::Item] closure) -> void
     def closure=: (Array[States::Item] closure) -> void

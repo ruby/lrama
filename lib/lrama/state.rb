@@ -77,6 +77,7 @@ module Lrama
       @goto_follows = {}
     end
 
+    # @rbs (State other) -> bool
     def ==(other)
       self.id == other.id
     end
