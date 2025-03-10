@@ -3,11 +3,9 @@
 module Lrama
   class Counterexamples
     class Example
-      type path = StartPath | TransitionPath | ProductionPath
+      @path1: ::Array[Path::path]
 
-      @path1: ::Array[path]
-
-      @path2: ::Array[path]
+      @path2: ::Array[Path::path]
 
       @conflict: State::conflict
 
@@ -19,9 +17,9 @@ module Lrama
 
       @derivations2: Derivation
 
-      attr_reader path1: ::Array[path]
+      attr_reader path1: ::Array[Path::path]
 
-      attr_reader path2: ::Array[path]
+      attr_reader path2: ::Array[Path::path]
 
       attr_reader conflict: State::conflict
 
@@ -30,8 +28,8 @@ module Lrama
       # path1 is shift conflict when S/R conflict
       # path2 is always reduce conflict
       #
-      # @rbs (::Array[path]? path1, ::Array[path]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
-      def initialize: (::Array[path]? path1, ::Array[path]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      # @rbs (::Array[Path::path]? path1, ::Array[Path::path]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      def initialize: (::Array[Path::path]? path1, ::Array[Path::path]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
 
       # @rbs () -> (:shift_reduce | :reduce_reduce)
       def type: () -> (:shift_reduce | :reduce_reduce)
@@ -50,8 +48,8 @@ module Lrama
 
       private
 
-      # @rbs (::Array[path] paths) -> Derivation
-      def _derivations: (::Array[path] paths) -> Derivation
+      # @rbs (::Array[Path::path] paths) -> Derivation
+      def _derivations: (::Array[Path::path] paths) -> Derivation
 
       # @rbs (StateItem state_item, Grammar::Symbol sym) -> Derivation?
       def find_derivation_for_symbol: (StateItem state_item, Grammar::Symbol sym) -> Derivation?
