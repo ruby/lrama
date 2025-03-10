@@ -1,3 +1,4 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 require "set"
@@ -15,19 +16,30 @@ module Lrama
   # See: https://www.cs.cornell.edu/andru/papers/cupex/cupex.pdf
   #      4. Constructing Nonunifying Counterexamples
   class Counterexamples
-    attr_reader :transitions, :productions
+    # @rbs!
+    #   @states: States
+    #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
+    #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
+    #   @productions: Hash[StateItem, Set[States::Item]]
+    #   @reverse_productions: Hash[[State, Grammar::Symbol], Set[States::Item]]
 
+    attr_reader :transitions #: Hash[[StateItem, Grammar::Symbol], StateItem]
+    attr_reader :productions #: Hash[StateItem, Set[States::Item]]
+
+    # @rbs (States states) -> void
     def initialize(states)
       @states = states
       setup_transitions
       setup_productions
     end
 
+    # @rbs () -> "#<Counterexamples>"
     def to_s
       "#<Counterexamples>"
     end
     alias :inspect :to_s
 
+    # @rbs (State conflict_state) -> Array[Example]
     def compute(conflict_state)
       conflict_state.conflicts.flat_map do |conflict|
         case conflict.type
@@ -43,6 +55,7 @@ module Lrama
 
     private
 
+    # @rbs () -> void
     def setup_transitions
       # Hash [StateItem, Symbol] => StateItem
       @transitions = {}
@@ -77,6 +90,7 @@ module Lrama
       end
     end
 
+    # @rbs () -> void
     def setup_productions
       # Hash [StateItem] => Set(Item)
       @productions = {}
@@ -111,6 +125,7 @@ module Lrama
       end
     end
 
+    # @rbs (State conflict_state, State::ShiftReduceConflict conflict) -> Example
     def shift_reduce_example(conflict_state, conflict)
       conflict_symbol = conflict.symbols.first
       # @type var shift_conflict_item: ::Lrama::States::Item
@@ -121,6 +136,7 @@ module Lrama
       Example.new(path1, path2, conflict, conflict_symbol, self)
     end
 
+    # @rbs (State conflict_state, State::ReduceReduceConflict conflict) -> Example
     def reduce_reduce_examples(conflict_state, conflict)
       conflict_symbol = conflict.symbols.first
       path1 = shortest_path(conflict_state, conflict.reduce1.item, conflict_symbol)
@@ -129,11 +145,13 @@ module Lrama
       Example.new(path1, path2, conflict, conflict_symbol, self)
     end
 
+    # @rbs (::Array[StartPath|TransitionPath|ProductionPath]? reduce_path, State conflict_state, States::Item conflict_item) -> ::Array[StartPath|TransitionPath|ProductionPath]
     def find_shift_conflict_shortest_path(reduce_path, conflict_state, conflict_item)
       state_items = find_shift_conflict_shortest_state_items(reduce_path, conflict_state, conflict_item)
       build_paths_from_state_items(state_items)
     end
 
+    # @rbs (::Array[StartPath|TransitionPath|ProductionPath]? reduce_path, State conflict_state, States::Item conflict_item) -> Array[StateItem]
     def find_shift_conflict_shortest_state_items(reduce_path, conflict_state, conflict_item)
       target_state_item = StateItem.new(conflict_state, conflict_item)
       result = [target_state_item]
@@ -219,6 +237,7 @@ module Lrama
       result.reverse
     end
 
+    # @rbs (Array[StateItem] state_items) -> ::Array[StartPath|TransitionPath|ProductionPath]
     def build_paths_from_state_items(state_items)
       state_items.zip([nil] + state_items).map do |si, prev_si|
         case
@@ -232,6 +251,7 @@ module Lrama
       end
     end
 
+    # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StartPath|TransitionPath|ProductionPath]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
       # queue: is an array of [Triple, [Path]]
       queue = [] #: Array[[Triple, Array[StartPath|TransitionPath|ProductionPath]]]
@@ -278,6 +298,7 @@ module Lrama
       return nil
     end
 
+    # @rbs (States::Item item, Set[Grammar::Symbol] current_l) -> Set[Grammar::Symbol]
     def follow_l(item, current_l)
       # 1. follow_L (A -> X1 ... Xn-1 • Xn) = L
       # 2. follow_L (A -> X1 ... Xk • Xk+1 Xk+2 ... Xn) = {Xk+2} if Xk+2 is a terminal
