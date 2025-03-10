@@ -1,3 +1,5 @@
+# Generated from lib/lrama/counterexamples/derivation.rb with RBS::Inline
+
 module Lrama
   class Counterexamples
     class Derivation
@@ -15,18 +17,23 @@ module Lrama
 
       attr_writer right: Derivation?
 
+      # @rbs (States::Item item, Derivation? left, ?Derivation? right) -> void
       def initialize: (States::Item item, Derivation? left, ?Derivation? right) -> void
 
+      # @rbs () -> ::String
       def to_s: () -> ::String
 
       alias inspect to_s
 
+      # @rbs () -> Array[String]
       def render_strings_for_report: () -> Array[String]
 
+      # @rbs () -> String
       def render_for_report: () -> String
 
       private
 
+      # @rbs (Derivation derivation, Integer offset, Array[String] strings, Integer index) -> Integer
       def _render_for_report: (Derivation derivation, Integer offset, Array[String] strings, Integer index) -> Integer
     end
   end

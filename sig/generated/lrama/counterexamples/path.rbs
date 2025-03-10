@@ -1,3 +1,5 @@
+# Generated from lib/lrama/counterexamples/path.rb with RBS::Inline
+
 module Lrama
   class Counterexamples
     class Path
@@ -5,17 +7,22 @@ module Lrama
 
       @to_state_item: StateItem
 
+      # @rbs (StateItem? from_state_item, StateItem to_state_item) -> void
       def initialize: (StateItem? from_state_item, StateItem to_state_item) -> void
 
+      # @rbs () -> StateItem?
       def from: () -> StateItem?
 
+      # @rbs () -> StateItem
       def to: () -> StateItem
 
+      # @rbs () -> ::String
       def to_s: () -> ::String
 
       alias inspect to_s
 
-      def type: -> bot
+      # @rbs () -> bot
+      def type: () -> bot
     end
   end
 end

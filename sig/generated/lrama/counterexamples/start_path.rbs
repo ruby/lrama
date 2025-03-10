@@ -1,12 +1,18 @@
+# Generated from lib/lrama/counterexamples/start_path.rb with RBS::Inline
+
 module Lrama
   class Counterexamples
     class StartPath < Path
+      # @rbs (StateItem to_state_item) -> void
       def initialize: (StateItem to_state_item) -> void
 
+      # @rbs () -> :start
       def type: () -> :start
 
+      # @rbs () -> false
       def transition?: () -> false
 
+      # @rbs () -> false
       def production?: () -> false
     end
   end
