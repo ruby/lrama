@@ -157,9 +157,7 @@ module Lrama
     def update_transition(transition, next_state)
       set_items_to_state(transition.to_items, next_state)
       next_state.append_predecessor(self)
-      clear_relations_cache
       clear_transitions_cache
-      predecessors.each {|p| p.clear_relations_cache }
     end
 
     # @rbs () -> void
@@ -167,12 +165,6 @@ module Lrama
       @nterm_transitions = nil
       @term_transitions = nil
       @transitions = nil
-    end
-
-    # @rbs () -> void
-    def clear_relations_cache
-      @internal_dependencies.clear
-      @successor_dependencies.clear
     end
 
     # @rbs () -> Array[Action::Shift]
@@ -275,7 +267,7 @@ module Lrama
     #
     # @rbs () -> lookahead_set
     def lookahead_set_filters
-      kernels.map {|kernel|
+      @lookahead_set_filters ||= kernels.map {|kernel|
         [kernel, @lalr_isocore.annotation_list.select {|annotation| annotation.contributed?(kernel) }.map(&:token)]
       }.to_h
     end
