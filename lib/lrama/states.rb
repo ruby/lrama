@@ -665,6 +665,8 @@ module Lrama
       }.to_h
     end
 
+    # Definition 3.24 (goto_follows, via always_follows)
+    #
     # @rbs () -> void
     def compute_goto_follows
       set = nterm_transitions
@@ -675,8 +677,6 @@ module Lrama
       end
     end
 
-    # Definition 3.24 (goto_follows, via always_follows)
-    #
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_internal_or_predecessor_dependencies
       relations = {}

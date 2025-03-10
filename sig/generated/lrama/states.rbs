@@ -175,11 +175,11 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, bitmap]
     def compute_transition_bitmaps: () -> Hash[State::Action::Goto, bitmap]
 
+    # Definition 3.24 (goto_follows, via always_follows)
+    #
     # @rbs () -> void
     def compute_goto_follows: () -> void
 
-    # Definition 3.24 (goto_follows, via always_follows)
-    #
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_internal_or_predecessor_dependencies: () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
 
