@@ -21,7 +21,7 @@ module Lrama
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
     #   @productions: Hash[StateItem, Set[States::Item]]
-    #   @reverse_productions: Hash[[State, Grammar::Symbol], Set[States::Item]]
+    #   @reverse_productions: Hash[[State, Grammar::Symbol], Set[States::Item]] # Grammar::Symbol is nterm
 
     attr_reader :transitions #: Hash[[StateItem, Grammar::Symbol], StateItem]
     attr_reader :productions #: Hash[StateItem, Set[States::Item]]
@@ -57,9 +57,7 @@ module Lrama
 
     # @rbs () -> void
     def setup_transitions
-      # Hash [StateItem, Symbol] => StateItem
       @transitions = {}
-      # Hash [StateItem, Symbol] => Set(StateItem)
       @reverse_transitions = {}
 
       @states.states.each do |src_state|
@@ -92,13 +90,11 @@ module Lrama
 
     # @rbs () -> void
     def setup_productions
-      # Hash [StateItem] => Set(Item)
       @productions = {}
-      # Hash [State, Symbol] => Set(Item). Symbol is nterm
       @reverse_productions = {}
 
       @states.states.each do |state|
-        # LHS => Set(Item)
+        # Grammar::Symbol is LHS
         h = {} #: Hash[Grammar::Symbol, Set[States::Item]]
 
         state.closure.each do |item|
@@ -253,7 +249,6 @@ module Lrama
 
     # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
-      # queue: is an array of [Triple, [Path]]
       queue = [] #: Array[[Triple, Array[Path::path]]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
