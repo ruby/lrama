@@ -247,13 +247,36 @@ module Lrama
       end
     end
 
+    # @rbs (StateItem target) -> Set[StateItem]
+    def reachable_state_items(target)
+      result = Set.new
+      queue = [target]
+
+      while (state_item = queue.shift)
+        next if result.include?(state_item)
+        result << state_item
+
+        @reverse_transitions[[state_item, state_item.item.previous_sym]]&.each do |prev_state_item|
+          queue << prev_state_item
+        end
+
+        if state_item.item.beginning_of_rule?
+          @reverse_productions[[state_item.state, state_item.item.lhs]]&.each do |item|
+            queue << StateItem.new(state_item.state, item)
+          end
+        end
+      end
+
+      result
+    end
+
     # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
       queue = [] #: Array[[Triple, Array[Path::path]]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
-
+      reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
       start = Triple.new(start_state, start_state.kernels.first, Set.new([@states.eof_symbol]))
 
       queue << [start, [StartPath.new(start.state_item)]]
@@ -271,14 +294,15 @@ module Lrama
 
         # transition
         next_state_item = @transitions[[triple.state_item, triple.item.next_sym]]
-        if next_state_item
+        if next_state_item && reachable.include?(next_state_item)
           t = Triple.new(next_state_item.state, next_state_item.item, triple.l)
           queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
         end
 
         # production step
         @productions[triple.state_item]&.each do |item|
-          next unless triple.item.next_sym && triple.item.next_sym == item.lhs
+          next unless reachable.include?(StateItem.new(triple.state, item))
+
           l = follow_l(triple.item, triple.l)
           t = Triple.new(triple.state, item, l)
           queue << [t, paths + [ProductionPath.new(triple.state_item, t.state_item)]]
