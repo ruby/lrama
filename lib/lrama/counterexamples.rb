@@ -280,9 +280,7 @@ module Lrama
 
       queue << [start, [StartPath.new(start.state_item)]]
 
-      while true
-        triple, paths = queue.shift
-
+      while (triple, paths = queue.shift)
         next if visited[triple]
         visited[triple] = true
 
@@ -308,8 +306,6 @@ module Lrama
           t = Triple.new(triple.state, item, l)
           queue << [t, paths + [ProductionPath.new(triple.state_item, t.state_item)]]
         end
-
-        break if queue.empty?
       end
 
       return nil
