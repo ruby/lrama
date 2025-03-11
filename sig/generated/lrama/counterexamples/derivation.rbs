@@ -7,18 +7,14 @@ module Lrama
 
       @left: Derivation?
 
-      @right: Derivation?
-
       attr_reader item: States::Item
 
       attr_reader left: Derivation?
 
-      attr_reader right: Derivation?
+      attr_accessor right: Derivation?
 
-      attr_writer right: Derivation?
-
-      # @rbs (States::Item item, Derivation? left, ?Derivation? right) -> void
-      def initialize: (States::Item item, Derivation? left, ?Derivation? right) -> void
+      # @rbs (States::Item item, Derivation? left) -> void
+      def initialize: (States::Item item, Derivation? left) -> void
 
       # @rbs () -> ::String
       def to_s: () -> ::String

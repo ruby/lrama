@@ -7,18 +7,15 @@ module Lrama
       # @rbs!
       #   @item: States::Item
       #   @left: Derivation?
-      #   @right: Derivation?
 
       attr_reader :item  #: States::Item
       attr_reader :left  #: Derivation?
-      attr_reader :right #: Derivation?
-      attr_writer :right #: Derivation?
+      attr_accessor :right #: Derivation?
 
-      # @rbs (States::Item item, Derivation? left, ?Derivation? right) -> void
-      def initialize(item, left, right = nil)
+      # @rbs (States::Item item, Derivation? left) -> void
+      def initialize(item, left)
         @item = item
         @left = left
-        @right = right
       end
 
       # @rbs () -> ::String
