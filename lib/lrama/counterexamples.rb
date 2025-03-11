@@ -110,11 +110,10 @@ module Lrama
 
           sym = item.next_sym
           state_item = StateItem.new(state, item)
-          # @type var key: [State, Grammar::Symbol]
-          key = [state, sym]
-
           @productions[state_item] = h[sym]
 
+          # @type var key: [State, Grammar::Symbol]
+          key = [state, sym]
           @reverse_productions[key] ||= Set.new
           @reverse_productions[key] << item
         end
