@@ -12,8 +12,16 @@ module Lrama
         # @rbs return: StackProf::result | void
         def self.report(enabled)
           if enabled && require_stackprof
+            ex = nil #: Exception?
+
             StackProf.run(mode: :cpu, raw: true, out: 'tmp/stackprof-cpu-myapp.dump') do
               yield
+            rescue Exception => e
+              ex = e
+            end
+
+            if ex
+              raise ex
             end
           else
             yield
