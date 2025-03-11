@@ -10,8 +10,7 @@ module Lrama
 
       attr_reader :item  #: States::Item
       attr_reader :left  #: Derivation?
-      attr_reader :right #: Derivation?
-      attr_writer :right #: Derivation?
+      attr_accessor :right #: Derivation?
 
       # @rbs (States::Item item, Derivation? left) -> void
       def initialize(item, left)
