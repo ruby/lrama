@@ -295,6 +295,7 @@ module Lrama
         # transition
         next_state_item = @transitions[[triple.state_item, triple.item.next_sym]]
         if next_state_item && reachable.include?(next_state_item)
+          # @type var t: Triple
           t = Triple.new(next_state_item.state, next_state_item.item, triple.l)
           queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
         end
@@ -304,6 +305,7 @@ module Lrama
           next unless reachable.include?(StateItem.new(triple.state, item))
 
           l = follow_l(triple.item, triple.l)
+          # @type var t: Triple
           t = Triple.new(triple.state, item, l)
           queue << [t, paths + [ProductionPath.new(triple.state_item, t.state_item)]]
         end
