@@ -2,13 +2,15 @@
 
 module Lrama
   module Bitmap
-    # @rbs (Array[Integer] ary) -> Integer
-    def self.from_array: (Array[Integer] ary) -> Integer
+    type bitmap = Integer
 
-    # @rbs (Integer int) -> Array[Integer]
-    def self.to_array: (Integer int) -> Array[Integer]
+    # @rbs (Array[Integer] ary) -> bitmap
+    def self.from_array: (Array[Integer] ary) -> bitmap
 
-    # @rbs (Integer int, Integer size) -> Array[bool]
-    def self.to_bool_array: (Integer int, Integer size) -> Array[bool]
+    # @rbs (bitmap int) -> Array[Integer]
+    def self.to_array: (bitmap int) -> Array[Integer]
+
+    # @rbs (bitmap int, Integer size) -> Array[bool]
+    def self.to_bool_array: (bitmap int, Integer size) -> Array[bool]
   end
 end
