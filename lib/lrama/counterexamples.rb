@@ -110,11 +110,10 @@ module Lrama
 
           sym = item.next_sym
           state_item = StateItem.new(state, item)
-          # @type var key: [State, Grammar::Symbol]
-          key = [state, sym]
-
           @productions[state_item] = h[sym]
 
+          # @type var key: [State, Grammar::Symbol]
+          key = [state, sym]
           @reverse_productions[key] ||= Set.new
           @reverse_productions[key] << item
         end
@@ -247,20 +246,41 @@ module Lrama
       end
     end
 
+    # @rbs (StateItem target) -> Set[StateItem]
+    def reachable_state_items(target)
+      result = Set.new
+      queue = [target]
+
+      while (state_item = queue.shift)
+        next if result.include?(state_item)
+        result << state_item
+
+        @reverse_transitions[[state_item, state_item.item.previous_sym]]&.each do |prev_state_item|
+          queue << prev_state_item
+        end
+
+        if state_item.item.beginning_of_rule?
+          @reverse_productions[[state_item.state, state_item.item.lhs]]&.each do |item|
+            queue << StateItem.new(state_item.state, item)
+          end
+        end
+      end
+
+      result
+    end
+
     # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
       queue = [] #: Array[[Triple, Array[Path::path]]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
-
+      reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
       start = Triple.new(start_state, start_state.kernels.first, Set.new([@states.eof_symbol]))
 
       queue << [start, [StartPath.new(start.state_item)]]
 
-      while true
-        triple, paths = queue.shift
-
+      while (triple, paths = queue.shift)
         next if visited[triple]
         visited[triple] = true
 
@@ -270,24 +290,22 @@ module Lrama
         end
 
         # transition
-        triple.state.transitions.each do |transition|
-          next unless triple.item.next_sym && triple.item.next_sym == transition.next_sym
-          transition.to_state.kernels.each do |kernel|
-            next if kernel.rule != triple.item.rule
-            t = Triple.new(transition.to_state, kernel, triple.l)
-            queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
-          end
+        next_state_item = @transitions[[triple.state_item, triple.item.next_sym]]
+        if next_state_item && reachable.include?(next_state_item)
+          # @type var t: Triple
+          t = Triple.new(next_state_item.state, next_state_item.item, triple.l)
+          queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
         end
 
         # production step
-        triple.state.closure.each do |item|
-          next unless triple.item.next_sym && triple.item.next_sym == item.lhs
+        @productions[triple.state_item]&.each do |item|
+          next unless reachable.include?(StateItem.new(triple.state, item))
+
           l = follow_l(triple.item, triple.l)
+          # @type var t: Triple
           t = Triple.new(triple.state, item, l)
           queue << [t, paths + [ProductionPath.new(triple.state_item, t.state_item)]]
         end
-
-        break if queue.empty?
       end
 
       return nil
