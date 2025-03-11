@@ -3,7 +3,10 @@
 
 module Lrama
   module Bitmap
-    # @rbs (Array[Integer] ary) -> Integer
+    # @rbs!
+    #   type bitmap = Integer
+
+    # @rbs (Array[Integer] ary) -> bitmap
     def self.from_array(ary)
       bit = 0
 
@@ -14,7 +17,7 @@ module Lrama
       bit
     end
 
-    # @rbs (Integer int) -> Array[Integer]
+    # @rbs (bitmap int) -> Array[Integer]
     def self.to_array(int)
       a = [] #: Array[Integer]
       i = 0
@@ -31,7 +34,7 @@ module Lrama
       a
     end
 
-    # @rbs (Integer int, Integer size) -> Array[bool]
+    # @rbs (bitmap int, Integer size) -> Array[bool]
     def self.to_bool_array(int, size)
       a = Array.new(size) #: Array[bool]
 
