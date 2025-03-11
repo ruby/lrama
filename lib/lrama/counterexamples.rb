@@ -277,7 +277,7 @@ module Lrama
         end
 
         # production step
-        triple.state.closure.each do |item|
+        @productions[triple.state_item]&.each do |item|
           next unless triple.item.next_sym && triple.item.next_sym == item.lhs
           l = follow_l(triple.item, triple.l)
           t = Triple.new(triple.state, item, l)
