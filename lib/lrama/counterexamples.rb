@@ -270,13 +270,10 @@ module Lrama
         end
 
         # transition
-        triple.state.transitions.each do |transition|
-          next unless triple.item.next_sym && triple.item.next_sym == transition.next_sym
-          transition.to_state.kernels.each do |kernel|
-            next if kernel.rule != triple.item.rule
-            t = Triple.new(transition.to_state, kernel, triple.l)
-            queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
-          end
+        next_state_item = @transitions[[triple.state_item, triple.item.next_sym]]
+        if next_state_item
+          t = Triple.new(next_state_item.state, next_state_item.item, triple.l)
+          queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
         end
 
         # production step

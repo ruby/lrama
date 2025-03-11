@@ -592,14 +592,16 @@ RSpec.describe Lrama::Counterexamples do
           "expr: expr • opt_nl '+' expr  (rule 3)",
           "expr: expr opt_nl • '+' expr  (rule 3)",
           "expr: expr opt_nl '+' • expr  (rule 3)",
+          "expr: • expr opt_nl '+' expr  (rule 3)",
           "expr: expr • opt_nl '+' expr  (rule 3)",
           "opt_nl: •  (rule 6)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
-          0:  stmt                         "end of file"
+          0:  stmt                                            "end of file"
               1:  expr
-                  3: expr opt_nl  '+' expr
-                          6:   •
+                  3: expr opt_nl '+' expr
+                                     3: expr opt_nl  '+' expr
+                                             6:   •
         STR
       end
     end
