@@ -40,7 +40,7 @@ module Lrama
 
       # @rbs () -> Integer
       def number_of_rest_symbols
-        rhs.count - position
+        @number_of_rest_symbols ||= rhs.count - position
       end
 
       # @rbs () -> Grammar::Symbol
@@ -50,7 +50,7 @@ module Lrama
 
       # @rbs () -> Grammar::Symbol
       def next_next_sym
-        rhs[position + 1]
+        @next_next_sym ||= rhs[position + 1]
       end
 
       # @rbs () -> Grammar::Symbol

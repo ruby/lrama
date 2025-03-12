@@ -7,7 +7,9 @@ module Lrama
 
       attr_accessor alias_name: String?
 
-      attr_accessor number: Integer
+      attr_reader number: Integer
+
+      attr_accessor number_bitmap: Integer
 
       attr_accessor tag: Lexer::Token::Tag?
 
@@ -40,6 +42,9 @@ module Lrama
       # @rbs (id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?,
       #      ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
       def initialize: (id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?, ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
+
+      # @rbs (Integer) -> void
+      def number=: (Integer) -> void
 
       # @rbs () -> bool
       def term?: () -> bool

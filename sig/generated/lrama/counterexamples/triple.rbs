@@ -10,9 +10,9 @@ module Lrama
 
       attr_accessor itm: States::Item
 
-      attr_accessor l: Set[Grammar::Symbol]
+      attr_accessor l: Bitmap::bitmap
 
-      def initialize: (State s, States::Item itm, Set[Grammar::Symbol] l) -> void
+      def initialize: (State s, States::Item itm, Bitmap::bitmap l) -> void
 
       alias state s
 

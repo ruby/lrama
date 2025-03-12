@@ -10,9 +10,9 @@ module Lrama
       # @rbs!
       #   attr_accessor s: State
       #   attr_accessor itm: States::Item
-      #   attr_accessor l: Set[Grammar::Symbol]
+      #   attr_accessor l: Bitmap::bitmap
       #
-      #   def initialize: (State s, States::Item itm, Set[Grammar::Symbol] l) -> void
+      #   def initialize: (State s, States::Item itm, Bitmap::bitmap l) -> void
 
       alias :state :s
       alias :item :itm
@@ -25,7 +25,7 @@ module Lrama
 
       # @rbs () -> ::String
       def inspect
-        "#{state.inspect}. #{item.display_name}. #{l.map(&:id).map(&:s_value)}"
+        "#{state.inspect}. #{item.display_name}. #{l.to_s(2)}"
       end
       alias :to_s :inspect
     end

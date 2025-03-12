@@ -274,9 +274,10 @@ module Lrama
       queue = [] #: Array[[Triple, Array[Path::path]]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
+      conflict_term_bit = Bitmap::from_array([conflict_term.number])
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
       reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
-      start = Triple.new(start_state, start_state.kernels.first, Set.new([@states.eof_symbol]))
+      start = Triple.new(start_state, start_state.kernels.first, Bitmap::from_array([@states.eof_symbol.number]))
 
       queue << [start, [StartPath.new(start.state_item)]]
 
@@ -285,7 +286,7 @@ module Lrama
         visited[triple] = true
 
         # Found
-        if triple.state == conflict_state && triple.item == conflict_reduce_item && triple.l.include?(conflict_term)
+        if (triple.state == conflict_state) && (triple.item == conflict_reduce_item) && (triple.l & conflict_term_bit != 0)
           return paths
         end
 
@@ -311,7 +312,7 @@ module Lrama
       return nil
     end
 
-    # @rbs (States::Item item, Set[Grammar::Symbol] current_l) -> Set[Grammar::Symbol]
+    # @rbs (States::Item item, Bitmap::bitmap current_l) -> Bitmap::bitmap
     def follow_l(item, current_l)
       # 1. follow_L (A -> X1 ... Xn-1 • Xn) = L
       # 2. follow_L (A -> X1 ... Xk • Xk+1 Xk+2 ... Xn) = {Xk+2} if Xk+2 is a terminal
@@ -321,11 +322,11 @@ module Lrama
       when item.number_of_rest_symbols == 1
         current_l
       when item.next_next_sym.term?
-        Set.new([item.next_next_sym])
+        item.next_next_sym.number_bitmap
       when !item.next_next_sym.nullable
-        item.next_next_sym.first_set
+        item.next_next_sym.first_set_bitmap
       else
-        item.next_next_sym.first_set + follow_l(item.new_by_next_position, current_l)
+        item.next_next_sym.first_set_bitmap | follow_l(item.new_by_next_position, current_l)
       end
     end
   end

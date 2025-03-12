@@ -12,7 +12,8 @@ module Lrama
     class Symbol
       attr_accessor :id #: Lexer::Token
       attr_accessor :alias_name #: String?
-      attr_accessor :number #: Integer
+      attr_reader :number #: Integer
+      attr_accessor :number_bitmap #: Integer
       attr_accessor :tag #: Lexer::Token::Tag?
       attr_accessor :token_id #: Integer
       attr_accessor :nullable #: bool
@@ -41,6 +42,12 @@ module Lrama
         @precedence = precedence
         @printer = printer
         @destructor = destructor
+      end
+
+      # @rbs (Integer) -> void
+      def number=(number)
+        @number = number
+        @number_bitmap = Bitmap::from_array([number])
       end
 
       # @rbs () -> bool
