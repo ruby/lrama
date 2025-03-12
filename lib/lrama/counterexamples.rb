@@ -277,7 +277,7 @@ module Lrama
       conflict_term_bit = Bitmap::from_array([conflict_term.number])
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
       reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
-      start = Triple.new(start_state, start_state.kernels.first, Bitmap::from_array([@states.eof_symbol.number]))
+      start = Triple.new(StateItem.new(start_state, start_state.kernels.first), Bitmap::from_array([@states.eof_symbol.number]))
 
       queue << [start, [StartPath.new(start.state_item)]]
 
@@ -294,7 +294,7 @@ module Lrama
         next_state_item = @transitions[[triple.state_item, triple.item.next_sym]]
         if next_state_item && reachable.include?(next_state_item)
           # @type var t: Triple
-          t = Triple.new(next_state_item.state, next_state_item.item, triple.l)
+          t = Triple.new(next_state_item, triple.l)
           queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
         end
 
@@ -304,7 +304,7 @@ module Lrama
 
           l = follow_l(triple.item, triple.l)
           # @type var t: Triple
-          t = Triple.new(triple.state, item, l)
+          t = Triple.new(StateItem.new(triple.state, item), l)
           queue << [t, paths + [ProductionPath.new(triple.state_item, t.state_item)]]
         end
       end
