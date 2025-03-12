@@ -37,13 +37,6 @@ module Lrama
         end
       end
 
-      # @rbs () -> bool
-      def only_always_or_never?
-        @contribution_matrix.all? {|_, contributions|
-          contributions.nil? || contributions.all? {|_, contributed| !contributed }
-        }
-      end
-
       # Definition 3.42 (dominant_contribution)
       #
       # @rbs (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Action::Shift | Action::Reduce]?

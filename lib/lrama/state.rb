@@ -158,9 +158,7 @@ module Lrama
     def update_transition(transition, next_state)
       set_items_to_state(transition.to_items, next_state)
       next_state.append_predecessor(self)
-      clear_relations_cache
       clear_transitions_cache
-      predecessors.each {|p| p.clear_relations_cache }
     end
 
     # @rbs () -> void
@@ -168,12 +166,6 @@ module Lrama
       @nterm_transitions = nil
       @term_transitions = nil
       @transitions = nil
-    end
-
-    # @rbs () -> void
-    def clear_relations_cache
-      @internal_dependencies.clear
-      @successor_dependencies.clear
     end
 
     # @rbs () -> Array[Action::Shift]
@@ -276,7 +268,7 @@ module Lrama
     #
     # @rbs () -> lookahead_set
     def lookahead_set_filters
-      kernels.map {|kernel|
+      @lookahead_set_filters ||= kernels.map {|kernel|
         [kernel, @lalr_isocore.annotation_list.select {|annotation| annotation.contributed?(kernel) }.map(&:token)]
       }.to_h
     end
@@ -317,11 +309,7 @@ module Lrama
             [action, action.rule.empty_rule? ? lhs_contributions(action.rule.lhs, token) : kernels.map {|k| [k, k.end_of_rule?] }.to_h]
           end
         }.to_h
-        if (annotation = @annotation_list.find {|a| a.state == self && a.token == token && a.actions == actions })
-          annotation.merge_matrix(contribution_matrix)
-        else
-          @annotation_list << InadequacyAnnotation.new(self, token, actions, contribution_matrix)
-        end
+        @annotation_list << InadequacyAnnotation.new(self, token, actions, contribution_matrix)
       }
     end
 
@@ -330,8 +318,6 @@ module Lrama
     # @rbs (State predecessor) -> void
     def annotate_predecessor(predecessor)
       propagating_list = annotation_list.map {|annotation|
-        next nil if annotation.only_always_or_never?
-
         contribution_matrix = annotation.contribution_matrix.map {|action, contributions|
           if contributions.nil?
             [action, nil]
@@ -348,6 +334,7 @@ module Lrama
             [action, cs]
           end
         }.to_h
+        next nil if contribution_matrix.all? {|_, contributions| contributions.nil? || contributions.all? {|_, contributed| !contributed } }
 
         InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
       }.compact

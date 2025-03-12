@@ -757,20 +757,12 @@ module Lrama
         new_state.lookaheads_recomputed = true
         new_state.item_lookahead_set = propagating_lookaheads
         state.update_transition(transition, new_state)
-        compute_follow_kernel_items
-        compute_always_follows
-        compute_goto_follows
       elsif(!s.lookaheads_recomputed)
         s.lookaheads_recomputed = true
         s.item_lookahead_set = propagating_lookaheads
       else
         merge_lookaheads(s, propagating_lookaheads)
-        if state.items_to_state[transition.to_items].id != s.id
-          state.update_transition(transition, s)
-          compute_follow_kernel_items
-          compute_always_follows
-          compute_goto_follows
-        end
+        state.update_transition(transition, s) if state.items_to_state[transition.to_items].id != s.id
       end
     end
 

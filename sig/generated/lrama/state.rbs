@@ -110,9 +110,6 @@ module Lrama
     # @rbs () -> void
     def clear_transitions_cache: () -> void
 
-    # @rbs () -> void
-    def clear_relations_cache: () -> void
-
     # @rbs () -> Array[Action::Shift]
     def selected_term_transitions: () -> Array[Action::Shift]
 

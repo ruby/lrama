@@ -22,9 +22,6 @@ module Lrama
       # @rbs (Array[Hash[Action::Shift | Action::Reduce, Hash[States::Item, bool]]] another_matrixes) -> void
       def merge_matrix: (Array[Hash[Action::Shift | Action::Reduce, Hash[States::Item, bool]]] another_matrixes) -> void
 
-      # @rbs () -> bool
-      def only_always_or_never?: () -> bool
-
       # Definition 3.42 (dominant_contribution)
       #
       # @rbs (Hash[States::Item, Array[Grammar::Symbol]] lookaheads) -> Array[Action::Shift | Action::Reduce]?
