@@ -6,7 +6,7 @@ module Lrama
     class StartPath < Path
       # @rbs (StateItem to_state_item) -> void
       def initialize(to_state_item)
-        super nil, to_state_item
+        super nil, to_state_item, nil
       end
 
       # @rbs () -> :start

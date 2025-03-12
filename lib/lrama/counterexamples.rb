@@ -239,9 +239,9 @@ module Lrama
         when prev_si.nil?
           StartPath.new(si)
         when si.item.beginning_of_rule?
-          ProductionPath.new(prev_si, si)
+          ProductionPath.new(prev_si, si, nil)
         else
-          TransitionPath.new(prev_si, si)
+          TransitionPath.new(prev_si, si, nil)
         end
       end
     end
@@ -271,7 +271,7 @@ module Lrama
 
     # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
-      queue = [] #: Array[[Triple, Array[Path::path]]]
+      queue = [] #: Array[[Triple, Path::path]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
       conflict_term_bit = Bitmap::from_array([conflict_term.number])
@@ -279,15 +279,21 @@ module Lrama
       reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
       start = Triple.new(StateItem.new(start_state, start_state.kernels.first), Bitmap::from_array([@states.eof_symbol.number]))
 
-      queue << [start, [StartPath.new(start.state_item)]]
+      queue << [start, StartPath.new(start.state_item)]
 
-      while (triple, paths = queue.shift)
+      while (triple, path = queue.shift)
         next if visited[triple]
         visited[triple] = true
 
         # Found
         if (triple.state == conflict_state) && (triple.item == conflict_reduce_item) && (triple.l & conflict_term_bit != 0)
-          return paths
+          paths = [path]
+
+          while (path = path.parent)
+            paths << path
+          end
+
+          return paths.reverse
         end
 
         # transition
@@ -295,7 +301,7 @@ module Lrama
         if next_state_item && reachable.include?(next_state_item)
           # @type var t: Triple
           t = Triple.new(next_state_item, triple.l)
-          queue << [t, paths + [TransitionPath.new(triple.state_item, t.state_item)]]
+          queue << [t, TransitionPath.new(triple.state_item, t.state_item, path)]
         end
 
         # production step
@@ -305,7 +311,7 @@ module Lrama
           l = follow_l(triple.item, triple.l)
           # @type var t: Triple
           t = Triple.new(StateItem.new(triple.state, item), l)
-          queue << [t, paths + [ProductionPath.new(triple.state_item, t.state_item)]]
+          queue << [t, ProductionPath.new(triple.state_item, t.state_item, path)]
         end
       end
 

@@ -10,10 +10,13 @@ module Lrama
       #   @from_state_item: StateItem?
       #   @to_state_item: StateItem
 
-      # @rbs (StateItem? from_state_item, StateItem to_state_item) -> void
-      def initialize(from_state_item, to_state_item)
+      attr_reader :parent #: path?
+
+      # @rbs (StateItem? from_state_item, StateItem to_state_item, path? parent) -> void
+      def initialize(from_state_item, to_state_item, parent)
         @from_state_item = from_state_item
         @to_state_item = to_state_item
+        @parent = parent
       end
 
       # @rbs () -> StateItem?
