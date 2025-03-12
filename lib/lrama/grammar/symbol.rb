@@ -1,3 +1,4 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 # Symbol is both of nterm and term
@@ -9,11 +10,26 @@
 module Lrama
   class Grammar
     class Symbol
-      attr_accessor :id, :alias_name, :tag, :number, :token_id, :nullable, :precedence,
-                    :printer, :destructor, :error_token, :first_set, :first_set_bitmap
-      attr_reader :term
-      attr_writer :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol
+      attr_accessor :id #: Lexer::Token
+      attr_accessor :alias_name #: String?
+      attr_accessor :number #: Integer
+      attr_accessor :tag #: Lexer::Token::Tag?
+      attr_accessor :token_id #: Integer
+      attr_accessor :nullable #: bool
+      attr_accessor :precedence #: Precedence?
+      attr_accessor :printer #: Printer?
+      attr_accessor :destructor #: Destructor?
+      attr_accessor :error_token #: ErrorToken
+      attr_accessor :first_set #: Set[Grammar::Symbol]
+      attr_accessor :first_set_bitmap #: Integer
+      attr_reader :term #: bool
+      attr_writer :eof_symbol #: bool
+      attr_writer :error_symbol #: bool
+      attr_writer :undef_symbol #: bool
+      attr_writer :accept_symbol #: bool
 
+      # @rbs (id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?,
+      #      ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
       def initialize(id:, term:, alias_name: nil, number: nil, tag: nil, token_id: nil, nullable: nil, precedence: nil, printer: nil, destructor: nil)
         @id = id
         @alias_name = alias_name
@@ -27,30 +43,37 @@ module Lrama
         @destructor = destructor
       end
 
+      # @rbs () -> bool
       def term?
         term
       end
 
+      # @rbs () -> bool
       def nterm?
         !term
       end
 
+      # @rbs () -> bool
       def eof_symbol?
         !!@eof_symbol
       end
 
+      # @rbs () -> bool
       def error_symbol?
         !!@error_symbol
       end
 
+      # @rbs () -> bool
       def undef_symbol?
         !!@undef_symbol
       end
 
+      # @rbs () -> bool
       def accept_symbol?
         !!@accept_symbol
       end
 
+      # @rbs () -> String
       def display_name
         alias_name || id.s_value
       end
@@ -59,6 +82,7 @@ module Lrama
       #
       # See: b4_symbol_kind_base
       # @type var name: String
+      # @rbs () -> String
       def enum_name
         case
         when accept_symbol?
@@ -81,6 +105,8 @@ module Lrama
       end
 
       # comment for yysymbol_kind_t
+      #
+      # @rbs () -> String?
       def comment
         case
         when accept_symbol?
