@@ -13,7 +13,7 @@ module Lrama
       attr_accessor :id #: Lexer::Token
       attr_accessor :alias_name #: String?
       attr_reader :number #: Integer
-      attr_accessor :number_bitmap #: Integer
+      attr_accessor :number_bitmap #: Bitmap::bitmap
       attr_accessor :tag #: Lexer::Token::Tag?
       attr_accessor :token_id #: Integer
       attr_accessor :nullable #: bool
@@ -22,7 +22,7 @@ module Lrama
       attr_accessor :destructor #: Destructor?
       attr_accessor :error_token #: ErrorToken
       attr_accessor :first_set #: Set[Grammar::Symbol]
-      attr_accessor :first_set_bitmap #: Integer
+      attr_accessor :first_set_bitmap #: Bitmap::bitmap
       attr_reader :term #: bool
       attr_writer :eof_symbol #: bool
       attr_writer :error_symbol #: bool

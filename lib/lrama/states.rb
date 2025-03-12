@@ -15,7 +15,6 @@ module Lrama
     #       Move these type declarations above instance variable definitions, once it's supported.
     #
     # @rbs!
-    #   type bitmap = Integer
     #   type state_id = Integer
     #   type nterm_id = Integer
     #   type rule_id = Integer
@@ -29,13 +28,13 @@ module Lrama
     #   @grammar: Grammar
     #   @tracer: Tracer
     #   @states: Array[State]
-    #   @direct_read_sets: Hash[transition, bitmap]
+    #   @direct_read_sets: Hash[transition, Bitmap::bitmap]
     #   @reads_relation: Hash[transition, Array[transition]]
-    #   @read_sets: Hash[transition, bitmap]
+    #   @read_sets: Hash[transition, Bitmap::bitmap]
     #   @includes_relation: Hash[transition, Array[transition]]
     #   @lookback_relation: Hash[reduce, Array[transition]]
-    #   @follow_sets: Hash[reduce, bitmap]
-    #   @la: Hash[reduce, bitmap]
+    #   @follow_sets: Hash[reduce, Bitmap::bitmap]
+    #   @la: Hash[reduce, Bitmap::bitmap]
 
     extend Forwardable
     include Lrama::Tracer::Duration
@@ -464,7 +463,7 @@ module Lrama
       end
     end
 
-    # @rbs (bitmap bit) -> Array[Grammar::Symbol]
+    # @rbs (Bitmap::bitmap bit) -> Array[Grammar::Symbol]
     def bitmap_to_terms(bit)
       ary = Bitmap.to_array(bit)
       ary.map do |i|
@@ -625,7 +624,7 @@ module Lrama
       relations
     end
 
-    # @rbs () -> Hash[State::Action::Goto, bitmap]
+    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
     def compute_goto_bitmaps
       nterm_transitions.map {|goto|
         bools = goto.from_state.kernels.map.with_index {|kernel, i| i if kernel.next_sym == goto.next_sym && kernel.symbols_after_transition.all?(&:nullable) }.compact
@@ -658,7 +657,7 @@ module Lrama
       relations
     end
 
-    # @rbs () -> Hash[State::Action::Goto, bitmap]
+    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
     def compute_transition_bitmaps
       nterm_transitions.map {|goto|
         [goto, Bitmap.from_array(goto.to_state.term_transitions.map {|shift| shift.next_sym.number })]
@@ -690,7 +689,7 @@ module Lrama
       relations
     end
 
-    # @rbs () -> Hash[State::Action::Goto, bitmap]
+    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
     def compute_always_follows_bitmaps
       nterm_transitions.map {|goto|
         [goto, Bitmap.from_array(goto.from_state.always_follows[goto].map(&:number))]

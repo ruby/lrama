@@ -9,7 +9,7 @@ module Lrama
 
       attr_reader number: Integer
 
-      attr_accessor number_bitmap: Integer
+      attr_accessor number_bitmap: Bitmap::bitmap
 
       attr_accessor tag: Lexer::Token::Tag?
 
@@ -27,7 +27,7 @@ module Lrama
 
       attr_accessor first_set: Set[Grammar::Symbol]
 
-      attr_accessor first_set_bitmap: Integer
+      attr_accessor first_set_bitmap: Bitmap::bitmap
 
       attr_reader term: bool
 
