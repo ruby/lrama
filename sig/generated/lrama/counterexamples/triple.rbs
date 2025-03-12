@@ -2,23 +2,23 @@
 
 module Lrama
   class Counterexamples
-    # s: state
-    # itm: item within s
-    # l: precise lookahead set
     class Triple
-      attr_accessor s: State
+      attr_reader precise_lookahead_set: Bitmap::bitmap
 
-      attr_accessor itm: States::Item
+      alias l precise_lookahead_set
 
-      attr_accessor l: Bitmap::bitmap
+      # @rbs (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> void
+      def initialize: (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> void
 
-      def initialize: (State s, States::Item itm, Bitmap::bitmap l) -> void
+      # @rbs () -> State
+      def state: () -> State
 
-      alias state s
+      alias s state
 
-      alias item itm
+      # @rbs () -> States::Item
+      def item: () -> States::Item
 
-      alias precise_lookahead_set l
+      alias itm item
 
       # @rbs () -> StateItem
       def state_item: () -> StateItem
