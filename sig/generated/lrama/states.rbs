@@ -6,8 +6,6 @@ module Lrama
   # "Efficient Computation of LALR(1) Look-Ahead Sets"
   #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
-    type bitmap = Integer
-
     type state_id = Integer
 
     type nterm_id = Integer
@@ -30,19 +28,19 @@ module Lrama
 
     @states: Array[State]
 
-    @direct_read_sets: Hash[transition, bitmap]
+    @direct_read_sets: Hash[transition, Bitmap::bitmap]
 
     @reads_relation: Hash[transition, Array[transition]]
 
-    @read_sets: Hash[transition, bitmap]
+    @read_sets: Hash[transition, Bitmap::bitmap]
 
     @includes_relation: Hash[transition, Array[transition]]
 
     @lookback_relation: Hash[reduce, Array[transition]]
 
-    @follow_sets: Hash[reduce, bitmap]
+    @follow_sets: Hash[reduce, Bitmap::bitmap]
 
-    @la: Hash[reduce, bitmap]
+    @la: Hash[reduce, Bitmap::bitmap]
 
     extend Forwardable
 
@@ -133,8 +131,8 @@ module Lrama
     # @rbs () -> void
     def compute_look_ahead_sets: () -> void
 
-    # @rbs (bitmap bit) -> Array[Grammar::Symbol]
-    def bitmap_to_terms: (bitmap bit) -> Array[Grammar::Symbol]
+    # @rbs (Bitmap::bitmap bit) -> Array[Grammar::Symbol]
+    def bitmap_to_terms: (Bitmap::bitmap bit) -> Array[Grammar::Symbol]
 
     # @rbs () -> void
     def compute_conflicts: () -> void
@@ -161,8 +159,8 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_internal_relation: () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    # @rbs () -> Hash[State::Action::Goto, bitmap]
-    def compute_goto_bitmaps: () -> Hash[State::Action::Goto, bitmap]
+    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
+    def compute_goto_bitmaps: () -> Hash[State::Action::Goto, Bitmap::bitmap]
 
     # Definition 3.20 (always_follows, one closure)
     #
@@ -172,8 +170,8 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_successor_or_internal_relation: () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    # @rbs () -> Hash[State::Action::Goto, bitmap]
-    def compute_transition_bitmaps: () -> Hash[State::Action::Goto, bitmap]
+    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
+    def compute_transition_bitmaps: () -> Hash[State::Action::Goto, Bitmap::bitmap]
 
     # Definition 3.24 (goto_follows, via always_follows)
     #
@@ -183,8 +181,8 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_internal_or_predecessor_dependencies: () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    # @rbs () -> Hash[State::Action::Goto, bitmap]
-    def compute_always_follows_bitmaps: () -> Hash[State::Action::Goto, bitmap]
+    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
+    def compute_always_follows_bitmaps: () -> Hash[State::Action::Goto, Bitmap::bitmap]
 
     # @rbs () -> void
     def split_states: () -> void
