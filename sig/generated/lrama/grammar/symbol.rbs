@@ -1,37 +1,77 @@
+# Generated from lib/lrama/grammar/symbol.rb with RBS::Inline
+
 module Lrama
   class Grammar
     class Symbol
       attr_accessor id: Lexer::Token
+
       attr_accessor alias_name: String?
+
       attr_accessor number: Integer
+
       attr_accessor tag: Lexer::Token::Tag?
-      attr_accessor term: bool
+
       attr_accessor token_id: Integer
+
       attr_accessor nullable: bool
+
       attr_accessor precedence: Precedence?
+
       attr_accessor printer: Printer?
+
       attr_accessor destructor: Destructor?
+
       attr_accessor error_token: ErrorToken
 
       attr_accessor first_set: Set[Grammar::Symbol]
+
       attr_accessor first_set_bitmap: Integer
+
+      attr_reader term: bool
+
       attr_writer eof_symbol: bool
+
       attr_writer error_symbol: bool
+
       attr_writer undef_symbol: bool
+
       attr_writer accept_symbol: bool
 
-      def initialize: (
-          id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?,
-          ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
+      # @rbs (id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?,
+      #      ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
+      def initialize: (id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?, ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
 
+      # @rbs () -> bool
       def term?: () -> bool
+
+      # @rbs () -> bool
       def nterm?: () -> bool
+
+      # @rbs () -> bool
       def eof_symbol?: () -> bool
+
+      # @rbs () -> bool
       def error_symbol?: () -> bool
+
+      # @rbs () -> bool
       def undef_symbol?: () -> bool
+
+      # @rbs () -> bool
       def accept_symbol?: () -> bool
+
+      # @rbs () -> String
       def display_name: () -> String
+
+      # name for yysymbol_kind_t
+      #
+      # See: b4_symbol_kind_base
+      # @type var name: String
+      # @rbs () -> String
       def enum_name: () -> String
+
+      # comment for yysymbol_kind_t
+      #
+      # @rbs () -> String?
       def comment: () -> String?
     end
   end
