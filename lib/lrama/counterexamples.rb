@@ -271,6 +271,9 @@ module Lrama
 
     # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
+      time1 = Time.now.to_f
+      iterate_count = 0
+
       queue = [] #: Array[[Triple, Path::path]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
@@ -284,6 +287,7 @@ module Lrama
       while (triple, path = queue.shift)
         next if visited[triple]
         visited[triple] = true
+        iterate_count += 1
 
         # Found
         if (triple.state == conflict_state) && (triple.item == conflict_reduce_item) && (triple.l & conflict_term_bit != 0)
@@ -291,6 +295,11 @@ module Lrama
 
           while (path = path.parent)
             paths << path
+          end
+
+          if Tracer::Duration.enabled?
+            time2 = Time.now.to_f
+            STDERR.puts sprintf("  %s %10.5f s", "shortest_path #{iterate_count} iteration", time2 - time1)
           end
 
           return paths.reverse
