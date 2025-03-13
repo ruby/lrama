@@ -14,6 +14,19 @@ module Lrama
         @precise_lookahead_set = precise_lookahead_set
       end
 
+      # @rbs () -> Integer
+      def hash
+        [state.id, item.hash, @precise_lookahead_set].hash
+      end
+
+      # @rbs (Triple other) -> bool
+      def eql?(other)
+        self.class == other.class &&
+        self.state.id == other.state.id &&
+        self.item == other.item &&
+        self.precise_lookahead_set == other.precise_lookahead_set
+      end
+
       # @rbs () -> State
       def state
         @state_item.state
