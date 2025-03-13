@@ -27,7 +27,7 @@ module Lrama
         time2 = Time.now.to_f
 
         if Duration.enabled?
-          puts sprintf("%s %10.5f s", method_name, time2 - time1)
+          STDERR.puts sprintf("%s %10.5f s", method_name, time2 - time1)
         end
 
         return result
