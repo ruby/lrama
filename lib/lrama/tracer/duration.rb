@@ -20,14 +20,14 @@ module Lrama
         !!@_report_duration_enabled
       end
 
-      # @rbs [T] (_ToS method_name) { -> T } -> T
-      def report_duration(method_name)
+      # @rbs [T] (_ToS message) { -> T } -> T
+      def report_duration(message)
         time1 = Time.now.to_f
         result = yield
         time2 = Time.now.to_f
 
         if Duration.enabled?
-          STDERR.puts sprintf("%s %10.5f s", method_name, time2 - time1)
+          STDERR.puts sprintf("%s %10.5f s", message, time2 - time1)
         end
 
         return result

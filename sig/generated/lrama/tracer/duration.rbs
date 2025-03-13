@@ -11,8 +11,8 @@ module Lrama
       # @rbs () -> bool
       def self.enabled?: () -> bool
 
-      # @rbs [T] (_ToS method_name) { -> T } -> T
-      def report_duration: [T] (_ToS method_name) { () -> T } -> T
+      # @rbs [T] (_ToS message) { -> T } -> T
+      def report_duration: [T] (_ToS message) { () -> T } -> T
     end
   end
 end
