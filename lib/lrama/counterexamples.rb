@@ -285,8 +285,6 @@ module Lrama
       queue << [start, StartPath.new(start.state_item)]
 
       while (triple, path = queue.shift)
-        next if visited[triple]
-        visited[triple] = true
         iterate_count += 1
 
         # Found
@@ -310,7 +308,10 @@ module Lrama
         if next_state_item && reachable.include?(next_state_item)
           # @type var t: Triple
           t = Triple.new(next_state_item, triple.l)
-          queue << [t, TransitionPath.new(triple.state_item, t.state_item, path)]
+          unless visited[t]
+            visited[t] = true
+            queue << [t, TransitionPath.new(triple.state_item, t.state_item, path)]
+          end
         end
 
         # production step
@@ -320,7 +321,10 @@ module Lrama
           l = follow_l(triple.item, triple.l)
           # @type var t: Triple
           t = Triple.new(StateItem.new(triple.state, item), l)
-          queue << [t, ProductionPath.new(triple.state_item, t.state_item, path)]
+          unless visited[t]
+            visited[t] = true
+            queue << [t, ProductionPath.new(triple.state_item, t.state_item, path)]
+          end
         end
       end
 
