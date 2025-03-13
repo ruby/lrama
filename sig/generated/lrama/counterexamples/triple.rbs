@@ -10,6 +10,12 @@ module Lrama
       # @rbs (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> void
       def initialize: (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> void
 
+      # @rbs () -> Integer
+      def hash: () -> Integer
+
+      # @rbs (Triple other) -> bool
+      def eql?: (Triple other) -> bool
+
       # @rbs () -> State
       def state: () -> State
 
