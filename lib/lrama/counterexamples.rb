@@ -142,11 +142,6 @@ module Lrama
 
     # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
     def find_shift_conflict_shortest_path(reduce_state_items, conflict_state, conflict_item)
-      find_shift_conflict_shortest_state_items(reduce_state_items, conflict_state, conflict_item)
-    end
-
-    # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
-    def find_shift_conflict_shortest_state_items(reduce_state_items, conflict_state, conflict_item)
       target_state_item = StateItem.new(conflict_state, conflict_item)
       result = [target_state_item]
       reversed_state_items = reduce_state_items.to_a.reverse

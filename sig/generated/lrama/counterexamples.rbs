@@ -46,9 +46,6 @@ module Lrama
     # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
     def find_shift_conflict_shortest_path: (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
 
-    # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
-    def find_shift_conflict_shortest_state_items: (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
-
     # @rbs (StateItem target) -> Set[StateItem]
     def reachable_state_items: (StateItem target) -> Set[StateItem]
 
