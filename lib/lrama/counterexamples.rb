@@ -277,10 +277,10 @@ module Lrama
       queue = [] #: Array[[Triple, Path::path]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
-      conflict_term_bit = Bitmap::from_array([conflict_term.number])
+      conflict_term_bit = Bitmap::from_integer(conflict_term.number)
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
       reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
-      start = Triple.new(StateItem.new(start_state, start_state.kernels.first), Bitmap::from_array([@states.eof_symbol.number]))
+      start = Triple.new(StateItem.new(start_state, start_state.kernels.first), Bitmap::from_integer(@states.eof_symbol.number))
 
       queue << [start, StartPath.new(start.state_item)]
 
