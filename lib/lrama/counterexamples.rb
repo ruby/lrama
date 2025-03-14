@@ -290,11 +290,12 @@ module Lrama
 
         # production step
         @productions[triple.state_item]&.each do |item|
-          next unless reachable.include?(StateItem.new(triple.state, item))
+          si = StateItem.new(triple.state, item)
+          next unless reachable.include?(si)
 
           l = follow_l(triple.item, triple.l)
           # @type var t: Triple
-          t = Triple.new(StateItem.new(triple.state, item), l)
+          t = Triple.new(si, l)
           unless visited[t]
             visited[t] = true
             queue << [t, Path.new(t.state_item, path)]
