@@ -7,6 +7,9 @@ module Lrama
     # @rbs (Array[Integer] ary) -> bitmap
     def self.from_array: (Array[Integer] ary) -> bitmap
 
+    # @rbs (Integer int) -> bitmap
+    def self.from_integer: (Integer int) -> bitmap
+
     # @rbs (bitmap int) -> Array[Integer]
     def self.to_array: (bitmap int) -> Array[Integer]
 

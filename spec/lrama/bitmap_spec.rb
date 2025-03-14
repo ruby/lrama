@@ -11,6 +11,18 @@ RSpec.describe Lrama::Bitmap do
     end
   end
 
+  describe ".from_integer" do
+    it "converts integer into bitmap integer" do
+      expect(Lrama::Bitmap.from_integer(0)).to eq(0b1)
+      expect(Lrama::Bitmap.from_integer(1)).to eq(0b10)
+      expect(Lrama::Bitmap.from_integer(2)).to eq(0b100)
+      expect(Lrama::Bitmap.from_integer(3)).to eq(0b1000)
+      expect(Lrama::Bitmap.from_integer(4)).to eq(0b10000)
+      expect(Lrama::Bitmap.from_integer(5)).to eq(0b100000)
+      expect(Lrama::Bitmap.from_integer(6)).to eq(0b1000000)
+    end
+  end
+
   describe ".to_array" do
     it "converts bitmap integer into array of integer" do
       expect(Lrama::Bitmap.to_array(0b0)).to eq([])

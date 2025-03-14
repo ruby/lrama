@@ -47,7 +47,7 @@ module Lrama
       # @rbs (Integer) -> void
       def number=(number)
         @number = number
-        @number_bitmap = Bitmap::from_array([number])
+        @number_bitmap = Bitmap::from_integer(number)
       end
 
       # @rbs () -> bool

@@ -17,6 +17,11 @@ module Lrama
       bit
     end
 
+    # @rbs (Integer int) -> bitmap
+    def self.from_integer(int)
+      1 << int
+    end
+
     # @rbs (bitmap int) -> Array[Integer]
     def self.to_array(int)
       a = [] #: Array[Integer]
