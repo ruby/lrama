@@ -6,10 +6,7 @@ require "set"
 require_relative "counterexamples/derivation"
 require_relative "counterexamples/example"
 require_relative "counterexamples/path"
-require_relative "counterexamples/production_path"
-require_relative "counterexamples/start_path"
 require_relative "counterexamples/state_item"
-require_relative "counterexamples/transition_path"
 require_relative "counterexamples/triple"
 
 module Lrama
@@ -140,40 +137,31 @@ module Lrama
       Example.new(path1, path2, conflict, conflict_symbol, self)
     end
 
-    # @rbs (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> ::Array[Path::path]
-    def find_shift_conflict_shortest_path(reduce_path, conflict_state, conflict_item)
-      state_items = find_shift_conflict_shortest_state_items(reduce_path, conflict_state, conflict_item)
-      build_paths_from_state_items(state_items)
-    end
-
-    # @rbs (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> Array[StateItem]
-    def find_shift_conflict_shortest_state_items(reduce_path, conflict_state, conflict_item)
+    # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
+    def find_shift_conflict_shortest_path(reduce_state_items, conflict_state, conflict_item)
       target_state_item = StateItem.new(conflict_state, conflict_item)
       result = [target_state_item]
-      reversed_reduce_path = reduce_path.to_a.reverse
+      reversed_state_items = reduce_state_items.to_a.reverse
       # Index for state_item
       i = 0
 
-      while (path = reversed_reduce_path[i])
+      while (state_item = reversed_state_items[i])
         # Index for prev_state_item
         j = i + 1
         _j = j
 
-        while (prev_path = reversed_reduce_path[j])
-          if prev_path.production?
+        while (prev_state_item = reversed_state_items[j])
+          if prev_state_item.type == :production
             j += 1
           else
             break
           end
         end
 
-        state_item = path.to
-        prev_state_item = prev_path&.to
-
         if target_state_item == state_item || target_state_item.item.start_item?
           result.concat(
-            reversed_reduce_path[_j..-1] #: Array[Path::path]
-              .map(&:to))
+            reversed_state_items[_j..-1] #: Array[StateItem]
+          )
           break
         end
 
@@ -232,20 +220,6 @@ module Lrama
       result.reverse
     end
 
-    # @rbs (Array[StateItem] state_items) -> ::Array[Path::path]
-    def build_paths_from_state_items(state_items)
-      state_items.zip([nil] + state_items).map do |si, prev_si|
-        case
-        when prev_si.nil?
-          StartPath.new(si)
-        when si.item.beginning_of_rule?
-          ProductionPath.new(si, nil)
-        else
-          TransitionPath.new(si, nil)
-        end
-      end
-    end
-
     # @rbs (StateItem target) -> Set[StateItem]
     def reachable_state_items(target)
       result = Set.new
@@ -269,12 +243,12 @@ module Lrama
       result
     end
 
-    # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
+    # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StateItem]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
       time1 = Time.now.to_f
       iterate_count = 0
 
-      queue = [] #: Array[[Triple, Path::path]]
+      queue = [] #: Array[[Triple, Path]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
       conflict_term_bit = Bitmap::from_integer(conflict_term.number)
@@ -282,17 +256,17 @@ module Lrama
       reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
       start = Triple.new(StateItem.new(start_state, start_state.kernels.first), Bitmap::from_integer(@states.eof_symbol.number))
 
-      queue << [start, StartPath.new(start.state_item)]
+      queue << [start, Path.new(start.state_item, nil)]
 
       while (triple, path = queue.shift)
         iterate_count += 1
 
         # Found
         if (triple.state == conflict_state) && (triple.item == conflict_reduce_item) && (triple.l & conflict_term_bit != 0)
-          paths = [path]
+          state_items = [path.state_item]
 
           while (path = path.parent)
-            paths << path
+            state_items << path.state_item
           end
 
           if Tracer::Duration.enabled?
@@ -300,7 +274,7 @@ module Lrama
             STDERR.puts sprintf("  %s %10.5f s", "shortest_path #{iterate_count} iteration", time2 - time1)
           end
 
-          return paths.reverse
+          return state_items.reverse
         end
 
         # transition
@@ -310,20 +284,21 @@ module Lrama
           t = Triple.new(next_state_item, triple.l)
           unless visited[t]
             visited[t] = true
-            queue << [t, TransitionPath.new(t.state_item, path)]
+            queue << [t, Path.new(t.state_item, path)]
           end
         end
 
         # production step
         @productions[triple.state_item]&.each do |item|
-          next unless reachable.include?(StateItem.new(triple.state, item))
+          si = StateItem.new(triple.state, item)
+          next unless reachable.include?(si)
 
           l = follow_l(triple.item, triple.l)
           # @type var t: Triple
-          t = Triple.new(StateItem.new(triple.state, item), l)
+          t = Triple.new(si, l)
           unless visited[t]
             visited[t] = true
-            queue << [t, ProductionPath.new(t.state_item, path)]
+            queue << [t, Path.new(t.state_item, path)]
           end
         end
       end

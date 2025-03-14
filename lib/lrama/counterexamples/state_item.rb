@@ -9,6 +9,18 @@ module Lrama
       #   attr_accessor item: States::Item
       #
       #   def initialize: (State state, States::Item item) -> void
+
+      # @rbs () -> (:start | :transition | :production)
+      def type
+        case
+        when item.start_item?
+          :start
+        when item.beginning_of_rule?
+          :production
+        else
+          :transition
+        end
+      end
     end
   end
 end
