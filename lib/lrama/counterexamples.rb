@@ -6,10 +6,7 @@ require "set"
 require_relative "counterexamples/derivation"
 require_relative "counterexamples/example"
 require_relative "counterexamples/path"
-require_relative "counterexamples/production_path"
-require_relative "counterexamples/start_path"
 require_relative "counterexamples/state_item"
-require_relative "counterexamples/transition_path"
 require_relative "counterexamples/triple"
 
 module Lrama
@@ -251,7 +248,7 @@ module Lrama
       time1 = Time.now.to_f
       iterate_count = 0
 
-      queue = [] #: Array[[Triple, Path::path]]
+      queue = [] #: Array[[Triple, Path]]
       visited = {} #: Hash[Triple, true]
       start_state = @states.states.first #: Lrama::State
       conflict_term_bit = Bitmap::from_integer(conflict_term.number)
@@ -259,7 +256,7 @@ module Lrama
       reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
       start = Triple.new(StateItem.new(start_state, start_state.kernels.first), Bitmap::from_integer(@states.eof_symbol.number))
 
-      queue << [start, StartPath.new(start.state_item)]
+      queue << [start, Path.new(start.state_item, nil)]
 
       while (triple, path = queue.shift)
         iterate_count += 1
@@ -287,7 +284,7 @@ module Lrama
           t = Triple.new(next_state_item, triple.l)
           unless visited[t]
             visited[t] = true
-            queue << [t, TransitionPath.new(t.state_item, path)]
+            queue << [t, Path.new(t.state_item, path)]
           end
         end
 
@@ -300,7 +297,7 @@ module Lrama
           t = Triple.new(StateItem.new(triple.state, item), l)
           unless visited[t]
             visited[t] = true
-            queue << [t, ProductionPath.new(t.state_item, path)]
+            queue << [t, Path.new(t.state_item, path)]
           end
         end
       end

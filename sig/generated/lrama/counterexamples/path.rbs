@@ -3,24 +3,21 @@
 module Lrama
   class Counterexamples
     class Path
-      type path = StartPath | TransitionPath | ProductionPath
-
       @state_item: StateItem
+
+      @parent: Path?
 
       attr_reader state_item: StateItem
 
-      attr_reader parent: path?
+      attr_reader parent: Path?
 
-      # @rbs (StateItem state_item, path? parent) -> void
-      def initialize: (StateItem state_item, path? parent) -> void
+      # @rbs (StateItem state_item, Path? parent) -> void
+      def initialize: (StateItem state_item, Path? parent) -> void
 
       # @rbs () -> ::String
       def to_s: () -> ::String
 
       alias inspect to_s
-
-      # @rbs () -> bot
-      def type: () -> bot
     end
   end
 end
