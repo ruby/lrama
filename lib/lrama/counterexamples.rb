@@ -167,13 +167,13 @@ module Lrama
           end
         end
 
-        state_item = path.to
-        prev_state_item = prev_path&.to
+        state_item = path.state_item
+        prev_state_item = prev_path&.state_item
 
         if target_state_item == state_item || target_state_item.item.start_item?
           result.concat(
             reversed_reduce_path[_j..-1] #: Array[Path::path]
-              .map(&:to))
+              .map(&:state_item))
           break
         end
 

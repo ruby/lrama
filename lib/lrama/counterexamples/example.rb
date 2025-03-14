@@ -40,12 +40,12 @@ module Lrama
 
       # @rbs () -> States::Item
       def path1_item
-        @path1.last.to.item
+        @path1.last.state_item.item
       end
 
       # @rbs () -> States::Item
       def path2_item
-        @path2.last.to.item
+        @path2.last.state_item.item
       end
 
       # @rbs () -> Derivation
@@ -65,10 +65,10 @@ module Lrama
         derivation = nil #: Derivation
         current = :production
         last_path = paths.last #: Path
-        lookahead_sym = last_path.to.item.end_of_rule? ? @conflict_symbol : nil
+        lookahead_sym = last_path.state_item.item.end_of_rule? ? @conflict_symbol : nil
 
         paths.reverse_each do |path|
-          item = path.to.item
+          item = path.state_item.item
 
           case current
           when :production
@@ -87,7 +87,7 @@ module Lrama
             end
 
             if lookahead_sym && item.next_next_sym && item.next_next_sym.first_set.include?(lookahead_sym)
-              state_item = @counterexamples.transitions[[path.to, item.next_sym]]
+              state_item = @counterexamples.transitions[[path.state_item, item.next_sym]]
               derivation2 = find_derivation_for_symbol(state_item, lookahead_sym)
               derivation.right = derivation2 # steep:ignore
               lookahead_sym = nil
