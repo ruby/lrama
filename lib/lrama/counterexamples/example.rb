@@ -8,23 +8,23 @@ module Lrama
       #       Move these type declarations above instance variable definitions, once it's supported.
       #
       # @rbs!
-      #   @path1: ::Array[Path::path]
-      #   @path2: ::Array[Path::path]
+      #   @path1: ::Array[StateItem]
+      #   @path2: ::Array[StateItem]
       #   @conflict: State::conflict
       #   @conflict_symbol: Grammar::Symbol
       #   @counterexamples: Counterexamples
       #   @derivations1: Derivation
       #   @derivations2: Derivation
 
-      attr_reader :path1 #: ::Array[Path::path]
-      attr_reader :path2 #: ::Array[Path::path]
+      attr_reader :path1 #: ::Array[StateItem]
+      attr_reader :path2 #: ::Array[StateItem]
       attr_reader :conflict #: State::conflict
       attr_reader :conflict_symbol #: Grammar::Symbol
 
       # path1 is shift conflict when S/R conflict
       # path2 is always reduce conflict
       #
-      # @rbs (::Array[Path::path]? path1, ::Array[Path::path]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      # @rbs (Array[StateItem]? path1, Array[StateItem]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
       def initialize(path1, path2, conflict, conflict_symbol, counterexamples)
         @path1 = path1
         @path2 = path2
@@ -40,12 +40,12 @@ module Lrama
 
       # @rbs () -> States::Item
       def path1_item
-        @path1.last.state_item.item
+        @path1.last.item
       end
 
       # @rbs () -> States::Item
       def path2_item
-        @path2.last.state_item.item
+        @path2.last.item
       end
 
       # @rbs () -> Derivation
@@ -60,48 +60,48 @@ module Lrama
 
       private
 
-      # @rbs (::Array[Path::path] paths) -> Derivation
-      def _derivations(paths)
+      # @rbs (Array[StateItem] state_items) -> Derivation
+      def _derivations(state_items)
         derivation = nil #: Derivation
         current = :production
-        last_path = paths.last #: Path
-        lookahead_sym = last_path.state_item.item.end_of_rule? ? @conflict_symbol : nil
+        last_state_item = state_items.last #: StateItem
+        lookahead_sym = last_state_item.item.end_of_rule? ? @conflict_symbol : nil
 
-        paths.reverse_each do |path|
-          item = path.state_item.item
+        state_items.reverse_each do |si|
+          item = si.item
 
           case current
           when :production
-            case path
-            when StartPath
+            case si.type
+            when :start
               derivation = Derivation.new(item, derivation)
               current = :start
-            when TransitionPath
+            when :transition
               derivation = Derivation.new(item, derivation)
               current = :transition
-            when ProductionPath
+            when :production
               derivation = Derivation.new(item, derivation)
               current = :production
             else
-              raise "Unexpected. #{path}"
+              raise "Unexpected. #{si}"
             end
 
             if lookahead_sym && item.next_next_sym && item.next_next_sym.first_set.include?(lookahead_sym)
-              state_item = @counterexamples.transitions[[path.state_item, item.next_sym]]
-              derivation2 = find_derivation_for_symbol(state_item, lookahead_sym)
+              si2 = @counterexamples.transitions[[si, item.next_sym]]
+              derivation2 = find_derivation_for_symbol(si2, lookahead_sym)
               derivation.right = derivation2 # steep:ignore
               lookahead_sym = nil
             end
 
           when :transition
-            case path
-            when StartPath
+            case si.type
+            when :start
               derivation = Derivation.new(item, derivation)
               current = :start
-            when TransitionPath
+            when :transition
               # ignore
               current = :transition
-            when ProductionPath
+            when :production
               # ignore
               current = :production
             end

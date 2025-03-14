@@ -43,20 +43,17 @@ module Lrama
     # @rbs (State conflict_state, State::ReduceReduceConflict conflict) -> Example
     def reduce_reduce_examples: (State conflict_state, State::ReduceReduceConflict conflict) -> Example
 
-    # @rbs (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> ::Array[Path::path]
-    def find_shift_conflict_shortest_path: (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> ::Array[Path::path]
+    # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
+    def find_shift_conflict_shortest_path: (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
 
-    # @rbs (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> Array[StateItem]
-    def find_shift_conflict_shortest_state_items: (::Array[Path::path]? reduce_path, State conflict_state, States::Item conflict_item) -> Array[StateItem]
-
-    # @rbs (Array[StateItem] state_items) -> ::Array[Path::path]
-    def build_paths_from_state_items: (Array[StateItem] state_items) -> ::Array[Path::path]
+    # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
+    def find_shift_conflict_shortest_state_items: (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
 
     # @rbs (StateItem target) -> Set[StateItem]
     def reachable_state_items: (StateItem target) -> Set[StateItem]
 
-    # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
-    def shortest_path: (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[Path::path]?
+    # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StateItem]?
+    def shortest_path: (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StateItem]?
 
     # @rbs (States::Item item, Bitmap::bitmap current_l) -> Bitmap::bitmap
     def follow_l: (States::Item item, Bitmap::bitmap current_l) -> Bitmap::bitmap

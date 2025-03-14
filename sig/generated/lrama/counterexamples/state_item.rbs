@@ -8,6 +8,9 @@ module Lrama
       attr_accessor item: States::Item
 
       def initialize: (State state, States::Item item) -> void
+
+      # @rbs () -> (:start | :transition | :production)
+      def type: () -> (:start | :transition | :production)
     end
   end
 end

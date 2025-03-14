@@ -70,7 +70,7 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :shift_reduce
         # Shift Conflict
-        expect(example.path1.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path1.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr '?' stmt stmt  (rule 3)",
           "stmt: expr • '?' stmt stmt  (rule 3)",
@@ -93,7 +93,7 @@ RSpec.describe Lrama::Counterexamples do
                                                        8: num  • digit
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path2.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr '?' stmt stmt  (rule 3)",
           "stmt: expr • '?' stmt stmt  (rule 3)",
@@ -129,7 +129,7 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :shift_reduce
         # Shift Conflict
-        expect(example.path1.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path1.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr '?' stmt stmt  (rule 3)",
           "expr: • expr '+' expr  (rule 6)",
@@ -147,7 +147,7 @@ RSpec.describe Lrama::Counterexamples do
                                   6: expr  • '+' expr
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path2.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr '?' stmt stmt  (rule 3)",
           "expr: • expr '+' expr  (rule 6)",
@@ -177,7 +177,7 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :shift_reduce
         # Shift Conflict
-        expect(example.path1.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path1.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • keyword_if expr keyword_then stmt keyword_else stmt  (rule 1)",
           "stmt: keyword_if • expr keyword_then stmt keyword_else stmt  (rule 1)",
@@ -195,7 +195,7 @@ RSpec.describe Lrama::Counterexamples do
                                               1: keyword_if expr keyword_then stmt  • keyword_else stmt
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path2.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • keyword_if expr keyword_then stmt keyword_else stmt  (rule 1)",
           "stmt: keyword_if • expr keyword_then stmt keyword_else stmt  (rule 1)",
@@ -271,7 +271,7 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :reduce_reduce
         # Reduce Conflict
-        expect(example.path1.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path1.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr1  (rule 1)",
           "expr1: • digit '+' digit  (rule 3)",
@@ -285,7 +285,7 @@ RSpec.describe Lrama::Counterexamples do
                   3: digit '+' digit  •
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path2.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr2  (rule 2)",
           "expr2: • digit '+' digit  (rule 4)",
@@ -356,7 +356,7 @@ RSpec.describe Lrama::Counterexamples do
 
           expect(example.type).to eq :reduce_reduce
           # Reduce Conflict
-          expect(example.path1.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+          expect(example.path1.map(&:item).map(&:to_s)).to eq([
             "$accept: • stmt \"end of file\"  (rule 0)",
             "stmt: • expr1  (rule 1)",
             "expr1: • digit '+' digit  (rule 3)",
@@ -370,7 +370,7 @@ RSpec.describe Lrama::Counterexamples do
                     3: digit '+' digit  •
           STR
           # Reduce Conflict
-          expect(example.path2.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+          expect(example.path2.map(&:item).map(&:to_s)).to eq([
             "$accept: • stmt \"end of file\"  (rule 0)",
             "stmt: • long_long_long_name_expr2  (rule 2)",
             "long_long_long_name_expr2: • digit '+' digit  (rule 4)",
@@ -436,7 +436,7 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :shift_reduce
         # Shift Conflict
-        expect(example.path1.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path1.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr '+'  (rule 1)",
           "expr: • digit '+' digit  (rule 2)",
@@ -448,7 +448,7 @@ RSpec.describe Lrama::Counterexamples do
                   2: digit  • '+' digit
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path2.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr '+'  (rule 1)",
           "expr: • digit  (rule 3)",
@@ -525,7 +525,7 @@ RSpec.describe Lrama::Counterexamples do
         expect(example.type).to eq :shift_reduce
         expect(example.conflict_symbol.id.s_value).to eq "'\\n'"
         # Shift Conflict
-        expect(example.path1.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path1.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr  (rule 1)",
           "expr: • expr opt_nl '+' expr  (rule 3)",
@@ -546,7 +546,7 @@ RSpec.describe Lrama::Counterexamples do
                                                  7:   • '\\n'
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path2.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr  (rule 1)",
           "expr: • expr opt_nl '+' expr  (rule 3)",
@@ -568,7 +568,7 @@ RSpec.describe Lrama::Counterexamples do
         expect(example.type).to eq :reduce_reduce
         expect(example.conflict_symbol.id.s_value).to eq "'+'"
         # Reduce Conflict
-        expect(example.path1.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path1.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr  (rule 1)",
           "expr: • expr opt_nl '+' expr  (rule 3)",
@@ -585,7 +585,7 @@ RSpec.describe Lrama::Counterexamples do
                       3: expr opt_nl '+' expr  •
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:state_item).map(&:item).map(&:to_s)).to eq([
+        expect(example.path2.map(&:item).map(&:to_s)).to eq([
           "$accept: • stmt \"end of file\"  (rule 0)",
           "stmt: • expr  (rule 1)",
           "expr: • expr opt_nl '+' expr  (rule 3)",
