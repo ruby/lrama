@@ -7,21 +7,14 @@ module Lrama
       # @rbs!
       #   type path = StartPath | TransitionPath | ProductionPath
       #
-      #   @from_state_item: StateItem?
       #   @to_state_item: StateItem
 
       attr_reader :parent #: path?
 
-      # @rbs (StateItem? from_state_item, StateItem to_state_item, path? parent) -> void
-      def initialize(from_state_item, to_state_item, parent)
-        @from_state_item = from_state_item
+      # @rbs (StateItem to_state_item, path? parent) -> void
+      def initialize(to_state_item, parent)
         @to_state_item = to_state_item
         @parent = parent
-      end
-
-      # @rbs () -> StateItem?
-      def from
-        @from_state_item
       end
 
       # @rbs () -> StateItem

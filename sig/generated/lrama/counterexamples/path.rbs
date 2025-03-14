@@ -5,17 +5,12 @@ module Lrama
     class Path
       type path = StartPath | TransitionPath | ProductionPath
 
-      @from_state_item: StateItem?
-
       @to_state_item: StateItem
 
       attr_reader parent: path?
 
-      # @rbs (StateItem? from_state_item, StateItem to_state_item, path? parent) -> void
-      def initialize: (StateItem? from_state_item, StateItem to_state_item, path? parent) -> void
-
-      # @rbs () -> StateItem?
-      def from: () -> StateItem?
+      # @rbs (StateItem to_state_item, path? parent) -> void
+      def initialize: (StateItem to_state_item, path? parent) -> void
 
       # @rbs () -> StateItem
       def to: () -> StateItem

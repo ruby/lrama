@@ -239,9 +239,9 @@ module Lrama
         when prev_si.nil?
           StartPath.new(si)
         when si.item.beginning_of_rule?
-          ProductionPath.new(prev_si, si, nil)
+          ProductionPath.new(si, nil)
         else
-          TransitionPath.new(prev_si, si, nil)
+          TransitionPath.new(si, nil)
         end
       end
     end
@@ -310,7 +310,7 @@ module Lrama
           t = Triple.new(next_state_item, triple.l)
           unless visited[t]
             visited[t] = true
-            queue << [t, TransitionPath.new(triple.state_item, t.state_item, path)]
+            queue << [t, TransitionPath.new(t.state_item, path)]
           end
         end
 
@@ -323,7 +323,7 @@ module Lrama
           t = Triple.new(StateItem.new(triple.state, item), l)
           unless visited[t]
             visited[t] = true
-            queue << [t, ProductionPath.new(triple.state_item, t.state_item, path)]
+            queue << [t, ProductionPath.new(t.state_item, path)]
           end
         end
       end
