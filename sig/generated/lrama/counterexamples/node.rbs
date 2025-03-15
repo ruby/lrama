@@ -1,0 +1,18 @@
+# Generated from lib/lrama/counterexamples/node.rb with RBS::Inline
+
+module Lrama
+  class Counterexamples
+    # @rbs generic E < Object -- Type of an element
+    class Node[E < Object]
+      attr_reader elem: E
+
+      attr_reader next_node: Node[E]?
+
+      # @rbs　[T] (Node[T] node) -> Array[T]
+      def self.to_a: (untyped node) -> untyped
+
+      # @rbs (E elem, Node[E]? next_node) -> void
+      def initialize: (E elem, Node[E]? next_node) -> void
+    end
+  end
+end
