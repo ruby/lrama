@@ -139,6 +139,9 @@ module Lrama
 
     # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
     def find_shift_conflict_shortest_path(reduce_state_items, conflict_state, conflict_item)
+      time1 = Time.now.to_f
+      iterate_count = 0
+
       target_state_item = StateItem.new(conflict_state, conflict_item)
       result = [target_state_item]
       reversed_state_items = reduce_state_items.to_a.reverse
@@ -171,6 +174,7 @@ module Lrama
 
           # Find reverse production
           while (sis = queue.shift)
+            iterate_count += 1
             si = sis.last
 
             # Reach to start state
@@ -215,6 +219,11 @@ module Lrama
             break
           end
         end
+      end
+
+      if Tracer::Duration.enabled?
+        time2 = Time.now.to_f
+        STDERR.puts sprintf("  %s %10.5f s", "find_shift_conflict_shortest_path #{iterate_count} iteration", time2 - time1)
       end
 
       result.reverse
