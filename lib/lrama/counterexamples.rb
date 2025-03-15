@@ -168,7 +168,7 @@ module Lrama
           break
         end
 
-        if target_state_item.item.beginning_of_rule?
+        if target_state_item.type == :production
           queue = [] #: Array[Array[StateItem]]
           queue << [target_state_item]
 
@@ -185,7 +185,7 @@ module Lrama
               break
             end
 
-            if si.item.beginning_of_rule?
+            if si.type == :production
               # @type var key: [State, Grammar::Symbol]
               key = [si.state, si.item.lhs]
               @reverse_productions[key].each do |item|
