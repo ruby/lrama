@@ -1,0 +1,34 @@
+# Generated from lib/lrama/counterexamples/list.rb with RBS::Inline
+
+module Lrama
+  class Counterexamples
+    # singly-linked list
+    #
+    # @rbs generic E < Object -- Type of an element
+    class List[E < Object]
+      # @rbs generic E < Object -- Type of an element
+      class Node[E < Object]
+        attr_reader elem: E
+
+        attr_reader next_node: Node[E]?
+
+        # @rbs (E elem, Node[E]? next_node) -> void
+        def initialize: (E elem, Node[E]? next_node) -> void
+      end
+
+      @first_node: Node[E]
+
+      # @rbs (E elem) -> void
+      def initialize: (E elem) -> void
+
+      # @rbs () -> E
+      def first: () -> E
+
+      # @rbs (E elem) -> void
+      def add_first: (E elem) -> void
+
+      # @rbs () -> Array[E]
+      def to_a: () -> Array[E]
+    end
+  end
+end
