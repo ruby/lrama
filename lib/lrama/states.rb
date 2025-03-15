@@ -548,21 +548,13 @@ module Lrama
     # @rbs () -> void
     def compute_reduce_reduce_conflicts
       states.each do |state|
-        count = state.reduces.count
+        state.reduces.combination(2) do |reduce1, reduce2|
+          next if reduce1.look_ahead.nil? || reduce2.look_ahead.nil?
 
-        (0...count).each do |i|
-          reduce1 = state.reduces[i]
-          next if reduce1.look_ahead.nil?
+          intersection = reduce1.look_ahead & reduce2.look_ahead
 
-          ((i+1)...count).each do |j|
-            reduce2 = state.reduces[j]
-            next if reduce2.look_ahead.nil?
-
-            intersection = reduce1.look_ahead & reduce2.look_ahead
-
-            unless intersection.empty?
-              state.conflicts << State::ReduceReduceConflict.new(symbols: intersection, reduce1: reduce1, reduce2: reduce2)
-            end
+          unless intersection.empty?
+            state.conflicts << State::ReduceReduceConflict.new(symbols: intersection, reduce1: reduce1, reduce2: reduce2)
           end
         end
       end
