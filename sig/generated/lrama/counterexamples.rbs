@@ -4,7 +4,17 @@ module Lrama
   # See: https://www.cs.cornell.edu/andru/papers/cupex/cupex.pdf
   #      4. Constructing Nonunifying Counterexamples
   class Counterexamples
+    PathSearchTimeLimit: ::Integer
+
+    CumulativeTimeLimit: ::Integer
+
     @states: States
+
+    @iterate_count: Integer
+
+    @total_duration: Float
+
+    @exceed_cumulative_time_limit: bool
 
     @transitions: Hash[[ StateItem, Grammar::Symbol ], StateItem]
 
@@ -54,5 +64,11 @@ module Lrama
 
     # @rbs (States::Item item, Bitmap::bitmap current_l) -> Bitmap::bitmap
     def follow_l: (States::Item item, Bitmap::bitmap current_l) -> Bitmap::bitmap
+
+    # @rbs [T] (String message) { -> T } -> T
+    def with_timeout: [T] (String message) { () -> T } -> T
+
+    # @rbs (Float|Integer duration) -> void
+    def increment_total_duration: (Float | Integer duration) -> void
   end
 end
