@@ -16,10 +16,13 @@ module Lrama
   #      4. Constructing Nonunifying Counterexamples
   class Counterexamples
     PathSearchTimeLimit = 10 # 10 sec
+    CumulativeTimeLimit = 120 # 120 sec
 
     # @rbs!
     #   @states: States
     #   @iterate_count: Integer
+    #   @total_duration: Float
+    #   @exceed_cumulative_time_limit: bool
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
     #   @productions: Hash[StateItem, Set[States::Item]]
@@ -32,6 +35,8 @@ module Lrama
     def initialize(states)
       @states = states
       @iterate_count = 0
+      @total_duration = 0
+      @exceed_cumulative_time_limit = false
       setup_transitions
       setup_productions
     end
@@ -45,6 +50,10 @@ module Lrama
     # @rbs (State conflict_state) -> Array[Example]
     def compute(conflict_state)
       conflict_state.conflicts.flat_map do |conflict|
+        # Check cumulative time limit for not each path search method call but each conflict
+        # to avoid one of example's path to be nil.
+        next if @exceed_cumulative_time_limit
+
         case conflict.type
         when :shift_reduce
           # @type var conflict: State::ShiftReduceConflict
@@ -55,6 +64,7 @@ module Lrama
         end
       rescue Timeout::Error => e
         STDERR.puts "Counterexamples calculation for state #{conflict_state.id} #{e.message} with #{@iterate_count} iteration"
+        increment_total_duration(PathSearchTimeLimit)
         nil
       end.compact
     end
@@ -240,9 +250,12 @@ module Lrama
         end
       end
 
+      time2 = Time.now.to_f
+      duration = time2 - time1
+      increment_total_duration(duration)
+
       if Tracer::Duration.enabled?
-        time2 = Time.now.to_f
-        STDERR.puts sprintf("  %s %10.5f s", "find_shift_conflict_shortest_path #{@iterate_count} iteration", time2 - time1)
+        STDERR.puts sprintf("  %s %10.5f s", "find_shift_conflict_shortest_path #{@iterate_count} iteration", duration)
       end
 
       result.reverse
@@ -297,9 +310,12 @@ module Lrama
             state_items << path.state_item
           end
 
+          time2 = Time.now.to_f
+          duration = time2 - time1
+          increment_total_duration(duration)
+
           if Tracer::Duration.enabled?
-            time2 = Time.now.to_f
-            STDERR.puts sprintf("  %s %10.5f s", "shortest_path #{@iterate_count} iteration", time2 - time1)
+            STDERR.puts sprintf("  %s %10.5f s", "shortest_path #{@iterate_count} iteration", duration)
           end
 
           return state_items.reverse
@@ -355,6 +371,15 @@ module Lrama
     def with_timeout(message)
       Timeout.timeout(PathSearchTimeLimit, Timeout::Error, message + " timeout of #{PathSearchTimeLimit} sec exceeded") do
         yield
+      end
+    end
+
+    def increment_total_duration(duration)
+      @total_duration += duration
+
+      if !@exceed_cumulative_time_limit && @total_duration > CumulativeTimeLimit
+        @exceed_cumulative_time_limit = true
+        STDERR.puts "CumulativeTimeLimit #{CumulativeTimeLimit} sec exceeded then skip following Counterexamples calculation"
       end
     end
   end
