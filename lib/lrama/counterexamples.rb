@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "set"
+require "timeout"
 
 require_relative "counterexamples/derivation"
 require_relative "counterexamples/example"
@@ -14,8 +15,11 @@ module Lrama
   # See: https://www.cs.cornell.edu/andru/papers/cupex/cupex.pdf
   #      4. Constructing Nonunifying Counterexamples
   class Counterexamples
+    PathSearchTimeLimit = 10 # 10 sec
+
     # @rbs!
     #   @states: States
+    #   @iterate_count: Integer
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
     #   @productions: Hash[StateItem, Set[States::Item]]
@@ -27,6 +31,7 @@ module Lrama
     # @rbs (States states) -> void
     def initialize(states)
       @states = states
+      @iterate_count = 0
       setup_transitions
       setup_productions
     end
@@ -48,6 +53,9 @@ module Lrama
           # @type var conflict: State::ReduceReduceConflict
           reduce_reduce_examples(conflict_state, conflict)
         end
+      rescue Timeout::Error => e
+        STDERR.puts "Counterexamples calculation for state #{conflict_state.id} #{e.message} with #{@iterate_count} iteration"
+        nil
       end.compact
     end
 
@@ -123,8 +131,12 @@ module Lrama
       conflict_symbol = conflict.symbols.first
       # @type var shift_conflict_item: ::Lrama::States::Item
       shift_conflict_item = conflict_state.items.find { |item| item.next_sym == conflict_symbol }
-      path2 = shortest_path(conflict_state, conflict.reduce.item, conflict_symbol)
-      path1 = find_shift_conflict_shortest_path(path2, conflict_state, shift_conflict_item)
+      path2 = with_timeout("#shortest_path:") do
+        shortest_path(conflict_state, conflict.reduce.item, conflict_symbol)
+      end
+      path1 = with_timeout("#find_shift_conflict_shortest_path:") do
+        find_shift_conflict_shortest_path(path2, conflict_state, shift_conflict_item)
+      end
 
       Example.new(path1, path2, conflict, conflict_symbol, self)
     end
@@ -132,8 +144,12 @@ module Lrama
     # @rbs (State conflict_state, State::ReduceReduceConflict conflict) -> Example
     def reduce_reduce_examples(conflict_state, conflict)
       conflict_symbol = conflict.symbols.first
-      path1 = shortest_path(conflict_state, conflict.reduce1.item, conflict_symbol)
-      path2 = shortest_path(conflict_state, conflict.reduce2.item, conflict_symbol)
+      path1 = with_timeout("#shortest_path:") do
+        shortest_path(conflict_state, conflict.reduce1.item, conflict_symbol)
+      end
+      path2 = with_timeout("#shortest_path:") do
+        shortest_path(conflict_state, conflict.reduce2.item, conflict_symbol)
+      end
 
       Example.new(path1, path2, conflict, conflict_symbol, self)
     end
@@ -141,7 +157,7 @@ module Lrama
     # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
     def find_shift_conflict_shortest_path(reduce_state_items, conflict_state, conflict_item)
       time1 = Time.now.to_f
-      iterate_count = 0
+      @iterate_count = 0
 
       target_state_item = StateItem.new(conflict_state, conflict_item)
       result = [target_state_item]
@@ -175,7 +191,7 @@ module Lrama
 
           # Find reverse production
           while (sis = queue.shift)
-            iterate_count += 1
+            @iterate_count += 1
             si = sis.elem
 
             # Reach to start state
@@ -226,7 +242,7 @@ module Lrama
 
       if Tracer::Duration.enabled?
         time2 = Time.now.to_f
-        STDERR.puts sprintf("  %s %10.5f s", "find_shift_conflict_shortest_path #{iterate_count} iteration", time2 - time1)
+        STDERR.puts sprintf("  %s %10.5f s", "find_shift_conflict_shortest_path #{@iterate_count} iteration", time2 - time1)
       end
 
       result.reverse
@@ -258,7 +274,7 @@ module Lrama
     # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StateItem]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
       time1 = Time.now.to_f
-      iterate_count = 0
+      @iterate_count = 0
 
       queue = [] #: Array[[Triple, Path]]
       visited = {} #: Hash[Triple, true]
@@ -271,7 +287,7 @@ module Lrama
       queue << [start, Path.new(start.state_item, nil)]
 
       while (triple, path = queue.shift)
-        iterate_count += 1
+        @iterate_count += 1
 
         # Found
         if (triple.state == conflict_state) && (triple.item == conflict_reduce_item) && (triple.l & conflict_term_bit != 0)
@@ -283,7 +299,7 @@ module Lrama
 
           if Tracer::Duration.enabled?
             time2 = Time.now.to_f
-            STDERR.puts sprintf("  %s %10.5f s", "shortest_path #{iterate_count} iteration", time2 - time1)
+            STDERR.puts sprintf("  %s %10.5f s", "shortest_path #{@iterate_count} iteration", time2 - time1)
           end
 
           return state_items.reverse
@@ -333,6 +349,12 @@ module Lrama
         item.next_next_sym.first_set_bitmap
       else
         item.next_next_sym.first_set_bitmap | follow_l(item.new_by_next_position, current_l)
+      end
+    end
+
+    def with_timeout(message)
+      Timeout.timeout(PathSearchTimeLimit, Timeout::Error, message + " timeout of #{PathSearchTimeLimit} sec exceeded") do
+        yield
       end
     end
   end
