@@ -13,9 +13,11 @@ module Lrama
         @verbose = verbose
       end
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report(io, states)
+      # @rbs (IO io, Lrama::States states, ielr: bool) -> void
+      def report(io, states, ielr: false)
         cex = Counterexamples.new(states) if @counterexamples
+
+        report_split_states(io, states.states) if ielr
 
         states.states.each do |state|
           report_state_header(io, state)
@@ -34,6 +36,21 @@ module Lrama
       end
 
       private
+
+      # @rbs (IO io, Array[Lrama::State] states) -> void
+      def report_split_states(io, states)
+        ss = states.select(&:split_state?)
+
+        return if ss.empty?
+
+        io << "Split States\n\n"
+
+        ss.each do |state|
+          io << "    State #{state.id} is split from state #{state.lalr_isocore.id}\n"
+        end
+
+        io << "\n"
+      end
 
       # @rbs (IO io, Lrama::State state) -> void
       def report_state_header(io, state)

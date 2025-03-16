@@ -29,7 +29,7 @@ module Lrama
         @terms.report(io, states)
         @conflicts.report(io, states)
         @grammar.report(io, states)
-        @states.report(io, states)
+        @states.report(io, states, ielr: states.ielr_defined?)
       end
     end
   end

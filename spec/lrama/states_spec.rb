@@ -1839,6 +1839,12 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
+        Split States
+
+            State 19 is split from state 4
+            State 20 is split from state 9
+            State 21 is split from state 14
+
         State 0
 
             0 $accept: • S "end of file"

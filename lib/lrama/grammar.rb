@@ -38,6 +38,7 @@ module Lrama
     #     def terms: () -> Array[Grammar::Symbol]
     #     def nterms: () -> Array[Grammar::Symbol]
     #     def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
+    #     def ielr_defined?: () -> bool
     #   end
     #
     #   include Symbols::Resolver::_DelegatedMethods

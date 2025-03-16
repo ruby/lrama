@@ -147,6 +147,9 @@ module Lrama
     # @rbs () -> void
     def clear_conflicts: () -> void
 
+    # @rbs () -> bool
+    def split_state?: () -> bool
+
     # Definition 3.40 (propagate_lookaheads)
     #
     # @rbs (State next_state) -> lookahead_set

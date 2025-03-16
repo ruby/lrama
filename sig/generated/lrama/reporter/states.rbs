@@ -6,10 +6,13 @@ module Lrama
       # @rbs (?itemsets: bool, ?lookaheads: bool, ?solved: bool, ?counterexamples: bool, ?verbose: bool, **bool _) -> void
       def initialize: (?itemsets: bool, ?lookaheads: bool, ?solved: bool, ?counterexamples: bool, ?verbose: bool, **bool _) -> void
 
-      # @rbs (IO io, Lrama::States states) -> void
-      def report: (IO io, Lrama::States states) -> void
+      # @rbs (IO io, Lrama::States states, ielr: bool) -> void
+      def report: (IO io, Lrama::States states, ielr: bool) -> void
 
       private
+
+      # @rbs (IO io, Array[Lrama::State] states) -> void
+      def report_split_states: (IO io, Array[Lrama::State] states) -> void
 
       # @rbs (IO io, Lrama::State state) -> void
       def report_state_header: (IO io, Lrama::State state) -> void
