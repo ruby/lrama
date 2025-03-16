@@ -2,6 +2,10 @@
 
 RSpec.describe Lrama::Counterexamples do
   describe "#compute" do
+    def format_example_path(path)
+      sprintf("%3d. %s", path.state.id, path.item)
+    end
+
     # Example comes from https://www.cs.cornell.edu/andru/papers/cupex/cupex.pdf
     # "4. Constructing Nonunifying Counterexamples"
     describe "Example of 'Finding Counterexamples from Parsing Conflicts'" do
@@ -70,20 +74,20 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :shift_reduce
         # Shift Conflict
-        expect(example.path1.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr '?' stmt stmt  (rule 3)",
-          "stmt: expr • '?' stmt stmt  (rule 3)",
-          "stmt: expr '?' • stmt stmt  (rule 3)",
-          "stmt: • arr '[' expr ']' \":=\" expr  (rule 4)",
-          "stmt: arr • '[' expr ']' \":=\" expr  (rule 4)",
-          "stmt: arr '[' • expr ']' \":=\" expr  (rule 4)",
-          "stmt: arr '[' expr • ']' \":=\" expr  (rule 4)",
-          "stmt: arr '[' expr ']' • \":=\" expr  (rule 4)",
-          "stmt: arr '[' expr ']' \":=\" • expr  (rule 4)",
-          "expr: • num  (rule 5)",
-          "num: • num digit  (rule 8)",
-          "num: num • digit  (rule 8)"
+        expect(example.path1.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr '?' stmt stmt  (rule 3)",
+          "  5. stmt: expr • '?' stmt stmt  (rule 3)",
+          " 10. stmt: expr '?' • stmt stmt  (rule 3)",
+          " 10. stmt: • arr '[' expr ']' \":=\" expr  (rule 4)",
+          "  2. stmt: arr • '[' expr ']' \":=\" expr  (rule 4)",
+          "  8. stmt: arr '[' • expr ']' \":=\" expr  (rule 4)",
+          " 14. stmt: arr '[' expr • ']' \":=\" expr  (rule 4)",
+          " 18. stmt: arr '[' expr ']' • \":=\" expr  (rule 4)",
+          " 21. stmt: arr '[' expr ']' \":=\" • expr  (rule 4)",
+          " 21. expr: • num  (rule 5)",
+          " 21. num: • num digit  (rule 8)",
+          "  6. num: num • digit  (rule 8)"
         ])
         expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                          "end of file"
@@ -93,19 +97,19 @@ RSpec.describe Lrama::Counterexamples do
                                                        8: num  • digit
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr '?' stmt stmt  (rule 3)",
-          "stmt: expr • '?' stmt stmt  (rule 3)",
-          "stmt: expr '?' • stmt stmt  (rule 3)",
-          "stmt: • arr '[' expr ']' \":=\" expr  (rule 4)",
-          "stmt: arr • '[' expr ']' \":=\" expr  (rule 4)",
-          "stmt: arr '[' • expr ']' \":=\" expr  (rule 4)",
-          "stmt: arr '[' expr • ']' \":=\" expr  (rule 4)",
-          "stmt: arr '[' expr ']' • \":=\" expr  (rule 4)",
-          "stmt: arr '[' expr ']' \":=\" • expr  (rule 4)",
-          "expr: • num  (rule 5)",
-          "expr: num •  (rule 5)"
+        expect(example.path2.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr '?' stmt stmt  (rule 3)",
+          "  5. stmt: expr • '?' stmt stmt  (rule 3)",
+          " 10. stmt: expr '?' • stmt stmt  (rule 3)",
+          " 10. stmt: • arr '[' expr ']' \":=\" expr  (rule 4)",
+          "  2. stmt: arr • '[' expr ']' \":=\" expr  (rule 4)",
+          "  8. stmt: arr '[' • expr ']' \":=\" expr  (rule 4)",
+          " 14. stmt: arr '[' expr • ']' \":=\" expr  (rule 4)",
+          " 18. stmt: arr '[' expr ']' • \":=\" expr  (rule 4)",
+          " 21. stmt: arr '[' expr ']' \":=\" • expr  (rule 4)",
+          " 21. expr: • num  (rule 5)",
+          "  6. expr: num •  (rule 5)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                                               "end of file"
@@ -129,15 +133,15 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :shift_reduce
         # Shift Conflict
-        expect(example.path1.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr '?' stmt stmt  (rule 3)",
-          "expr: • expr '+' expr  (rule 6)",
-          "expr: • expr '+' expr  (rule 6)",
-          "expr: expr • '+' expr  (rule 6)",
-          "expr: expr '+' • expr  (rule 6)",
-          "expr: • expr '+' expr  (rule 6)",
-          "expr: expr • '+' expr  (rule 6)"
+        expect(example.path1.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr '?' stmt stmt  (rule 3)",
+          "  0. expr: • expr '+' expr  (rule 6)",
+          "  0. expr: • expr '+' expr  (rule 6)",
+          "  5. expr: expr • '+' expr  (rule 6)",
+          " 11. expr: expr '+' • expr  (rule 6)",
+          " 11. expr: • expr '+' expr  (rule 6)",
+          " 16. expr: expr • '+' expr  (rule 6)"
         ])
         expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                           "end of file"
@@ -147,14 +151,14 @@ RSpec.describe Lrama::Counterexamples do
                                   6: expr  • '+' expr
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr '?' stmt stmt  (rule 3)",
-          "expr: • expr '+' expr  (rule 6)",
-          "expr: • expr '+' expr  (rule 6)",
-          "expr: expr • '+' expr  (rule 6)",
-          "expr: expr '+' • expr  (rule 6)",
-          "expr: expr '+' expr •  (rule 6)"
+        expect(example.path2.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr '?' stmt stmt  (rule 3)",
+          "  0. expr: • expr '+' expr  (rule 6)",
+          "  0. expr: • expr '+' expr  (rule 6)",
+          "  5. expr: expr • '+' expr  (rule 6)",
+          " 11. expr: expr '+' • expr  (rule 6)",
+          " 16. expr: expr '+' expr •  (rule 6)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                "end of file"
@@ -177,17 +181,17 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :shift_reduce
         # Shift Conflict
-        expect(example.path1.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • keyword_if expr keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if • expr keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if expr • keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if expr keyword_then • stmt keyword_else stmt  (rule 1)",
-          "stmt: • keyword_if expr keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if • expr keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if expr • keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if expr keyword_then • stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if expr keyword_then stmt • keyword_else stmt  (rule 1)"
+        expect(example.path1.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • keyword_if expr keyword_then stmt keyword_else stmt  (rule 1)",
+          "  1. stmt: keyword_if • expr keyword_then stmt keyword_else stmt  (rule 1)",
+          "  7. stmt: keyword_if expr • keyword_then stmt keyword_else stmt  (rule 1)",
+          " 13. stmt: keyword_if expr keyword_then • stmt keyword_else stmt  (rule 1)",
+          " 13. stmt: • keyword_if expr keyword_then stmt keyword_else stmt  (rule 1)",
+          "  1. stmt: keyword_if • expr keyword_then stmt keyword_else stmt  (rule 1)",
+          "  7. stmt: keyword_if expr • keyword_then stmt keyword_else stmt  (rule 1)",
+          " 13. stmt: keyword_if expr keyword_then • stmt keyword_else stmt  (rule 1)",
+          " 17. stmt: keyword_if expr keyword_then stmt • keyword_else stmt  (rule 1)"
         ])
         expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                                                                        "end of file"
@@ -195,17 +199,17 @@ RSpec.describe Lrama::Counterexamples do
                                               1: keyword_if expr keyword_then stmt  • keyword_else stmt
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • keyword_if expr keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if • expr keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if expr • keyword_then stmt keyword_else stmt  (rule 1)",
-          "stmt: keyword_if expr keyword_then • stmt keyword_else stmt  (rule 1)",
-          "stmt: • keyword_if expr keyword_then stmt  (rule 2)",
-          "stmt: keyword_if • expr keyword_then stmt  (rule 2)",
-          "stmt: keyword_if expr • keyword_then stmt  (rule 2)",
-          "stmt: keyword_if expr keyword_then • stmt  (rule 2)",
-          "stmt: keyword_if expr keyword_then stmt •  (rule 2)"
+        expect(example.path2.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • keyword_if expr keyword_then stmt keyword_else stmt  (rule 1)",
+          "  1. stmt: keyword_if • expr keyword_then stmt keyword_else stmt  (rule 1)",
+          "  7. stmt: keyword_if expr • keyword_then stmt keyword_else stmt  (rule 1)",
+          " 13. stmt: keyword_if expr keyword_then • stmt keyword_else stmt  (rule 1)",
+          " 13. stmt: • keyword_if expr keyword_then stmt  (rule 2)",
+          "  1. stmt: keyword_if • expr keyword_then stmt  (rule 2)",
+          "  7. stmt: keyword_if expr • keyword_then stmt  (rule 2)",
+          " 13. stmt: keyword_if expr keyword_then • stmt  (rule 2)",
+          " 17. stmt: keyword_if expr keyword_then stmt •  (rule 2)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                                                       "end of file"
@@ -271,13 +275,13 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :reduce_reduce
         # Reduce Conflict
-        expect(example.path1.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr1  (rule 1)",
-          "expr1: • digit '+' digit  (rule 3)",
-          "expr1: digit • '+' digit  (rule 3)",
-          "expr1: digit '+' • digit  (rule 3)",
-          "expr1: digit '+' digit •  (rule 3)"
+        expect(example.path1.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr1  (rule 1)",
+          "  0. expr1: • digit '+' digit  (rule 3)",
+          "  1. expr1: digit • '+' digit  (rule 3)",
+          "  5. expr1: digit '+' • digit  (rule 3)",
+          "  7. expr1: digit '+' digit •  (rule 3)"
         ])
         expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                       "end of file"
@@ -285,13 +289,13 @@ RSpec.describe Lrama::Counterexamples do
                   3: digit '+' digit  •
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr2  (rule 2)",
-          "expr2: • digit '+' digit  (rule 4)",
-          "expr2: digit • '+' digit  (rule 4)",
-          "expr2: digit '+' • digit  (rule 4)",
-          "expr2: digit '+' digit •  (rule 4)"
+        expect(example.path2.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr2  (rule 2)",
+          "  0. expr2: • digit '+' digit  (rule 4)",
+          "  1. expr2: digit • '+' digit  (rule 4)",
+          "  5. expr2: digit '+' • digit  (rule 4)",
+          "  7. expr2: digit '+' digit •  (rule 4)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                       "end of file"
@@ -356,13 +360,13 @@ RSpec.describe Lrama::Counterexamples do
 
           expect(example.type).to eq :reduce_reduce
           # Reduce Conflict
-          expect(example.path1.map(&:item).map(&:to_s)).to eq([
-            "$accept: • stmt \"end of file\"  (rule 0)",
-            "stmt: • expr1  (rule 1)",
-            "expr1: • digit '+' digit  (rule 3)",
-            "expr1: digit • '+' digit  (rule 3)",
-            "expr1: digit '+' • digit  (rule 3)",
-            "expr1: digit '+' digit •  (rule 3)"
+          expect(example.path1.map {|path| format_example_path(path)}).to eq([
+            "  0. $accept: • stmt \"end of file\"  (rule 0)",
+            "  0. stmt: • expr1  (rule 1)",
+            "  0. expr1: • digit '+' digit  (rule 3)",
+            "  1. expr1: digit • '+' digit  (rule 3)",
+            "  5. expr1: digit '+' • digit  (rule 3)",
+            "  7. expr1: digit '+' digit •  (rule 3)"
           ])
           expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
             0:  stmt                       "end of file"
@@ -370,13 +374,13 @@ RSpec.describe Lrama::Counterexamples do
                     3: digit '+' digit  •
           STR
           # Reduce Conflict
-          expect(example.path2.map(&:item).map(&:to_s)).to eq([
-            "$accept: • stmt \"end of file\"  (rule 0)",
-            "stmt: • long_long_long_name_expr2  (rule 2)",
-            "long_long_long_name_expr2: • digit '+' digit  (rule 4)",
-            "long_long_long_name_expr2: digit • '+' digit  (rule 4)",
-            "long_long_long_name_expr2: digit '+' • digit  (rule 4)",
-            "long_long_long_name_expr2: digit '+' digit •  (rule 4)"
+          expect(example.path2.map {|path| format_example_path(path)}).to eq([
+            "  0. $accept: • stmt \"end of file\"  (rule 0)",
+            "  0. stmt: • long_long_long_name_expr2  (rule 2)",
+            "  0. long_long_long_name_expr2: • digit '+' digit  (rule 4)",
+            "  1. long_long_long_name_expr2: digit • '+' digit  (rule 4)",
+            "  5. long_long_long_name_expr2: digit '+' • digit  (rule 4)",
+            "  7. long_long_long_name_expr2: digit '+' digit •  (rule 4)"
           ])
           expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
             0:  stmt                         "end of file"
@@ -436,11 +440,11 @@ RSpec.describe Lrama::Counterexamples do
 
         expect(example.type).to eq :shift_reduce
         # Shift Conflict
-        expect(example.path1.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr '+'  (rule 1)",
-          "expr: • digit '+' digit  (rule 2)",
-          "expr: digit • '+' digit  (rule 2)"
+        expect(example.path1.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr '+'  (rule 1)",
+          "  0. expr: • digit '+' digit  (rule 2)",
+          "  1. expr: digit • '+' digit  (rule 2)"
         ])
         expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                          "end of file"
@@ -448,11 +452,11 @@ RSpec.describe Lrama::Counterexamples do
                   2: digit  • '+' digit
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr '+'  (rule 1)",
-          "expr: • digit  (rule 3)",
-          "expr: digit •  (rule 3)"
+        expect(example.path2.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr '+'  (rule 1)",
+          "  0. expr: • digit  (rule 3)",
+          "  1. expr: digit •  (rule 3)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                 "end of file"
@@ -525,17 +529,17 @@ RSpec.describe Lrama::Counterexamples do
         expect(example.type).to eq :shift_reduce
         expect(example.conflict_symbol.id.s_value).to eq "'\\n'"
         # Shift Conflict
-        expect(example.path1.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr  (rule 1)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: expr • opt_nl '+' expr  (rule 3)",
-          "expr: expr opt_nl • '+' expr  (rule 3)",
-          "expr: expr opt_nl '+' • expr  (rule 3)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: expr • opt_nl '+' expr  (rule 3)",
-          "opt_nl: • '\\n'  (rule 7)"
+        expect(example.path1.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr  (rule 1)",
+          "  0. expr: • expr opt_nl '+' expr  (rule 3)",
+          "  0. expr: • expr opt_nl '+' expr  (rule 3)",
+          "  3. expr: expr • opt_nl '+' expr  (rule 3)",
+          "  7. expr: expr opt_nl • '+' expr  (rule 3)",
+          "  9. expr: expr opt_nl '+' • expr  (rule 3)",
+          "  9. expr: • expr opt_nl '+' expr  (rule 3)",
+          " 10. expr: expr • opt_nl '+' expr  (rule 3)",
+          " 10. opt_nl: • '\\n'  (rule 7)"
         ])
         expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                                    "end of file"
@@ -546,15 +550,15 @@ RSpec.describe Lrama::Counterexamples do
                                                  7:   • '\\n'
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr  (rule 1)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: expr • opt_nl '+' expr  (rule 3)",
-          "expr: expr opt_nl • '+' expr  (rule 3)",
-          "expr: expr opt_nl '+' • expr  (rule 3)",
-          "expr: expr opt_nl '+' expr •  (rule 3)"
+        expect(example.path2.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr  (rule 1)",
+          "  0. expr: • expr opt_nl '+' expr  (rule 3)",
+          "  0. expr: • expr opt_nl '+' expr  (rule 3)",
+          "  3. expr: expr • opt_nl '+' expr  (rule 3)",
+          "  7. expr: expr opt_nl • '+' expr  (rule 3)",
+          "  9. expr: expr opt_nl '+' • expr  (rule 3)",
+          " 10. expr: expr opt_nl '+' expr •  (rule 3)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                "end of file"
@@ -568,15 +572,15 @@ RSpec.describe Lrama::Counterexamples do
         expect(example.type).to eq :reduce_reduce
         expect(example.conflict_symbol.id.s_value).to eq "'+'"
         # Reduce Conflict
-        expect(example.path1.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr  (rule 1)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: expr • opt_nl '+' expr  (rule 3)",
-          "expr: expr opt_nl • '+' expr  (rule 3)",
-          "expr: expr opt_nl '+' • expr  (rule 3)",
-          "expr: expr opt_nl '+' expr •  (rule 3)"
+        expect(example.path1.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr  (rule 1)",
+          "  0. expr: • expr opt_nl '+' expr  (rule 3)",
+          "  0. expr: • expr opt_nl '+' expr  (rule 3)",
+          "  3. expr: expr • opt_nl '+' expr  (rule 3)",
+          "  7. expr: expr opt_nl • '+' expr  (rule 3)",
+          "  9. expr: expr opt_nl '+' • expr  (rule 3)",
+          " 10. expr: expr opt_nl '+' expr •  (rule 3)"
         ])
         expect(example.derivations1.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                                "end of file"
@@ -585,16 +589,16 @@ RSpec.describe Lrama::Counterexamples do
                       3: expr opt_nl '+' expr  •
         STR
         # Reduce Conflict
-        expect(example.path2.map(&:item).map(&:to_s)).to eq([
-          "$accept: • stmt \"end of file\"  (rule 0)",
-          "stmt: • expr  (rule 1)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: expr • opt_nl '+' expr  (rule 3)",
-          "expr: expr opt_nl • '+' expr  (rule 3)",
-          "expr: expr opt_nl '+' • expr  (rule 3)",
-          "expr: • expr opt_nl '+' expr  (rule 3)",
-          "expr: expr • opt_nl '+' expr  (rule 3)",
-          "opt_nl: •  (rule 6)"
+        expect(example.path2.map {|path| format_example_path(path)}).to eq([
+          "  0. $accept: • stmt \"end of file\"  (rule 0)",
+          "  0. stmt: • expr  (rule 1)",
+          "  0. expr: • expr opt_nl '+' expr  (rule 3)",
+          "  3. expr: expr • opt_nl '+' expr  (rule 3)",
+          "  7. expr: expr opt_nl • '+' expr  (rule 3)",
+          "  9. expr: expr opt_nl '+' • expr  (rule 3)",
+          "  9. expr: • expr opt_nl '+' expr  (rule 3)",
+          " 10. expr: expr • opt_nl '+' expr  (rule 3)",
+          " 10. opt_nl: •  (rule 6)"
         ])
         expect(example.derivations2.render_for_report).to eq(<<~STR.chomp)
           0:  stmt                                            "end of file"
