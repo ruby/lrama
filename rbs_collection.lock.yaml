@@ -1,6 +1,10 @@
 ---
 path: ".gem_rbs_collection"
 gems:
+- name: dbm
+  version: '0'
+  source:
+    type: stdlib
 - name: diff-lcs
   version: '1.5'
   source:
@@ -25,6 +29,14 @@ gems:
   version: '0'
   source:
     type: stdlib
+- name: pstore
+  version: '0'
+  source:
+    type: stdlib
+- name: psych
+  version: '0'
+  source:
+    type: stdlib
 - name: rake
   version: '13.0'
   source:
@@ -46,6 +58,10 @@ gems:
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: strscan
+  version: '0'
+  source:
+    type: stdlib
+- name: timeout
   version: '0'
   source:
     type: stdlib

@@ -368,12 +368,14 @@ module Lrama
       end
     end
 
+    # @rbs [T] (String message) { -> T } -> T
     def with_timeout(message)
       Timeout.timeout(PathSearchTimeLimit, Timeout::Error, message + " timeout of #{PathSearchTimeLimit} sec exceeded") do
         yield
       end
     end
 
+    # @rbs (Float|Integer duration) -> void
     def increment_total_duration(duration)
       @total_duration += duration
 
