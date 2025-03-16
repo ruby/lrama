@@ -5,6 +5,7 @@ require "set"
 
 require_relative "counterexamples/derivation"
 require_relative "counterexamples/example"
+require_relative "counterexamples/node"
 require_relative "counterexamples/path"
 require_relative "counterexamples/state_item"
 require_relative "counterexamples/triple"
@@ -169,18 +170,19 @@ module Lrama
         end
 
         if target_state_item.type == :production
-          queue = [] #: Array[Array[StateItem]]
-          queue << [target_state_item]
+          queue = [] #: Array[Node[StateItem]]
+          queue << Node.new(target_state_item, nil)
 
           # Find reverse production
           while (sis = queue.shift)
             iterate_count += 1
-            si = sis.last
+            si = sis.elem
 
             # Reach to start state
             if si.item.start_item?
-              sis.shift
-              result.concat(sis)
+              a = Node.to_a(sis).reverse
+              a.shift
+              result.concat(a)
               target_state_item = si
               break
             end
@@ -190,15 +192,16 @@ module Lrama
               key = [si.state, si.item.lhs]
               @reverse_productions[key].each do |item|
                 state_item = StateItem.new(si.state, item)
-                queue << (sis + [state_item])
+                queue << Node.new(state_item, sis)
               end
             else
               # @type var key: [StateItem, Grammar::Symbol]
               key = [si, si.item.previous_sym]
               @reverse_transitions[key].each do |prev_target_state_item|
                 next if prev_target_state_item.state != prev_state_item&.state
-                sis.shift
-                result.concat(sis)
+                a = Node.to_a(sis).reverse
+                a.shift
+                result.concat(a)
                 result << prev_target_state_item
                 target_state_item = prev_target_state_item
                 i = j
