@@ -133,6 +133,9 @@ module Lrama
     # @rbs () -> Array[conflict]
     def rr_conflicts: () -> Array[conflict]
 
+    # @rbs () -> bool
+    def splitted_state?: () -> bool
+
     # Definition 3.40 (propagate_lookaheads)
     #
     # @rbs (State next_state) -> lookahead_set
