@@ -26,7 +26,7 @@ module Lrama
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
     #   @productions: Hash[StateItem, Set[StateItem]]
-    #   @reverse_productions: Hash[[State, Grammar::Symbol], Set[States::Item]] # Grammar::Symbol is nterm
+    #   @reverse_productions: Hash[[State, Grammar::Symbol], Set[StateItem]] # Grammar::Symbol is nterm
 
     attr_reader :transitions #: Hash[[StateItem, Grammar::Symbol], StateItem]
     attr_reader :productions #: Hash[StateItem, Set[StateItem]]
@@ -131,7 +131,7 @@ module Lrama
           # @type var key: [State, Grammar::Symbol]
           key = [state, sym]
           @reverse_productions[key] ||= Set.new
-          @reverse_productions[key] << item
+          @reverse_productions[key] << state_item
         end
       end
     end
@@ -216,8 +216,7 @@ module Lrama
             if si.type == :production
               # @type var key: [State, Grammar::Symbol]
               key = [si.state, si.item.lhs]
-              @reverse_productions[key].each do |item|
-                state_item = StateItem.new(si.state, item)
+              @reverse_productions[key].each do |state_item|
                 queue << Node.new(state_item, sis)
               end
             else
@@ -275,8 +274,8 @@ module Lrama
         end
 
         if state_item.item.beginning_of_rule?
-          @reverse_productions[[state_item.state, state_item.item.lhs]]&.each do |item|
-            queue << StateItem.new(state_item.state, item)
+          @reverse_productions[[state_item.state, state_item.item.lhs]]&.each do |si|
+            queue << si
           end
         end
       end
