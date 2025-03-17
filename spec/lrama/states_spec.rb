@@ -2499,6 +2499,175 @@ RSpec.describe Lrama::States do
 
       STR
     end
+
+    it 'recompute states for R/R conflicts' do
+      y = <<~INPUT
+        %{
+        // Prologue
+        %}
+
+        %token a
+        %token b
+        %token c
+
+        %%
+
+        S: S2
+         ;
+
+        S2: a A1 a
+          | a A2 b
+          | b A1 b
+          | b A2 a
+          ;
+
+        A1: c
+         ;
+
+        A2: c
+         ;
+
+        %%
+      INPUT
+      grammar = Lrama::Parser.new(y, "states/ArgumentError_on_goto_follows.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      expect { states.compute_ielr }.not_to raise_error
+
+      io = StringIO.new
+      Lrama::Reporter.new(states: true).report(io, states)
+
+      expect(io.string).to eq(<<~STR)
+        State 5 conflicts: 1 reduce/reduce
+
+
+        State 0
+
+            0 $accept: • S "end of file"
+
+            a  shift, and go to state 1
+            b  shift, and go to state 2
+
+            S   go to state 3
+            S2  go to state 4
+
+
+        State 1
+
+            2 S2: a • A1 a
+            3   | a • A2 b
+
+            c  shift, and go to state 5
+
+            A1  go to state 6
+            A2  go to state 7
+
+
+        State 2
+
+            4 S2: b • A1 b
+            5   | b • A2 a
+
+            c  shift, and go to state 5
+
+            A1  go to state 8
+            A2  go to state 9
+
+
+        State 3
+
+            0 $accept: S • "end of file"
+
+            "end of file"  shift, and go to state 10
+
+
+        State 4
+
+            1 S: S2 •
+
+            $default  reduce using rule 1 (S)
+
+
+        State 5
+
+            6 A1: c •
+            7 A2: c •
+
+            Conflict on a, b. reduce(A1)/reduce(A2)
+
+            a  reduce using rule 6 (A1)
+            a  reduce using rule 7 (A2)
+            b  reduce using rule 6 (A1)
+            b  reduce using rule 7 (A2)
+
+
+        State 6
+
+            2 S2: a A1 • a
+
+            a  shift, and go to state 11
+
+
+        State 7
+
+            3 S2: a A2 • b
+
+            b  shift, and go to state 12
+
+
+        State 8
+
+            4 S2: b A1 • b
+
+            b  shift, and go to state 13
+
+
+        State 9
+
+            5 S2: b A2 • a
+
+            a  shift, and go to state 14
+
+
+        State 10
+
+            0 $accept: S "end of file" •
+
+            $default  accept
+
+
+        State 11
+
+            2 S2: a A1 a •
+
+            $default  reduce using rule 2 (S2)
+
+
+        State 12
+
+            3 S2: a A2 b •
+
+            $default  reduce using rule 3 (S2)
+
+
+        State 13
+
+            4 S2: b A1 b •
+
+            $default  reduce using rule 4 (S2)
+
+
+        State 14
+
+            5 S2: b A2 a •
+
+            $default  reduce using rule 5 (S2)
+
+
+      STR
+    end
   end
 
   describe "#validate!" do
