@@ -2501,6 +2501,8 @@ RSpec.describe Lrama::States do
     end
 
     it 'recompute states for R/R conflicts' do
+      pending "IELR doesn't split R/R conflict now"
+
       y = <<~INPUT
         %{
         // Prologue
@@ -2540,9 +2542,6 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
-        State 5 conflicts: 1 reduce/reduce
-
-
         State 0
 
             0 $accept: • S "end of file"
@@ -2570,7 +2569,7 @@ RSpec.describe Lrama::States do
             4 S2: b • A1 b
             5   | b • A2 a
 
-            c  shift, and go to state 5
+            c  shift, and go to state 15
 
             A1  go to state 8
             A2  go to state 9
@@ -2595,12 +2594,8 @@ RSpec.describe Lrama::States do
             6 A1: c •
             7 A2: c •
 
-            Conflict on a, b. reduce(A1)/reduce(A2)
-
-            a  reduce using rule 6 (A1)
-            a  reduce using rule 7 (A2)
-            b  reduce using rule 6 (A1)
-            b  reduce using rule 7 (A2)
+            b         reduce using rule 7 (A2)
+            $default  reduce using rule 6 (A1)
 
 
         State 6
@@ -2664,6 +2659,15 @@ RSpec.describe Lrama::States do
             5 S2: b A2 a •
 
             $default  reduce using rule 5 (S2)
+
+
+        State 15
+
+            6 A1: c •
+            7 A2: c •
+
+            a         reduce usgin rule 7 (A2)
+            $default  reduce using rule 6 (A1)
 
 
       STR
