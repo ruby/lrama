@@ -129,6 +129,8 @@ module Lrama
 
     # @rbs () -> void
     def compute_ielr
+      # Preparation
+      report_duration(:clear_conflicts) { clear_conflicts }
       # Phase 1
       report_duration(:compute_predecessors) { compute_predecessors }
       report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
@@ -575,6 +577,11 @@ module Lrama
           [-count, rule_id]
         end.first
       end
+    end
+
+    # @rbs () -> void
+    def clear_conflicts
+      states.each(&:clear_conflicts)
     end
 
     # Definition 3.15 (Predecessors)

@@ -50,6 +50,12 @@ module Lrama
             []
           end
         end
+
+        # @rbs () -> void
+        def clear_conflicts
+          @not_selected_symbols = []
+          @default_reduction = nil
+        end
       end
     end
   end

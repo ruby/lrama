@@ -27,6 +27,11 @@ module Lrama
           @to_items = to_items
           @to_state = to_state
         end
+
+        # @rbs () -> void
+        def clear_conflicts
+          @not_selected = nil
+        end
       end
     end
   end

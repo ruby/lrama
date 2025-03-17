@@ -33,6 +33,9 @@ module Lrama
 
         # @rbs () -> (::Array[Grammar::Symbol?])
         def selected_look_ahead: () -> ::Array[Grammar::Symbol?]
+
+        # @rbs () -> void
+        def clear_conflicts: () -> void
       end
     end
   end
