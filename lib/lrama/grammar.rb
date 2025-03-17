@@ -265,17 +265,17 @@ module Lrama
       @sym_to_rules[sym.number]
     end
 
-    # @rbs 
+    # @rbs (String s_value) -> Array[Rule]
     def select_rules_by_s_value(s_value)
       @rules.select {|rule| rule.lhs.id.s_value == s_value }
     end
 
-    # @rbs 
+    # @rbs () -> Array[String]
     def unique_rule_s_values
       @rules.map {|rule| rule.lhs.id.s_value }.uniq
     end
 
-    # @rbs 
+    # @rbs () -> bool
     def ielr_defined?
       @define.key?('lr.type') && @define['lr.type'] == 'ielr'
     end

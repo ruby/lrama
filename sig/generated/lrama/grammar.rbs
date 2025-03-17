@@ -205,14 +205,14 @@ module Lrama
     # @rbs (Grammar::Symbol sym) -> Array[Rule]?
     def find_rules_by_symbol: (Grammar::Symbol sym) -> Array[Rule]?
 
-    # @rbs 
-    def select_rules_by_s_value: (untyped s_value) -> untyped
+    # @rbs (String s_value) -> Array[Rule]
+    def select_rules_by_s_value: (String s_value) -> Array[Rule]
 
-    # @rbs 
-    def unique_rule_s_values: () -> untyped
+    # @rbs () -> Array[String]
+    def unique_rule_s_values: () -> Array[String]
 
-    # @rbs 
-    def ielr_defined?: () -> untyped
+    # @rbs () -> bool
+    def ielr_defined?: () -> bool
 
     private
 
