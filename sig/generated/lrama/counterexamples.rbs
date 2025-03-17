@@ -20,13 +20,13 @@ module Lrama
 
     @reverse_transitions: Hash[[ StateItem, Grammar::Symbol ], Set[StateItem]]
 
-    @productions: Hash[StateItem, Set[States::Item]]
+    @productions: Hash[StateItem, Set[StateItem]]
 
     @reverse_productions: Hash[[ State, Grammar::Symbol ], Set[States::Item]]
 
     attr_reader transitions: Hash[[ StateItem, Grammar::Symbol ], StateItem]
 
-    attr_reader productions: Hash[StateItem, Set[States::Item]]
+    attr_reader productions: Hash[StateItem, Set[StateItem]]
 
     # @rbs (States states) -> void
     def initialize: (States states) -> void
