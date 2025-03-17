@@ -235,6 +235,11 @@ module Lrama
       end
     end
 
+    # @rbs () -> bool
+    def splitted_state?
+      @lalr_isocore != self
+    end
+
     # Definition 3.40 (propagate_lookaheads)
     #
     # @rbs (State next_state) -> lookahead_set
