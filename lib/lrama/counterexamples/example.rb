@@ -135,9 +135,8 @@ module Lrama
           end
 
           if next_sym.nterm? && next_sym.first_set.include?(sym)
-            @counterexamples.productions[si].each do |next_item|
-              next if next_item.empty_rule?
-              next_si = StateItem.new(si.state, next_item)
+            @counterexamples.productions[si].each do |next_si|
+              next if next_si.item.empty_rule?
               next if sis.include?(next_si)
               queue << (sis + [next_si])
             end

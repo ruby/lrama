@@ -25,11 +25,11 @@ module Lrama
     #   @exceed_cumulative_time_limit: bool
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
-    #   @productions: Hash[StateItem, Set[States::Item]]
+    #   @productions: Hash[StateItem, Set[StateItem]]
     #   @reverse_productions: Hash[[State, Grammar::Symbol], Set[States::Item]] # Grammar::Symbol is nterm
 
     attr_reader :transitions #: Hash[[StateItem, Grammar::Symbol], StateItem]
-    attr_reader :productions #: Hash[StateItem, Set[States::Item]]
+    attr_reader :productions #: Hash[StateItem, Set[StateItem]]
 
     # @rbs (States states) -> void
     def initialize(states)
@@ -111,13 +111,13 @@ module Lrama
 
       @states.states.each do |state|
         # Grammar::Symbol is LHS
-        h = {} #: Hash[Grammar::Symbol, Set[States::Item]]
+        h = {} #: Hash[Grammar::Symbol, Set[StateItem]]
 
         state.closure.each do |item|
           sym = item.lhs
 
           h[sym] ||= Set.new
-          h[sym] << item
+          h[sym] << StateItem.new(state, item)
         end
 
         state.items.each do |item|
@@ -333,8 +333,7 @@ module Lrama
         end
 
         # production step
-        @productions[triple.state_item]&.each do |item|
-          si = StateItem.new(triple.state, item)
+        @productions[triple.state_item]&.each do |si|
           next unless reachable.include?(si)
 
           l = follow_l(triple.item, triple.l)
