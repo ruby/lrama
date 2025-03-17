@@ -235,6 +235,22 @@ module Lrama
       end
     end
 
+    # Clear information related to conflicts.
+    # IELR computation re-calculates conflicts and default reduction of states
+    # after LALR computation.
+    # Call this method before IELR computation to avoid duplicated conflicts information
+    # is stored.
+    #
+    # @rbs () -> void
+    def clear_conflicts
+      @conflicts = []
+      @resolved_conflicts = []
+      @default_reduction_rule = nil
+
+      term_transitions.each(&:clear_conflicts)
+      reduces.each(&:clear_conflicts)
+    end
+
     # Definition 3.40 (propagate_lookaheads)
     #
     # @rbs (State next_state) -> lookahead_set

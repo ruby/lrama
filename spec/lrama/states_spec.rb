@@ -2096,7 +2096,6 @@ RSpec.describe Lrama::States do
             4     | expr "==" expr •
 
             "=="  error (nonassociative)
-            "=="  error (nonassociative)
 
             $default  reduce using rule 4 (expr)
 

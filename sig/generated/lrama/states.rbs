@@ -146,6 +146,9 @@ module Lrama
     # @rbs () -> void
     def compute_default_reduction: () -> void
 
+    # @rbs () -> void
+    def clear_conflicts: () -> void
+
     # Definition 3.15 (Predecessors)
     #
     # @rbs () -> void
