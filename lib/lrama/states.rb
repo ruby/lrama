@@ -722,7 +722,7 @@ module Lrama
       end
     end
 
-    # @rbs (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
+    # @rbs (State state, State::lookahead_set filtered_lookaheads) -> void
     def merge_lookaheads(state, filtered_lookaheads)
       return if state.kernels.all? {|item| (filtered_lookaheads[item] - state.item_lookahead_set[item]).empty? }
 
