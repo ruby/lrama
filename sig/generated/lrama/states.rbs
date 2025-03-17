@@ -193,8 +193,8 @@ module Lrama
     # @rbs () -> void
     def compute_inadequacy_annotations: () -> void
 
-    # @rbs (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
-    def merge_lookaheads: (State state, Hash[States::Item, Array[Grammar::Symbol]] filtered_lookaheads) -> void
+    # @rbs (State state, State::lookahead_set filtered_lookaheads) -> void
+    def merge_lookaheads: (State state, State::lookahead_set filtered_lookaheads) -> void
 
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state: (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
