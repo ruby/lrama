@@ -2501,8 +2501,6 @@ RSpec.describe Lrama::States do
     end
 
     it 'recompute states for R/R conflicts' do
-      pending "IELR doesn't split R/R conflict now"
-
       y = <<~INPUT
         %{
         // Prologue

@@ -322,7 +322,7 @@ module Lrama
           if action.is_a?(Action::Shift)
             [action, nil]
           else
-            [action, action.rule.empty_rule? ? lhs_contributions(action.rule.lhs, token) : kernels.map {|k| [k, k.end_of_rule?] }.to_h]
+            [action, action.rule.empty_rule? ? lhs_contributions(action.rule.lhs, token) : kernels.map {|k| [k, k.rule == action.item.rule && k.end_of_rule?] }.to_h]
           end
         }.to_h
         @annotation_list << InadequacyAnnotation.new(self, token, actions, contribution_matrix)

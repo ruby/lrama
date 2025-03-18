@@ -210,5 +210,8 @@ module Lrama
 
     # @rbs (Logger logger) -> bool
     def rr_conflicts_within_threshold?: (Logger logger) -> bool
+
+    # @rbs () -> void
+    def clear_look_ahead_sets: () -> void
   end
 end
