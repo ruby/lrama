@@ -25,4 +25,5 @@ target :lib do
   check "lib/lrama/options.rb"
   check "lib/lrama/tracer.rb"
   check "lib/lrama/version.rb"
+  check "lib/lrama/warnings.rb"
 end
