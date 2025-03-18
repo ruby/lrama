@@ -32,7 +32,7 @@ module Lrama
 
       attr_accessor :original_rule #: Rule
 
-      # @rbs 
+      # @rbs (Rule other) -> bool
       def ==(other)
         self.class == other.class &&
         self.lhs == other.lhs &&
@@ -62,7 +62,7 @@ module Lrama
         "#{l} -> #{r}"
       end
 
-      # @rbs 
+      # @rbs () -> (RailroadDiagrams::Skip | RailroadDiagrams::Sequence)
       def to_diagrams
         if rhs.empty?
           RailroadDiagrams::Skip.new

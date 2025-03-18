@@ -36,8 +36,8 @@ module Lrama
 
       attr_accessor original_rule: Rule
 
-      # @rbs 
-      def ==: (untyped other) -> untyped
+      # @rbs (Rule other) -> bool
+      def ==: (Rule other) -> bool
 
       # @rbs () -> String
       def display_name: () -> String
@@ -45,8 +45,8 @@ module Lrama
       # @rbs () -> String
       def display_name_without_action: () -> String
 
-      # @rbs 
-      def to_diagrams: () -> untyped
+      # @rbs () -> (RailroadDiagrams::Skip | RailroadDiagrams::Sequence)
+      def to_diagrams: () -> (RailroadDiagrams::Skip | RailroadDiagrams::Sequence)
 
       # Used by #user_actions
       #
