@@ -83,6 +83,7 @@ module Lrama
       def setup_rules
         preprocess_references unless @skip_preprocess_references
         process_rhs
+        resolve_inline_rules
         build_rules
       end
 
@@ -111,6 +112,7 @@ module Lrama
       # @rbs () -> void
       def build_rules
         tokens = @replaced_rhs
+        return if tokens.any? { |t| @parameterized_resolver.find_inline(t) }
 
         rule = Rule.new(
           id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
@@ -187,6 +189,20 @@ module Lrama
       end
 
       # @rbs () -> void
+      def resolve_inline_rules
+        while @rule_builders_for_parameterized.any?(&:has_inline_rules?) do
+          @rule_builders_for_parameterized = @rule_builders_for_parameterized.flat_map do |rule_builder|
+            if rule_builder.has_inline_rules?
+              inlined_builders = Inline::Resolver.new(rule_builder).resolve
+              inlined_builders.each { |builder| builder.setup_rules }
+              inlined_builders
+            else
+              rule_builder
+            end
+          end
+        end
+      end
+
       def numberize_references
         # Bison n'th component is 1-origin
         (rhs + [user_code]).compact.each.with_index(1) do |token, i|

@@ -87,7 +87,9 @@ module Lrama
       def process_rhs: () -> void
 
       # @rbs () -> void
-      def numberize_references: () -> void
+      def resolve_inline_rules: () -> void
+
+      def numberize_references: () -> untyped
 
       # @rbs () -> void
       def flush_user_code: () -> void
