@@ -40,7 +40,7 @@ module Lrama
     #     def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
     #   end
     #
-    #   include Symbols::_DelegatedMethods
+    #   include Symbols::Resolver::_DelegatedMethods
     #
     #   @rule_counter: Counter
     #   @percent_codes: Array[PercentCode]

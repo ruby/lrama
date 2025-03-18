@@ -1,0 +1,128 @@
+# Generated from lib/lrama/grammar/symbols/resolver.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Symbols
+      class Resolver
+        interface _DelegatedMethods
+          def symbols: () -> Array[Grammar::Symbol]
+
+          def nterms: () -> Array[Grammar::Symbol]
+
+          def terms: () -> Array[Grammar::Symbol]
+
+          def add_nterm: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
+
+          def add_term: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
+
+          def find_symbol_by_number!: (Integer number) -> Grammar::Symbol
+
+          def find_symbol_by_id!: (Lexer::Token id) -> Grammar::Symbol
+
+          def token_to_symbol: (Lexer::Token token) -> Grammar::Symbol
+
+          def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
+
+          def fill_nterm_type: (Array[Grammar::Type] types) -> void
+
+          def fill_symbol_number: () -> void
+
+          def fill_printer: (Array[Grammar::Printer] printers) -> void
+
+          def fill_destructor: (Array[Destructor] destructors) -> (Destructor | bot)
+
+          def fill_error_token: (Array[Grammar::ErrorToken] error_tokens) -> void
+
+          def sort_by_number!: () -> Array[Grammar::Symbol]
+        end
+
+        @symbols: Array[Grammar::Symbol]?
+
+        @number: Integer
+
+        @used_numbers: Hash[Integer, bool]
+
+        attr_reader terms: Array[Grammar::Symbol]
+
+        attr_reader nterms: Array[Grammar::Symbol]
+
+        # @rbs () -> void
+        def initialize: () -> void
+
+        # @rbs () -> Array[Grammar::Symbol]
+        def symbols: () -> Array[Grammar::Symbol]
+
+        # @rbs () -> Array[Grammar::Symbol]
+        def sort_by_number!: () -> Array[Grammar::Symbol]
+
+        # @rbs (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
+        def add_term: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
+
+        # @rbs (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
+        def add_nterm: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
+
+        # @rbs 
+        def find_term_by_s_value: (untyped s_value) -> untyped
+
+        # @rbs (::String s_value) -> Grammar::Symbol?
+        def find_symbol_by_s_value: (::String s_value) -> Grammar::Symbol?
+
+        # @rbs (::String s_value) -> Grammar::Symbol
+        def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
+
+        # @rbs (Lexer::Token id) -> Grammar::Symbol?
+        def find_symbol_by_id: (Lexer::Token id) -> Grammar::Symbol?
+
+        # @rbs (Lexer::Token id) -> Grammar::Symbol
+        def find_symbol_by_id!: (Lexer::Token id) -> Grammar::Symbol
+
+        # @rbs (Integer token_id) -> Grammar::Symbol?
+        def find_symbol_by_token_id: (Integer token_id) -> Grammar::Symbol?
+
+        # @rbs (Integer number) -> Grammar::Symbol
+        def find_symbol_by_number!: (Integer number) -> Grammar::Symbol
+
+        # @rbs () -> void
+        def fill_symbol_number: () -> void
+
+        # @rbs (Array[Grammar::Type] types) -> void
+        def fill_nterm_type: (Array[Grammar::Type] types) -> void
+
+        # @rbs (Array[Grammar::Printer] printers) -> void
+        def fill_printer: (Array[Grammar::Printer] printers) -> void
+
+        # @rbs (Array[Destructor] destructors) -> (Array[Grammar::Symbol] | bot)
+        def fill_destructor: (Array[Destructor] destructors) -> (Array[Grammar::Symbol] | bot)
+
+        # @rbs (Array[Grammar::ErrorToken] error_tokens) -> void
+        def fill_error_token: (Array[Grammar::ErrorToken] error_tokens) -> void
+
+        # @rbs (Lexer::Token token) -> Grammar::Symbol
+        def token_to_symbol: (Lexer::Token token) -> Grammar::Symbol
+
+        # @rbs () -> void
+        def validate!: () -> void
+
+        private
+
+        # @rbs (Lexer::Token id) -> Grammar::Symbol
+        def find_nterm_by_id!: (Lexer::Token id) -> Grammar::Symbol
+
+        # @rbs () -> void
+        def fill_terms_number: () -> void
+
+        # @rbs () -> void
+        def fill_nterms_number: () -> void
+
+        # @rbs () -> Hash[Integer, bool]
+        def used_numbers: () -> Hash[Integer, bool]
+
+        # @rbs () -> void
+        def validate_number_uniqueness!: () -> void
+
+        # @rbs () -> void
+        def validate_alias_name_uniqueness!: () -> void
+      end
+    end
+  end
+end
