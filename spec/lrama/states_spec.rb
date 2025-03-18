@@ -2666,7 +2666,7 @@ RSpec.describe Lrama::States do
             6 A1: c •
             7 A2: c •
 
-            a         reduce usgin rule 7 (A2)
+            a         reduce using rule 7 (A2)
             $default  reduce using rule 6 (A1)
 
 
