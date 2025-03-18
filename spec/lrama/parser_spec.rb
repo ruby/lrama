@@ -2529,7 +2529,7 @@ RSpec.describe Lrama::Parser do
       end
 
       context 'when inline have rhs include parameterized rule' do
-        let(:path) { "inlining/inline_parameterized_rhs.y" }
+        let(:path) { "inlining/rhs_include_parameterized.y" }
 
         it "expands inlining rules" do
           expect(grammar.nterms.sort_by(&:number)).to match_symbols([
@@ -2613,8 +2613,8 @@ RSpec.describe Lrama::Parser do
         end
       end
 
-      context 'when inline with parameterized rule' do
-        let(:path) { "inlining/with_parameterized.y" }
+      context 'when inline with parameters' do
+        let(:path) { "inlining/with_parameters.y" }
 
         it "expands inlining rules" do
           expect(grammar.nterms.sort_by(&:number)).to match_symbols([
