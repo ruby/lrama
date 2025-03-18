@@ -11,7 +11,7 @@ module Lrama
   # "Efficient Computation of LALR(1) Look-Ahead Sets"
   #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
-    # TODO: rbs-inline 0.10.0 doesn't support instance variables.
+    # TODO: rbs-inline 0.11.0 doesn't support instance variables.
     #       Move these type declarations above instance variable definitions, once it's supported.
     #
     # @rbs!
