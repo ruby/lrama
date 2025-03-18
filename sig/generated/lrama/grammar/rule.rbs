@@ -1,0 +1,83 @@
+# Generated from lib/lrama/grammar/rule.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    # _rhs holds original RHS element. Use rhs to refer to Symbol.
+    class Rule
+      interface _DelegatedMethods
+        def lhs: () -> Grammar::Symbol
+
+        def rhs: () -> Array[Grammar::Symbol]
+      end
+
+      attr_accessor id: Integer
+
+      attr_accessor _lhs: Lexer::Token
+
+      attr_accessor lhs: Grammar::Symbol
+
+      attr_accessor lhs_tag: Lexer::Token::Tag?
+
+      attr_accessor _rhs: Array[Lexer::Token]
+
+      attr_accessor rhs: Array[Grammar::Symbol]
+
+      attr_accessor token_code: Grammar::Code?
+
+      attr_accessor position_in_original_rule_rhs: Integer
+
+      attr_accessor nullable: bool
+
+      attr_accessor precedence_sym: Grammar::Symbol?
+
+      attr_accessor lineno: Integer?
+
+      def initialize: (?id: Integer, ?_lhs: Lexer::Token, ?lhs: Lexer::Token, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Lexer::Token], ?rhs: Array[Grammar::Symbol], ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool, ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?) -> void
+
+      attr_accessor original_rule: Rule
+
+      # @rbs (Rule other) -> bool
+      def ==: (Rule other) -> bool
+
+      # @rbs () -> String
+      def display_name: () -> String
+
+      # @rbs () -> String
+      def display_name_without_action: () -> String
+
+      # @rbs () -> (RailroadDiagrams::Skip | RailroadDiagrams::Sequence)
+      def to_diagrams: () -> (RailroadDiagrams::Skip | RailroadDiagrams::Sequence)
+
+      # Used by #user_actions
+      #
+      # @rbs () -> String
+      def as_comment: () -> String
+
+      # @rbs () -> String
+      def with_actions: () -> String
+
+      # opt_nl: ε     <-- empty_rule
+      #       | '\n'  <-- not empty_rule
+      #
+      # @rbs () -> bool
+      def empty_rule?: () -> bool
+
+      # @rbs () -> Precedence?
+      def precedence: () -> Precedence?
+
+      # @rbs () -> bool
+      def initial_rule?: () -> bool
+
+      # @rbs () -> String?
+      def translated_code: () -> String?
+
+      # @rbs () -> bool
+      def contains_at_reference?: () -> bool
+
+      private
+
+      # @rbs () -> Array[(RailroadDiagrams::Terminal | RailroadDiagrams::NonTerminal)]
+      def rhs_to_diagram: () -> Array[RailroadDiagrams::Terminal | RailroadDiagrams::NonTerminal]
+    end
+  end
+end
