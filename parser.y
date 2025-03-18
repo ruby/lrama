@@ -6,7 +6,7 @@ class Lrama::Parser
 
 rule
 
-  input: prologue_declaration* bison_declaration* "%%" rules_or_grammar_declaration+ epilogue_declaration?
+  input: prologue_declaration* bison_declaration* ("%%" rules_or_grammar_declaration+ epilogue_declaration?)?
 
   prologue_declaration:
       "%{"

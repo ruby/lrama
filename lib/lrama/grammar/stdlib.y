@@ -138,7 +138,3 @@
 %rule separated_list(separator, X)
                 : option(separated_nonempty_list(separator, X))
                 ;
-
-%%
-
-%union{};
