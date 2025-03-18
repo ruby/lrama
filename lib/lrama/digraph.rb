@@ -29,6 +29,7 @@ module Lrama
   class Digraph
     # TODO: rbs-inline 0.11.0 doesn't support instance variables.
     #       Move these type declarations above instance variable definitions, once it's supported.
+    #       see: https://github.com/soutaro/rbs-inline/pull/149
     #
     # @rbs!
     #   interface _Or
