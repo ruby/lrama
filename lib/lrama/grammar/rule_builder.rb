@@ -56,6 +56,7 @@ module Lrama
       def setup_rules
         preprocess_references unless @skip_preprocess_references
         process_rhs
+        resolve_inline_rules
         build_rules
       end
 
@@ -79,6 +80,7 @@ module Lrama
 
       def build_rules
         tokens = @replaced_rhs
+        return if tokens.any? { |t| @parameterized_resolver.find_inline(t) }
 
         rule = Rule.new(
           id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
@@ -148,6 +150,20 @@ module Lrama
             @rule_builders_for_derived_rules << rule_builder
           else
             raise "Unexpected token. #{token}"
+          end
+        end
+      end
+
+      def resolve_inline_rules
+        while @rule_builders_for_parameterized.any?(&:has_inline_rules?) do
+          @rule_builders_for_parameterized = @rule_builders_for_parameterized.flat_map do |rule_builder|
+            if rule_builder.has_inline_rules?
+              inlined_builders = Inline::Resolver.new(rule_builder).resolve
+              inlined_builders.each { |builder| builder.setup_rules }
+              inlined_builders
+            else
+              rule_builder
+            end
           end
         end
       end
