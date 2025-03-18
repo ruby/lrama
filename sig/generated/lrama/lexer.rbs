@@ -1,0 +1,54 @@
+# Generated from lib/lrama/lexer.rb with RBS::Inline
+
+module Lrama
+  class Lexer
+    type token = lexer_token | c_token
+
+    type lexer_token = [ String, String ] | [ ::Symbol, Token::Tag ] | [ ::Symbol, Token::Char ] | [ ::Symbol, String ] | [ ::Symbol, Integer ] | [ ::Symbol, Token::Ident ]
+
+    type c_token = [ :C_DECLARATION, Token::UserCode ]
+
+    attr_reader head_line: Integer
+
+    attr_reader head_column: Integer
+
+    attr_reader line: Integer
+
+    attr_accessor status: untyped
+
+    attr_accessor end_symbol: String?
+
+    SYMBOLS: untyped
+
+    PERCENT_TOKENS: untyped
+
+    # @rbs (GrammarFile grammar_file) -> void
+    def initialize: (GrammarFile grammar_file) -> void
+
+    # @rbs () -> token?
+    def next_token: () -> token?
+
+    # @rbs () -> Integer
+    def column: () -> Integer
+
+    # @rbs () -> Location
+    def location: () -> Location
+
+    # @rbs () -> lexer_token?
+    def lex_token: () -> lexer_token?
+
+    # @rbs () -> c_token
+    def lex_c_code: () -> c_token
+
+    private
+
+    # @rbs () -> void
+    def lex_comment: () -> void
+
+    # @rbs () -> void
+    def reset_first_position: () -> void
+
+    # @rbs () -> void
+    def newline: () -> void
+  end
+end
