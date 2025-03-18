@@ -61,8 +61,8 @@ module Lrama
         # @rbs (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
         def add_nterm: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
 
-        # @rbs 
-        def find_term_by_s_value: (untyped s_value) -> untyped
+        # @rbs (::String s_value) -> Grammar::Symbol?
+        def find_term_by_s_value: (::String s_value) -> Grammar::Symbol?
 
         # @rbs (::String s_value) -> Grammar::Symbol?
         def find_symbol_by_s_value: (::String s_value) -> Grammar::Symbol?

@@ -88,7 +88,7 @@ module Lrama
           nterm
         end
 
-        # @rbs 
+        # @rbs (::String s_value) -> Grammar::Symbol?
         def find_term_by_s_value(s_value)
           terms.find { |s| s.id.s_value == s_value }
         end
