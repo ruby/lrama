@@ -4,7 +4,7 @@
 module Lrama
   class Grammar
     class RuleBuilder
-      # TODO: rbs-inline 0.10.0 doesn't support instance variables.
+      # TODO: rbs-inline 0.11.0 doesn't support instance variables.
       #       Move these type declarations above instance variable definitions, once it's supported.
       #
       # @rbs!

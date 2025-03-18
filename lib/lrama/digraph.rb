@@ -27,7 +27,7 @@ module Lrama
   # @rbs generic X < Object -- Type of a node
   # @rbs generic Y < _Or    -- Type of attribute sets assigned to a node which should support merge operation (#| method)
   class Digraph
-    # TODO: rbs-inline 0.10.0 doesn't support instance variables.
+    # TODO: rbs-inline 0.11.0 doesn't support instance variables.
     #       Move these type declarations above instance variable definitions, once it's supported.
     #
     # @rbs!
