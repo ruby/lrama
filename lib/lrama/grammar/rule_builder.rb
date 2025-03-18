@@ -4,25 +4,24 @@
 module Lrama
   class Grammar
     class RuleBuilder
+      # TODO: rbs-inline 0.10.0 doesn't support instance variables.
+      #       Move these type declarations above instance variable definitions, once it's supported.
+      #
       # @rbs!
-      #   @rule_counter: Counter
-      #   @midrule_action_counter: Counter
-      #   @parameterized_resolver: Grammar::Parameterized::Resolver
       #   @position_in_original_rule_rhs: Integer?
       #   @skip_preprocess_references: bool
-      #   @user_code: Lexer::Token::UserCode?
+      #   @rules: Array[Rule]
       #   @rule_builders_for_parameterized: Array[RuleBuilder]
       #   @rule_builders_for_derived_rules: Array[RuleBuilder]
-      #   @rules: Array[Rule]
-      #   @replaced_rhs: Array[Lexer::Token]
       #   @parameterized_rules: Array[Rule]
       #   @midrule_action_rules: Array[Rule]
+      #   @replaced_rhs: Array[Lexer::Token]?
 
-      attr_accessor :lhs #: Lexer::Token
+      attr_accessor :lhs #: Lexer::Token?
       attr_accessor :line #: Integer?
       attr_reader :rule_counter #: Counter
       attr_reader :midrule_action_counter #: Counter
-      attr_reader :parameterized_resolver #: Parameterized::Resolver
+      attr_reader :parameterized_resolver #: Grammar::Parameterized::Resolver
       attr_reader :lhs_tag #: Lexer::Token::Tag?
       attr_reader :rhs #: Array[Lexer::Token]
       attr_reader :user_code #: Lexer::Token::UserCode?
@@ -87,7 +86,7 @@ module Lrama
         build_rules
       end
 
-      # @rbs () -> Array[Rule]
+      # @rbs () -> Array[Grammar::Rule]
       def rules
         @parameterized_rules + @midrule_action_rules + @rules
       end
@@ -111,7 +110,7 @@ module Lrama
 
       # @rbs () -> void
       def build_rules
-        tokens = @replaced_rhs
+        tokens = @replaced_rhs #: Array[Lexer::Token]
         return if tokens.any? { |t| @parameterized_resolver.find_inline(t) }
 
         rule = Rule.new(
@@ -137,14 +136,14 @@ module Lrama
       def process_rhs
         return if @replaced_rhs
 
-        @replaced_rhs = []
+        replaced_rhs = [] #: Array[Lexer::Token]
 
         rhs.each_with_index do |token, i|
           case token
           when Lrama::Lexer::Token::Char
-            @replaced_rhs << token
+            replaced_rhs << token
           when Lrama::Lexer::Token::Ident
-            @replaced_rhs << token
+            replaced_rhs << token
           when Lrama::Lexer::Token::InstantiateRule
             parameterized_rule = @parameterized_resolver.find_rule(token)
             raise "Unexpected token. #{token}" unless parameterized_rule
@@ -152,10 +151,10 @@ module Lrama
             bindings = Binding.new(parameterized_rule.parameters, token.args)
             lhs_s_value = bindings.concatenated_args_str(token)
             if (created_lhs = @parameterized_resolver.created_lhs(lhs_s_value))
-              @replaced_rhs << created_lhs
+              replaced_rhs << created_lhs
             else
               lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: token.location)
-              @replaced_rhs << lhs_token
+              replaced_rhs << lhs_token
               @parameterized_resolver.created_lhs_list << lhs_token
               parameterized_rule.rhs.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: token.lhs_tag || parameterized_rule.tag)
@@ -173,7 +172,7 @@ module Lrama
             prefix = token.referred ? "@" : "$@"
             tag = token.tag || lhs_tag
             new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
-            @replaced_rhs << new_token
+            replaced_rhs << new_token
 
             rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, i, lhs_tag: tag, skip_preprocess_references: true)
             rule_builder.lhs = new_token
@@ -186,6 +185,8 @@ module Lrama
             raise "Unexpected token. #{token}"
           end
         end
+
+        @replaced_rhs = replaced_rhs
       end
 
       # @rbs () -> void
@@ -203,6 +204,7 @@ module Lrama
         end
       end
 
+      # @rbs () -> void
       def numberize_references
         # Bison n'th component is 1-origin
         (rhs + [user_code]).compact.each.with_index(1) do |token, i|
@@ -215,7 +217,10 @@ module Lrama
               if ref_name == '$'
                 ref.name = '$'
               else
-                candidates = ([lhs] + rhs).each_with_index.select {|token, _i| token.referred_by?(ref_name) }
+                candidates = ([lhs] + rhs).each_with_index.select do |token, _i|
+                  # @type var token: Lexer::Token
+                  token.referred_by?(ref_name)
+                end
 
                 if candidates.size >= 2
                   token.invalid_ref(ref, "Referring symbol `#{ref_name}` is duplicated.")
