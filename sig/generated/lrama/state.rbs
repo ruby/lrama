@@ -108,7 +108,7 @@ module Lrama
     def update_transition: (Action::Shift | Action::Goto transition, State next_state) -> void
 
     # @rbs () -> void
-    def clear_transitions_cache: () -> void
+    def update_transitions_caches: () -> void
 
     # @rbs () -> Array[Action::Shift]
     def selected_term_transitions: () -> Array[Action::Shift]

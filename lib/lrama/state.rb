@@ -158,14 +158,25 @@ module Lrama
     def update_transition(transition, next_state)
       set_items_to_state(transition.to_items, next_state)
       next_state.append_predecessor(self)
-      clear_transitions_cache
+      update_transitions_caches(transition)
     end
 
     # @rbs () -> void
-    def clear_transitions_cache
+    def update_transitions_caches(transition)
+      new_transition =
+        if transition.next_sym.term?
+          Action::Shift.new(self, transition.next_sym, transition.to_items, @items_to_state[transition.to_items])
+        else
+          Action::Goto.new(self, transition.next_sym, transition.to_items, @items_to_state[transition.to_items])
+        end
+
+      @transitions.delete(transition)
+      @transitions << new_transition
       @nterm_transitions = nil
       @term_transitions = nil
-      @transitions = nil
+
+      @follow_kernel_items[new_transition] = @follow_kernel_items.delete(transition)
+      @always_follows[new_transition] = @always_follows.delete(transition)
     end
 
     # @rbs () -> Array[Action::Shift]
