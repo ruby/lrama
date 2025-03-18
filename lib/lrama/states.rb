@@ -141,6 +141,7 @@ module Lrama
       # Phase 3
       report_duration(:split_states) { split_states }
       # Phase 4
+      report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
       report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
       report_duration(:compute_reads_relation) { compute_reads_relation }
       report_duration(:compute_read_sets) { compute_read_sets }
@@ -790,6 +791,17 @@ module Lrama
 
       logger.error("reduce/reduce conflicts: #{rr_conflicts_count} found, #{expected} expected")
       false
+    end
+
+    # @rbs () -> void
+    def clear_look_ahead_sets
+      @direct_read_sets.clear
+      @reads_relation.clear
+      @read_sets.clear
+      @includes_relation.clear
+      @lookback_relation.clear
+      @follow_sets.clear
+      @la.clear
     end
   end
 end
