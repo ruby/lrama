@@ -408,7 +408,7 @@ module Lrama
 
     # @rbs () -> void
     def resolve_inline_rules
-      while @rule_builders.any?(&:has_inline_rules?) do
+      if @rule_builders.any?(&:has_inline_rules?)
         @rule_builders = @rule_builders.flat_map do |builder|
           if builder.has_inline_rules?
             Inline::Resolver.new(builder).resolve
