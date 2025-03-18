@@ -23,5 +23,6 @@ target :lib do
   check "lib/lrama/logger.rb"
   check "lib/lrama/option_parser.rb"
   check "lib/lrama/options.rb"
+  check "lib/lrama/reporter.rb"
   check "lib/lrama/tracer.rb"
 end

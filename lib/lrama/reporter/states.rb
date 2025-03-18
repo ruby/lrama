@@ -4,7 +4,7 @@
 module Lrama
   class Reporter
     class States
-      # @rbs (itemsets: bool, lookaheads: bool, solved: bool, counterexamples: bool, verbose: bool, **untyped _) -> void
+      # @rbs (?itemsets: bool, ?lookaheads: bool, ?solved: bool, ?counterexamples: bool, ?verbose: bool, **bool _) -> void
       def initialize(itemsets: false, lookaheads: false, solved: false, counterexamples: false, verbose: false, **_)
         @itemsets = itemsets
         @lookaheads = lookaheads

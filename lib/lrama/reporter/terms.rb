@@ -4,7 +4,7 @@
 module Lrama
   class Reporter
     class Terms
-      # @rbs (terms: bool, **untyped _) -> void
+      # @rbs (?terms: bool, **bool _) -> void
       def initialize(terms: false, **_)
         @terms = terms
       end

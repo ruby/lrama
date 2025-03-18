@@ -12,7 +12,7 @@ module Lrama
   class Reporter
     include Lrama::Tracer::Duration
 
-    # @rbs (**Hash[Symbol, bool] options) -> void
+    # @rbs (**bool options) -> void
     def initialize(**options)
       @options = options
       @rules = Rules.new(**options)

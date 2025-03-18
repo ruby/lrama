@@ -4,7 +4,7 @@
 module Lrama
   class Reporter
     class Rules
-      # @rbs (rules: bool, **untyped _) -> void
+      # @rbs (?rules: bool, **bool _) -> void
       def initialize(rules: false, **_)
         @rules = rules
       end
