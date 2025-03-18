@@ -8,7 +8,7 @@ module Lrama
       attr_reader :elem #: E
       attr_reader :next_node #: Node[E]?
 
-      # @rbs　[T] (Node[T] node) -> Array[T]
+      # @rbs [E < Object] (Node[E] node) -> Array[E]
       def self.to_a(node)
         a = [] # steep:ignore UnannotatedEmptyCollection
 

@@ -8,8 +8,8 @@ module Lrama
 
       attr_reader next_node: Node[E]?
 
-      # @rbs　[T] (Node[T] node) -> Array[T]
-      def self.to_a: (untyped node) -> untyped
+      # @rbs [E < Object] (Node[E] node) -> Array[E]
+      def self.to_a: [E < Object] (Node[E] node) -> Array[E]
 
       # @rbs (E elem, Node[E]? next_node) -> void
       def initialize: (E elem, Node[E]? next_node) -> void
