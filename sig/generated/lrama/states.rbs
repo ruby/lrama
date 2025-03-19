@@ -18,8 +18,6 @@ module Lrama
 
     include Grammar::_DelegatedMethods
 
-    include Lrama::Tracer::Duration
-
     @grammar: Grammar
 
     @tracer: Tracer

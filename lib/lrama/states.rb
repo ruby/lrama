@@ -22,7 +22,6 @@ module Lrama
     #   type reduce = [state_id, rule_id]
     #
     #   include Grammar::_DelegatedMethods
-    #   include Lrama::Tracer::Duration
     #
     #   @grammar: Grammar
     #   @tracer: Tracer
