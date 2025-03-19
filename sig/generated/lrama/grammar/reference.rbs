@@ -22,9 +22,7 @@ module Lrama
 
       attr_accessor last_column: Integer
 
-      attr_accessor position_in_rhs: Integer?
-
-      def initialize: (type: ::Symbol, first_column: Integer, last_column: Integer, ?name: String, ?number: Integer, ?index: Integer, ?ex_tag: Lexer::Token?, ?position_in_rhs: Integer?) -> void
+      def initialize: (type: ::Symbol, first_column: Integer, last_column: Integer, ?name: String, ?number: Integer, ?index: Integer, ?ex_tag: Lexer::Token?) -> void
 
       # @rbs () -> (String|Integer)
       def value: () -> (String | Integer)
