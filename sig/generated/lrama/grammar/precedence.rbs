@@ -1,12 +1,17 @@
+# Generated from lib/lrama/grammar/precedence.rb with RBS::Inline
+
 module Lrama
   class Grammar
     class Precedence
       include Comparable
+
       attr_accessor type: ::Symbol
+
       attr_accessor precedence: Integer
 
       def initialize: (?type: ::Symbol, ?precedence: Integer) -> void
 
+      # @rbs (Precedence other) -> Integer
       def <=>: (Precedence other) -> Integer
     end
   end
