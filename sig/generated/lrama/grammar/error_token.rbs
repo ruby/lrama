@@ -1,12 +1,17 @@
+# Generated from lib/lrama/grammar/error_token.rb with RBS::Inline
+
 module Lrama
   class Grammar
     class ErrorToken
       attr_accessor ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag]
+
       attr_accessor token_code: Grammar::Code
+
       attr_accessor lineno: Integer
 
-      def initialize: (?ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], ?token_code: Grammar::Code, ?lineno: Integer) -> void
+      def initialize: (?ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], ?token_code: Grammar::Code, ?lineno: Integer) -> void
 
+      # @rbs (Lexer::Token::Tag tag) -> String
       def translated_code: (Lexer::Token::Tag tag) -> String
     end
   end
