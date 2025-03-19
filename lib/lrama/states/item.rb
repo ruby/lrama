@@ -9,7 +9,6 @@ module Lrama
   class States
     class Item < Struct.new(:rule, :position, keyword_init: true)
       # @rbs!
-      #   extend Forwardable
       #   include Grammar::Rule::_DelegatedMethods
       #
       #   attr_accessor rule: Grammar::Rule
