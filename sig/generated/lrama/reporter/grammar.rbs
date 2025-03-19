@@ -3,8 +3,8 @@
 module Lrama
   class Reporter
     class Grammar
-      # @rbs (grammar: bool, **untyped _) -> void
-      def initialize: (grammar: bool, **untyped _) -> void
+      # @rbs (?grammar: bool, **bool _) -> void
+      def initialize: (?grammar: bool, **bool _) -> void
 
       # @rbs (IO io, Lrama::States states) -> void
       def report: (IO io, Lrama::States states) -> void

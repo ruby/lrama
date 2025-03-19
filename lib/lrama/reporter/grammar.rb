@@ -4,7 +4,7 @@
 module Lrama
   class Reporter
     class Grammar
-      # @rbs (grammar: bool, **untyped _) -> void
+      # @rbs (?grammar: bool, **bool _) -> void
       def initialize(grammar: false, **_)
         @grammar = grammar
       end
