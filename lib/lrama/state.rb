@@ -9,8 +9,9 @@ require_relative "state/inadequacy_annotation"
 
 module Lrama
   class State
-    # TODO: rbs-inline 0.10.0 doesn't support instance variables.
+    # TODO: rbs-inline 0.11.0 doesn't support instance variables.
     #       Move these type declarations above instance variable definitions, once it's supported.
+    #       see: https://github.com/soutaro/rbs-inline/pull/149
     #
     # @rbs!
     #   type conflict = State::ShiftReduceConflict | State::ReduceReduceConflict
