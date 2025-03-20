@@ -1,3 +1,4 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 require "forwardable"
@@ -10,12 +11,22 @@ require_relative "code/rule_action"
 module Lrama
   class Grammar
     class Code
+      # @rbs!
+      #
+      #  # delegated
+      #  def s_value: -> String
+      #  def line: -> Integer
+      #  def column: -> Integer
+      #  def references: -> Array[Lrama::Grammar::Reference]
+
       extend Forwardable
 
       def_delegators "token_code", :s_value, :line, :column, :references
 
-      attr_reader :type, :token_code
+      attr_reader :type #: ::Symbol
+      attr_reader :token_code #: Grammar::Code
 
+      # @rbs (type: ::Symbol, token_code: Grammar::Code) -> void
       def initialize(type:, token_code:)
         @type = type
         @token_code = token_code
@@ -28,6 +39,8 @@ module Lrama
       end
 
       # $$, $n, @$, @n are translated to C code
+      #
+      # @rbs () -> String
       def translated_code
         t_code = s_value.dup
 
@@ -45,6 +58,7 @@ module Lrama
 
       private
 
+      # @rbs (untyped ref) -> untyped
       def reference_to_c(ref)
         raise NotImplementedError.new("#reference_to_c is not implemented")
       end
