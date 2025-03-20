@@ -18,14 +18,20 @@ module Lrama
 
       private
 
-      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token]
-      def map_params_to_args: (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token]
+      # @rbs (Lexer::Token::InstantiateRule sym) -> Lexer::Token::InstantiateRule
+      def create_instantiate_rule: (Lexer::Token::InstantiateRule sym) -> Lexer::Token::InstantiateRule
 
-      # @rbs (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
-      def resolved_args: (Lexer::Token::InstantiateRule sym) -> Array[Lexer::Token]
+      # @rbs (Array[Lexer::Token]) -> Array[Lexer::Token]
+      def resolve_args: (Array[Lexer::Token]) -> Array[Lexer::Token]
 
       # @rbs (Lexer::Token sym) -> Lexer::Token
-      def param_to_arg: (Lexer::Token sym) -> Lexer::Token
+      def find_arg_for_param: (Lexer::Token sym) -> Lexer::Token
+
+      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token?]
+      def build_param_to_arg: (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token?]
+
+      # @rbs (Lexer::Token::InstantiateRule token) -> String
+      def format_args: (Lexer::Token::InstantiateRule token) -> String
 
       # @rbs (Lexer::Token::InstantiateRule token) -> Array[String]
       def token_to_args_s_values: (Lexer::Token::InstantiateRule token) -> Array[String]
