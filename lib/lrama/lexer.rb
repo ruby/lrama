@@ -25,10 +25,10 @@ module Lrama
     attr_reader :head_line #: Integer
     attr_reader :head_column #: Integer
     attr_reader :line #: Integer
-    attr_accessor :status # :initial | :c_declaration
+    attr_accessor :status #: :initial | :c_declaration
     attr_accessor :end_symbol #: String?
 
-    SYMBOLS = ['%{', '%}', '%%', '{', '}', '\[', '\]', '\(', '\)', '\,', ':', '\|', ';'].freeze
+    SYMBOLS = ['%{', '%}', '%%', '{', '}', '\[', '\]', '\(', '\)', '\,', ':', '\|', ';'].freeze #: Array[String]
     PERCENT_TOKENS = %w(
       %union
       %token
@@ -60,7 +60,7 @@ module Lrama
       %inline
       %locations
       %categories
-    ).freeze
+    ).freeze #: Array[String]
 
     # @rbs (GrammarFile grammar_file) -> void
     def initialize(grammar_file)
