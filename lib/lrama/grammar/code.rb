@@ -32,6 +32,7 @@ module Lrama
         @token_code = token_code
       end
 
+      # @rbs (Code other) -> bool
       def ==(other)
         self.class == other.class &&
         self.type == other.type &&
@@ -58,7 +59,7 @@ module Lrama
 
       private
 
-      # @rbs (untyped ref) -> untyped
+      # @rbs (Lrama::Grammar::Reference ref) -> bot
       def reference_to_c(ref)
         raise NotImplementedError.new("#reference_to_c is not implemented")
       end

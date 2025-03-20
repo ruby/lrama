@@ -21,7 +21,8 @@ module Lrama
       # @rbs (type: ::Symbol, token_code: Grammar::Code) -> void
       def initialize: (type: ::Symbol, token_code: Grammar::Code) -> void
 
-      def ==: (untyped other) -> untyped
+      # @rbs (Code other) -> bool
+      def ==: (Code other) -> bool
 
       # $$, $n, @$, @n are translated to C code
       #
@@ -30,8 +31,8 @@ module Lrama
 
       private
 
-      # @rbs (untyped ref) -> untyped
-      def reference_to_c: (untyped ref) -> untyped
+      # @rbs (Lrama::Grammar::Reference ref) -> bot
+      def reference_to_c: (Lrama::Grammar::Reference ref) -> bot
     end
   end
 end
