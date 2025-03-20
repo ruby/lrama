@@ -1,12 +1,34 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 module Lrama
   class Grammar
     class RuleBuilder
-      attr_accessor :lhs, :line
-      attr_reader :rule_counter, :midrule_action_counter, :parameterized_resolver,
-                  :lhs_tag, :rhs, :user_code, :precedence_sym
+      # @rbs!
+      #   @rule_counter: Counter
+      #   @midrule_action_counter: Counter
+      #   @parameterized_resolver: Grammar::Parameterized::Resolver
+      #   @position_in_original_rule_rhs: Integer?
+      #   @skip_preprocess_references: bool
+      #   @user_code: Lexer::Token::UserCode?
+      #   @rule_builders_for_parameterized: Array[RuleBuilder]
+      #   @rule_builders_for_derived_rules: Array[RuleBuilder]
+      #   @rules: Array[Rule]
+      #   @replaced_rhs: Array[Lexer::Token]
+      #   @parameterized_rules: Array[Rule]
+      #   @midrule_action_rules: Array[Rule]
 
+      attr_accessor :lhs #: Lexer::Token
+      attr_accessor :line #: Integer?
+      attr_reader :rule_counter #: Counter
+      attr_reader :midrule_action_counter #: Counter
+      attr_reader :parameterized_resolver #: Parameterized::Resolver
+      attr_reader :lhs_tag #: Lexer::Token::Tag?
+      attr_reader :rhs #: Array[Lexer::Token]
+      attr_reader :user_code #: Lexer::Token::UserCode?
+      attr_reader :precedence_sym #: Grammar::Symbol?
+
+      # @rbs (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
       def initialize(rule_counter, midrule_action_counter, parameterized_resolver, position_in_original_rule_rhs = nil, lhs_tag: nil, skip_preprocess_references: false)
         @rule_counter = rule_counter
         @midrule_action_counter = midrule_action_counter
@@ -27,6 +49,7 @@ module Lrama
         @midrule_action_rules = []
       end
 
+      # @rbs (Lexer::Token rhs) -> void
       def add_rhs(rhs)
         @line ||= rhs.line
 
@@ -35,6 +58,7 @@ module Lrama
         @rhs << rhs
       end
 
+      # @rbs (Lexer::Token::UserCode? user_code) -> void
       def user_code=(user_code)
         @line ||= user_code&.line
 
@@ -43,40 +67,48 @@ module Lrama
         @user_code = user_code
       end
 
+      # @rbs (Grammar::Symbol? precedence_sym) -> void
       def precedence_sym=(precedence_sym)
         flush_user_code
 
         @precedence_sym = precedence_sym
       end
 
+      # @rbs () -> void
       def complete_input
         freeze_rhs
       end
 
+      # @rbs () -> void
       def setup_rules
         preprocess_references unless @skip_preprocess_references
         process_rhs
         build_rules
       end
 
+      # @rbs () -> Array[Rule]
       def rules
         @parameterized_rules + @midrule_action_rules + @rules
       end
 
+      # @rbs () -> bool
       def has_inline_rules?
         rhs.any? { |token| @parameterized_resolver.find_inline(token) }
       end
 
       private
 
+      # @rbs () -> void
       def freeze_rhs
         @rhs.freeze
       end
 
+      # @rbs () -> void
       def preprocess_references
         numberize_references
       end
 
+      # @rbs () -> void
       def build_rules
         tokens = @replaced_rhs
 
@@ -98,6 +130,8 @@ module Lrama
 
       # rhs is a mixture of variety type of tokens like `Ident`, `InstantiateRule`, `UserCode` and so on.
       # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
+      #
+      # @rbs () -> void
       def process_rhs
         return if @replaced_rhs
 
@@ -152,6 +186,7 @@ module Lrama
         end
       end
 
+      # @rbs () -> void
       def numberize_references
         # Bison n'th component is 1-origin
         (rhs + [user_code]).compact.each.with_index(1) do |token, i|
@@ -199,6 +234,7 @@ module Lrama
         end
       end
 
+      # @rbs () -> void
       def flush_user_code
         if (c = @user_code)
           @rhs << c

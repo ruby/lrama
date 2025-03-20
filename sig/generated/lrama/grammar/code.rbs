@@ -1,0 +1,38 @@
+# Generated from lib/lrama/grammar/code.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Code
+      # delegated
+      def s_value: () -> String
+
+      def line: () -> Integer
+
+      def column: () -> Integer
+
+      def references: () -> Array[Lrama::Grammar::Reference]
+
+      extend Forwardable
+
+      attr_reader type: ::Symbol
+
+      attr_reader token_code: Grammar::Code
+
+      # @rbs (type: ::Symbol, token_code: Grammar::Code) -> void
+      def initialize: (type: ::Symbol, token_code: Grammar::Code) -> void
+
+      # @rbs (Code other) -> bool
+      def ==: (Code other) -> bool
+
+      # $$, $n, @$, @n are translated to C code
+      #
+      # @rbs () -> String
+      def translated_code: () -> String
+
+      private
+
+      # @rbs (Lrama::Grammar::Reference ref) -> bot
+      def reference_to_c: (Lrama::Grammar::Reference ref) -> bot
+    end
+  end
+end
