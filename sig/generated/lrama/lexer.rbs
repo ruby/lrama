@@ -18,9 +18,9 @@ module Lrama
 
     attr_accessor end_symbol: String?
 
-    SYMBOLS: untyped
+    SYMBOLS: Array[String]
 
-    PERCENT_TOKENS: untyped
+    PERCENT_TOKENS: Array[String]
 
     # @rbs (GrammarFile grammar_file) -> void
     def initialize: (GrammarFile grammar_file) -> void
