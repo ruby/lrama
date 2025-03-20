@@ -14,7 +14,7 @@ module Lrama
 
     attr_reader line: Integer
 
-    attr_accessor status: untyped
+    attr_accessor status: :initial | :c_declaration
 
     attr_accessor end_symbol: String?
 
