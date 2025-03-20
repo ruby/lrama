@@ -31,11 +31,11 @@ module Lrama
 
       attr_accessor line: Integer?
 
-      attr_reader rule_counter: untyped
+      attr_reader rule_counter: Counter
 
-      attr_reader midrule_action_counter: untyped
+      attr_reader midrule_action_counter: Counter
 
-      attr_reader parameterized_resolver: untyped
+      attr_reader parameterized_resolver: Parameterized::Resolver
 
       attr_reader lhs_tag: Lexer::Token::Tag?
 

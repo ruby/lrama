@@ -20,9 +20,9 @@ module Lrama
 
       attr_accessor :lhs #: Lexer::Token
       attr_accessor :line #: Integer?
-      attr_reader :rule_counter
-      attr_reader :midrule_action_counter
-      attr_reader :parameterized_resolver
+      attr_reader :rule_counter #: Counter
+      attr_reader :midrule_action_counter #: Counter
+      attr_reader :parameterized_resolver #: Parameterized::Resolver
       attr_reader :lhs_tag #: Lexer::Token::Tag?
       attr_reader :rhs #: Array[Lexer::Token]
       attr_reader :user_code #: Lexer::Token::UserCode?
