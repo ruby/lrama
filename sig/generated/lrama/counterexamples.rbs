@@ -16,6 +16,8 @@ module Lrama
 
     @exceed_cumulative_time_limit: bool
 
+    @state_items: Hash[[ State, States::Item ], StateItem]
+
     @transitions: Hash[[ StateItem, Grammar::Symbol ], StateItem]
 
     @reverse_transitions: Hash[[ StateItem, Grammar::Symbol ], Set[StateItem]]
@@ -40,6 +42,12 @@ module Lrama
     def compute: (State conflict_state) -> Array[Example]
 
     private
+
+    # @rbs (State state, States::Item item) -> StateItem
+    def get_state_item: (State state, States::Item item) -> StateItem
+
+    # @rbs () -> void
+    def setup_state_items: () -> void
 
     # @rbs () -> void
     def setup_transitions: () -> void

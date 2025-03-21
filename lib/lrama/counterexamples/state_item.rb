@@ -3,12 +3,15 @@
 
 module Lrama
   class Counterexamples
-    class StateItem < Struct.new(:state, :item)
-      # @rbs!
-      #   attr_accessor state: State
-      #   attr_accessor item: States::Item
-      #
-      #   def initialize: (State state, States::Item item) -> void
+    class StateItem
+      attr_reader :state #: State
+      attr_reader :item #: States::Item
+
+      # @rbs (State state, States::Item item) -> void
+      def initialize(state, item)
+        @state = state
+        @item = item
+      end
 
       # @rbs () -> (:start | :transition | :production)
       def type
