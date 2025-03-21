@@ -435,6 +435,7 @@ module Lrama
         end
       end
 
+      nterms.freeze
       @rules.sort_by!(&:id).freeze
     end
 
@@ -452,6 +453,8 @@ module Lrama
           raise "Unknown class: #{s}"
         end
       end
+
+      terms.freeze
     end
 
     # @rbs () -> void
