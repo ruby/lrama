@@ -24,6 +24,7 @@ module Lrama
     #   @total_duration: Float
     #   @exceed_cumulative_time_limit: bool
     #   @state_items: Hash[[State, States::Item], StateItem]
+    #   @triples: Hash[[StateItem, Bitmap::bitmap], Triple]
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
     #   @productions: Hash[StateItem, Set[StateItem]]
@@ -38,6 +39,7 @@ module Lrama
       @iterate_count = 0
       @total_duration = 0
       @exceed_cumulative_time_limit = false
+      @triples = {}
       setup_state_items
       setup_transitions
       setup_productions
@@ -157,6 +159,15 @@ module Lrama
           @reverse_productions[key] << state_item
         end
       end
+    end
+
+    # For optimization, use same Triple if it's already created.
+    # Do not create new Triple instance anywhere else
+    # to avoid miss hash lookup.
+    #
+    # @rbs (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> Triple
+    def get_triple(state_item, precise_lookahead_set)
+      @triples[[state_item, precise_lookahead_set]] ||= Triple.new(state_item, precise_lookahead_set)
     end
 
     # @rbs (State conflict_state, State::ShiftReduceConflict conflict) -> Example
@@ -317,7 +328,7 @@ module Lrama
       conflict_term_bit = Bitmap::from_integer(conflict_term.number)
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
       reachable = reachable_state_items(get_state_item(conflict_state, conflict_reduce_item))
-      start = Triple.new(get_state_item(start_state, start_state.kernels.first), Bitmap::from_integer(@states.eof_symbol.number))
+      start = get_triple(get_state_item(start_state, start_state.kernels.first), Bitmap::from_integer(@states.eof_symbol.number))
 
       queue << [start, Path.new(start.state_item, nil)]
 
@@ -347,7 +358,7 @@ module Lrama
         next_state_item = @transitions[[triple.state_item, triple.item.next_sym]]
         if next_state_item && reachable.include?(next_state_item)
           # @type var t: Triple
-          t = Triple.new(next_state_item, triple.l)
+          t = get_triple(next_state_item, triple.l)
           unless visited[t]
             visited[t] = true
             queue << [t, Path.new(t.state_item, path)]
@@ -360,7 +371,7 @@ module Lrama
 
           l = follow_l(triple.item, triple.l)
           # @type var t: Triple
-          t = Triple.new(si, l)
+          t = get_triple(si, l)
           unless visited[t]
             visited[t] = true
             queue << [t, Path.new(t.state_item, path)]
