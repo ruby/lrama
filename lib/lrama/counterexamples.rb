@@ -23,6 +23,8 @@ module Lrama
     #   @iterate_count: Integer
     #   @total_duration: Float
     #   @exceed_cumulative_time_limit: bool
+    #   @state_items: Hash[[State, States::Item], StateItem]
+    #   @triples: Hash[Integer, Triple]
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
     #   @productions: Hash[StateItem, Set[StateItem]]
@@ -37,6 +39,8 @@ module Lrama
       @iterate_count = 0
       @total_duration = 0
       @exceed_cumulative_time_limit = false
+      @triples = {}
+      setup_state_items
       setup_transitions
       setup_productions
     end
@@ -71,6 +75,31 @@ module Lrama
 
     private
 
+    # @rbs (State state, States::Item item) -> StateItem
+    def get_state_item(state, item)
+      @state_items[[state, item]]
+    end
+
+    # For optimization, create all StateItem in advance
+    # and use them by fetching an instance from `@state_items`.
+    # Do not create new StateItem instance in the shortest path search process
+    # to avoid miss hash lookup.
+    #
+    # @rbs () -> void
+    def setup_state_items
+      @state_items = {}
+      count = 0
+
+      @states.states.each do |state|
+        state.items.each do |item|
+          @state_items[[state, item]] = StateItem.new(count, state, item)
+          count += 1
+        end
+      end
+
+      @state_item_shift = Math.log(count, 2).ceil
+    end
+
     # @rbs () -> void
     def setup_transitions
       @transitions = {}
@@ -90,8 +119,8 @@ module Lrama
 
           dest_state.kernels.each do |dest_item|
             next unless (src_item.rule == dest_item.rule) && (src_item.position + 1 == dest_item.position)
-            src_state_item = StateItem.new(src_state, src_item)
-            dest_state_item = StateItem.new(dest_state, dest_item)
+            src_state_item = get_state_item(src_state, src_item)
+            dest_state_item = get_state_item(dest_state, dest_item)
 
             @transitions[[src_state_item, sym]] = dest_state_item
 
@@ -117,7 +146,7 @@ module Lrama
           sym = item.lhs
 
           h[sym] ||= Set.new
-          h[sym] << StateItem.new(state, item)
+          h[sym] << get_state_item(state, item)
         end
 
         state.items.each do |item|
@@ -125,7 +154,7 @@ module Lrama
           next if item.next_sym.term?
 
           sym = item.next_sym
-          state_item = StateItem.new(state, item)
+          state_item = get_state_item(state, item)
           @productions[state_item] = h[sym]
 
           # @type var key: [State, Grammar::Symbol]
@@ -134,6 +163,16 @@ module Lrama
           @reverse_productions[key] << state_item
         end
       end
+    end
+
+    # For optimization, use same Triple if it's already created.
+    # Do not create new Triple instance anywhere else
+    # to avoid miss hash lookup.
+    #
+    # @rbs (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> Triple
+    def get_triple(state_item, precise_lookahead_set)
+      key = (precise_lookahead_set << @state_item_shift) | state_item.id
+      @triples[key] ||= Triple.new(state_item, precise_lookahead_set)
     end
 
     # @rbs (State conflict_state, State::ShiftReduceConflict conflict) -> Example
@@ -169,7 +208,7 @@ module Lrama
       time1 = Time.now.to_f
       @iterate_count = 0
 
-      target_state_item = StateItem.new(conflict_state, conflict_item)
+      target_state_item = get_state_item(conflict_state, conflict_item)
       result = [target_state_item]
       reversed_state_items = reduce_state_items.to_a.reverse
       # Index for state_item
@@ -293,8 +332,8 @@ module Lrama
       start_state = @states.states.first #: Lrama::State
       conflict_term_bit = Bitmap::from_integer(conflict_term.number)
       raise "BUG: Start state should be just one kernel." if start_state.kernels.count != 1
-      reachable = reachable_state_items(StateItem.new(conflict_state, conflict_reduce_item))
-      start = Triple.new(StateItem.new(start_state, start_state.kernels.first), Bitmap::from_integer(@states.eof_symbol.number))
+      reachable = reachable_state_items(get_state_item(conflict_state, conflict_reduce_item))
+      start = get_triple(get_state_item(start_state, start_state.kernels.first), Bitmap::from_integer(@states.eof_symbol.number))
 
       queue << [start, Path.new(start.state_item, nil)]
 
@@ -324,7 +363,7 @@ module Lrama
         next_state_item = @transitions[[triple.state_item, triple.item.next_sym]]
         if next_state_item && reachable.include?(next_state_item)
           # @type var t: Triple
-          t = Triple.new(next_state_item, triple.l)
+          t = get_triple(next_state_item, triple.l)
           unless visited[t]
             visited[t] = true
             queue << [t, Path.new(t.state_item, path)]
@@ -337,7 +376,7 @@ module Lrama
 
           l = follow_l(triple.item, triple.l)
           # @type var t: Triple
-          t = Triple.new(si, l)
+          t = get_triple(si, l)
           unless visited[t]
             visited[t] = true
             queue << [t, Path.new(t.state_item, path)]

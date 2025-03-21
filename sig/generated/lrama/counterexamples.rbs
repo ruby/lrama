@@ -16,6 +16,10 @@ module Lrama
 
     @exceed_cumulative_time_limit: bool
 
+    @state_items: Hash[[ State, States::Item ], StateItem]
+
+    @triples: Hash[Integer, Triple]
+
     @transitions: Hash[[ StateItem, Grammar::Symbol ], StateItem]
 
     @reverse_transitions: Hash[[ StateItem, Grammar::Symbol ], Set[StateItem]]
@@ -41,11 +45,29 @@ module Lrama
 
     private
 
+    # @rbs (State state, States::Item item) -> StateItem
+    def get_state_item: (State state, States::Item item) -> StateItem
+
+    # For optimization, create all StateItem in advance
+    # and use them by fetching an instance from `@state_items`.
+    # Do not create new StateItem instance in the shortest path search process
+    # to avoid miss hash lookup.
+    #
+    # @rbs () -> void
+    def setup_state_items: () -> void
+
     # @rbs () -> void
     def setup_transitions: () -> void
 
     # @rbs () -> void
     def setup_productions: () -> void
+
+    # For optimization, use same Triple if it's already created.
+    # Do not create new Triple instance anywhere else
+    # to avoid miss hash lookup.
+    #
+    # @rbs (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> Triple
+    def get_triple: (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> Triple
 
     # @rbs (State conflict_state, State::ShiftReduceConflict conflict) -> Example
     def shift_reduce_example: (State conflict_state, State::ShiftReduceConflict conflict) -> Example
