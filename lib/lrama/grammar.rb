@@ -435,7 +435,7 @@ module Lrama
         end
       end
 
-      @rules.sort_by!(&:id)
+      @rules.sort_by!(&:id).freeze
     end
 
     # Collect symbols from rules
