@@ -18,7 +18,7 @@ module Lrama
 
     @state_items: Hash[[ State, States::Item ], StateItem]
 
-    @triples: Hash[[ StateItem, Bitmap::bitmap ], Triple]
+    @triples: Hash[Integer, Triple]
 
     @transitions: Hash[[ StateItem, Grammar::Symbol ], StateItem]
 

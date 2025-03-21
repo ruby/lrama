@@ -24,7 +24,7 @@ module Lrama
     #   @total_duration: Float
     #   @exceed_cumulative_time_limit: bool
     #   @state_items: Hash[[State, States::Item], StateItem]
-    #   @triples: Hash[[StateItem, Bitmap::bitmap], Triple]
+    #   @triples: Hash[Integer, Triple]
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
     #   @productions: Hash[StateItem, Set[StateItem]]
@@ -88,12 +88,16 @@ module Lrama
     # @rbs () -> void
     def setup_state_items
       @state_items = {}
+      count = 0
 
       @states.states.each do |state|
         state.items.each do |item|
-          @state_items[[state, item]] = StateItem.new(state, item)
+          @state_items[[state, item]] = StateItem.new(count, state, item)
+          count += 1
         end
       end
+
+      @state_item_shift = Math.log(count, 2).ceil
     end
 
     # @rbs () -> void
@@ -167,7 +171,8 @@ module Lrama
     #
     # @rbs (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> Triple
     def get_triple(state_item, precise_lookahead_set)
-      @triples[[state_item, precise_lookahead_set]] ||= Triple.new(state_item, precise_lookahead_set)
+      key = (precise_lookahead_set << @state_item_shift) | state_item.id
+      @triples[key] ||= Triple.new(state_item, precise_lookahead_set)
     end
 
     # @rbs (State conflict_state, State::ShiftReduceConflict conflict) -> Example

@@ -4,11 +4,13 @@
 module Lrama
   class Counterexamples
     class StateItem
+      attr_reader :id #: Integer
       attr_reader :state #: State
       attr_reader :item #: States::Item
 
-      # @rbs (State state, States::Item item) -> void
-      def initialize(state, item)
+      # @rbs (Integer id, State state, States::Item item) -> void
+      def initialize(id, state, item)
+        @id = id
         @state = state
         @item = item
       end
