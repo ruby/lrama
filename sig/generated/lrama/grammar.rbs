@@ -231,13 +231,13 @@ module Lrama
     # @rbs () -> void
     def resolve_inline_rules: () -> void
 
-    # @rbs () -> Array[Rule]
-    def normalize_rules: () -> Array[Rule]
+    # @rbs () -> void
+    def normalize_rules: () -> void
 
     # Collect symbols from rules
     #
-    # @rbs () -> Array[Lexer::Token]
-    def collect_symbols: () -> Array[Lexer::Token]
+    # @rbs () -> void
+    def collect_symbols: () -> void
 
     # @rbs () -> void
     def set_lhs_and_rhs: () -> void
