@@ -419,7 +419,7 @@ module Lrama
       end
     end
 
-    # @rbs () -> Array[Rule]
+    # @rbs () -> void
     def normalize_rules
       # Add $accept rule to the top of rules
       rule_builder = @rule_builders.first # : RuleBuilder
@@ -435,12 +435,13 @@ module Lrama
         end
       end
 
+      nterms.freeze
       @rules.sort_by!(&:id).freeze
     end
 
     # Collect symbols from rules
     #
-    # @rbs () -> Array[Lexer::Token]
+    # @rbs () -> void
     def collect_symbols
       @rules.flat_map(&:_rhs).each do |s|
         case s
@@ -452,6 +453,8 @@ module Lrama
           raise "Unknown class: #{s}"
         end
       end
+
+      terms.freeze
     end
 
     # @rbs () -> void
