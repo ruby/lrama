@@ -17,7 +17,7 @@ gem "railroad_diagrams", "0.3.0"
 # Recent steep requires Ruby >= 3.0.0.
 # Then skip install on some CI jobs.
 if !ENV['GITHUB_ACTION'] || ENV['INSTALL_STEEP'] == 'true'
-  gem "rbs", "3.9.0", require: false
+  gem "rbs", "3.9.1", require: false
   gem "rbs-inline", require: false
   gem "steep", "1.10.0", require: false
 end
