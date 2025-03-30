@@ -20,9 +20,10 @@
  * option_X: %empty
  * option_X: X
  */
-%rule option(X): /* empty */
-               | X
-               ;
+%rule option(X)
+                : /* empty */
+                | X
+                ;
 
 // -------------------------------------------------------------------
 // Sequences
@@ -35,8 +36,9 @@
  * program: preceded_opening_X
  * preceded_opening_X: opening X
  */
-%rule preceded(opening, X): opening X { $$ = $2; }
-                          ;
+%rule preceded(opening, X)
+                : opening X { $$ = $2; }
+                ;
 
 /*
  * program: terminated(X, closing)
@@ -46,8 +48,9 @@
  * program: terminated_X_closing
  * terminated_X_closing: X closing
  */
-%rule terminated(X, closing): X closing { $$ = $1; }
-                            ;
+%rule terminated(X, closing)
+                : X closing { $$ = $1; }
+                ;
 
 /*
  * program: delimited(opening, X, closing)
@@ -57,8 +60,9 @@
  * program: delimited_opening_X_closing
  * delimited_opening_X_closing: opening X closing
  */
-%rule delimited(opening, X, closing): opening X closing { $$ = $2; }
-                                     ;
+%rule delimited(opening, X, closing)
+                : opening X closing { $$ = $2; }
+                ;
 
 // -------------------------------------------------------------------
 // Lists
@@ -72,9 +76,10 @@
  * list_X: %empty
  * list_X: list_X X
  */
-%rule list(X): /* empty */
-             | list(X) X
-             ;
+%rule list(X)
+                : /* empty */
+                | list(X) X
+                ;
 
 /*
  * program: nonempty_list(X)
@@ -85,9 +90,10 @@
  * nonempty_list_X: X
  * nonempty_list_X: nonempty_list_X X
  */
-%rule nonempty_list(X): X
-                      | nonempty_list(X) X
-                      ;
+%rule nonempty_list(X)
+                : X
+                | nonempty_list(X) X
+                ;
 
 /*
  * program: separated_nonempty_list(separator, X)
@@ -98,9 +104,10 @@
  * separated_nonempty_list_separator_X: X
  * separated_nonempty_list_separator_X: separated_nonempty_list_separator_X separator X
  */
-%rule separated_nonempty_list(separator, X): X
-                                           | separated_nonempty_list(separator, X) separator X
-                                           ;
+%rule separated_nonempty_list(separator, X)
+                : X
+                | separated_nonempty_list(separator, X) separator X
+                ;
 
 /*
  * program: separated_list(separator, X)
@@ -114,8 +121,9 @@
  * separated_nonempty_list_separator_X: X
  * separated_nonempty_list_separator_X: separator separated_nonempty_list_separator_X X
  */
-%rule separated_list(separator, X): option(separated_nonempty_list(separator, X))
-                                  ;
+%rule separated_list(separator, X)
+                : option(separated_nonempty_list(separator, X))
+                ;
 
 %%
 
