@@ -12,13 +12,13 @@
 // Options
 
 /*
- * program: option(number)
+ * program: option(X)
  *
  * =>
  *
- * program: option_number
- * option_number: %empty
- * option_number: number
+ * program: option_X
+ * option_X: %empty
+ * option_X: X
  */
 %rule option(X): /* empty */
                | X
@@ -64,55 +64,55 @@
 // Lists
 
 /*
- * program: list(number)
+ * program: list(X)
  *
  * =>
  *
- * program: list_number
- * list_number: %empty
- * list_number: list_number number
+ * program: list_X
+ * list_X: %empty
+ * list_X: list_X X
  */
 %rule list(X): /* empty */
              | list(X) X
              ;
 
 /*
- * program: nonempty_list(number)
+ * program: nonempty_list(X)
  *
  * =>
  *
- * program: nonempty_list_number
- * nonempty_list_number: number
- * nonempty_list_number: nonempty_list_number number
+ * program: nonempty_list_X
+ * nonempty_list_X: X
+ * nonempty_list_X: nonempty_list_X X
  */
 %rule nonempty_list(X): X
                       | nonempty_list(X) X
                       ;
 
 /*
- * program: separated_nonempty_list(comma, number)
+ * program: separated_nonempty_list(separator, X)
  *
  * =>
  *
- * program: separated_nonempty_list_comma_number
- * separated_nonempty_list_comma_number: number
- * separated_nonempty_list_comma_number: separated_nonempty_list_comma_number comma number
+ * program: separated_nonempty_list_separator_X
+ * separated_nonempty_list_separator_X: X
+ * separated_nonempty_list_separator_X: separated_nonempty_list_separator_X separator X
  */
 %rule separated_nonempty_list(separator, X): X
                                            | separated_nonempty_list(separator, X) separator X
                                            ;
 
 /*
- * program: separated_list(comma, number)
+ * program: separated_list(separator, X)
  *
  * =>
  *
- * program: separated_list_comma_number
- * separated_list_comma_number: option_separated_nonempty_list_comma_number
- * option_separated_nonempty_list_comma_number: %empty
- * option_separated_nonempty_list_comma_number: separated_nonempty_list_comma_number
- * separated_nonempty_list_comma_number: number
- * separated_nonempty_list_comma_number: comma separated_nonempty_list_comma_number number
+ * program: separated_list_separator_X
+ * separated_list_separator_X: option_separated_nonempty_list_separator_X
+ * option_separated_nonempty_list_separator_X: %empty
+ * option_separated_nonempty_list_separator_X: separated_nonempty_list_separator_X
+ * separated_nonempty_list_separator_X: X
+ * separated_nonempty_list_separator_X: separator separated_nonempty_list_separator_X X
  */
 %rule separated_list(separator, X): option(separated_nonempty_list(separator, X))
                                   ;
