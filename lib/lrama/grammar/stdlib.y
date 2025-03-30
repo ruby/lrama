@@ -24,6 +24,20 @@
                | X
                ;
 
+
+/*
+ * program: ioption(X)
+ *
+ * =>
+ *
+ * program: %empty
+ * program: X
+ */
+%rule %inline ioption(X)
+                : /* empty */
+                | X
+                ;
+
 // -------------------------------------------------------------------
 // Sequences
 
