@@ -3795,6 +3795,54 @@ RSpec.describe Lrama::Parser do
           ERROR
         end
       end
+
+      context "when multiple %empty" do
+        it "raises an error" do
+          y = <<~INPUT
+            %{
+            // Prologue
+            %}
+            
+            %%
+            
+            program: %empty %empty
+                   ;
+          INPUT
+
+          parser = Lrama::Parser.new(y, "error_messages/parse.y")
+
+          expect { parser.parse }.to raise_error(ParseError, <<~'ERROR')
+            error_messages/parse.y:7:16: parse error on value "%empty" ("%empty")
+            program: %empty %empty
+                            ^^^^^^
+          ERROR
+        end
+      end
+
+      context "when symbol after %empty" do
+        it "raises an error" do
+          y = <<~INPUT
+            %{
+            // Prologue
+            %}
+
+            %token NUMBER
+            
+            %%
+            
+            program: NUMBER %empty
+                   ;
+          INPUT
+
+          parser = Lrama::Parser.new(y, "error_messages/parse.y")
+
+          expect { parser.parse }.to raise_error(ParseError, <<~'ERROR')
+            error_messages/parse.y:9:16: parse error on value "%empty" ("%empty")
+            program: NUMBER %empty
+                            ^^^^^^
+          ERROR
+        end
+      end
     end
   end
 
