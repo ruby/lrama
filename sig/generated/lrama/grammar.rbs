@@ -135,14 +135,14 @@ module Lrama
     # @rbs (id: Lexer::Token, code: Lexer::Token::UserCode) -> Array[PercentCode]
     def add_percent_code: (id: Lexer::Token, code: Lexer::Token::UserCode) -> Array[PercentCode]
 
-    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Destructor]
-    def add_destructor: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Destructor]
+    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[Destructor]
+    def add_destructor: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[Destructor]
 
-    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Printer]
-    def add_printer: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Printer]
+    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[Printer]
+    def add_printer: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[Printer]
 
-    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[ErrorToken]
-    def add_error_token: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[ErrorToken]
+    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[ErrorToken]
+    def add_error_token: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[ErrorToken]
 
     # @rbs (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
     def add_type: (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
