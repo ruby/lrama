@@ -16,7 +16,7 @@ program: stmt ;
 
 stmt: expr opt_semicolon
     | opt_expr opt_colon
-    | /* empty */
+    | %empty
     ;
 
 expr: tNUMBER;
