@@ -16,10 +16,10 @@ module Lrama
 
       attr_reader type: ::Symbol
 
-      attr_reader token_code: Grammar::Code
+      attr_reader token_code: Lexer::Token::UserCode
 
-      # @rbs (type: ::Symbol, token_code: Grammar::Code) -> void
-      def initialize: (type: ::Symbol, token_code: Grammar::Code) -> void
+      # @rbs (type: ::Symbol, token_code: Lexer::Token::UserCode) -> void
+      def initialize: (type: ::Symbol, token_code: Lexer::Token::UserCode) -> void
 
       # @rbs (Code other) -> bool
       def ==: (Code other) -> bool

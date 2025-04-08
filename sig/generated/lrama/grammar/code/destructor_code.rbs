@@ -6,8 +6,8 @@ module Lrama
       class DestructorCode < Code
         @tag: Lexer::Token::Tag
 
-        # @rbs (type: ::Symbol, token_code: Grammar::Code, tag: Lexer::Token::Tag) -> void
-        def initialize: (type: ::Symbol, token_code: Grammar::Code, tag: Lexer::Token::Tag) -> void
+        # @rbs (type: ::Symbol, token_code: Lexer::Token::UserCode, tag: Lexer::Token::Tag) -> void
+        def initialize: (type: ::Symbol, token_code: Lexer::Token::UserCode, tag: Lexer::Token::Tag) -> void
 
         private
 

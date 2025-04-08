@@ -18,7 +18,7 @@ module Lrama
       #   attr_accessor lhs_tag: Lexer::Token::Tag?
       #   attr_accessor _rhs: Array[Lexer::Token]
       #   attr_accessor rhs: Array[Grammar::Symbol]
-      #   attr_accessor token_code: Grammar::Code?
+      #   attr_accessor token_code: Lexer::Token::UserCode?
       #   attr_accessor position_in_original_rule_rhs: Integer
       #   attr_accessor nullable: bool
       #   attr_accessor precedence_sym: Grammar::Symbol?
