@@ -20,6 +20,10 @@ RSpec.describe Lrama::States do
             0 unused
 
 
+        19 Terms
+
+        13 Non-Terminals
+
         11 Unused Terms
 
             0 YYerror
