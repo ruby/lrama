@@ -27,6 +27,10 @@ module Lrama
           (look_aheads + next_terms).include?(term)
         end
 
+        io << states.terms.count << " Terms\n\n"
+
+        io << states.nterms.count << " Non-Terminals\n\n"
+
         unless unused_symbols.empty?
           io << "#{unused_symbols.count} Unused Terms\n\n"
           unused_symbols.each_with_index do |term, index|
