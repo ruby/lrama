@@ -140,17 +140,17 @@ module Lrama
       @percent_codes << PercentCode.new(id.s_value, code.s_value)
     end
 
-    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Destructor]
+    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[Destructor]
     def add_destructor(ident_or_tags:, token_code:, lineno:)
       @destructors << Destructor.new(ident_or_tags: ident_or_tags, token_code: token_code, lineno: lineno)
     end
 
-    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[Printer]
+    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[Printer]
     def add_printer(ident_or_tags:, token_code:, lineno:)
       @printers << Printer.new(ident_or_tags: ident_or_tags, token_code: token_code, lineno: lineno)
     end
 
-    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Code, lineno: Integer) -> Array[ErrorToken]
+    # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[ErrorToken]
     def add_error_token(ident_or_tags:, token_code:, lineno:)
       @error_tokens << ErrorToken.new(ident_or_tags: ident_or_tags, token_code: token_code, lineno: lineno)
     end

@@ -24,9 +24,9 @@ module Lrama
       def_delegators "token_code", :s_value, :line, :column, :references
 
       attr_reader :type #: ::Symbol
-      attr_reader :token_code #: Grammar::Code
+      attr_reader :token_code #: Lexer::Token::UserCode
 
-      # @rbs (type: ::Symbol, token_code: Grammar::Code) -> void
+      # @rbs (type: ::Symbol, token_code: Lexer::Token::UserCode) -> void
       def initialize(type:, token_code:)
         @type = type
         @token_code = token_code

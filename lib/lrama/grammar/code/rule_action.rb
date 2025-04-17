@@ -11,7 +11,7 @@ module Lrama
         # @rbs!
         #   @rule: Rule
 
-        # @rbs (type: ::Symbol, token_code: Grammar::Code, rule: Rule) -> void
+        # @rbs (type: ::Symbol, token_code: Lexer::Token::UserCode, rule: Rule) -> void
         def initialize(type:, token_code:, rule:)
           super(type: type, token_code: token_code)
           @rule = rule
