@@ -117,7 +117,7 @@ RSpec.describe Lrama::Parser do
       CODE
 
       expect(grammar.expect).to eq(0)
-      expect(grammar.define).to eq({'api.pure' => nil, 'parse.error' => 'verbose'})
+      expect(grammar.define).to eq({'api.prefix' => 'prefix', 'api.pure' => nil, 'parse.error' => 'verbose'})
       expect(grammar.printers).to eq([
         Printer.new(
           ident_or_tags: [T::Tag.new(s_value: "<int>")],
