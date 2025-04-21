@@ -136,13 +136,13 @@ module Lrama
           alias_name
         when (term? && 0 < token_id && token_id < 128)
           # YYSYMBOL_3_backslash_, YYSYMBOL_14_
-          alias_name || name
+          display_name
         when midrule?
           # YYSYMBOL_21_1
           name
         else
           # YYSYMBOL_keyword_class, YYSYMBOL_strings_1
-          alias_name || name
+          display_name
         end
       end
     end
