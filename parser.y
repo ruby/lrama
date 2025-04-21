@@ -28,6 +28,10 @@ rule
         }
 
   bison_declaration:
+      parser_option ";"*
+    | grammar_declaration ";"*
+
+  parser_option:
       "%expect" INTEGER
         {
           @grammar.expect = val[1]
@@ -69,8 +73,6 @@ rule
         {
           @grammar.locations = true
         }
-    | grammar_declaration
-    | bison_declaration ";"
 
   grammar_declaration:
       symbol_declaration
@@ -326,8 +328,8 @@ rule
     | CHARACTER { on_action_error("char after %prec", val[0]) if @prec_seen }
 
   rules_or_grammar_declaration:
-      rules ";"?
-    | grammar_declaration ";"
+      rules ";"*
+    | grammar_declaration ";"+
 
   rules:
       IDENT_COLON named_ref? ":" rhs_list
