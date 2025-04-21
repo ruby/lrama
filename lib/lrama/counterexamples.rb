@@ -29,6 +29,7 @@ module Lrama
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
     #   @productions: Hash[StateItem, Set[StateItem]]
     #   @reverse_productions: Hash[[State, Grammar::Symbol], Set[StateItem]] # Grammar::Symbol is nterm
+    #   @state_item_shift: Integer
 
     attr_reader :transitions #: Hash[[StateItem, Grammar::Symbol], StateItem]
     attr_reader :productions #: Hash[StateItem, Set[StateItem]]
