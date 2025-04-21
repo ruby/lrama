@@ -112,7 +112,7 @@ module Lrama
           name = number.to_s + display_name
         when term? && id.is_a?(Lrama::Lexer::Token::Ident)
           name = id.s_value
-        when nterm? && (id.s_value.include?("$") || id.s_value.include?("@"))
+        when midrule?
           name = number.to_s + id.s_value
         when nterm?
           name = id.s_value
@@ -137,7 +137,7 @@ module Lrama
         when (term? && 0 < token_id && token_id < 128)
           # YYSYMBOL_3_backslash_, YYSYMBOL_14_
           alias_name || id.s_value
-        when id.s_value.include?("$") || id.s_value.include?("@")
+        when midrule?
           # YYSYMBOL_21_1
           id.s_value
         else
