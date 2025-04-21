@@ -64,6 +64,12 @@ module Lrama
       # @rbs () -> bool
       def accept_symbol?: () -> bool
 
+      # @rbs () -> bool
+      def midrule?: () -> bool
+
+      # @rbs () -> String
+      def name: () -> String
+
       # @rbs () -> String
       def display_name: () -> String
 

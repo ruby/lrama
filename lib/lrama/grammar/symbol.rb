@@ -80,9 +80,21 @@ module Lrama
         !!@accept_symbol
       end
 
+      # @rbs () -> bool
+      def midrule?
+        return false if term?
+
+        id.s_value.include?("$") || id.s_value.include?("@")
+      end
+
+      # @rbs () -> String
+      def name
+        id.s_value
+      end
+
       # @rbs () -> String
       def display_name
-        alias_name || id.s_value
+        alias_name || name
       end
 
       # name for yysymbol_kind_t
