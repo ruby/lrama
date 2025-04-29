@@ -94,6 +94,7 @@ RSpec.describe Lrama::Lexer do
 
         expect(lexer.next_token).to eq(['}', '}'])
         expect(lexer.next_token).to eq([';', ';'])
+        expect(lexer.next_token).to eq([';', ';'])
         expect(lexer.next_token).to eq(['%union', '%union'])
         expect(lexer.next_token).to eq(['{', '{'])
 
@@ -238,6 +239,7 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(['}', '}'])
         expect(lexer.next_token).to eq(['%prec', '%prec'])
         expect(lexer.next_token).to eq([:CHARACTER, token_class::Char.new(s_value: "'>'")])
+        expect(lexer.next_token).to eq([';', ';'])
         expect(lexer.next_token).to eq([';', ';'])
         expect(lexer.next_token).to eq([:IDENT_COLON, token_class::Ident.new(s_value: 'strings_1')])
         expect(lexer.next_token).to eq([':', ':'])

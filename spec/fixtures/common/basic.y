@@ -26,7 +26,7 @@
 %initial-action
 {
     initial_action_func(@$);
-};
+};; // intentional multiple semicolons
 
 %union {
     int i;
@@ -64,7 +64,7 @@ class : keyword_class tSTRING keyword_end %prec tPLUS
           { code 1 }
       | keyword_class { code 2 } tSTRING '!' keyword_end { code 3 } %prec "="
       | keyword_class { code 4 } tSTRING '?' keyword_end { code 5 } %prec '>'
-      ;
+      ;; // intentional multiple semicolons
 
 strings_1: string_1
          ;
