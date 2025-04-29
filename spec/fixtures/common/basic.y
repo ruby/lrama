@@ -11,6 +11,7 @@
 %expect 0
 %define api.pure
 %define parse.error verbose
+%define api.prefix {prefix}
 
 %printer {
     print_int();
