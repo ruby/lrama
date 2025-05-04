@@ -80,9 +80,21 @@ module Lrama
         !!@accept_symbol
       end
 
+      # @rbs () -> bool
+      def midrule?
+        return false if term?
+
+        name.include?("$") || name.include?("@")
+      end
+
+      # @rbs () -> String
+      def name
+        id.s_value
+      end
+
       # @rbs () -> String
       def display_name
-        alias_name || id.s_value
+        alias_name || name
       end
 
       # name for yysymbol_kind_t
@@ -93,22 +105,22 @@ module Lrama
       def enum_name
         case
         when accept_symbol?
-          name = "YYACCEPT"
+          res = "YYACCEPT"
         when eof_symbol?
-          name = "YYEOF"
+          res = "YYEOF"
         when term? && id.is_a?(Lrama::Lexer::Token::Char)
-          name = number.to_s + display_name
+          res = number.to_s + display_name
         when term? && id.is_a?(Lrama::Lexer::Token::Ident)
-          name = id.s_value
-        when nterm? && (id.s_value.include?("$") || id.s_value.include?("@"))
-          name = number.to_s + id.s_value
+          res = name
+        when midrule?
+          res = number.to_s + name
         when nterm?
-          name = id.s_value
+          res = name
         else
           raise "Unexpected #{self}"
         end
 
-        "YYSYMBOL_" + name.gsub(/\W+/, "_")
+        "YYSYMBOL_" + res.gsub(/\W+/, "_")
       end
 
       # comment for yysymbol_kind_t
@@ -118,19 +130,19 @@ module Lrama
         case
         when accept_symbol?
           # YYSYMBOL_YYACCEPT
-          id.s_value
+          name
         when eof_symbol?
           # YYEOF
           alias_name
         when (term? && 0 < token_id && token_id < 128)
           # YYSYMBOL_3_backslash_, YYSYMBOL_14_
-          alias_name || id.s_value
-        when id.s_value.include?("$") || id.s_value.include?("@")
+          display_name
+        when midrule?
           # YYSYMBOL_21_1
-          id.s_value
+          name
         else
           # YYSYMBOL_keyword_class, YYSYMBOL_strings_1
-          alias_name || id.s_value
+          display_name
         end
       end
     end

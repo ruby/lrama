@@ -15,6 +15,26 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(grammar: true, rules: true, terms: true, states: true, itemsets: true, lookaheads: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
+        Rule Usage Frequency
+
+            0 tSTRING (4 times)
+            1 keyword_class (3 times)
+            2 keyword_end (3 times)
+            3 '+' (2 times)
+            4 string (2 times)
+            5 string_1 (2 times)
+            6 '!' (1 times)
+            7 '-' (1 times)
+            8 '?' (1 times)
+            9 EOI (1 times)
+           10 class (1 times)
+           11 program (1 times)
+           12 string_2 (1 times)
+           13 strings_1 (1 times)
+           14 strings_2 (1 times)
+           15 tNUMBER (1 times)
+
+
         1 Unused Rules
 
             0 unused

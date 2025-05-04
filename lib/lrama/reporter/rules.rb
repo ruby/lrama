@@ -15,6 +15,17 @@ module Lrama
 
         used_rules = states.rules.flat_map(&:rhs)
 
+        unless used_rules.empty?
+          io << "Rule Usage Frequency\n\n"
+          frequency_counts = used_rules.each_with_object(Hash.new(0)) { |rule, counts| counts[rule] += 1 }
+
+          frequency_counts
+            .select { |rule,| !rule.midrule? }
+            .sort_by { |rule, count| [-count, rule.name] }
+            .each_with_index { |(rule, count), i| io << sprintf("%5d %s (%d times)", i, rule.name, count) << "\n" }
+          io << "\n\n"
+        end
+
         unused_rules = states.rules.map(&:lhs).select do |rule|
           !used_rules.include?(rule) && rule.token_id != 0
         end
