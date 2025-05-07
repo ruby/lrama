@@ -987,6 +987,52 @@ RSpec.describe Lrama::Parser do
           end
         end
 
+        context "when ioption" do
+          let(:path) { "parameterized/stdlib/ioption.y" }
+
+          it "expands parameterized rules" do
+            expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+              Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 4, tag: nil, term: false, token_id: 0, nullable: false),
+              Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 1, nullable: true),
+            ])
+
+            expect(grammar.rules).to eq([
+              Rule.new(
+                id: 0,
+                lhs: grammar.find_symbol_by_s_value!("$accept"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("program"),
+                  grammar.find_symbol_by_s_value!("YYEOF"),
+                ],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+                lineno: 19,
+              ),
+              Rule.new(
+                id: 1,
+                lhs: grammar.find_symbol_by_s_value!("program"),
+                rhs: [],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 19,
+              ),
+              Rule.new(
+                id: 2,
+                lhs: grammar.find_symbol_by_s_value!("program"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("number"),
+                ],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("number"),
+                lineno: 19,
+              ),
+            ])
+          end
+        end
+
         context "when preceded" do
           let(:path) { "parameterized/stdlib/preceded.y" }
 
