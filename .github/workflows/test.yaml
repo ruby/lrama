@@ -173,8 +173,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # '3.0' is the oldest living ruby version and minimal BASERUBY version
-        baseruby: ['head', '3.0']
+        # '3.1' is the oldest living ruby version and minimal BASERUBY version
+        baseruby: ['head', '3.1']
         ruby_branch: ['master']
     defaults:
       run:
