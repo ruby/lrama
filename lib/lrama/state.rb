@@ -126,6 +126,7 @@ module Lrama
       self.reduces = reduces.freeze
     end
 
+    # @rbs (Grammar::Symbol next_sym, State next_state) -> void
     def set_lane_items(next_sym, next_state)
       @lane_items[next_state] = @_lane_items[next_sym]
     end
@@ -379,6 +380,7 @@ module Lrama
       predecessor.append_annotation_list(propagating_list)
     end
 
+    # @rbs () -> Array[States::Item]
     def first_kernels
       @first_kernels ||= kernels.select {|kernel| kernel.position == 1 }
     end
