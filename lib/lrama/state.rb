@@ -43,6 +43,7 @@ module Lrama
     attr_reader :annotation_list #: Array[InadequacyAnnotation]
     attr_reader :predecessors #: Array[State]
     attr_reader :items_to_state #: Hash[Array[States::Item], State]
+    attr_reader :lane_items #: Hash[State, Array[[States::Item, States::Item]]]
 
     attr_accessor :_transitions #: Array[[Grammar::Symbol, Array[States::Item]]]
     attr_accessor :reduces #: Array[Action::Reduce]
@@ -76,6 +77,7 @@ module Lrama
       @always_follows = {}
       @goto_follows = {}
       @lhs_contributions = {}
+      @lane_items = {}
     end
 
     # @rbs (State other) -> bool
@@ -99,6 +101,7 @@ module Lrama
     # @rbs () -> void
     def compute_transitions_and_reduces
       _transitions = {}
+      @_lane_items ||= {}
       reduces = []
       items.each do |item|
         # TODO: Consider what should be pushed
@@ -107,7 +110,10 @@ module Lrama
         else
           key = item.next_sym
           _transitions[key] ||= []
-          _transitions[key] << item.new_by_next_position
+          @_lane_items[key] ||= []
+          next_item = item.new_by_next_position
+          _transitions[key] << next_item
+          @_lane_items[key] << [item, next_item]
         end
       end
 
@@ -118,6 +124,10 @@ module Lrama
 
       self._transitions = transitions.freeze
       self.reduces = reduces.freeze
+    end
+
+    def set_lane_items(next_sym, next_state)
+      @lane_items[next_state] = @_lane_items[next_sym]
     end
 
     # @rbs (Array[States::Item] items, State next_state) -> void
@@ -349,14 +359,14 @@ module Lrama
         contribution_matrix = annotation.contribution_matrix.map {|action, contributions|
           if contributions.nil?
             [action, nil]
-          elsif kernels.any? {|kernel| contributions[kernel] && kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, annotation.token).nil? }
+          elsif first_kernels.any? {|kernel| contributions[kernel] && predecessor.lhs_contributions(kernel.lhs, annotation.token).empty? }
             [action, nil]
           else
-            cs = predecessor.kernels.map {|pred_kernel|
-              c = kernels.any? {|kernel| contributions[kernel] && (
-                (pred_kernel.predecessor_item_of?(kernel) && predecessor.item_lookahead_set[pred_kernel].include?(annotation.token)) ||
+            cs = predecessor.lane_items[self].map {|pred_kernel, kernel|
+              c = contributions[kernel] && (
+                (kernel.position > 1 && predecessor.item_lookahead_set[pred_kernel].include?(annotation.token)) ||
                 (kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, annotation.token)[pred_kernel])
-              ) }
+              )
               [pred_kernel, c]
             }.to_h
             [action, cs]
@@ -367,6 +377,10 @@ module Lrama
         InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
       }.compact
       predecessor.append_annotation_list(propagating_list)
+    end
+
+    def first_kernels
+      @first_kernels ||= kernels.select {|kernel| kernel.position == 1 }
     end
 
     # @rbs (Array[InadequacyAnnotation] propagating_list) -> void
