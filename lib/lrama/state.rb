@@ -75,6 +75,7 @@ module Lrama
       @follow_kernel_items = {}
       @always_follows = {}
       @goto_follows = {}
+      @lhs_contributions = {}
     end
 
     # @rbs (State other) -> bool
@@ -383,12 +384,16 @@ module Lrama
     #
     # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[States::Item, bool])
     def lhs_contributions(sym, token)
+      return @lhs_contributions[sym][token] unless @lhs_contributions.dig(sym, token).nil?
+
       transition = nterm_transitions.find {|goto| goto.next_sym == sym }
-      if always_follows[transition].include?(token)
-        nil
-      else
-        kernels.map {|kernel| [kernel, follow_kernel_items[transition][kernel] && item_lookahead_set[kernel].include?(token)] }.to_h
-      end
+      @lhs_contributions[sym] ||= {}
+      @lhs_contributions[sym][token] =
+        if always_follows[transition].include?(token)
+          {}
+        else
+          kernels.map {|kernel| [kernel, follow_kernel_items[transition][kernel] && item_lookahead_set[kernel].include?(token)] }.to_h
+        end
     end
 
     # Definition 3.26 (item_lookahead_sets)
