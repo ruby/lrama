@@ -1,16 +1,12 @@
 ---
 path: ".gem_rbs_collection"
 gems:
-- name: dbm
-  version: '0'
-  source:
-    type: stdlib
 - name: diff-lcs
   version: '1.5'
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 2813b6be44d7617d5defa2aaecdbd4540ee1c418
+    revision: 01f77ce44d0ac13c8ebfc3cfdd7104320021f991
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: erb
@@ -29,20 +25,12 @@ gems:
   version: '0'
   source:
     type: stdlib
-- name: pstore
-  version: '0'
-  source:
-    type: stdlib
-- name: psych
-  version: '0'
-  source:
-    type: stdlib
 - name: rake
   version: '13.0'
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 2813b6be44d7617d5defa2aaecdbd4540ee1c418
+    revision: 01f77ce44d0ac13c8ebfc3cfdd7104320021f991
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: rdoc
@@ -54,7 +42,7 @@ gems:
   source:
     type: git
     name: ruby/gem_rbs_collection
-    revision: 2813b6be44d7617d5defa2aaecdbd4540ee1c418
+    revision: 01f77ce44d0ac13c8ebfc3cfdd7104320021f991
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
 - name: strscan
