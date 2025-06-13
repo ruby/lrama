@@ -78,6 +78,7 @@ module Lrama
         o.on('-S', '--skeleton=FILE', 'specify the skeleton to use') {|v| @options.skeleton = v }
         o.on('-t', '--debug', 'display debugging outputs of internal parser') {|v| @options.debug = true }
         o.separator "                                     same as '-Dparse.trace'"
+        o.on('--locations', 'enable location support') {|v| @options.locations = true }
         o.on('-D', '--define=NAME[=VALUE]', Array, "similar to '%define NAME VALUE'") do |v|
           @options.define = v.each_with_object({}) do |item, hash| # steep:ignore UnannotatedEmptyCollection
             key, value = item.split('=', 2)

@@ -101,8 +101,8 @@ module Lrama
                                         :find_symbol_by_s_value!, :fill_symbol_number, :fill_nterm_type,
                                         :fill_printer, :fill_destructor, :fill_error_token, :sort_by_number!
 
-    # @rbs (Counter rule_counter) -> void
-    def initialize(rule_counter, define = {})
+    # @rbs (Counter rule_counter, bool locations, Hash[String, String] define) -> void
+    def initialize(rule_counter, locations, define = {})
       @rule_counter = rule_counter
 
       # Code defined by "%code"
@@ -123,7 +123,7 @@ module Lrama
       @accept_symbol = nil
       @aux = Auxiliary.new
       @no_stdlib = false
-      @locations = false
+      @locations = locations
       @define = define
       @required = false
 

@@ -55,7 +55,7 @@ RSpec.describe Lrama::Parser do
       context 'with define is specified' do
         context 'with `api.pure`' do
           it '@yydebug is true' do
-            parser = Lrama::Parser.new("", "", true, {'api.pure' => nil})
+            parser = Lrama::Parser.new("", "", true, false, {'api.pure' => nil})
             yydebug = parser.instance_variable_get(:@yydebug)
             expect(yydebug).to be_truthy
           end
@@ -63,7 +63,7 @@ RSpec.describe Lrama::Parser do
 
         context 'with `parse.trace`' do
           it '@yydebug is true' do
-            parser = Lrama::Parser.new("", "", true, {'parse.trace' => nil})
+            parser = Lrama::Parser.new("", "", true, false, {'parse.trace' => nil})
             yydebug = parser.instance_variable_get(:@yydebug)
             expect(yydebug).to be_truthy
           end
@@ -83,7 +83,7 @@ RSpec.describe Lrama::Parser do
       context 'with define is specified' do
         context 'with `api.pure`' do
           it '@yydebug is false' do
-            parser = Lrama::Parser.new("", "", false, {'api.pure' => nil})
+            parser = Lrama::Parser.new("", "", false, false, {'api.pure' => nil})
             yydebug = parser.instance_variable_get(:@yydebug)
             expect(yydebug).to be_falsey
           end
@@ -91,11 +91,27 @@ RSpec.describe Lrama::Parser do
 
         context 'with `parse.trace`' do
           it '@yydebug is true' do
-            parser = Lrama::Parser.new("", "", false, {'parse.trace' => nil})
+            parser = Lrama::Parser.new("", "", false, false, {'parse.trace' => nil})
             yydebug = parser.instance_variable_get(:@yydebug)
             expect(yydebug).to be_truthy
           end
         end
+      end
+    end
+
+    context 'when locations is true' do
+      it '@locations is true' do
+        parser = Lrama::Parser.new("", "", false, true)
+        locations = parser.instance_variable_get(:@locations)
+        expect(locations).to be_truthy
+      end
+    end
+
+    context 'when locations is false' do
+      it '@locations is false' do
+        parser = Lrama::Parser.new("", "", false, false)
+        locations = parser.instance_variable_get(:@locations)
+        expect(locations).to be_falsey
       end
     end
   end
