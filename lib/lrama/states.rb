@@ -312,6 +312,7 @@ module Lrama
         state._transitions.each do |next_sym, to_items|
           new_state, created = create_state(next_sym, to_items, states_created)
           state.set_items_to_state(to_items, new_state)
+          state.set_lane_items(next_sym, new_state)
           enqueue_state(states, new_state) if created
         end
       end

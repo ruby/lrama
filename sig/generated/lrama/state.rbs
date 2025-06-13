@@ -58,6 +58,8 @@ module Lrama
 
     attr_reader items_to_state: Hash[Array[States::Item], State]
 
+    attr_reader lane_items: Hash[State, Array[[ States::Item, States::Item ]]]
+
     attr_accessor _transitions: Array[[ Grammar::Symbol, Array[States::Item] ]]
 
     attr_accessor reduces: Array[Action::Reduce]
@@ -88,6 +90,9 @@ module Lrama
 
     # @rbs () -> void
     def compute_transitions_and_reduces: () -> void
+
+    # @rbs (Grammar::Symbol next_sym, State next_state) -> void
+    def set_lane_items: (Grammar::Symbol next_sym, State next_state) -> void
 
     # @rbs (Array[States::Item] items, State next_state) -> void
     def set_items_to_state: (Array[States::Item] items, State next_state) -> void
@@ -171,6 +176,9 @@ module Lrama
     #
     # @rbs (State predecessor) -> void
     def annotate_predecessor: (State predecessor) -> void
+
+    # @rbs () -> Array[States::Item]
+    def first_kernels: () -> Array[States::Item]
 
     # @rbs (Array[InadequacyAnnotation] propagating_list) -> void
     def append_annotation_list: (Array[InadequacyAnnotation] propagating_list) -> void
