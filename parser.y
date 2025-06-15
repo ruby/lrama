@@ -156,7 +156,7 @@ rule
         {
           val[1].each {|hash|
             hash[:tokens].each {|id|
-              sym = @grammar.add_term(id: id)
+              sym = @grammar.add_term(id: id, tag: hash[:tag])
               @grammar.add_left(sym, @precedence_number)
             }
           }
@@ -166,7 +166,7 @@ rule
         {
           val[1].each {|hash|
             hash[:tokens].each {|id|
-              sym = @grammar.add_term(id: id)
+              sym = @grammar.add_term(id: id, tag: hash[:tag])
               @grammar.add_right(sym, @precedence_number)
             }
           }
@@ -176,7 +176,7 @@ rule
         {
           val[1].each {|hash|
             hash[:tokens].each {|id|
-              sym = @grammar.add_term(id: id)
+              sym = @grammar.add_term(id: id, tag: hash[:tag])
               @grammar.add_precedence(sym, @precedence_number)
             }
           }
@@ -186,7 +186,7 @@ rule
         {
           val[1].each {|hash|
             hash[:tokens].each {|id|
-              sym = @grammar.add_term(id: id)
+              sym = @grammar.add_term(id: id, tag: hash[:tag])
               @grammar.add_nonassoc(sym, @precedence_number)
             }
           }
@@ -320,7 +320,7 @@ rule
 
   token_declarations_for_precedence:
       id+ { result = [{tag: nil, tokens: val[0]}] }
-    | TAG id+ { result = [{tag: val[0], tokens: val[1]}] }
+    | (TAG id+)+ { result = val[0].map {|tag, ids| {tag: tag, tokens: ids} } }
     | id TAG id+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
 
   id:
