@@ -11,12 +11,12 @@ RSpec.describe Lrama::Grammar::Code do
 
   describe Lrama::Grammar::Code::InitialActionCode do
     describe "#translated_code" do
-      it "translats '$$' to 'yylval'" do
+      it "translates '$$' to 'yylval'" do
         code = described_class.new(type: :initial_action, token_code: user_code_dollar_dollar)
         expect(code.translated_code).to eq("print(yylval);")
       end
 
-      it "translats '@$' to 'yylloc'" do
+      it "translates '@$' to 'yylloc'" do
         code = described_class.new(type: :initial_action, token_code: user_code_at_dollar)
         expect(code.translated_code).to eq("print(yylloc);")
       end
@@ -81,12 +81,12 @@ RSpec.describe Lrama::Grammar::Code do
     describe "#translated_code" do
       let(:tag) { token_class::Tag.new(s_value: '<val>') }
 
-      it "translats '$$' to '((*yyvaluep).val)'" do
+      it "translates '$$' to '((*yyvaluep).val)'" do
         code = described_class.new(type: :destructor, token_code: user_code_dollar_dollar, tag: tag)
         expect(code.translated_code).to eq("print(((*yyvaluep).val));")
       end
 
-      it "translats '@$' to '(*yylocationp)'" do
+      it "translates '@$' to '(*yylocationp)'" do
         code = described_class.new(type: :destructor, token_code: user_code_at_dollar, tag: tag)
         expect(code.translated_code).to eq("print((*yylocationp));")
       end
@@ -117,12 +117,12 @@ RSpec.describe Lrama::Grammar::Code do
     describe "#translated_code" do
       let(:tag) { token_class::Tag.new(s_value: '<val>') }
 
-      it "translats '$$' to '((*yyvaluep).val)'" do
+      it "translates '$$' to '((*yyvaluep).val)'" do
         code = described_class.new(type: :printer, token_code: user_code_dollar_dollar, tag: tag)
         expect(code.translated_code).to eq("print(((*yyvaluep).val));")
       end
 
-      it "translats '@$' to '(*yylocationp)'" do
+      it "translates '@$' to '(*yylocationp)'" do
         code = described_class.new(type: :printer, token_code: user_code_at_dollar, tag: tag)
         expect(code.translated_code).to eq("print((*yylocationp));")
       end
@@ -246,22 +246,22 @@ RSpec.describe Lrama::Grammar::Code do
     end
 
     describe "#translated_code" do
-      it "translats '$$' to '(yyval)' with member" do
+      it "translates '$$' to '(yyval)' with member" do
         code = grammar.rules.find {|r| r.lhs.id.s_value == "rule1" }
         expect(code.translated_code).to eq(" (yyval.rule1) = 0; ")
       end
 
-      it "translats '@$' to '(yyloc)'" do
+      it "translates '@$' to '(yyloc)'" do
         code = grammar.rules.find {|r| r.lhs.id.s_value == "rule2" }
         expect(code.translated_code).to eq(" (yyloc) = 0; ")
       end
 
-      it "translats '$n' to '(yyvsp)' with index and member" do
+      it "translates '$n' to '(yyvsp)' with index and member" do
         code = grammar.rules.find {|r| r.lhs.id.s_value == "rule3" }
         expect(code.translated_code).to eq(" (yyvsp[-2].expr) + (yyvsp[0].expr); ")
       end
 
-      it "translats '@n' to '(yylsp)' with index" do
+      it "translates '@n' to '(yylsp)' with index" do
         code = grammar.rules.find {|r| r.lhs.id.s_value == "rule4" }
         expect(code.translated_code).to eq(" (yylsp[-2]) + (yylsp[0]); (yylsp[-3]); ")
       end
@@ -312,7 +312,7 @@ RSpec.describe Lrama::Grammar::Code do
       end
 
       context "$: is used" do
-        it "translats '$:$' to '-yylen' and '$:n' to index from the last of array" do
+        it "translates '$:$' to '-yylen' and '$:n' to index from the last of array" do
           code = grammar.rules.find {|r| r.lhs.id.s_value == "rule9" }
           expect(code.translated_code).to eq(" (-2 - 1); (-1 - 1); (0 - 1); ")
 
