@@ -333,6 +333,77 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq(nil)
       end
     end
+
+    context 'precedence.y' do
+      it do
+        path = fixture_path("common/precedence.y")
+        text = File.read(path)
+        grammar_file = Lrama::Lexer::GrammarFile.new(path, text)
+        lexer = Lrama::Lexer.new(grammar_file)
+        expect(lexer.next_token).to eq(['%{', '%{'])
+        lexer.status = :c_declaration
+        lexer.end_symbol = '%}'
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n#include <stdio.h>\n#include <stdlib.h>\n\nint yylex(void);\nvoid yyerror(const char *s);\n")])
+        lexer.status = :initial
+        expect(lexer.next_token).to eq(['%}', '%}'])
+        expect(lexer.next_token).to eq(['%union', '%union'])
+        expect(lexer.next_token).to eq(['{', '{'])
+        lexer.status = :c_declaration
+        lexer.end_symbol = '}'
+        token = lexer.next_token
+        expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: "\n    int ival;\n    void *pval;\n")])
+        lexer.status = :initial
+        expect(lexer.next_token).to eq(['}', '}'])
+        expect(lexer.next_token).to eq(['%left', '%left'])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<ival>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'PLUS')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'MINUS')])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<pval>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'PLUGIN_ADD_OP')])
+        expect(lexer.next_token).to eq(['%left', '%left'])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<ival>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'MULT')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'DIV')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'MOD')])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<pval>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'PLUGIN_MULT_OP')])
+        expect(lexer.next_token).to eq(['%right', '%right'])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<ival>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'POW')])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<pval>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'PLUGIN_POW_OP')])
+        expect(lexer.next_token).to eq(['%left', '%left'])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<ival>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'OROR')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'DORDOR')])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<pval>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'PLUGIN_LOGICAL_OR_OP')])
+        expect(lexer.next_token).to eq(['%left', '%left'])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<ival>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'ANDAND')])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<pval>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'PLUGIN_LOGICAL_AND_OP')])
+        expect(lexer.next_token).to eq(['%token', '%token'])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<ival>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'NUMBER')])
+        expect(lexer.next_token).to eq(['%token', '%token'])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<ival>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'LPAREN')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'RPAREN')])
+        expect(lexer.next_token).to eq(['%token', '%token'])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'ID')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'STRING')])
+        expect(lexer.next_token).to eq(['%type', '%type'])
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: '<ival>')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'expr')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'term')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'factor')])
+        expect(lexer.next_token).to eq(['%%', '%%'])
+        expect(lexer.next_token).to eq([:IDENT_COLON, token_class::Ident.new(s_value: 'program')])
+        expect(lexer.next_token).to eq([':', ':'])
+      end
+    end
   end
 
   context 'unexpected_token.y' do
