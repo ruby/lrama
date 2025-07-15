@@ -659,6 +659,193 @@ RSpec.describe Lrama::Parser do
       ])
     end
 
+    it "precedence" do
+      path = "common/precedence.y"
+      y = File.read(fixture_path(path))
+      grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
+
+      expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 13, tag: nil, term: false, token_id: 0, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 14, tag: nil, term: false, token_id: 1, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "expr"),    alias_name: nil, number: 15, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 2, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "term"),    alias_name: nil, number: 16, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 3, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "factor"),  alias_name: nil, number: 17, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 4, nullable: false),
+      ])
+
+      expect(grammar.find_symbol_by_s_value!("PLUS").tag).to eq(T::Tag.new(s_value: "<i>"))
+      expect(grammar.find_symbol_by_s_value!("MINUS").tag).to eq(T::Tag.new(s_value: "<i>"))
+      expect(grammar.find_symbol_by_s_value!("ADD_OP").tag).to eq(T::Tag.new(s_value: "<p>"))
+      expect(grammar.find_symbol_by_s_value!("MULT").tag).to eq(T::Tag.new(s_value: "<i>"))
+      expect(grammar.find_symbol_by_s_value!("DIV").tag).to eq(T::Tag.new(s_value: "<i>"))
+      expect(grammar.find_symbol_by_s_value!("MOD").tag).to eq(T::Tag.new(s_value: "<i>"))
+      expect(grammar.find_symbol_by_s_value!("MULT_OP").tag).to eq(T::Tag.new(s_value: "<p>"))
+
+      expect(grammar.rules).to eq([
+        Rule.new(
+          id: 0,
+          lhs: grammar.find_symbol_by_s_value!("$accept"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("program"),
+            grammar.find_symbol_by_s_value!("YYEOF"),
+          ],
+          token_code: nil,
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+          lineno: 25,
+        ),
+        Rule.new(
+          id: 1,
+          lhs: grammar.find_symbol_by_s_value!("program"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("expr"),
+          ],
+          token_code: T::UserCode.new(s_value: " printf(\"Result: %d\\n\", $1); "),
+          nullable: false,
+          precedence_sym: nil,
+          lineno: 25,
+        ),
+        Rule.new(
+          id: 2,
+          lhs: grammar.find_symbol_by_s_value!("expr"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("expr"),
+            grammar.find_symbol_by_s_value!("PLUS"),
+            grammar.find_symbol_by_s_value!("term"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1 + $3; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("PLUS"),
+          lineno: 29,
+        ),
+        Rule.new(
+          id: 3,
+          lhs: grammar.find_symbol_by_s_value!("expr"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("expr"),
+            grammar.find_symbol_by_s_value!("MINUS"),
+            grammar.find_symbol_by_s_value!("term"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1 - $3; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("MINUS"),
+          lineno: 30,
+        ),
+        Rule.new(
+          id: 4,
+          lhs: grammar.find_symbol_by_s_value!("expr"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("expr"),
+            grammar.find_symbol_by_s_value!("ADD_OP"),
+            grammar.find_symbol_by_s_value!("term"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1 + $3; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("ADD_OP"),
+          lineno: 31,
+        ),
+        Rule.new(
+          id: 5,
+          lhs: grammar.find_symbol_by_s_value!("expr"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("term"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1; "),
+          nullable: false,
+          precedence_sym: nil,
+          lineno: 32,
+        ),
+        Rule.new(
+          id: 6,
+          lhs: grammar.find_symbol_by_s_value!("term"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("term"),
+            grammar.find_symbol_by_s_value!("MULT"),
+            grammar.find_symbol_by_s_value!("factor"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1 * $3; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("MULT"),
+          lineno: 36,
+        ),
+        Rule.new(
+          id: 7,
+          lhs: grammar.find_symbol_by_s_value!("term"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("term"),
+            grammar.find_symbol_by_s_value!("DIV"),
+            grammar.find_symbol_by_s_value!("factor"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1 / $3; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("DIV"),
+          lineno: 37,
+        ),
+        Rule.new(
+          id: 8,
+          lhs: grammar.find_symbol_by_s_value!("term"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("term"),
+            grammar.find_symbol_by_s_value!("MOD"),
+            grammar.find_symbol_by_s_value!("factor"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1 % $3; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("MOD"),
+          lineno: 38,
+        ),
+        Rule.new(
+          id: 9,
+          lhs: grammar.find_symbol_by_s_value!("term"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("term"),
+            grammar.find_symbol_by_s_value!("MULT_OP"),
+            grammar.find_symbol_by_s_value!("factor"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1 * $3; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("MULT_OP"),
+          lineno: 39,
+        ),
+        Rule.new(
+          id: 10,
+          lhs: grammar.find_symbol_by_s_value!("term"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("factor"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1; "),
+          nullable: false,
+          precedence_sym: nil,
+          lineno: 40,
+        ),
+        Rule.new(
+          id: 11,
+          lhs: grammar.find_symbol_by_s_value!("factor"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("NUMBER"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $1; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("NUMBER"),
+          lineno: 44,
+        ),
+        Rule.new(
+          id: 12,
+          lhs: grammar.find_symbol_by_s_value!("factor"),
+          rhs: [
+            grammar.find_symbol_by_s_value!("LPAREN"),
+            grammar.find_symbol_by_s_value!("expr"),
+            grammar.find_symbol_by_s_value!("RPAREN"),
+          ],
+          token_code: T::UserCode.new(s_value: " $$ = $2; "),
+          nullable: false,
+          precedence_sym: grammar.find_symbol_by_s_value!("RPAREN"),
+          lineno: 45,
+        ),
+      ])
+    end
+
     context 'when parameterized rules' do
       let(:grammar) do
         grammar = Lrama::Parser.new(y, path).parse
