@@ -156,7 +156,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: ['head']
+        # TODO: Temporarily uses ruby 3.4 to avoid "uninitialized constant RBS::Collection::Sources::Git::FileUtils (NameError)"
+        # ruby: ['head']
+        ruby: ['3.4']
     env:
       INSTALL_STEEP: 'true'
     steps:
