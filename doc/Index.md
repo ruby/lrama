@@ -49,7 +49,7 @@ Enter the formula:
 
 ## Supported Ruby version
 
-Lrama is executed with BASERUBY when building ruby from source code. Therefore Lrama needs to support BASERUBY, currently 2.5, or later version.
+Lrama is executed with BASERUBY when building ruby from source code. Therefore Lrama needs to support BASERUBY, currently 3.1, or later version.
 
 This also requires Lrama to be able to run with only default gems because BASERUBY runs with `--disable=gems` option.
 
