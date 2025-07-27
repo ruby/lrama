@@ -20,15 +20,6 @@ Lrama (pronounced in the same way as the noun “llama” in English) is LALR (1
   - [How to generate parser.rb](#how-to-generate-parserrb)
   - [How to Write a Type Signature](#how-to-write-a-type-signature)
   - [Test](#test)
-  - [Call-stack Profiling Lrama](#call-stack-profiling-lrama)
-    - [1. Create parse.tmp.y in ruby/ruby](#1-create-parsetmpy-in-rubyruby)
-    - [2. Enable Profiler](#2-enable-profiler)
-    - [3. Run Lrama](#3-run-lrama)
-    - [4. Generate Flamegraph](#4-generate-flamegraph)
-  - [Memory Profiling Lrama](#memory-profiling-lrama)
-    - [1. Create parse.tmp.y in ruby/ruby](#1-create-parsetmpy-in-rubyruby-1)
-    - [2. Enable Profiler](#2-enable-profiler-1)
-    - [3. Run Lrama](#3-run-lrama-1)
   - [Build Ruby](#build-ruby)
 - [Release flow](#release-flow)
 - [License](#license)
@@ -161,44 +152,6 @@ Running both of them:
 $ bundle install
 $ bundle exec rake
 ```
-
-### Call-stack Profiling Lrama
-
-#### 1. Create parse.tmp.y in ruby/ruby
-
-```shell
-$ ruby tool/id2token.rb parse.y > parse.tmp.y
-$ cp parse.tmp.y dir/lrama/tmp
-```
-
-#### 2. Run Lrama
-
-```shell
-$ exe/lrama -o parse.tmp.c --header=parse.tmp.h --profile=call-stack tmp/parse.tmp.y
-```
-
-#### 3. Generate Flamegraph
-
-```shell
-$ stackprof --d3-flamegraph tmp/stackprof-cpu-myapp.dump > tmp/flamegraph.html
-```
-
-### Memory Profiling Lrama
-
-#### 1. Create parse.tmp.y in ruby/ruby
-
-```shell
-$ ruby tool/id2token.rb parse.y > parse.tmp.y
-$ cp parse.tmp.y dir/lrama/tmp
-```
-
-#### 2. Run Lrama
-
-```shell
-$ exe/lrama -o parse.tmp.c --header=parse.tmp.h --profile=memory tmp/parse.tmp.y
-```
-
-Then "tmp/memory_profiler.txt" is generated.
 
 ### Build Ruby
 
