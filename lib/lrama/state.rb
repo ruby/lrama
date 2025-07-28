@@ -373,6 +373,12 @@ module Lrama
             [action, cs]
           end
         }.to_h
+
+        # Observation 3.33 (Simple Split-Stable Dominance)
+        #
+        # If all of contributions in the contribution_matrix are
+        # always contribution or never contribution, we can stop annotate propagations
+        # to the predecessor state.
         next nil if contribution_matrix.all? {|_, contributions| contributions.nil? || contributions.all? {|_, contributed| !contributed } }
 
         InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
