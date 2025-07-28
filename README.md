@@ -102,9 +102,7 @@ This branch generates "parse.c" compatible with Bison 3.8.2 for ruby 3.0, 3.1, 3
 
 ## Supported Ruby version
 
-Lrama is executed with BASERUBY when building ruby from source code. Therefore Lrama needs to support BASERUBY, currently 2.5, or later version.
-
-This also requires Lrama to be able to run with only default gems because BASERUBY runs with `--disable=gems` option.
+See [Supported Ruby version](/doc/Index.md#supported-ruby-version) in doc.
 
 ## Development
 
