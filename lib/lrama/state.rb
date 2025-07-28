@@ -166,7 +166,7 @@ module Lrama
       end
     end
 
-    # @rbs (Action::Shift | Action::Goto transition, State next_state) -> void
+    # @rbs (transition transition, State next_state) -> void
     def update_transition(transition, next_state)
       set_items_to_state(transition.to_items, next_state)
       next_state.append_predecessor(self)
