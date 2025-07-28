@@ -109,8 +109,8 @@ module Lrama
     # @rbs () -> Array[transition]
     def transitions: () -> Array[transition]
 
-    # @rbs (Action::Shift | Action::Goto transition, State next_state) -> void
-    def update_transition: (Action::Shift | Action::Goto transition, State next_state) -> void
+    # @rbs (transition transition, State next_state) -> void
+    def update_transition: (transition transition, State next_state) -> void
 
     # @rbs () -> void
     def update_transitions_caches: () -> void
