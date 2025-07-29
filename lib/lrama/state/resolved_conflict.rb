@@ -6,14 +6,19 @@ module Lrama
     # * symbol: A symbol under discussion
     # * reduce: A reduce under discussion
     # * which: For which a conflict is resolved. :shift, :reduce or :error (for nonassociative)
-    class ResolvedConflict < Struct.new(:symbol, :reduce, :which, :same_prec, keyword_init: true)
-      # @rbs!
-      #   attr_accessor symbol: Grammar::Symbol
-      #   attr_accessor reduce: State::Action::Reduce
-      #   attr_accessor which: (:reduce | :shift | :error)
-      #   attr_accessor same_prec: bool
-      #
-      #   def initialize: (?symbol: Grammar::Symbol, ?reduce: State::Action::Reduce, ?which: (:reduce | :shift | :error), ?same_prec: bool) -> void
+    class ResolvedConflict
+      attr_reader :symbol #: Grammar::Symbol
+      attr_reader :reduce #: State::Action::Reduce
+      attr_reader :which #: (:reduce | :shift | :error)
+      attr_reader :same_prec #: bool
+
+      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: (:reduce | :shift | :error), ?same_prec: bool) -> void
+      def initialize(symbol:, reduce:, which:, same_prec: false)
+        @symbol = symbol
+        @reduce = reduce
+        @which = which
+        @same_prec = same_prec
+      end
 
       # @rbs () -> (::String | bot)
       def report_message
