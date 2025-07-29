@@ -473,6 +473,7 @@ end
 include Lrama::Tracer::Duration
 
 def initialize(text, path, debug = false, locations = false, define = {})
+  @path = path
   @grammar_file = Lrama::Lexer::GrammarFile.new(path, text)
   @yydebug = debug || define.key?('parse.trace')
   @rule_counter = Lrama::Grammar::Counter.new(0)
@@ -482,7 +483,8 @@ def initialize(text, path, debug = false, locations = false, define = {})
 end
 
 def parse
-  report_duration(:parse) do
+  message = "parse '#{File.basename(@path)}'"
+  report_duration(message) do
     @lexer = Lrama::Lexer.new(@grammar_file)
     @grammar = Lrama::Grammar.new(@rule_counter, @locations, @define)
     @precedence_number = 0
