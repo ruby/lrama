@@ -710,8 +710,9 @@ module Lrama
         state.annotate_manifestation
       end
 
-      queue = @states.select do |state|
-        !state.annotation_list.empty?
+      queue = OrderedSet.new
+      @states.each do |state|
+        queue << state if !state.annotation_list.empty?
       end
 
       while (curr = queue.shift) do
