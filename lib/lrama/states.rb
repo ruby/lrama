@@ -710,14 +710,15 @@ module Lrama
         state.annotate_manifestation
       end
 
-      @states.reverse.each do |state|
-        queue = [state]
-        while (curr = queue.shift) do
-          curr.predecessors.each do |pred|
-            cache = pred.annotation_list.dup
-            curr.annotate_predecessor(pred)
-            queue << pred if cache != pred.annotation_list
-          end
+      queue = @states.select do |state|
+        !state.annotation_list.empty?
+      end
+
+      while (curr = queue.shift) do
+        curr.predecessors.each do |pred|
+          cache = pred.annotation_list.dup
+          curr.annotate_predecessor(pred)
+          queue << pred if cache != pred.annotation_list
         end
       end
     end
