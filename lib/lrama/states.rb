@@ -710,10 +710,7 @@ module Lrama
         state.annotate_manifestation
       end
 
-      queue = []
-      @states.each do |state|
-        queue << state if !state.annotation_list.empty?
-      end
+      queue = @states.reject {|state| state.annotation_list.empty? }
 
       while (curr = queue.shift) do
         curr.predecessors.each do |pred|
