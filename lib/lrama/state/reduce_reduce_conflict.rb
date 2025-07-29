@@ -3,13 +3,17 @@
 
 module Lrama
   class State
-    class ReduceReduceConflict < Struct.new(:symbols, :reduce1, :reduce2, keyword_init: true)
-      # @rbs!
-      #   attr_accessor symbols: Array[Grammar::Symbol]
-      #   attr_accessor reduce1: State::Action::Reduce
-      #   attr_accessor reduce2: State::Action::Reduce
-      #
-      #   def initialize: (?symbols: Array[Grammar::Symbol], ?reduce1: State::Action::Reduce, ?reduce2: State::Action::Reduce) -> void
+    class ReduceReduceConflict
+      attr_reader :symbols #: Array[Grammar::Symbol]
+      attr_reader :reduce1 #: State::Action::Reduce
+      attr_reader :reduce2 #: State::Action::Reduce
+
+      # @rbs (symbols: Array[Grammar::Symbol], reduce1: State::Action::Reduce, reduce2: State::Action::Reduce) -> void
+      def initialize(symbols:, reduce1:, reduce2:)
+        @symbols = symbols
+        @reduce1 = reduce1
+        @reduce2 = reduce2
+      end
 
       # @rbs () -> :reduce_reduce
       def type
