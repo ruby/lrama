@@ -710,7 +710,7 @@ module Lrama
         state.annotate_manifestation
       end
 
-      queue = OrderedSet.new
+      queue = []
       @states.each do |state|
         queue << state if !state.annotation_list.empty?
       end
@@ -719,7 +719,7 @@ module Lrama
         curr.predecessors.each do |pred|
           cache = pred.annotation_list.dup
           curr.annotate_predecessor(pred)
-          queue << pred if cache != pred.annotation_list
+          queue << pred if cache != pred.annotation_list && !queue.include?(pred)
         end
       end
     end
