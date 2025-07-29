@@ -7,12 +7,15 @@ module Lrama
     # * reduce: A reduce under discussion
     # * which: For which a conflict is resolved. :shift, :reduce or :error (for nonassociative)
     class ResolvedConflict
+      # @rbs!
+      #   type which_enum = :reduce | :shift | :error
+
       attr_reader :symbol #: Grammar::Symbol
       attr_reader :reduce #: State::Action::Reduce
-      attr_reader :which #: (:reduce | :shift | :error)
+      attr_reader :which #: which_enum
       attr_reader :same_prec #: bool
 
-      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: (:reduce | :shift | :error), ?same_prec: bool) -> void
+      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, ?same_prec: bool) -> void
       def initialize(symbol:, reduce:, which:, same_prec: false)
         @symbol = symbol
         @reduce = reduce
