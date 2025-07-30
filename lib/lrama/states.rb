@@ -521,12 +521,12 @@ module Lrama
               next
             when :right
               # Shift is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift, same_prec: true)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift, resolved_by_precedence: true)
               reduce.add_not_selected_symbol(sym)
               next
             when :left
               # Reduce is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce, same_prec: true)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce, resolved_by_precedence: true)
               shift.not_selected = true
               next
             when :nonassoc
