@@ -17,8 +17,8 @@ module Lrama
 
       attr_reader resolved_by_precedence: bool
 
-      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, ?resolved_by_precedence: bool) -> void
-      def initialize: (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, ?resolved_by_precedence: bool) -> void
+      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
+      def initialize: (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
 
       # @rbs () -> (::String | bot)
       def report_message: () -> (::String | bot)

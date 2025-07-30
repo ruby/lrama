@@ -502,12 +502,12 @@ module Lrama
             case
             when shift_prec < reduce_prec
               # Reduce is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce, resolved_by_precedence: false)
               shift.not_selected = true
               next
             when shift_prec > reduce_prec
               # Shift is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift, resolved_by_precedence: false)
               reduce.add_not_selected_symbol(sym)
               next
             end
@@ -536,7 +536,7 @@ module Lrama
               # Then omit both the shift and reduce.
               #
               # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :error)
+              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :error, resolved_by_precedence: false)
               shift.not_selected = true
               reduce.add_not_selected_symbol(sym)
             else

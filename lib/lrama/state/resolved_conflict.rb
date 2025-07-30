@@ -16,8 +16,8 @@ module Lrama
       attr_reader :which #: which_enum
       attr_reader :resolved_by_precedence #: bool
 
-      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, ?resolved_by_precedence: bool) -> void
-      def initialize(symbol:, reduce:, which:, resolved_by_precedence: false)
+      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
+      def initialize(symbol:, reduce:, which:, resolved_by_precedence:)
         @symbol = symbol
         @reduce = reduce
         @which = which
