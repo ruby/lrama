@@ -2,6 +2,55 @@
 
 ## Lrama 0.7.1 (2025-xx-xx)
 
+### Optimize IELR
+
+https://github.com/ruby/lrama/pull/595
+https://github.com/ruby/lrama/pull/605
+https://github.com/ruby/lrama/pull/685
+https://github.com/ruby/lrama/pull/700
+
+### Introduce counterexamples timeout
+
+https://github.com/ruby/lrama/pull/623
+
+### Optimize Counterexamples
+
+https://github.com/ruby/lrama/pull/607
+https://github.com/ruby/lrama/pull/610
+https://github.com/ruby/lrama/pull/614
+https://github.com/ruby/lrama/pull/622
+https://github.com/ruby/lrama/pull/627
+https://github.com/ruby/lrama/pull/629
+https://github.com/ruby/lrama/pull/659
+
+### Support parameterized rule's arguments include inline
+
+https://github.com/ruby/lrama/pull/637
+
+### Print conflicts of each state on output file
+
+```
+TODO example
+```
+
+https://github.com/ruby/lrama/pull/541
+
+### Print the origin of conflicted tokens on output file
+
+https://github.com/ruby/lrama/pull/726
+
+### Add support for reporting Rule Usage Frequency
+
+https://github.com/ruby/lrama/pull/677
+
+### Render Split States information on output file
+
+https://github.com/ruby/lrama/pull/624
+
+### Add ioption support to the Standard library
+
+https://github.com/ruby/lrama/pull/666
+
 ### Syntax Diagrams
 
 Lrama provides an API for generating HTML syntax diagrams. These visual diagrams are highly useful as grammar development tools and can also serve as a form of automatic self-documentation.
@@ -13,6 +62,8 @@ If you use syntax diagrams, you add `--diagram` option.
 ```console
 $ exe/lrama --diagram sample.y
 ```
+
+https://github.com/ruby/lrama/pull/523
 
 ### Support `--profile` option
 
@@ -26,6 +77,10 @@ $ exe/lrama --profile=call-stack sample/calc.y
 Then "tmp/stackprof-cpu-myapp.dump" is generated.
 
 https://github.com/ruby/lrama/pull/525
+
+### Add support Start-Symbol: `%start`
+
+https://github.com/ruby/lrama/pull/576
 
 ## Lrama 0.7.0 (2025-01-21)
 
