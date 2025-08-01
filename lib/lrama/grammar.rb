@@ -161,24 +161,24 @@ module Lrama
       @types << Type.new(id: id, tag: tag)
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence) -> Precedence
-    def add_nonassoc(sym, precedence)
-      set_precedence(sym, Precedence.new(type: :nonassoc, precedence: precedence))
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_nonassoc(sym, precedence, lineno)
+      set_precedence(sym, Precedence.new(type: :nonassoc, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence) -> Precedence
-    def add_left(sym, precedence)
-      set_precedence(sym, Precedence.new(type: :left, precedence: precedence))
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_left(sym, precedence, lineno)
+      set_precedence(sym, Precedence.new(type: :left, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence) -> Precedence
-    def add_right(sym, precedence)
-      set_precedence(sym, Precedence.new(type: :right, precedence: precedence))
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_right(sym, precedence, lineno)
+      set_precedence(sym, Precedence.new(type: :right, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence) -> Precedence
-    def add_precedence(sym, precedence)
-      set_precedence(sym, Precedence.new(type: :precedence, precedence: precedence))
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_precedence(sym, precedence, lineno)
+      set_precedence(sym, Precedence.new(type: :precedence, precedence: precedence, lineno: lineno))
     end
 
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
@@ -253,6 +253,7 @@ module Lrama
     # @rbs () -> void
     def validate!
       @symbols_resolver.validate!
+      validate_precedence_is_term!
       validate_rule_lhs_is_nterm!
     end
 
@@ -505,6 +506,21 @@ module Lrama
         @sym_to_rules[key] ||= []
         @sym_to_rules[key] << rule
       end
+    end
+
+    # @rbs () -> void
+    def validate_precedence_is_term!
+      errors = [] #: Array[String]
+
+      @rules.each do |rule|
+        next if rule.lhs.precedence.nil?
+
+        errors << "[BUG] Precedence of #{rule.lhs.name} (line: #{rule.lhs.precedence.lineno}) is not term. It should be term."
+      end
+
+      return if errors.empty?
+
+      raise errors.join("\n")
     end
 
     # @rbs () -> void
