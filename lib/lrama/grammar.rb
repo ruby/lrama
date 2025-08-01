@@ -183,7 +183,6 @@ module Lrama
 
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_precedence(sym, precedence)
-      raise "" if sym.nterm?
       sym.precedence = precedence
     end
 
