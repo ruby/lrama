@@ -122,6 +122,9 @@ module Lrama
 
         # @rbs () -> void
         def validate_alias_name_uniqueness!: () -> void
+
+        # @rbs () -> void
+        def validate_symbols!: () -> void
       end
     end
   end

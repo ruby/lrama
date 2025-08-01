@@ -217,6 +217,7 @@ module Lrama
         def validate!
           validate_number_uniqueness!
           validate_alias_name_uniqueness!
+          validate_symbols!
         end
 
         private
@@ -345,6 +346,15 @@ module Lrama
           return if invalid.empty?
 
           raise "Symbol alias name is duplicated. #{invalid}"
+        end
+
+        # @rbs () -> void
+        def validate_symbols!
+          symbols.each { |sym| sym.id.validate }
+          errors = symbols.map { |sym| sym.id.errors }.flatten.compact
+          return if errors.empty?
+
+          raise errors.join("\n")
         end
       end
     end

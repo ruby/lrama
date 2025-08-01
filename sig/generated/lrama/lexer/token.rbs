@@ -11,6 +11,8 @@ module Lrama
 
       attr_accessor referred: bool
 
+      attr_reader errors: Array[String]
+
       # @rbs (s_value: String, ?alias_name: String, ?location: Location) -> void
       def initialize: (s_value: String, ?alias_name: String, ?location: Location) -> void
 
@@ -41,6 +43,9 @@ module Lrama
 
       # @rbs (Lrama::Grammar::Reference ref, String message) -> bot
       def invalid_ref: (Lrama::Grammar::Reference ref, String message) -> bot
+
+      # @rbs () -> bool
+      def validate: () -> bool
     end
   end
 end

@@ -14,6 +14,7 @@ module Lrama
       attr_reader :location #: Location
       attr_accessor :alias_name #: String
       attr_accessor :referred #: bool
+      attr_reader :errors #: Array[String]
 
       # @rbs (s_value: String, ?alias_name: String, ?location: Location) -> void
       def initialize(s_value:, alias_name: nil, location: nil)
@@ -21,6 +22,7 @@ module Lrama
         @s_value = s_value
         @alias_name = alias_name
         @location = location
+        @errors = []
       end
 
       # @rbs () -> String
@@ -64,6 +66,11 @@ module Lrama
       def invalid_ref(ref, message)
         location = self.location.partial_location(ref.first_column, ref.last_column)
         raise location.generate_error_message(message)
+      end
+
+      # @rbs () -> bool
+      def validate
+        true
       end
     end
   end
