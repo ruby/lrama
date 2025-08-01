@@ -149,17 +149,17 @@ module Lrama
     # @rbs (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
     def add_type: (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
 
-    # @rbs (Grammar::Symbol sym, Integer precedence) -> Precedence
-    def add_nonassoc: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_nonassoc: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence) -> Precedence
-    def add_left: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_left: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence) -> Precedence
-    def add_right: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_right: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence) -> Precedence
-    def add_precedence: (Grammar::Symbol sym, Integer precedence) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_precedence: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
 
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
@@ -256,6 +256,9 @@ module Lrama
 
     # @rbs () -> Array[Rule]
     def fill_sym_to_rules: () -> Array[Rule]
+
+    # @rbs () -> void
+    def validate_precedence_is_term!: () -> void
 
     # @rbs () -> void
     def validate_rule_lhs_is_nterm!: () -> void

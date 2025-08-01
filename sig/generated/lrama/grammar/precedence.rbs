@@ -9,7 +9,9 @@ module Lrama
 
       attr_accessor precedence: Integer
 
-      def initialize: (?type: ::Symbol, ?precedence: Integer) -> void
+      attr_accessor lineno: Integer
+
+      def initialize: (?type: ::Symbol, ?precedence: Integer, ?lineno: Integer) -> void
 
       # @rbs (Precedence other) -> Integer
       def <=>: (Precedence other) -> Integer
