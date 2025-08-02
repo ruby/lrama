@@ -119,7 +119,7 @@ RSpec.describe Lrama::Grammar do
 
     it 'raises error with message' do
       expect { grammar.send(:validate!) }
-        .to raise_error('[BUG] LHS of + -> ε (line: 15) is term. It should be nterm.')
+        .to raise_error('[BUG] LHS of + -> ε (line: 15) is terminal symbol. It should be nonterminal symbol.')
     end
   end
 
@@ -157,8 +157,8 @@ RSpec.describe Lrama::Grammar do
     end
 
     it 'raises error with all messages joined' do
-      expected_message = "[BUG] LHS of + -> ε (line: 15) is term. It should be nterm.\n" \
-                          '[BUG] LHS of - -> ε (line: 25) is term. It should be nterm.'
+      expected_message = "[BUG] LHS of + -> ε (line: 15) is terminal symbol. It should be nonterminal symbol.\n" \
+                          '[BUG] LHS of - -> ε (line: 25) is terminal symbol. It should be nonterminal symbol.'
 
       expect { grammar.validate! }
         .to raise_error(expected_message)
