@@ -5,27 +5,16 @@ RSpec.describe Lrama::Grammar do
   let(:grammar) { described_class.new(rule_counter, false, {}) }
 
   describe '#validate!' do
+    let(:grammar_file) { Lrama::Lexer::GrammarFile.new('parse.y', '') }
+
     context 'when all rules have valid precedence' do
       before do
-        lhs1 = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr'), term: false)
-        lhs2 = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: 'term'), term: false)
-        rule1 = Lrama::Grammar::Rule.new(
-          id: 1,
-          _lhs: Lrama::Lexer::Token::Ident.new(s_value: 'expr'),
-          _rhs: [],
-          token_code: nil,
-          lineno: 1
-        )
-        rule1.lhs = lhs1
-        rule2 = Lrama::Grammar::Rule.new(
-          id: 2,
-          _lhs: Lrama::Lexer::Token::Ident.new(s_value: 'term'),
-          _rhs: [],
-          token_code: nil,
-          lineno: 2
-        )
-        rule2.lhs = lhs2
-        grammar.rules = [rule1, rule2]
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+        term1 = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr', location: location))
+        term2 = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'term', location: location))
+        grammar.add_precedence(term1, 1, 10)
+        grammar.add_precedence(term1, 1, 11)
+        grammar.fill_symbol_number
       end
 
       it 'does not raise error' do
@@ -35,22 +24,10 @@ RSpec.describe Lrama::Grammar do
 
     context 'when a rule has precedence on lhs (which should be term)' do
       before do
-        lhs_with_precedence = Lrama::Grammar::Symbol.new(
-          id: Lrama::Lexer::Token::Ident.new(s_value: 'expression'),
-          term: false
-        )
-        lhs_with_precedence.precedence = Lrama::Grammar::Precedence.new(type: :left, precedence: 1, lineno: 10)
-
-        rule = Lrama::Grammar::Rule.new(
-          id: 1,
-          _lhs: Lrama::Lexer::Token::Ident.new(s_value: 'expression'),
-          _rhs: [],
-          token_code: nil,
-          lineno: 1
-        )
-        rule.lhs = lhs_with_precedence
-
-        grammar.rules = [rule]
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+        nterm = grammar.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: 'expression', location: location))
+        grammar.add_precedence(nterm, 1, 10)
+        grammar.fill_symbol_number
       end
 
       it 'raises error with message' do
@@ -61,33 +38,13 @@ RSpec.describe Lrama::Grammar do
 
     context 'when multiple rules have precedence on lhs' do
       before do
-        lhs1 = Lrama::Grammar::Symbol.new(
-          id: Lrama::Lexer::Token::Ident.new(s_value: 'expression'),
-          term: false
-        )
-        lhs2 = Lrama::Grammar::Symbol.new(
-          id: Lrama::Lexer::Token::Ident.new(s_value: 'statement'),
-          term: false
-        )
-        rule1 = Lrama::Grammar::Rule.new(
-          id: 1,
-          _lhs: Lrama::Lexer::Token::Ident.new(s_value: 'expression'),
-          _rhs: [],
-          token_code: nil,
-          lineno: 1
-        )
-        rule2 = Lrama::Grammar::Rule.new(
-          id: 2,
-          _lhs: Lrama::Lexer::Token::Ident.new(s_value: 'statement'),
-          _rhs: [],
-          token_code: nil,
-          lineno: 2
-        )
-        lhs1.precedence = Lrama::Grammar::Precedence.new(type: :left, precedence: 1, lineno: 10)
-        lhs2.precedence = Lrama::Grammar::Precedence.new(type: :right, precedence: 2, lineno: 20)
-        rule1.lhs = lhs1
-        rule2.lhs = lhs2
-        grammar.rules = [rule1, rule2]
+        location1 = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 10)
+        location2 = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 2, first_column: 0, last_line: 2, last_column: 9)
+        nterm1 = grammar.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: 'expression', location: location1))
+        nterm2 = grammar.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: 'statement', location: location2))
+        grammar.add_precedence(nterm1, 1, 10)
+        grammar.add_precedence(nterm2, 2, 20)
+        grammar.fill_symbol_number
       end
 
       it 'raises error with all messages joined' do
