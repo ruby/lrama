@@ -236,5 +236,10 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
       term2.number = 2
       expect { resolver.validate! }.to raise_error(/Symbol alias name is duplicated./)
     end
+
+    it "validates symbols" do
+      resolver.add_term(id: Lrama::Lexer::Token::Char.new(s_value: "🦙"))
+      expect { resolver.validate! }.to raise_error(/Invalid character: `🦙`. Only ASCII characters are allowed./)
+    end
   end
 end

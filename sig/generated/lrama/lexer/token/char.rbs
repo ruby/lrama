@@ -4,6 +4,13 @@ module Lrama
   class Lexer
     class Token
       class Char < Token
+        # @rbs () -> void
+        def validate: () -> void
+
+        private
+
+        # @rbs () -> void
+        def validate_ascii_code_range: () -> void
       end
     end
   end
