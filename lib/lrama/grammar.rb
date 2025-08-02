@@ -252,7 +252,7 @@ module Lrama
     # @rbs () -> void
     def validate!
       @symbols_resolver.validate!
-      validate_precedence_is_term!
+      validate_no_precedence_for_nterm!
       validate_rule_lhs_is_nterm!
     end
 
@@ -508,7 +508,7 @@ module Lrama
     end
 
     # @rbs () -> void
-    def validate_precedence_is_term!
+    def validate_no_precedence_for_nterm!
       errors = [] #: Array[String]
 
       @rules.each do |rule|
