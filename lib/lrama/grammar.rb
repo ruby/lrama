@@ -529,7 +529,7 @@ module Lrama
       rules.each do |rule|
         next if rule.lhs.nterm?
 
-        errors << "[BUG] LHS of #{rule.display_name} (line: #{rule.lineno}) is term. It should be nterm."
+        errors << "[BUG] LHS of #{rule.display_name} (line: #{rule.lineno}) is terminal symbol. It should be nonterminal symbol."
       end
 
       return if errors.empty?
