@@ -192,11 +192,9 @@ rule
           }
           @precedence_number += 1
         }
-    | "%start" IDENTIFIER+
+    | "%start" IDENTIFIER
         {
-          val[1].each {|id|
-            @grammar.add_start_nterms(id)
-          }
+          @grammar.set_start_nterm(val[1])
         }
 
   token_declarations:

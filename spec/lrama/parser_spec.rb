@@ -520,27 +520,14 @@ RSpec.describe Lrama::Parser do
       grammar.validate!
 
       expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  6, tag: nil, term: false, token_id: 0, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "number"),  alias_name: nil, number:  7, tag: nil, term: false, token_id: 1, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "sum"),     alias_name: nil, number:  8, tag: nil, term: false, token_id: 2, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "minus"),   alias_name: nil, number:  9, tag: nil, term: false, token_id: 3, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number:  5, tag: nil, term: false, token_id: 0, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "number"),  alias_name: nil, number:  6, tag: nil, term: false, token_id: 1, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "sum"),     alias_name: nil, number:  7, tag: nil, term: false, token_id: 2, nullable: false),
       ])
 
       expect(grammar.rules).to eq([
         Rule.new(
           id: 0,
-          lhs: grammar.find_symbol_by_s_value!("$accept"),
-          rhs: [
-            grammar.find_symbol_by_s_value!("number"),
-            grammar.find_symbol_by_s_value!("YYEOF"),
-          ],
-          token_code: nil,
-          nullable: false,
-          precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-          lineno: 10,
-        ),
-        Rule.new(
-          id: 1,
           lhs: grammar.find_symbol_by_s_value!("$accept"),
           rhs: [
             grammar.find_symbol_by_s_value!("sum"),
@@ -552,53 +539,28 @@ RSpec.describe Lrama::Parser do
           lineno: 10,
         ),
         Rule.new(
-          id: 2,
-          lhs: grammar.find_symbol_by_s_value!("$accept"),
-          rhs: [
-            grammar.find_symbol_by_s_value!("minus"),
-            grammar.find_symbol_by_s_value!("YYEOF"),
-          ],
-          token_code: nil,
-          nullable: false,
-          precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-          lineno: 11,
-        ),
-        Rule.new(
-          id: 3,
+          id: 1,
           lhs: grammar.find_symbol_by_s_value!("number"),
           rhs: [
-            grammar.find_symbol_by_s_value!("NUM")
+            grammar.find_symbol_by_s_value!("NUM"),
           ],
           token_code: nil,
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("NUM"),
-          lineno: 15,
+          lineno: 14,
         ),
         Rule.new(
-          id: 4,
+          id: 2,
           lhs: grammar.find_symbol_by_s_value!("sum"),
           rhs: [
-            grammar.find_symbol_by_s_value!("NUM"),
+            grammar.find_symbol_by_s_value!("number"),
             grammar.find_symbol_by_s_value!("'+'"),
-            grammar.find_symbol_by_s_value!("NUM")
+            grammar.find_symbol_by_s_value!("number")
           ],
           token_code: nil,
           nullable: false,
-          precedence_sym: grammar.find_symbol_by_s_value!("NUM"),
-          lineno: 18,
-        ),
-        Rule.new(
-          id: 5,
-          lhs: grammar.find_symbol_by_s_value!("minus"),
-          rhs: [
-            grammar.find_symbol_by_s_value!("NUM"),
-            grammar.find_symbol_by_s_value!("'-'"),
-            grammar.find_symbol_by_s_value!("NUM")
-          ],
-          token_code: nil,
-          nullable: false,
-          precedence_sym: grammar.find_symbol_by_s_value!("NUM"),
-          lineno: 21,
+          precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
+          lineno: 17,
         ),
       ])
     end
