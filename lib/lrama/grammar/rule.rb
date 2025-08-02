@@ -25,7 +25,7 @@ module Lrama
       #   attr_accessor lineno: Integer?
       #
       #   def initialize: (
-      #     ?id: Integer, ?_lhs: Lexer::Token, ?lhs: Lexer::Token, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Lexer::Token], ?rhs: Array[Grammar::Symbol],
+      #     ?id: Integer, ?_lhs: Lexer::Token?, ?lhs: Lexer::Token, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Lexer::Token], ?rhs: Array[Grammar::Symbol],
       #     ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool,
       #     ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?
       #   ) -> void

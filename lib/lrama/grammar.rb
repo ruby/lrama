@@ -425,7 +425,8 @@ module Lrama
       # Add $accept rule to the top of rules
       rule_builder = @rule_builders.first # : RuleBuilder
       lineno = rule_builder ? rule_builder.line : 0
-      @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [rule_builder.lhs, @eof_symbol.id], token_code: nil, lineno: lineno)
+      lhs = rule_builder.lhs #: Lexer::Token
+      @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [lhs, @eof_symbol.id], token_code: nil, lineno: lineno)
 
       setup_rules
 
