@@ -258,7 +258,7 @@ module Lrama
     def fill_sym_to_rules: () -> Array[Rule]
 
     # @rbs () -> void
-    def validate_precedence_is_term!: () -> void
+    def validate_no_precedence_for_nterm!: () -> void
 
     # @rbs () -> void
     def validate_rule_lhs_is_nterm!: () -> void
