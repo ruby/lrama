@@ -514,7 +514,7 @@ module Lrama
       @rules.each do |rule|
         next if rule.lhs.precedence.nil?
 
-        errors << "[BUG] Precedence of #{rule.lhs.name} (line: #{rule.lhs.precedence.lineno}) is not term. It should be term."
+        errors << "[BUG] Precedence #{rule.lhs.name} (line: #{rule.lhs.precedence.lineno}) is defined for nonterminal (line: #{rule.lineno}). Precedence can be defined for only terminal symbol."
       end
 
       return if errors.empty?

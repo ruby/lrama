@@ -55,7 +55,7 @@ RSpec.describe Lrama::Grammar do
 
       it 'raises error with message' do
         expect { grammar.validate! }
-          .to raise_error('[BUG] Precedence of expression (line: 10) is not term. It should be term.')
+          .to raise_error('[BUG] Precedence expression (line: 10) is defined for nonterminal (line: 1). Precedence can be defined for only terminal symbol.')
       end
     end
 
@@ -91,8 +91,8 @@ RSpec.describe Lrama::Grammar do
       end
 
       it 'raises error with all messages joined' do
-        expected_message = "[BUG] Precedence of expression (line: 10) is not term. It should be term.\n" \
-                           '[BUG] Precedence of statement (line: 20) is not term. It should be term.'
+        expected_message = "[BUG] Precedence expression (line: 10) is defined for nonterminal (line: 1). Precedence can be defined for only terminal symbol.\n" \
+                           '[BUG] Precedence statement (line: 20) is defined for nonterminal (line: 2). Precedence can be defined for only terminal symbol.'
 
         expect { grammar.validate! }.to raise_error(expected_message)
       end
