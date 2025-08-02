@@ -72,7 +72,7 @@ module Lrama
 
     @precedences: Array[Precedence]
 
-    @start_nterms: Array[Lrama::Lexer::Token]
+    @start_nterm: Lrama::Lexer::Token?
 
     extend Forwardable
 
@@ -167,8 +167,8 @@ module Lrama
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_precedence: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
 
-    # @rbs (Lrama::Lexer::Token id) -> Array[Lrama::Lexer::Token]
-    def add_start_nterms: (Lrama::Lexer::Token id) -> Array[Lrama::Lexer::Token]
+    # @rbs (Lrama::Lexer::Token id) -> Lrama::Lexer::Token
+    def set_start_nterm: (Lrama::Lexer::Token id) -> Lrama::Lexer::Token
 
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)

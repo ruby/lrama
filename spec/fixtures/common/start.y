@@ -7,19 +7,15 @@
 }
 
 %token <i> NUM
-%start number sum
-%start minus
+%start sum
 
 %%
 
 number: NUM
       ;
 
-sum: NUM '+' NUM
+sum: number '+' number
    ;
-
-minus: NUM '-' NUM
-     ;
 
 %%
 

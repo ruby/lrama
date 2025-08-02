@@ -66,7 +66,7 @@ module Lrama
     #   @required: bool
     #   @union: Union
     #   @precedences: Array[Precedence]
-    #   @start_nterms: Array[Lrama::Lexer::Token]
+    #   @start_nterm: Lrama::Lexer::Token?
 
     extend Forwardable
 
@@ -131,7 +131,7 @@ module Lrama
       @define = define
       @required = false
       @precedences = []
-      @start_nterms = []
+      @start_nterm = nil
 
       append_special_symbols
     end
@@ -186,9 +186,14 @@ module Lrama
       set_precedence(sym, Precedence.new(s_value: s_value, type: :precedence, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Lrama::Lexer::Token id) -> Array[Lrama::Lexer::Token]
-    def add_start_nterms(id)
-      @start_nterms << id
+    # @rbs (Lrama::Lexer::Token id) -> Lrama::Lexer::Token
+    def set_start_nterm(id)
+      if @start_nterm.nil?
+        @start_nterm = id
+      else
+        start = @start_nterm #: Lrama::Lexer::Token
+        raise "Start non-terminal is already set to #{start.s_value} (line: #{start.first_line}). Cannot set to #{id.s_value} (line: #{id.first_line})."
+      end
     end
 
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
@@ -449,15 +454,14 @@ module Lrama
 
     # Add $accept rule to the top of rules
     def add_accept_rules
-      if @start_nterms.empty?
+      if @start_nterm
+        start = @start_nterm #: Lrama::Lexer::Token
+        @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [start, @eof_symbol.id], token_code: nil, lineno: start.line)
+      else
         rule_builder = @rule_builders.first # : RuleBuilder
         lineno = rule_builder ? rule_builder.line : 0
         lhs = rule_builder.lhs # : Lexer::Token
         @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [lhs, @eof_symbol.id], token_code: nil, lineno: lineno)
-      else
-        @start_nterms.each do |sym|
-          @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [sym, @eof_symbol.id], token_code: nil, lineno: sym.line)
-        end
       end
     end
 
