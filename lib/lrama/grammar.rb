@@ -512,10 +512,10 @@ module Lrama
     def validate_no_precedence_for_nterm!
       errors = [] #: Array[String]
 
-      @rules.each do |rule|
-        next if rule.lhs.precedence.nil?
+      nterms.each do |nterm|
+        next if nterm.precedence.nil?
 
-        errors << "[BUG] Precedence #{rule.lhs.name} (line: #{rule.lhs.precedence.lineno}) is defined for nonterminal symbol (line: #{rule.lineno}). Precedence can be defined for only terminal symbol."
+        errors << "[BUG] Precedence #{nterm.name} (line: #{nterm.precedence.lineno}) is defined for nonterminal symbol (line: #{nterm.id.first_line}). Precedence can be defined for only terminal symbol."
       end
 
       return if errors.empty?
