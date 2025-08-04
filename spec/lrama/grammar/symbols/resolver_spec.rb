@@ -185,8 +185,13 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
   describe "#fill_destructor" do
     it "fills destructor" do
       term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      grammar_file = Lrama::Lexer::GrammarFile.new("foo/basic.y", "")
+      location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+      token_code = Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location)
       destructor = Lrama::Grammar::Destructor.new(
-        ident_or_tags: [Lrama::Lexer::Token::Ident.new(s_value: "term")]
+        ident_or_tags: [Lrama::Lexer::Token::Ident.new(s_value: "term")],
+        token_code: token_code,
+        lineno: 1
       )
       resolver.fill_destructor([destructor])
       expect(term.destructor).to eq(destructor)

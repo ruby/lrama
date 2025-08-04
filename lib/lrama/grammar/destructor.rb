@@ -3,13 +3,17 @@
 
 module Lrama
   class Grammar
-    class Destructor < Struct.new(:ident_or_tags, :token_code, :lineno, keyword_init: true)
-      # @rbs!
-      #   attr_accessor ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag]
-      #   attr_accessor token_code: Lexer::Token::UserCode
-      #   attr_accessor lineno: Integer
-      #
-      #   def initialize: (?ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], ?token_code: Lexer::Token::UserCode, ?lineno: Integer) -> void
+    class Destructor
+      attr_reader :ident_or_tags #: Array[Lexer::Token::Ident|Lexer::Token::Tag]
+      attr_reader :token_code #: Lexer::Token::UserCode
+      attr_reader :lineno #: Integer
+
+      # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> void
+      def initialize(ident_or_tags:, token_code:, lineno:)
+        @ident_or_tags = ident_or_tags
+        @token_code = token_code
+        @lineno = lineno
+      end
 
       # @rbs (Lexer::Token::Tag tag) -> String
       def translated_code(tag)
