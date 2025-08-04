@@ -4,6 +4,7 @@
 require_relative 'warnings/conflicts'
 require_relative 'warnings/redefined_rules'
 require_relative 'warnings/required'
+require_relative 'warnings/useless_precedence'
 
 module Lrama
   class Warnings
@@ -12,6 +13,7 @@ module Lrama
       @conflicts = Conflicts.new(logger, warnings)
       @redefined_rules = RedefinedRules.new(logger, warnings)
       @required = Required.new(logger, warnings)
+      @useless_precedence = UselessPrecedence.new(logger, warnings)
     end
 
     # @rbs (Lrama::Grammar grammar, Lrama::States states) -> void
@@ -19,6 +21,7 @@ module Lrama
       @conflicts.warn(states)
       @redefined_rules.warn(grammar)
       @required.warn(grammar)
+      @useless_precedence.warn(grammar, states)
     end
   end
 end
