@@ -3,12 +3,15 @@
 
 module Lrama
   class Grammar
-    class Union < Struct.new(:code, :lineno, keyword_init: true)
-      # @rbs!
-      #   attr_accessor code: Grammar::Code::NoReferenceCode
-      #   attr_accessor lineno: Integer
-      #
-      #   def initialize: (?code: Grammar::Code::NoReferenceCode, ?lineno: Integer) -> void
+    class Union
+      attr_reader :code #: Grammar::Code::NoReferenceCode
+      attr_reader :lineno #: Integer
+
+      # @rbs (code: Grammar::Code::NoReferenceCode, lineno: Integer) -> void
+      def initialize(code:, lineno:)
+        @code = code
+        @lineno = lineno
+      end
 
       # @rbs () -> String
       def braces_less_code
