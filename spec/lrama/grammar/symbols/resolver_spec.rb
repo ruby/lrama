@@ -213,7 +213,11 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
     it "fills error token" do
       term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
       token = Lrama::Lexer::Token::Ident.new(s_value: "term")
-      resolver.fill_error_token([Lrama::Grammar::ErrorToken.new(ident_or_tags: [token])])
+      grammar_file = Lrama::Lexer::GrammarFile.new("foo/basic.y", "")
+      location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+      token_code = Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location)
+
+      resolver.fill_error_token([Lrama::Grammar::ErrorToken.new(ident_or_tags: [token], token_code: token_code, lineno: 1)])
       expect(term.error_token.ident_or_tags).to eq([token])
     end
   end
