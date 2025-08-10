@@ -125,7 +125,7 @@ RSpec.describe Lrama::Reporter::States do
             2 expr: expr • "plus" expr
             2     | expr "plus" expr •  ["end of file", "plus"]
 
-            Conflict on '+'. shift/reduce(expr)
+            Conflict on "plus". shift/reduce(expr)
 
             "plus"  shift, and go to state 5
 
