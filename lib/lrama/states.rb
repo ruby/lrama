@@ -542,6 +542,8 @@ module Lrama
             # shift_prec == reduce_prec, then check associativity
             case sym.precedence.type
             when :precedence
+              # Can not resolve the conflict
+              #
               # %precedence only specifies precedence and not specify associativity
               # then a conflict is unresolved if precedence is same.
               state.conflicts << State::ShiftReduceConflict.new(symbols: [sym], shift: shift, reduce: reduce)
@@ -557,10 +559,12 @@ module Lrama
               shift.not_selected = true
               next
             when :nonassoc
-              # Can not resolve
+              # The conflict is resolved
               #
-              # nonassoc creates "run-time" error, precedence creates "compile-time" error.
-              # Then omit both the shift and reduce.
+              # %nonassoc creates "run-time" error by removing both shift and reduce from
+              # the state. This makes the state to get syntax error if the conflicted token appears.
+              # On the other hand, %precedence creates "compile-time" error by keeping both
+              # shift and reduce on the state. This makes the state to be conflicted on the token.
               #
               # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
               state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :error, resolved_by_precedence: false)
