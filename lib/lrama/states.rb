@@ -36,7 +36,7 @@ module Lrama
     extend Forwardable
     include Lrama::Tracer::Duration
 
-    def_delegators "@grammar", :symbols, :terms, :nterms, :rules,
+    def_delegators "@grammar", :symbols, :terms, :nterms, :rules, :precedences,
       :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?
 
     attr_reader :states #: Array[State]
@@ -114,7 +114,7 @@ module Lrama
       report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
 
       # Conflicts
-      report_duration(:compute_conflicts) { compute_conflicts }
+      report_duration(:compute_conflicts) { compute_conflicts(:lalr) }
 
       report_duration(:compute_default_reduction) { compute_default_reduction }
     end
@@ -136,7 +136,7 @@ module Lrama
       report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
       report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
       # Phase 5
-      report_duration(:compute_conflicts) { compute_conflicts }
+      report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
       report_duration(:compute_default_reduction) { compute_default_reduction }
     end
 
@@ -501,13 +501,13 @@ module Lrama
     end
 
     # @rbs () -> void
-    def compute_conflicts
-      compute_shift_reduce_conflicts
+    def compute_conflicts(lr_type)
+      compute_shift_reduce_conflicts(lr_type)
       compute_reduce_reduce_conflicts
     end
 
     # @rbs () -> void
-    def compute_shift_reduce_conflicts
+    def compute_shift_reduce_conflicts(lr_type)
       states.each do |state|
         state.term_transitions.each do |shift|
           state.reduces.each do |reduce|
@@ -529,13 +529,17 @@ module Lrama
             case
             when shift_prec < reduce_prec
               # Reduce is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce, resolved_by_precedence: false)
+              resolved_conflict = State::ResolvedConflict.new(state: state, symbol: sym, reduce: reduce, which: :reduce, resolved_by_precedence: false)
+              state.resolved_conflicts << resolved_conflict
               shift.not_selected = true
+              mark_precedences_used(lr_type, shift_prec, reduce_prec, resolved_conflict)
               next
             when shift_prec > reduce_prec
               # Shift is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift, resolved_by_precedence: false)
+              resolved_conflict = State::ResolvedConflict.new(state: state, symbol: sym, reduce: reduce, which: :shift, resolved_by_precedence: false)
+              state.resolved_conflicts << resolved_conflict
               reduce.add_not_selected_symbol(sym)
+              mark_precedences_used(lr_type, shift_prec, reduce_prec, resolved_conflict)
               next
             end
 
@@ -550,13 +554,17 @@ module Lrama
               next
             when :right
               # Shift is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :shift, resolved_by_precedence: true)
+              resolved_conflict = State::ResolvedConflict.new(state: state, symbol: sym, reduce: reduce, which: :shift, resolved_by_precedence: true)
+              state.resolved_conflicts << resolved_conflict
               reduce.add_not_selected_symbol(sym)
+              mark_precedences_used(lr_type, shift_prec, reduce_prec, resolved_conflict)
               next
             when :left
               # Reduce is selected
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :reduce, resolved_by_precedence: true)
+              resolved_conflict = State::ResolvedConflict.new(state: state, symbol: sym, reduce: reduce, which: :reduce, resolved_by_precedence: true)
+              state.resolved_conflicts << resolved_conflict
               shift.not_selected = true
+              mark_precedences_used(lr_type, shift_prec, reduce_prec, resolved_conflict)
               next
             when :nonassoc
               # The conflict is resolved
@@ -567,14 +575,28 @@ module Lrama
               # shift and reduce on the state. This makes the state to be conflicted on the token.
               #
               # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
-              state.resolved_conflicts << State::ResolvedConflict.new(symbol: sym, reduce: reduce, which: :error, resolved_by_precedence: false)
+              resolved_conflict = State::ResolvedConflict.new(state: state, symbol: sym, reduce: reduce, which: :error, resolved_by_precedence: false)
+              state.resolved_conflicts << resolved_conflict
               shift.not_selected = true
               reduce.add_not_selected_symbol(sym)
+              mark_precedences_used(lr_type, shift_prec, reduce_prec, resolved_conflict)
             else
               raise "Unknown precedence type. #{sym}"
             end
           end
         end
+      end
+    end
+
+    # @rbs (Grammar::Precedence shift_prec, Grammar::Precedence reduce_prec, State::ResolvedConflict resolved_conflict) -> void
+    def mark_precedences_used(lr_type, shift_prec, reduce_prec, resolved_conflict)
+      case lr_type
+      when :lalr
+        shift_prec.mark_used_by_lalr(resolved_conflict)
+        reduce_prec.mark_used_by_lalr(resolved_conflict)
+      when :ielr
+        shift_prec.mark_used_by_ielr(resolved_conflict)
+        reduce_prec.mark_used_by_ielr(resolved_conflict)
       end
     end
 

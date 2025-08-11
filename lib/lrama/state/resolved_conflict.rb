@@ -3,6 +3,7 @@
 
 module Lrama
   class State
+    # * state: A state on which the conflct is resolved
     # * symbol: A symbol under discussion
     # * reduce: A reduce under discussion
     # * which: For which a conflict is resolved. :shift, :reduce or :error (for nonassociative)
@@ -11,13 +12,15 @@ module Lrama
       # @rbs!
       #   type which_enum = :reduce | :shift | :error
 
+      attr_reader :state #: State
       attr_reader :symbol #: Grammar::Symbol
       attr_reader :reduce #: State::Action::Reduce
       attr_reader :which #: which_enum
       attr_reader :resolved_by_precedence #: bool
 
-      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
-      def initialize(symbol:, reduce:, which:, resolved_by_precedence:)
+      # @rbs (state: State, symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
+      def initialize(state:, symbol:, reduce:, which:, resolved_by_precedence:)
+        @state = state
         @symbol = symbol
         @reduce = reduce
         @which = which
@@ -26,6 +29,18 @@ module Lrama
 
       # @rbs () -> (::String | bot)
       def report_message
+        "Conflict between rule #{reduce.rule.id} and token #{symbol.display_name} #{how_resolved}."
+      end
+
+      # @rbs () -> (::String | bot)
+      def report_precedences_message
+        "Conflict between reduce by \"#{reduce.rule.display_name}\" and shift #{symbol.display_name} #{how_resolved}."
+      end
+
+      private
+
+      # @rbs () -> (::String | bot)
+      def how_resolved
         s = symbol.display_name
         r = reduce.rule.precedence_sym&.display_name
         case
@@ -43,7 +58,7 @@ module Lrama
           raise "Unknown direction. #{self}"
         end
 
-        "Conflict between rule #{reduce.rule.id} and token #{s} #{msg}."
+        msg
       end
     end
   end

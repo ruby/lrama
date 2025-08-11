@@ -1,0 +1,15 @@
+# Generated from lib/lrama/reporter/precedences.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    class Precedences
+      # @rbs (IO io, Lrama::States states) -> void
+      def report: (IO io, Lrama::States states) -> void
+
+      private
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_precedences: (IO io, Lrama::States states) -> void
+    end
+  end
+end

@@ -1148,6 +1148,18 @@ RSpec.describe Lrama::States do
         Lrama::Reporter.new(states: true, solved: true).report(io, states)
 
         expect(io.string).to eq(<<~STR)
+          Precedences
+
+            precedence on "unary+" is used to resolve conflict on
+              LALR
+                state 5. Conflict between reduce by "expr -> tUPLUS expr" and shift "+" resolved as reduce ("+" < "unary+").
+
+            precedence on "+" is used to resolve conflict on
+              LALR
+                state 5. Conflict between reduce by "expr -> tUPLUS expr" and shift "+" resolved as reduce ("+" < "unary+").
+                state 8. Conflict between reduce by "expr -> expr tPLUS expr" and shift "+" resolved as reduce (%left "+").
+
+
           State 0
 
               0 $accept: • program "EOI"
@@ -1267,6 +1279,13 @@ RSpec.describe Lrama::States do
         Lrama::Reporter.new(states: true, solved: true).report(io, states)
 
         expect(io.string).to eq(<<~STR)
+          Precedences
+
+            precedence on "=" is used to resolve conflict on
+              LALR
+                state 6. Conflict between reduce by "expr -> expr tEQ expr" and shift "=" resolved as an error (%nonassoc "=").
+
+
           State 0
 
               0 $accept: • program "EOI"
@@ -1368,6 +1387,19 @@ RSpec.describe Lrama::States do
         expect(io.string).to eq(<<~STR)
           State 7 conflicts: 1 shift/reduce
           State 8 conflicts: 1 shift/reduce
+
+
+          Precedences
+
+            precedence on '+' is used to resolve conflict on
+              LALR
+                state 7. Conflict between reduce by "expr -> expr '+' expr" and shift '*' resolved as shift ('+' < '*').
+                state 8. Conflict between reduce by "expr -> expr '*' expr" and shift '+' resolved as reduce ('+' < '*').
+
+            precedence on '*' is used to resolve conflict on
+              LALR
+                state 7. Conflict between reduce by "expr -> expr '+' expr" and shift '*' resolved as shift ('+' < '*').
+                state 8. Conflict between reduce by "expr -> expr '*' expr" and shift '+' resolved as reduce ('+' < '*').
 
 
           State 0
@@ -1851,6 +1883,23 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
+        Precedences
+
+          precedence on a is used to resolve conflict on
+            LALR
+              state 14. Conflict between reduce by "E -> ε" and shift a resolved as reduce (a < tHIGHEST).
+
+            IELR
+              state 14. Conflict between reduce by "E -> ε" and shift a resolved as reduce (a < tHIGHEST).
+
+          precedence on tHIGHEST is used to resolve conflict on
+            LALR
+              state 14. Conflict between reduce by "E -> ε" and shift a resolved as reduce (a < tHIGHEST).
+
+            IELR
+              state 14. Conflict between reduce by "E -> ε" and shift a resolved as reduce (a < tHIGHEST).
+
+
         Split States
 
             State 19 is split from state 4
@@ -2082,6 +2131,16 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
+        Precedences
+
+          precedence on "==" is used to resolve conflict on
+            LALR
+              state 6. Conflict between reduce by "expr -> expr tEQ expr" and shift "==" resolved as an error (%nonassoc "==").
+
+            IELR
+              state 6. Conflict between reduce by "expr -> expr tEQ expr" and shift "==" resolved as an error (%nonassoc "==").
+
+
         State 0
 
             0 $accept: • program "end of file"
@@ -2190,6 +2249,31 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
+        Precedences
+
+          precedence on '>' is used to resolve conflict on
+            LALR
+              state 9. Conflict between reduce by "arg -> arg '+' arg" and shift '>' resolved as reduce ('>' < '+').
+              state 10. Conflict between reduce by "rel_expr -> arg relop arg" and shift '>' resolved as reduce (%left '>').
+              state 10. Conflict between reduce by "rel_expr -> arg relop arg" and shift '+' resolved as shift ('>' < '+').
+
+            IELR
+              state 9. Conflict between reduce by "arg -> arg '+' arg" and shift '>' resolved as reduce ('>' < '+').
+              state 10. Conflict between reduce by "rel_expr -> arg relop arg" and shift '>' resolved as reduce (%left '>').
+              state 10. Conflict between reduce by "rel_expr -> arg relop arg" and shift '+' resolved as shift ('>' < '+').
+
+          precedence on '+' is used to resolve conflict on
+            LALR
+              state 9. Conflict between reduce by "arg -> arg '+' arg" and shift '>' resolved as reduce ('>' < '+').
+              state 9. Conflict between reduce by "arg -> arg '+' arg" and shift '+' resolved as reduce (%left '+').
+              state 10. Conflict between reduce by "rel_expr -> arg relop arg" and shift '+' resolved as shift ('>' < '+').
+
+            IELR
+              state 9. Conflict between reduce by "arg -> arg '+' arg" and shift '>' resolved as reduce ('>' < '+').
+              state 9. Conflict between reduce by "arg -> arg '+' arg" and shift '+' resolved as reduce (%left '+').
+              state 10. Conflict between reduce by "rel_expr -> arg relop arg" and shift '+' resolved as shift ('>' < '+').
+
+
         State 0
 
             0 $accept: • program "end of file"
@@ -2352,6 +2436,23 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
+        Precedences
+
+          precedence on a is used to resolve conflict on
+            LALR
+              state 15. Conflict between reduce by "E -> ε" and shift a resolved as reduce (a < tHIGHEST).
+
+            IELR
+              state 15. Conflict between reduce by "E -> ε" and shift a resolved as reduce (a < tHIGHEST).
+
+          precedence on tHIGHEST is used to resolve conflict on
+            LALR
+              state 15. Conflict between reduce by "E -> ε" and shift a resolved as reduce (a < tHIGHEST).
+
+            IELR
+              state 15. Conflict between reduce by "E -> ε" and shift a resolved as reduce (a < tHIGHEST).
+
+
         Split States
 
             State 20 is split from state 5
@@ -2549,6 +2650,188 @@ RSpec.describe Lrama::States do
             $default  reduce using rule 10 (E)
 
             E  go to state 19
+
+
+      STR
+    end
+
+    it 'recompute states' do
+      y = <<~INPUT
+        %{
+        // Prologue
+        %}
+
+        %define lr.type ielr
+
+        %token a
+        %token b
+
+        %left a
+        %left b
+
+        %%
+
+        S: S2
+         ;
+
+        S2: a A a
+          | b A b
+          ;
+
+        A: a
+         | a a
+         | a b
+         ;
+
+        %%
+      INPUT
+      grammar = Lrama::Parser.new(y, "states/ielr.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_ielr
+
+      io = StringIO.new
+      Lrama::Reporter.new(states: true).report(io, states)
+
+      expect(io.string).to eq(<<~STR)
+        Precedences
+
+          precedence on a is used to resolve conflict on
+            LALR
+              state 5. Conflict between reduce by "A -> a" and shift a resolved as reduce (%left a).
+              state 5. Conflict between reduce by "A -> a" and shift b resolved as shift (a < b).
+
+            IELR
+              state 5. Conflict between reduce by "A -> a" and shift a resolved as reduce (%left a).
+              state 13. Conflict between reduce by "A -> a" and shift b resolved as shift (a < b).
+
+          precedence on b is used to resolve conflict on
+            LALR
+              state 5. Conflict between reduce by "A -> a" and shift b resolved as shift (a < b).
+
+            IELR
+              state 13. Conflict between reduce by "A -> a" and shift b resolved as shift (a < b).
+
+
+        Split States
+
+            State 13 is split from state 5
+
+        State 0
+
+            0 $accept: • S "end of file"
+
+            a  shift, and go to state 1
+            b  shift, and go to state 2
+
+            S   go to state 3
+            S2  go to state 4
+
+
+        State 1
+
+            2 S2: a • A a
+
+            a  shift, and go to state 5
+
+            A  go to state 6
+
+
+        State 2
+
+            3 S2: b • A b
+
+            a  shift, and go to state 13
+
+            A  go to state 7
+
+
+        State 3
+
+            0 $accept: S • "end of file"
+
+            "end of file"  shift, and go to state 8
+
+
+        State 4
+
+            1 S: S2 •
+
+            $default  reduce using rule 1 (S)
+
+
+        State 5
+
+            4 A: a •
+            5  | a • a
+            6  | a • b
+
+            b  shift, and go to state 10
+
+            $default  reduce using rule 4 (A)
+
+
+        State 6
+
+            2 S2: a A • a
+
+            a  shift, and go to state 11
+
+
+        State 7
+
+            3 S2: b A • b
+
+            b  shift, and go to state 12
+
+
+        State 8
+
+            0 $accept: S "end of file" •
+
+            $default  accept
+
+
+        State 9
+
+            5 A: a a •
+
+            $default  reduce using rule 5 (A)
+
+
+        State 10
+
+            6 A: a b •
+
+            $default  reduce using rule 6 (A)
+
+
+        State 11
+
+            2 S2: a A a •
+
+            $default  reduce using rule 2 (S2)
+
+
+        State 12
+
+            3 S2: b A b •
+
+            $default  reduce using rule 3 (S2)
+
+
+        State 13
+
+            4 A: a •
+            5  | a • a
+            6  | a • b
+
+            a  shift, and go to state 9
+            b  shift, and go to state 10
+
+            $default  reduce using rule 4 (A)
 
 
       STR

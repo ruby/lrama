@@ -32,6 +32,7 @@ module Lrama
     #     def accept_symbol: () -> Grammar::Symbol
     #     def eof_symbol: () -> Grammar::Symbol
     #     def undef_symbol: () -> Grammar::Symbol
+    #     def precedences: () -> Array[Precedence]
     #
     #     # delegate to @symbols_resolver
     #     def symbols: () -> Array[Grammar::Symbol]
@@ -168,22 +169,22 @@ module Lrama
 
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_nonassoc(sym, precedence, s_value, lineno)
-      set_precedence(sym, Precedence.new(s_value: s_value, type: :nonassoc, precedence: precedence, lineno: lineno))
+      set_precedence(sym, Precedence.new(symbol: sym, s_value: s_value, type: :nonassoc, precedence: precedence, lineno: lineno))
     end
 
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_left(sym, precedence, s_value, lineno)
-      set_precedence(sym, Precedence.new(s_value: s_value, type: :left, precedence: precedence, lineno: lineno))
+      set_precedence(sym, Precedence.new(symbol: sym, s_value: s_value, type: :left, precedence: precedence, lineno: lineno))
     end
 
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_right(sym, precedence, s_value, lineno)
-      set_precedence(sym, Precedence.new(s_value: s_value, type: :right, precedence: precedence, lineno: lineno))
+      set_precedence(sym, Precedence.new(symbol: sym, s_value: s_value, type: :right, precedence: precedence, lineno: lineno))
     end
 
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_precedence(sym, precedence, s_value, lineno)
-      set_precedence(sym, Precedence.new(s_value: s_value, type: :precedence, precedence: precedence, lineno: lineno))
+      set_precedence(sym, Precedence.new(symbol: sym, s_value: s_value, type: :precedence, precedence: precedence, lineno: lineno))
     end
 
     # @rbs (Lrama::Lexer::Token::Base id) -> Lrama::Lexer::Token::Base
@@ -260,6 +261,7 @@ module Lrama
       fill_default_precedence
       fill_symbols
       fill_sym_to_rules
+      sort_precedence
       compute_nullable
       compute_first_set
       set_locations
@@ -303,6 +305,14 @@ module Lrama
     end
 
     private
+
+    # @rbs () -> void
+    def sort_precedence
+      @precedences.sort_by! do |prec|
+        prec.symbol.number
+      end
+      @precedences.freeze
+    end
 
     # @rbs () -> Array[Grammar::Symbol]
     def compute_nullable

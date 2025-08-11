@@ -2,12 +2,15 @@
 
 module Lrama
   class State
+    # * state: A state on which the conflct is resolved
     # * symbol: A symbol under discussion
     # * reduce: A reduce under discussion
     # * which: For which a conflict is resolved. :shift, :reduce or :error (for nonassociative)
     # * resolved_by_precedence: If the conflict is resolved by precedence definition or not
     class ResolvedConflict
       type which_enum = :reduce | :shift | :error
+
+      attr_reader state: State
 
       attr_reader symbol: Grammar::Symbol
 
@@ -17,11 +20,19 @@ module Lrama
 
       attr_reader resolved_by_precedence: bool
 
-      # @rbs (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
-      def initialize: (symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
+      # @rbs (state: State, symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
+      def initialize: (state: State, symbol: Grammar::Symbol, reduce: State::Action::Reduce, which: which_enum, resolved_by_precedence: bool) -> void
 
       # @rbs () -> (::String | bot)
       def report_message: () -> (::String | bot)
+
+      # @rbs () -> (::String | bot)
+      def report_precedences_message: () -> (::String | bot)
+
+      private
+
+      # @rbs () -> (::String | bot)
+      def how_resolved: () -> (::String | bot)
     end
   end
 end

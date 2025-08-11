@@ -12,6 +12,8 @@ module Lrama
 
       def undef_symbol: () -> Grammar::Symbol
 
+      def precedences: () -> Array[Precedence]
+
       # delegate to @symbols_resolver
       def symbols: () -> Array[Grammar::Symbol]
 
@@ -226,6 +228,9 @@ module Lrama
     def ielr_defined?: () -> bool
 
     private
+
+    # @rbs () -> void
+    def sort_precedence: () -> void
 
     # @rbs () -> Array[Grammar::Symbol]
     def compute_nullable: () -> Array[Grammar::Symbol]
