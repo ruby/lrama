@@ -13,12 +13,15 @@ module Lrama
         def self.report(enabled)
           if enabled && require_stackprof
             ex = nil #: Exception?
+            path = 'tmp/stackprof-cpu-myapp.dump'
 
-            StackProf.run(mode: :cpu, raw: true, out: 'tmp/stackprof-cpu-myapp.dump') do
+            StackProf.run(mode: :cpu, raw: true, out: path) do
               yield
             rescue Exception => e
               ex = e
             end
+
+            STDERR.puts("Call-stack Profiling result is generated on #{path}")
 
             if ex
               raise ex
