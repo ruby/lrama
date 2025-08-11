@@ -12,8 +12,8 @@ RSpec.describe Lrama::Grammar do
         location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
         term1 = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr', location: location))
         term2 = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'term', location: location))
-        grammar.add_precedence(term1, 1, 10)
-        grammar.add_precedence(term1, 1, 11)
+        grammar.add_precedence(term1, 1, 'tNUMBER', 10)
+        grammar.add_precedence(term1, 1, 'tSTRING', 11)
         grammar.fill_symbol_number
       end
 
@@ -26,7 +26,7 @@ RSpec.describe Lrama::Grammar do
       before do
         location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
         nterm = grammar.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: 'expression', location: location))
-        grammar.add_precedence(nterm, 1, 10)
+        grammar.add_precedence(nterm, 1, 'tNUMBER', 10)
         grammar.fill_symbol_number
       end
 
@@ -42,8 +42,8 @@ RSpec.describe Lrama::Grammar do
         location2 = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 2, first_column: 0, last_line: 2, last_column: 9)
         nterm1 = grammar.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: 'expression', location: location1))
         nterm2 = grammar.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: 'statement', location: location2))
-        grammar.add_precedence(nterm1, 1, 10)
-        grammar.add_precedence(nterm2, 2, 20)
+        grammar.add_precedence(nterm1, 1, 'tNUMBER', 10)
+        grammar.add_precedence(nterm2, 2, 'tSTRING', 20)
         grammar.fill_symbol_number
       end
 
@@ -126,6 +126,103 @@ RSpec.describe Lrama::Grammar do
         grammar.rules = []
 
         expect { grammar.validate! }.not_to raise_error
+      end
+    end
+
+    context 'when there are no duplicates' do
+      before do
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+        term = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr', location: location))
+        grammar.add_left(term, 0, "tSTRING", 7)
+        grammar.add_right(term, 1, "tNUMBER", 8)
+        grammar.add_nonassoc(term, 2, "tIDENT", 9)
+        grammar.fill_symbol_number
+      end
+
+      it 'does not raise an error' do
+        expect { grammar.validate! }.not_to raise_error
+      end
+    end
+
+    context 'when there is one duplicate' do
+      before do
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+        term = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr', location: location))
+        grammar.add_left(term, 0, "tSTRING", 7)
+        grammar.add_precedence(term, 1, "tSTRING", 8) # This is a duplicate
+        grammar.fill_symbol_number
+      end
+
+      it 'raises an error with the correct message' do
+        expected_message = "%precedence redeclaration for tSTRING (line: 8) previous declaration was %left (line: 7)"
+
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, expected_message)
+      end
+    end
+
+    context 'when there are multiple duplicates of the same token' do
+      before do
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+        term = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr', location: location))
+        grammar.add_left(term, 0, "tSTRING", 7)
+        grammar.add_precedence(term, 1, "tSTRING", 8)
+        grammar.add_nonassoc(term, 3, "tSTRING", 10)
+        grammar.fill_symbol_number
+      end
+
+      it 'raises an error with all duplicate messages' do
+        expected_messages = [
+          "%precedence redeclaration for tSTRING (line: 8) previous declaration was %left (line: 7)",
+          "%nonassoc redeclaration for tSTRING (line: 10) previous declaration was %left (line: 7)"
+        ]
+
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, expected_messages.join("\n"))
+      end
+    end
+
+    context 'when there are duplicates of different tokens' do
+      before do
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+        term = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr', location: location))
+        grammar.add_left(term, 0, "tSTRING", 7)
+        grammar.add_precedence(term, 1, "tSTRING", 8)
+        grammar.add_left(term, 2, "tNUMBER", 9)
+        grammar.add_nonassoc(term, 3, "tNUMBER", 10)
+        grammar.fill_symbol_number
+      end
+
+      it 'raises an error with messages for all duplicate tokens' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError) do |error|
+            expect(error.message).to include("%precedence redeclaration for tSTRING (line: 8)")
+            expect(error.message).to include("%nonassoc redeclaration for tNUMBER (line: 10)")
+            expect(error.message.lines.count).to eq(2)
+          end
+      end
+    end
+
+    context 'when the same token appears multiple times with mixed duplicates and non-duplicates' do
+      before do
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
+        term = grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr', location: location))
+        grammar.add_left(term, 0, "tSTRING", 7)
+        grammar.add_precedence(term, 1, "tSTRING", 8)
+        grammar.add_nonassoc(term, 2, "tSTRING", 10)
+        grammar.add_left(term, 3, "tNUMBER", 7)
+        grammar.add_nonassoc(term, 4, "tNUMBER", 10)
+        grammar.add_right(term, 5, "tIDENT", 9)
+        grammar.fill_symbol_number
+      end
+
+      it 'only reports errors for duplicated tokens' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError) do |error|
+            expect(error.message).to include("tSTRING")
+            expect(error.message).to include("tNUMBER")
+            expect(error.message).not_to include("tIDENT")
+          end
       end
     end
   end

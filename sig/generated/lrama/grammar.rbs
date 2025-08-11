@@ -70,6 +70,8 @@ module Lrama
 
     @union: Union
 
+    @precedences: Array[Precedence]
+
     extend Forwardable
 
     attr_reader percent_codes: Array[PercentCode]
@@ -85,6 +87,8 @@ module Lrama
     attr_reader aux: Auxiliary
 
     attr_reader parameterized_resolver: Parameterized::Resolver
+
+    attr_reader precedences: Array[Precedence]
 
     attr_accessor union: Union
 
@@ -149,17 +153,17 @@ module Lrama
     # @rbs (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
     def add_type: (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
-    def add_nonassoc: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    def add_nonassoc: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
-    def add_left: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    def add_left: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
-    def add_right: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    def add_right: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
-    def add_precedence: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    def add_precedence: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
 
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
@@ -262,6 +266,9 @@ module Lrama
 
     # @rbs () -> void
     def validate_rule_lhs_is_nterm!: () -> void
+
+    # # @rbs () -> void
+    def validate_duplicated_precedence!: () -> untyped
 
     # @rbs () -> void
     def set_locations: () -> void
