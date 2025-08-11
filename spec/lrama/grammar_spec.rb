@@ -54,79 +54,79 @@ RSpec.describe Lrama::Grammar do
         expect { grammar.validate! }.to raise_error(expected_message)
       end
     end
-  end
 
-  context 'when a rule has term as lhs' do
-    before do
-      lhs_term = Lrama::Grammar::Symbol.new(
-        id: Lrama::Lexer::Token::Ident.new(s_value: '+'),
-        term: true
-      )
-      rule = Lrama::Grammar::Rule.new(
-        id: 1,
-        _lhs: Lrama::Lexer::Token::Ident.new(s_value: '+'),
-        _rhs: [],
-        rhs: [],
-        token_code: nil,
-        lineno: 15
-      )
-      rule.lhs = lhs_term
-      grammar.rules = [rule]
+    context 'when a rule has term as lhs' do
+      before do
+        lhs_term = Lrama::Grammar::Symbol.new(
+          id: Lrama::Lexer::Token::Ident.new(s_value: '+'),
+          term: true
+        )
+        rule = Lrama::Grammar::Rule.new(
+          id: 1,
+          _lhs: Lrama::Lexer::Token::Ident.new(s_value: '+'),
+          _rhs: [],
+          rhs: [],
+          token_code: nil,
+          lineno: 15
+        )
+        rule.lhs = lhs_term
+        grammar.rules = [rule]
+      end
+
+      it 'raises error with message' do
+        expect { grammar.validate! }
+          .to raise_error('[BUG] LHS of + -> ε (line: 15) is terminal symbol. It should be nonterminal symbol.')
+      end
     end
 
-    it 'raises error with message' do
-      expect { grammar.send(:validate!) }
-        .to raise_error('[BUG] LHS of + -> ε (line: 15) is terminal symbol. It should be nonterminal symbol.')
+    context 'when multiple rules have term as lhs' do
+      before do
+        lhs1 = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: '+'), term: true)
+        lhs2 = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr'), term: false)
+        lhs3 = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: '-'), term: true)
+        rule1 = Lrama::Grammar::Rule.new(
+          id: 1,
+          _lhs: Lrama::Lexer::Token::Ident.new(s_value: '+'),
+          rhs: [],
+          token_code: nil,
+          lineno: 15
+        )
+        rule2 = Lrama::Grammar::Rule.new(
+          id: 2,
+          _lhs: Lrama::Lexer::Token::Ident.new(s_value: 'expr'),
+          rhs: [],
+          token_code: nil,
+          lineno: 20
+        )
+        rule3 = Lrama::Grammar::Rule.new(
+          id: 3,
+          _lhs: Lrama::Lexer::Token::Ident.new(s_value: '-'),
+          rhs: [],
+          token_code: nil,
+          lineno: 25
+        )
+        rule1.lhs = lhs1
+        rule2.lhs = lhs2
+        rule3.lhs = lhs3
+
+        grammar.rules = [rule1, rule2, rule3]
+      end
+
+      it 'raises error with all messages joined' do
+        expected_message = "[BUG] LHS of + -> ε (line: 15) is terminal symbol. It should be nonterminal symbol.\n" \
+                            '[BUG] LHS of - -> ε (line: 25) is terminal symbol. It should be nonterminal symbol.'
+
+        expect { grammar.validate! }
+          .to raise_error(expected_message)
+      end
     end
-  end
 
-  context 'when multiple rules have term as lhs' do
-    before do
-      lhs1 = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: '+'), term: true)
-      lhs2 = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: 'expr'), term: false)
-      lhs3 = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: '-'), term: true)
-      rule1 = Lrama::Grammar::Rule.new(
-        id: 1,
-        _lhs: Lrama::Lexer::Token::Ident.new(s_value: '+'),
-        rhs: [],
-        token_code: nil,
-        lineno: 15
-      )
-      rule2 = Lrama::Grammar::Rule.new(
-        id: 2,
-        _lhs: Lrama::Lexer::Token::Ident.new(s_value: 'expr'),
-        rhs: [],
-        token_code: nil,
-        lineno: 20
-      )
-      rule3 = Lrama::Grammar::Rule.new(
-        id: 3,
-        _lhs: Lrama::Lexer::Token::Ident.new(s_value: '-'),
-        rhs: [],
-        token_code: nil,
-        lineno: 25
-      )
-      rule1.lhs = lhs1
-      rule2.lhs = lhs2
-      rule3.lhs = lhs3
+    context 'when rules array is empty' do
+      it 'does not raise error' do
+        grammar.rules = []
 
-      grammar.rules = [rule1, rule2, rule3]
-    end
-
-    it 'raises error with all messages joined' do
-      expected_message = "[BUG] LHS of + -> ε (line: 15) is terminal symbol. It should be nonterminal symbol.\n" \
-                          '[BUG] LHS of - -> ε (line: 25) is terminal symbol. It should be nonterminal symbol.'
-
-      expect { grammar.validate! }
-        .to raise_error(expected_message)
-    end
-  end
-
-  context 'when rules array is empty' do
-    it 'does not raise error' do
-      grammar.rules = []
-
-      expect { grammar.validate! }.not_to raise_error
+        expect { grammar.validate! }.not_to raise_error
+      end
     end
   end
 end
