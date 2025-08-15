@@ -192,6 +192,10 @@ rule
           }
           @precedence_number += 1
         }
+    | "%start" IDENTIFIER
+        {
+          @grammar.set_start_nterm(val[1])
+        }
 
   token_declarations:
       TAG? token_declaration+
