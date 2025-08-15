@@ -92,7 +92,7 @@ module Lrama
         return if state.conflicts.empty?
 
         state.conflicts.each do |conflict|
-          syms = conflict.symbols.map { |sym| sym.id.s_value }
+          syms = conflict.symbols.map { |sym| sym.display_name }
           io << "    Conflict on #{syms.join(", ")}. "
 
           case conflict.type

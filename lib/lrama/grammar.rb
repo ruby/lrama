@@ -66,6 +66,7 @@ module Lrama
     #   @required: bool
     #   @union: Union
     #   @start_nterm: Lrama::Lexer::Token?
+    #   @precedences: Array[Precedence]
 
     extend Forwardable
 
@@ -76,6 +77,7 @@ module Lrama
     attr_reader :accept_symbol #: Grammar::Symbol
     attr_reader :aux #: Auxiliary
     attr_reader :parameterized_resolver #: Parameterized::Resolver
+    attr_reader :precedences #: Array[Precedence]
     attr_accessor :union #: Union
     attr_accessor :expect #: Integer
     attr_accessor :printers #: Array[Printer]
@@ -129,6 +131,7 @@ module Lrama
       @define = define
       @required = false
       @start_nterm = nil
+      @precedences = []
 
       append_special_symbols
     end
@@ -163,24 +166,24 @@ module Lrama
       @types << Type.new(id: id, tag: tag)
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
-    def add_nonassoc(sym, precedence, lineno)
-      set_precedence(sym, Precedence.new(type: :nonassoc, precedence: precedence, lineno: lineno))
+    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    def add_nonassoc(sym, precedence, s_value, lineno)
+      set_precedence(sym, Precedence.new(s_value: s_value, type: :nonassoc, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
-    def add_left(sym, precedence, lineno)
-      set_precedence(sym, Precedence.new(type: :left, precedence: precedence, lineno: lineno))
+    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    def add_left(sym, precedence, s_value, lineno)
+      set_precedence(sym, Precedence.new(s_value: s_value, type: :left, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
-    def add_right(sym, precedence, lineno)
-      set_precedence(sym, Precedence.new(type: :right, precedence: precedence, lineno: lineno))
+    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    def add_right(sym, precedence, s_value, lineno)
+      set_precedence(sym, Precedence.new(s_value: s_value, type: :right, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
-    def add_precedence(sym, precedence, lineno)
-      set_precedence(sym, Precedence.new(type: :precedence, precedence: precedence, lineno: lineno))
+    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    def add_precedence(sym, precedence, s_value, lineno)
+      set_precedence(sym, Precedence.new(s_value: s_value, type: :precedence, precedence: precedence, lineno: lineno))
     end
 
     # @rbs (Lrama::Lexer::Token id) -> Lrama::Lexer::Token
@@ -195,6 +198,7 @@ module Lrama
 
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_precedence(sym, precedence)
+      @precedences << precedence
       sym.precedence = precedence
     end
 
@@ -266,6 +270,7 @@ module Lrama
       @symbols_resolver.validate!
       validate_no_precedence_for_nterm!
       validate_rule_lhs_is_nterm!
+      validate_duplicated_precedence!
     end
 
     # @rbs (Grammar::Symbol sym) -> Array[Rule]
@@ -531,10 +536,10 @@ module Lrama
     def validate_no_precedence_for_nterm!
       errors = [] #: Array[String]
 
-      @rules.each do |rule|
-        next if rule.lhs.precedence.nil?
+      nterms.each do |nterm|
+        next if nterm.precedence.nil?
 
-        errors << "[BUG] Precedence #{rule.lhs.name} (line: #{rule.lhs.precedence.lineno}) is defined for nonterminal (line: #{rule.lineno}). Precedence can be defined for only terminal symbol."
+        errors << "[BUG] Precedence #{nterm.name} (line: #{nterm.precedence.lineno}) is defined for nonterminal symbol (line: #{nterm.id.first_line}). Precedence can be defined for only terminal symbol."
       end
 
       return if errors.empty?
@@ -550,6 +555,25 @@ module Lrama
         next if rule.lhs.nterm?
 
         errors << "[BUG] LHS of #{rule.display_name} (line: #{rule.lineno}) is terminal symbol. It should be nonterminal symbol."
+      end
+
+      return if errors.empty?
+
+      raise errors.join("\n")
+    end
+
+    # # @rbs () -> void
+    def validate_duplicated_precedence!
+      errors = [] #: Array[String]
+      seen = {} #: Hash[String, Precedence]
+
+      precedences.each do |prec|
+        s_value = prec.s_value
+        if first = seen[s_value]
+          errors << "%#{prec.type} redeclaration for #{s_value} (line: #{prec.lineno}) previous declaration was %#{first.type} (line: #{first.lineno})"
+        else
+          seen[s_value] = prec
+        end
       end
 
       return if errors.empty?

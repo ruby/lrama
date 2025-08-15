@@ -1603,7 +1603,7 @@ module_eval(<<'.,.,', 'parser.y', 156)
               val[1].each {|hash|
             hash[:tokens].each {|id|
               sym = @grammar.add_term(id: id, tag: hash[:tag])
-              @grammar.add_left(sym, @precedence_number, @lexer.line)
+              @grammar.add_left(sym, @precedence_number, id.s_value, id.first_line)
             }
           }
           @precedence_number += 1
@@ -1617,7 +1617,7 @@ module_eval(<<'.,.,', 'parser.y', 166)
               val[1].each {|hash|
             hash[:tokens].each {|id|
               sym = @grammar.add_term(id: id, tag: hash[:tag])
-              @grammar.add_right(sym, @precedence_number, @lexer.line)
+              @grammar.add_right(sym, @precedence_number, id.s_value, id.first_line)
             }
           }
           @precedence_number += 1
@@ -1631,7 +1631,7 @@ module_eval(<<'.,.,', 'parser.y', 176)
               val[1].each {|hash|
             hash[:tokens].each {|id|
               sym = @grammar.add_term(id: id, tag: hash[:tag])
-              @grammar.add_precedence(sym, @precedence_number, sym.id.first_line)
+              @grammar.add_precedence(sym, @precedence_number, id.s_value, id.first_line)
             }
           }
           @precedence_number += 1
@@ -1645,7 +1645,7 @@ module_eval(<<'.,.,', 'parser.y', 186)
               val[1].each {|hash|
             hash[:tokens].each {|id|
               sym = @grammar.add_term(id: id, tag: hash[:tag])
-              @grammar.add_nonassoc(sym, @precedence_number, @lexer.line)
+              @grammar.add_nonassoc(sym, @precedence_number, id.s_value, id.first_line)
             }
           }
           @precedence_number += 1
