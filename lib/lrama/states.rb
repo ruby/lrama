@@ -89,7 +89,7 @@ module Lrama
       #   where p, q are state, A -> ω is rule, A is nterm, ω is sequence of symbol.
       #
       # `@lookback_relation` is a hash whose
-      # key is [state.id, rule.id],
+      # key is reduce ([state.id, rule.id]),
       # value is array of transition ([state.id, nterm.token_id]).
       @lookback_relation = {}
 
