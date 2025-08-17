@@ -8,11 +8,7 @@ module Lrama
   class States
     type state_id = Integer
 
-    type nterm_id = Integer
-
     type rule_id = Integer
-
-    type transition = [ state_id, nterm_id ]
 
     type reduce = [ state_id, rule_id ]
 
@@ -24,17 +20,17 @@ module Lrama
 
     @states: Array[State]
 
-    @direct_read_sets: Hash[transition, Bitmap::bitmap]
+    @direct_read_sets: Hash[State::Action::Goto, Bitmap::bitmap]
 
-    @reads_relation: Hash[transition, Array[transition]]
+    @reads_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    @read_sets: Hash[transition, Bitmap::bitmap]
+    @read_sets: Hash[State::Action::Goto, Bitmap::bitmap]
 
-    @includes_relation: Hash[transition, Array[transition]]
+    @includes_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    @lookback_relation: Hash[reduce, Array[transition]]
+    @lookback_relation: Hash[reduce, Array[State::Action::Goto]]
 
-    @follow_sets: Hash[reduce, Bitmap::bitmap]
+    @follow_sets: Hash[State::Action::Goto, Bitmap::bitmap]
 
     @la: Hash[reduce, Bitmap::bitmap]
 
@@ -44,11 +40,11 @@ module Lrama
 
     attr_reader states: Array[State]
 
-    attr_reader reads_relation: Hash[transition, Array[transition]]
+    attr_reader reads_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    attr_reader includes_relation: Hash[transition, Array[transition]]
+    attr_reader includes_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    attr_reader lookback_relation: Hash[reduce, Array[transition]]
+    attr_reader lookback_relation: Hash[reduce, Array[State::Action::Goto]]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize: (Grammar grammar, Tracer tracer) -> void
@@ -62,14 +58,14 @@ module Lrama
     # @rbs () -> Integer
     def states_count: () -> Integer
 
-    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
-    def direct_read_sets: () -> Hash[transition, Array[Grammar::Symbol]]
+    # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
+    def direct_read_sets: () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
 
-    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
-    def read_sets: () -> Hash[transition, Array[Grammar::Symbol]]
+    # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
+    def read_sets: () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
 
-    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
-    def follow_sets: () -> Hash[reduce, Array[Grammar::Symbol]]
+    # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
+    def follow_sets: () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
 
     # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
     def la: () -> Hash[reduce, Array[Grammar::Symbol]]

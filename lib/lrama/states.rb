@@ -17,9 +17,7 @@ module Lrama
     #
     # @rbs!
     #   type state_id = Integer
-    #   type nterm_id = Integer
     #   type rule_id = Integer
-    #   type transition = [state_id, nterm_id]
     #   type reduce = [state_id, rule_id]
     #
     #   include Grammar::_DelegatedMethods
@@ -27,12 +25,12 @@ module Lrama
     #   @grammar: Grammar
     #   @tracer: Tracer
     #   @states: Array[State]
-    #   @direct_read_sets: Hash[transition, Bitmap::bitmap]
-    #   @reads_relation: Hash[transition, Array[transition]]
-    #   @read_sets: Hash[transition, Bitmap::bitmap]
-    #   @includes_relation: Hash[transition, Array[transition]]
-    #   @lookback_relation: Hash[reduce, Array[transition]]
-    #   @follow_sets: Hash[reduce, Bitmap::bitmap]
+    #   @direct_read_sets: Hash[State::Action::Goto, Bitmap::bitmap]
+    #   @reads_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
+    #   @read_sets: Hash[State::Action::Goto, Bitmap::bitmap]
+    #   @includes_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
+    #   @lookback_relation: Hash[reduce, Array[State::Action::Goto]]
+    #   @follow_sets: Hash[State::Action::Goto, Bitmap::bitmap]
     #   @la: Hash[reduce, Bitmap::bitmap]
 
     extend Forwardable
@@ -42,9 +40,9 @@ module Lrama
       :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?
 
     attr_reader :states #: Array[State]
-    attr_reader :reads_relation #: Hash[transition, Array[transition]]
-    attr_reader :includes_relation #: Hash[transition, Array[transition]]
-    attr_reader :lookback_relation #: Hash[reduce, Array[transition]]
+    attr_reader :reads_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
+    attr_reader :includes_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
+    attr_reader :lookback_relation #: Hash[reduce, Array[State::Action::Goto]]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
@@ -57,7 +55,7 @@ module Lrama
       #   where p is state, A is nterm, t is term.
       #
       # `@direct_read_sets` is a hash whose
-      # key is transition ([state.id, nterm.token_id]),
+      # key is goto,
       # value is bitmap of term.
       @direct_read_sets = {}
 
@@ -66,14 +64,14 @@ module Lrama
       #   where p, r are state, A, C are nterm.
       #
       # `@reads_relation` is a hash whose
-      # key is transition ([state.id, nterm.token_id]),
-      # value is array of transition ([state.id, nterm.token_id]).
+      # key is goto,
+      # value is array of goto.
       @reads_relation = {}
 
       # `Read(p, A) =s DR(p, A) ∪ ∪{Read(r, C) | (p, A) reads (r, C)}`
       #
       # `@read_sets` is a hash whose
-      # key is transition ([state.id, nterm.token_id]),
+      # key is goto,
       # value is bitmap of term.
       @read_sets = {}
 
@@ -81,8 +79,8 @@ module Lrama
       #   where p, p' are state, A, B are nterm, β, γ is sequence of symbol.
       #
       # `@includes_relation` is a hash whose
-      # key is transition ([state.id, nterm.token_id]),
-      # value is array of transition ([state.id, nterm.token_id]).
+      # key is goto,
+      # value is array of goto.
       @includes_relation = {}
 
       # `(q, A -> ω) lookback (p, A) iff p -(ω)-> q`
@@ -90,13 +88,13 @@ module Lrama
       #
       # `@lookback_relation` is a hash whose
       # key is reduce ([state.id, rule.id]),
-      # value is array of transition ([state.id, nterm.token_id]).
+      # value is array of goto.
       @lookback_relation = {}
 
       # `Follow(p, A) =s Read(p, A) ∪ ∪{Follow(p', B) | (p, A) includes (p', B)}`
       #
       # `@follow_sets` is a hash whose
-      # key is [state.id, rule.id],
+      # key is goto,
       # value is bitmap of term.
       @follow_sets = {}
 
@@ -147,21 +145,21 @@ module Lrama
       @states.count
     end
 
-    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
+    # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def direct_read_sets
       @direct_read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
-    # @rbs () -> Hash[transition, Array[Grammar::Symbol]]
+    # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def read_sets
       @read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
-    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
+    # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def follow_sets
       @follow_sets.transform_values do |v|
         bitmap_to_terms(v)
@@ -336,14 +334,11 @@ module Lrama
     def compute_direct_read_sets
       @states.each do |state|
         state.nterm_transitions.each do |goto|
-          nterm = goto.next_sym
-
           ary = goto.to_state.term_transitions.map do |shift|
             shift.next_sym.number
           end
 
-          key = [state.id, nterm.token_id] # @type var key: transition
-          @direct_read_sets[key] = Bitmap.from_array(ary)
+          @direct_read_sets[goto] = Bitmap.from_array(ary)
         end
       end
     end
@@ -352,13 +347,11 @@ module Lrama
     def compute_reads_relation
       @states.each do |state|
         state.nterm_transitions.each do |goto|
-          nterm = goto.next_sym
           goto.to_state.nterm_transitions.each do |goto2|
             nterm2 = goto2.next_sym
             if nterm2.nullable
-              key = [state.id, nterm.token_id] # @type var key: transition
-              @reads_relation[key] ||= []
-              @reads_relation[key] << [goto.to_state.id, nterm2.token_id]
+              @reads_relation[goto] ||= []
+              @reads_relation[goto] << goto2
             end
           end
         end
@@ -367,11 +360,8 @@ module Lrama
 
     # @rbs () -> void
     def compute_read_sets
-      sets = nterm_transitions.map do |goto|
-        [goto.from_state.id, goto.next_sym.token_id]
-      end
-
-      @read_sets = Digraph.new(sets, @reads_relation, @direct_read_sets).compute
+      sets = nterm_transitions
+      @read_sets = Digraph.new(nterm_transitions, @reads_relation, @direct_read_sets).compute
     end
 
     # Execute transition of state by symbols
@@ -400,10 +390,12 @@ module Lrama
               break if sym.term?
               state2 = transition(state, rule.rhs[0...i])
               # p' = state, B = nterm, p = state2, A = sym
-              key = [state2.id, sym.token_id] # @type var key: transition
+              key = state2.nterm_transitions.find do |goto2|
+                goto2.next_sym.token_id == sym.token_id
+              end || (raise "Goto by #{sym.name} on state #{state2.id} is not found")
               # TODO: need to omit if state == state2 ?
               @includes_relation[key] ||= []
-              @includes_relation[key] << [state.id, nterm.token_id]
+              @includes_relation[key] << goto
               break unless sym.nullable
               i -= 1
             end
@@ -422,7 +414,7 @@ module Lrama
             # p = state, A = nterm, q = state2, A -> ω = rule
             key = [state2.id, rule.id] # @type var key: reduce
             @lookback_relation[key] ||= []
-            @lookback_relation[key] << [state.id, nterm.token_id]
+            @lookback_relation[key] << goto
           end
         end
       end
@@ -430,10 +422,7 @@ module Lrama
 
     # @rbs () -> void
     def compute_follow_sets
-      sets = nterm_transitions.map do |goto|
-        [goto.from_state.id, goto.next_sym.token_id]
-      end
-
+      sets = nterm_transitions
       @follow_sets = Digraph.new(sets, @includes_relation, @read_sets).compute
     end
 
@@ -445,9 +434,9 @@ module Lrama
           ary = @lookback_relation[key]
           next unless ary
 
-          ary.each do |state2_id, nterm_token_id|
+          ary.each do |goto|
             # q = state, A -> ω = rule, p = state2, A = nterm
-            follows = @follow_sets[[state2_id, nterm_token_id]]
+            follows = @follow_sets[goto]
 
             next if follows == 0
 
