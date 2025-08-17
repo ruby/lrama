@@ -110,14 +110,9 @@ module Lrama
 
     # @rbs () -> void
     def compute
-      # Look Ahead Sets
       report_duration(:compute_lr0_states) { compute_lr0_states }
-      report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
-      report_duration(:compute_reads_relation) { compute_reads_relation }
-      report_duration(:compute_read_sets) { compute_read_sets }
-      report_duration(:compute_includes_relation) { compute_includes_relation }
-      report_duration(:compute_lookback_relation) { compute_lookback_relation }
-      report_duration(:compute_follow_sets) { compute_follow_sets }
+
+      # Look Ahead Sets
       report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
 
       # Conflicts
@@ -141,12 +136,6 @@ module Lrama
       report_duration(:split_states) { split_states }
       # Phase 4
       report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
-      report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
-      report_duration(:compute_reads_relation) { compute_reads_relation }
-      report_duration(:compute_read_sets) { compute_read_sets }
-      report_duration(:compute_includes_relation) { compute_includes_relation }
-      report_duration(:compute_lookback_relation) { compute_lookback_relation }
-      report_duration(:compute_follow_sets) { compute_follow_sets }
       report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
       # Phase 5
       report_duration(:compute_conflicts) { compute_conflicts }
@@ -333,6 +322,17 @@ module Lrama
     end
 
     # @rbs () -> void
+    def compute_look_ahead_sets
+      report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
+      report_duration(:compute_reads_relation) { compute_reads_relation }
+      report_duration(:compute_read_sets) { compute_read_sets }
+      report_duration(:compute_includes_relation) { compute_includes_relation }
+      report_duration(:compute_lookback_relation) { compute_lookback_relation }
+      report_duration(:compute_follow_sets) { compute_follow_sets }
+      report_duration(:compute_la) { compute_la }
+    end
+
+    # @rbs () -> void
     def compute_direct_read_sets
       @states.each do |state|
         state.nterm_transitions.each do |goto|
@@ -438,7 +438,7 @@ module Lrama
     end
 
     # @rbs () -> void
-    def compute_look_ahead_sets
+    def compute_la
       @states.each do |state|
         rules.each do |rule|
           key = [state.id, rule.id] # @type var key: reduce

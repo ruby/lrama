@@ -101,6 +101,9 @@ module Lrama
     def nterm_transitions: () -> Array[State::Action::Goto]
 
     # @rbs () -> void
+    def compute_look_ahead_sets: () -> void
+
+    # @rbs () -> void
     def compute_direct_read_sets: () -> void
 
     # @rbs () -> void
@@ -125,7 +128,7 @@ module Lrama
     def compute_follow_sets: () -> void
 
     # @rbs () -> void
-    def compute_look_ahead_sets: () -> void
+    def compute_la: () -> void
 
     # @rbs (Bitmap::bitmap bit) -> Array[Grammar::Symbol]
     def bitmap_to_terms: (Bitmap::bitmap bit) -> Array[Grammar::Symbol]
