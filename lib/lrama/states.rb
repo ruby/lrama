@@ -44,7 +44,7 @@ module Lrama
     attr_reader :states #: Array[State]
     attr_reader :reads_relation #: Hash[transition, Array[transition]]
     attr_reader :includes_relation #: Hash[transition, Array[transition]]
-    attr_reader :lookback_relation #: Hash[[state_id, rule_id], Array[transition]]
+    attr_reader :lookback_relation #: Hash[reduce, Array[transition]]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
