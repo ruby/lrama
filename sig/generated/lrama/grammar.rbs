@@ -246,7 +246,7 @@ module Lrama
     def normalize_rules: () -> void
 
     # Add $accept rule to the top of rules
-    def add_accept_rules: () -> untyped
+    def add_accept_rule: () -> untyped
 
     # Collect symbols from rules
     #

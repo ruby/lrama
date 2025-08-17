@@ -439,7 +439,7 @@ module Lrama
 
     # @rbs () -> void
     def normalize_rules
-      add_accept_rules
+      add_accept_rule
       setup_rules
       @rule_builders.each do |builder|
         builder.rules.each do |rule|
@@ -453,7 +453,7 @@ module Lrama
     end
 
     # Add $accept rule to the top of rules
-    def add_accept_rules
+    def add_accept_rule
       if @start_nterm
         start = @start_nterm #: Lrama::Lexer::Token
         @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [start, @eof_symbol.id], token_code: nil, lineno: start.line)
