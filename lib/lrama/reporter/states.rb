@@ -246,12 +246,12 @@ module Lrama
         io << "  [Direct Read sets]\n"
         direct_read_sets = states.direct_read_sets
 
-        states.nterms.each do |nterm|
-          terms = direct_read_sets[[state.id, nterm.token_id]]
+        state.nterm_transitions.each do |goto|
+          terms = direct_read_sets[goto]
           next unless terms && !terms.empty?
 
           str = terms.map { |sym| sym.id.s_value }.join(", ")
-          io << "    read #{nterm.id.s_value}  shift #{str}\n"
+          io << "    read #{goto.next_sym.id.s_value}  shift #{str}\n"
         end
 
         io << "\n"
@@ -261,13 +261,12 @@ module Lrama
       def report_reads_relation(io, state, states)
         io << "  [Reads Relation]\n"
 
-        states.nterms.each do |nterm|
-          relations = states.reads_relation[[state.id, nterm.token_id]]
-          next unless relations
+        state.nterm_transitions.each do |goto|
+          goto2 = states.reads_relation[goto]
+          next unless goto2
 
-          relations.each do |state_id2, nterm_id2|
-            n = states.nterms.find { |n| n.token_id == nterm_id2 }
-            io << "    (State #{state_id2}, #{n&.id&.s_value})\n"
+          goto2.each do |goto2|
+            io << "    (State #{goto2.from_state.id}, #{goto2.next_sym.id.s_value})\n"
           end
         end
 
@@ -279,8 +278,8 @@ module Lrama
         io << "  [Read sets]\n"
         read_sets = states.read_sets
 
-        states.nterms.each do |nterm|
-          terms = read_sets[[state.id, nterm.token_id]]
+        state.nterm_transitions.each do |goto|
+          terms = read_sets[goto]
           next unless terms && !terms.empty?
 
           terms.each do |sym|
@@ -295,13 +294,12 @@ module Lrama
       def report_includes_relation(io, state, states)
         io << "  [Includes Relation]\n"
 
-        states.nterms.each do |nterm|
-          relations = states.includes_relation[[state.id, nterm.token_id]]
-          next unless relations
+        state.nterm_transitions.each do |goto|
+          gotos = states.includes_relation[goto]
+          next unless gotos
 
-          relations.each do |state_id2, nterm_id2|
-            n = states.nterms.find { |n| n.token_id == nterm_id2 }
-            io << "    (State #{state.id}, #{nterm.id.s_value}) -> (State #{state_id2}, #{n&.id&.s_value})\n"
+          gotos.each do |goto2|
+            io << "    (State #{state.id}, #{goto.next_sym.id.s_value}) -> (State #{goto2.from_state.id}, #{goto2.next_sym.id.s_value})\n"
           end
         end
 
@@ -313,12 +311,11 @@ module Lrama
         io << "  [Lookback Relation]\n"
 
         states.rules.each do |rule|
-          relations = states.lookback_relation[[state.id, rule.id]]
-          next unless relations
+          gotos = states.lookback_relation[[state.id, rule.id]]
+          next unless gotos
 
-          relations.each do |state_id2, nterm_id2|
-            n = states.nterms.find { |n| n.token_id == nterm_id2 }
-            io << "    (Rule: #{rule.display_name}) -> (State #{state_id2}, #{n&.id&.s_value})\n"
+          gotos.each do |goto2|
+            io << "    (Rule: #{rule.display_name}) -> (State #{goto2.from_state.id}, #{goto2.next_sym.id.s_value})\n"
           end
         end
 
@@ -330,12 +327,12 @@ module Lrama
         io << "  [Follow sets]\n"
         follow_sets = states.follow_sets
 
-        states.nterms.each do |nterm|
-          terms = follow_sets[[state.id, nterm.token_id]]
+        state.nterm_transitions.each do |goto|
+          terms = follow_sets[goto]
           next unless terms
 
           terms.each do |sym|
-            io << "    #{nterm.id.s_value} -> #{sym.id.s_value}\n"
+            io << "    #{goto.next_sym.id.s_value} -> #{sym.id.s_value}\n"
           end
         end
 
