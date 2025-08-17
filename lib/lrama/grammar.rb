@@ -188,6 +188,10 @@ module Lrama
 
     # @rbs (Lrama::Lexer::Token id) -> Lrama::Lexer::Token
     def set_start_nterm(id)
+      # When multiple `%start` directives are defined, Bison does not generate an error,
+      # whereas Lrama does generate an error.
+      # Related Bison's specification are
+      #   refs: https://www.gnu.org/software/bison/manual/html_node/Multiple-start_002dsymbols.html
       if @start_nterm.nil?
         @start_nterm = id
       else
