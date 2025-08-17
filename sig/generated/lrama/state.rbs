@@ -100,6 +100,9 @@ module Lrama
     # @rbs (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
     def set_look_ahead: (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
 
+    # @rbs (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
+    def set_look_ahead_sources: (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
+
     # @rbs () -> Array[Action::Goto]
     def nterm_transitions: () -> Array[Action::Goto]
 

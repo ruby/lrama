@@ -125,8 +125,12 @@ RSpec.describe Lrama::States do
            10 class: keyword_class • $@3 tSTRING '?' "end" $@4
 
             Conflict on tSTRING. shift/reduce($@1)
+              tSTRING comes from state 1 goto by $@1
             Conflict on tSTRING. shift/reduce($@3)
+              tSTRING comes from state 1 goto by $@3
             Conflict on tSTRING. reduce($@1)/reduce($@3)
+              tSTRING comes from state 1 goto by $@1
+              tSTRING comes from state 1 goto by $@3
 
             tSTRING  shift, and go to state 6
 
@@ -417,6 +421,7 @@ RSpec.describe Lrama::States do
             4 B: ε •
 
             Conflict on a. shift/reduce(B)
+              a comes from state 6 goto by D
 
             a  shift, and go to state 1
 
@@ -605,6 +610,7 @@ RSpec.describe Lrama::States do
             4 B: ε •
 
             Conflict on a. shift/reduce(B)
+              a comes from state 6 goto by D
 
             a  shift, and go to state 1
 
@@ -1432,6 +1438,9 @@ RSpec.describe Lrama::States do
               3     | expr • '*' expr
 
               Conflict on '+'. shift/reduce(expr)
+                '+' comes from state 0 goto by expr
+                '+' comes from state 5 goto by expr
+                '+' comes from state 6 goto by expr
 
               '+'  shift, and go to state 5
               '*'  shift, and go to state 6
@@ -1450,6 +1459,9 @@ RSpec.describe Lrama::States do
               3     | expr '*' expr •
 
               Conflict on '*'. shift/reduce(expr)
+                '*' comes from state 0 goto by expr
+                '*' comes from state 5 goto by expr
+                '*' comes from state 6 goto by expr
 
               '*'  shift, and go to state 6
 

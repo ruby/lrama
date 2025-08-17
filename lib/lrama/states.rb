@@ -188,6 +188,45 @@ module Lrama
       validate_conflicts_within_threshold!(logger)
     end
 
+    def compute_la_sources
+      reflexive = {}
+      @states.each do |state|
+        state.nterm_transitions.each do |goto|
+          reflexive[goto] = [goto]
+        end
+      end
+
+      # compute_read_sets
+      read_sets = Digraph.new(nterm_transitions, @reads_relation, reflexive).compute
+      # compute_follow_sets
+      follow_sets = Digraph.new(nterm_transitions, @includes_relation, read_sets).compute
+
+      @states.each do |state|
+        rules.each do |rule|
+          sources = {}
+          key = [state.id, rule.id] # @type var key: reduce
+          ary = @lookback_relation[key]
+          next unless ary
+
+          ary.each do |goto|
+            source = follow_sets[goto]
+
+            next unless source
+
+            source.each do |goto2|
+              tokens = direct_read_sets[goto2]
+              tokens.each do |token|
+                sources[token] ||= []
+                sources[token] |= [goto2]
+              end
+            end
+          end
+
+          state.set_look_ahead_sources(rule, sources)
+        end
+      end
+    end
+
     private
 
     # @rbs (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [State, bool]

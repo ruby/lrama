@@ -79,6 +79,8 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate!: (Logger logger) -> void
 
+    def compute_la_sources: () -> untyped
+
     private
 
     # @rbs (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [State, bool]

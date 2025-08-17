@@ -17,6 +17,7 @@ module Lrama
       def report(io, states, ielr: false)
         cex = Counterexamples.new(states) if @counterexamples
 
+        states.compute_la_sources
         report_split_states(io, states.states) if ielr
 
         states.states.each do |state|
@@ -99,9 +100,25 @@ module Lrama
           when :shift_reduce
             # @type var conflict: Lrama::State::ShiftReduceConflict
             io << "shift/reduce(#{conflict.reduce.item.rule.lhs.display_name})\n"
+
+            conflict.symbols.each do |token|
+              conflict.reduce.look_ahead_sources[token].each do |goto| # steep:ignore NoMethod
+                io << "      #{token.display_name} comes from state #{goto.from_state.id} goto by #{goto.next_sym.display_name}\n"
+              end
+            end
           when :reduce_reduce
             # @type var conflict: Lrama::State::ReduceReduceConflict
             io << "reduce(#{conflict.reduce1.item.rule.lhs.display_name})/reduce(#{conflict.reduce2.item.rule.lhs.display_name})\n"
+
+            conflict.symbols.each do |token|
+              conflict.reduce1.look_ahead_sources[token].each do |goto| # steep:ignore NoMethod
+                io << "      #{token.display_name} comes from state #{goto.from_state.id} goto by #{goto.next_sym.display_name}\n"
+              end
+
+              conflict.reduce2.look_ahead_sources[token].each do |goto| # steep:ignore NoMethod
+                io << "      #{token.display_name} comes from state #{goto.from_state.id} goto by #{goto.next_sym.display_name}\n"
+              end
+            end
           else
             raise "Unknown conflict type #{conflict.type}"
           end

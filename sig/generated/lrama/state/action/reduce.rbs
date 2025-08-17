@@ -8,11 +8,15 @@ module Lrama
 
         @look_ahead: Array[Grammar::Symbol]?
 
+        @look_ahead_sources: Hash[Grammar::Symbol, Array[Action::Goto]]?
+
         @not_selected_symbols: Array[Grammar::Symbol]
 
         attr_reader item: States::Item
 
         attr_reader look_ahead: Array[Grammar::Symbol]?
+
+        attr_reader look_ahead_sources: Hash[Grammar::Symbol, Array[Action::Goto]]?
 
         attr_reader not_selected_symbols: Array[Grammar::Symbol]
 
@@ -27,6 +31,9 @@ module Lrama
 
         # @rbs (Array[Grammar::Symbol] look_ahead) -> Array[Grammar::Symbol]
         def look_ahead=: (Array[Grammar::Symbol] look_ahead) -> Array[Grammar::Symbol]
+
+        # @rbs (Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> Hash[Grammar::Symbol, Array[Action::Goto]]
+        def look_ahead_sources=: (Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> Hash[Grammar::Symbol, Array[Action::Goto]]
 
         # @rbs (Grammar::Symbol sym) -> Array[Grammar::Symbol]
         def add_not_selected_symbol: (Grammar::Symbol sym) -> Array[Grammar::Symbol]
