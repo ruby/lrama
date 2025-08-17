@@ -328,8 +328,8 @@ rule
     | id TAG id+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
 
   id:
-      IDENTIFIER { on_action_error("ident after %prec", val[0]) if @prec_seen }
-    | CHARACTER { on_action_error("char after %prec", val[0]) if @prec_seen }
+      IDENTIFIER
+    | CHARACTER
 
   rules_or_grammar_declaration:
       rules ";"*

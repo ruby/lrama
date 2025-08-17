@@ -1016,8 +1016,8 @@ racc_reduce_table = [
   1, 85, :_reduce_97,
   1, 85, :_reduce_98,
   3, 85, :_reduce_99,
-  1, 89, :_reduce_100,
-  1, 89, :_reduce_101,
+  1, 89, :_reduce_none,
+  1, 89, :_reduce_none,
   1, 110, :_reduce_102,
   2, 110, :_reduce_103,
   2, 62, :_reduce_none,
@@ -1978,19 +1978,9 @@ module_eval(<<'.,.,', 'parser.y', 327)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 330)
-  def _reduce_100(val, _values, result)
-     on_action_error("ident after %prec", val[0]) if @prec_seen
-    result
-  end
-.,.,
+# reduce 100 omitted
 
-module_eval(<<'.,.,', 'parser.y', 331)
-  def _reduce_101(val, _values, result)
-     on_action_error("char after %prec", val[0]) if @prec_seen
-    result
-  end
-.,.,
+# reduce 101 omitted
 
 module_eval(<<'.,.,', 'parser.y', 338)
   def _reduce_102(val, _values, result)

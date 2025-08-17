@@ -3444,8 +3444,8 @@ RSpec.describe Lrama::Parser do
       ])
     end
 
-    describe "invalid_prec" do
-      it "raises error if ident exists after %prec" do
+    describe "valid prec" do
+      it "does not raises error if ident exists after %prec" do
         y = header + <<~INPUT
           %%
           
@@ -3460,14 +3460,10 @@ RSpec.describe Lrama::Parser do
 
         parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-          parse.y:31:42: ident after %prec
-          class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
-                                                    ^^^^^^^^^^^
-        ERROR
+        expect { parser.parse }.not_to raise_error
       end
 
-      it "raises error if char exists after %prec" do
+      it "does not raises error if char exists after %prec" do
         y = header + <<~INPUT
           %%
           
@@ -3482,13 +3478,12 @@ RSpec.describe Lrama::Parser do
 
         parser = Lrama::Parser.new(y, "parse.y")
 
-        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
-          parse.y:31:51: char after %prec
-          class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
-                                                             ^^^
-        ERROR
+        expect { parser.parse }.not_to raise_error
       end
 
+    end
+
+    describe "invalid prec" do
       it "raises error if code exists after %prec" do
         y = header + <<~INPUT
           %%
