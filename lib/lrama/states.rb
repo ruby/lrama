@@ -441,7 +441,8 @@ module Lrama
     def compute_look_ahead_sets
       @states.each do |state|
         rules.each do |rule|
-          ary = @lookback_relation[[state.id, rule.id]]
+          key = [state.id, rule.id] # @type var key: reduce
+          ary = @lookback_relation[key]
           next unless ary
 
           ary.each do |state2_id, nterm_token_id|
@@ -450,7 +451,6 @@ module Lrama
 
             next if follows == 0
 
-            key = [state.id, rule.id] # @type var key: reduce
             @la[key] ||= 0
             look_ahead = @la[key] | follows
             @la[key] |= look_ahead
