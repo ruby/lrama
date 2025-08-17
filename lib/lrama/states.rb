@@ -57,7 +57,7 @@ module Lrama
       #   where p is state, A is nterm, t is term.
       #
       # `@direct_read_sets` is a hash whose
-      # key is [state.id, nterm.token_id],
+      # key is transition ([state.id, nterm.token_id]),
       # value is bitmap of term.
       @direct_read_sets = {}
 
@@ -66,14 +66,14 @@ module Lrama
       #   where p, r are state, A, C are nterm.
       #
       # `@reads_relation` is a hash whose
-      # key is [state.id, nterm.token_id],
-      # value is array of [state.id, nterm.token_id].
+      # key is transition ([state.id, nterm.token_id]),
+      # value is array of transition ([state.id, nterm.token_id]).
       @reads_relation = {}
 
       # `Read(p, A) =s DR(p, A) ∪ ∪{Read(r, C) | (p, A) reads (r, C)}`
       #
       # `@read_sets` is a hash whose
-      # key is [state.id, nterm.token_id],
+      # key is transition ([state.id, nterm.token_id]),
       # value is bitmap of term.
       @read_sets = {}
 
@@ -81,8 +81,8 @@ module Lrama
       #   where p, p' are state, A, B are nterm, β, γ is sequence of symbol.
       #
       # `@includes_relation` is a hash whose
-      # key is [state.id, nterm.token_id],
-      # value is array of [state.id, nterm.token_id].
+      # key is transition ([state.id, nterm.token_id]),
+      # value is array of transition ([state.id, nterm.token_id]).
       @includes_relation = {}
 
       # `(q, A -> ω) lookback (p, A) iff p -(ω)-> q`
@@ -90,7 +90,7 @@ module Lrama
       #
       # `@lookback_relation` is a hash whose
       # key is [state.id, rule.id],
-      # value is array of [state.id, nterm.token_id].
+      # value is array of transition ([state.id, nterm.token_id]).
       @lookback_relation = {}
 
       # `Follow(p, A) =s Read(p, A) ∪ ∪{Follow(p', B) | (p, A) includes (p', B)}`
