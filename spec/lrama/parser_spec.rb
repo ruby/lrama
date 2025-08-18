@@ -3549,6 +3549,27 @@ RSpec.describe Lrama::Parser do
                                           ^^^^^^^^^^^
         ERROR
       end
+
+      it "raises error if multiple %prec in a rule" do
+        y = header + <<~INPUT
+          %%
+          
+          program: class ;
+          
+          class : keyword_class %prec tPLUS %prec tMINUS keyword_end { code 1 }
+                ;
+          %%
+          
+        INPUT
+
+        parser = Lrama::Parser.new(y, "parse.y")
+
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31:40: multiple %prec in a rule
+          class : keyword_class %prec tPLUS %prec tMINUS keyword_end { code 1 }
+                                                  ^^^^^^
+        ERROR
+      end
     end
 
     describe "\" in user code" do

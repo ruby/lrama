@@ -287,6 +287,7 @@ rule
         }
     | rule_rhs "%prec" symbol
         {
+          on_action_error("multiple %prec in a rule", val[0]) if prec_seen?
           sym = @grammar.find_symbol_by_id!(val[2])
           if val[0].rhs.empty?
             @opening_prec_seen = true
@@ -416,6 +417,7 @@ rule
         }
     | rhs "%prec" symbol
         {
+          on_action_error("multiple %prec in a rule", val[0]) if prec_seen?
           sym = @grammar.find_symbol_by_id!(val[2])
           if val[0].rhs.empty?
             @opening_prec_seen = true
