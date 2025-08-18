@@ -146,6 +146,15 @@ module Lrama
       reduce.look_ahead = look_ahead
     end
 
+    # @rbs (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
+    def set_look_ahead_sources(rule, sources)
+      reduce = reduces.find do |r|
+        r.rule == rule
+      end
+
+      reduce.look_ahead_sources = sources
+    end
+
     # @rbs () -> Array[Action::Goto]
     def nterm_transitions # steep:ignore
       @nterm_transitions ||= transitions.select {|transition| transition.is_a?(Action::Goto) }

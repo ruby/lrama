@@ -12,10 +12,12 @@ module Lrama
         # @rbs!
         #   @item: States::Item
         #   @look_ahead: Array[Grammar::Symbol]?
+        #   @look_ahead_sources: Hash[Grammar::Symbol, Array[Action::Goto]]?
         #   @not_selected_symbols: Array[Grammar::Symbol]
 
         attr_reader :item #: States::Item
         attr_reader :look_ahead #: Array[Grammar::Symbol]?
+        attr_reader :look_ahead_sources #: Hash[Grammar::Symbol, Array[Action::Goto]]?
         attr_reader :not_selected_symbols #: Array[Grammar::Symbol]
 
         # https://www.gnu.org/software/bison/manual/html_node/Default-Reductions.html
@@ -25,6 +27,7 @@ module Lrama
         def initialize(item)
           @item = item
           @look_ahead = nil
+          @look_ahead_sources = nil
           @not_selected_symbols = []
         end
 
@@ -36,6 +39,11 @@ module Lrama
         # @rbs (Array[Grammar::Symbol] look_ahead) -> Array[Grammar::Symbol]
         def look_ahead=(look_ahead)
           @look_ahead = look_ahead.freeze
+        end
+
+        # @rbs (Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> Hash[Grammar::Symbol, Array[Action::Goto]]
+        def look_ahead_sources=(sources)
+          @look_ahead_sources = sources.freeze
         end
 
         # @rbs (Grammar::Symbol sym) -> Array[Grammar::Symbol]
