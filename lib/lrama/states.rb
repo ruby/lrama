@@ -360,7 +360,6 @@ module Lrama
 
     # @rbs () -> void
     def compute_read_sets
-      sets = nterm_transitions
       @read_sets = Digraph.new(nterm_transitions, @reads_relation, @direct_read_sets).compute
     end
 
@@ -422,8 +421,7 @@ module Lrama
 
     # @rbs () -> void
     def compute_follow_sets
-      sets = nterm_transitions
-      @follow_sets = Digraph.new(sets, @includes_relation, @read_sets).compute
+      @follow_sets = Digraph.new(nterm_transitions, @includes_relation, @read_sets).compute
     end
 
     # @rbs () -> void
