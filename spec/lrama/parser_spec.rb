@@ -3445,13 +3445,14 @@ RSpec.describe Lrama::Parser do
     end
 
     describe "valid prec" do
-      it "does not raises error if ident exists after %prec" do
+      it "does not raises error if ident appears after %prec, unless it is intermediate" do
         y = header + <<~INPUT
           %%
           
           program: class ;
           
-          class : keyword_class tSTRING %prec tPLUS keyword_end { code 1 }
+          class : %prec tPLUS keyword_class tSTRING keyword_end { code 1 }
+                | keyword_class tSTRING keyword_end %prec tMINUS { code 2 }
                 ;
           
           %%
@@ -3463,13 +3464,14 @@ RSpec.describe Lrama::Parser do
         expect { parser.parse }.not_to raise_error
       end
 
-      it "does not raises error if char exists after %prec" do
+      it "does not raises error if char appears after %prec, unless it is intermediate" do
         y = header + <<~INPUT
           %%
           
           program: class ;
           
-          class : keyword_class { code 2 } tSTRING %prec "=" '!' keyword_end { code 3 }
+          class : %prec "=" keyword_class tSTRING '!' keyword_end { code 1 }
+                | keyword_class tSTRING keyword_end %prec "=" { code 2 }
                 ;
           
           %%
@@ -3503,6 +3505,48 @@ RSpec.describe Lrama::Parser do
           parse.y:31:78: multiple User_code after %prec
           class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
                                                                                         ^
+        ERROR
+      end
+
+      it "raises error if ident appears after %prec, and it is intermediate" do
+        y = header + <<~INPUT
+          %%
+          
+          program: class ;
+          
+          class : keyword_class %prec tPLUS keyword_end { code 1 }
+                ;
+          %%
+          
+        INPUT
+
+        parser = Lrama::Parser.new(y, "parse.y")
+
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31:34: intermediate %prec in a rule
+          class : keyword_class %prec tPLUS keyword_end { code 1 }
+                                            ^^^^^^^^^^^
+        ERROR
+      end
+
+      it "raises error if char appears after %prec, and it is intermediate" do
+        y = header + <<~INPUT
+          %%
+          
+          program: class ;
+          
+          class : keyword_class %prec "=" keyword_end { code 1 }
+                ;
+          %%
+          
+        INPUT
+
+        parser = Lrama::Parser.new(y, "parse.y")
+
+        expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+          parse.y:31:32: intermediate %prec in a rule
+          class : keyword_class %prec "=" keyword_end { code 1 }
+                                          ^^^^^^^^^^^
         ERROR
       end
     end

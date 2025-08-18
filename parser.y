@@ -256,6 +256,7 @@ rule
         }
     | rule_rhs symbol named_ref?
         {
+          on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           token = val[1]
           token.alias_name = val[2]
           builder = val[0]
@@ -264,12 +265,14 @@ rule
         }
     | rule_rhs symbol parameterized_suffix
         {
+          on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           builder = val[0]
           builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
           result = builder
         }
     | rule_rhs IDENTIFIER "(" parameterized_args ")" TAG?
         {
+          on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           builder = val[0]
           builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
           result = builder
@@ -285,7 +288,11 @@ rule
     | rule_rhs "%prec" symbol
         {
           sym = @grammar.find_symbol_by_id!(val[2])
-          @prec_seen = true
+          if val[0].rhs.empty?
+            @opening_prec_seen = true
+          else
+            @trailing_prec_seen = true
+          end
           builder = val[0]
           builder.precedence_sym = sym
           result = builder
@@ -373,6 +380,7 @@ rule
         }
     | rhs symbol named_ref?
         {
+          on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           token = val[1]
           token.alias_name = val[2]
           builder = val[0]
@@ -381,6 +389,7 @@ rule
         }
     | rhs symbol parameterized_suffix named_ref? TAG?
         {
+          on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], alias_name: val[3], location: @lexer.location, args: [val[1]], lhs_tag: val[4])
           builder = val[0]
           builder.add_rhs(token)
@@ -389,6 +398,7 @@ rule
         }
     | rhs IDENTIFIER "(" parameterized_args ")" named_ref? TAG?
         {
+          on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           token = Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, alias_name: val[5], location: @lexer.location, args: val[3], lhs_tag: val[6])
           builder = val[0]
           builder.add_rhs(token)
@@ -407,7 +417,11 @@ rule
     | rhs "%prec" symbol
         {
           sym = @grammar.find_symbol_by_id!(val[2])
-          @prec_seen = true
+          if val[0].rhs.empty?
+            @opening_prec_seen = true
+          else
+            @trailing_prec_seen = true
+          end
           builder = val[0]
           builder.precedence_sym = sym
           result = builder
@@ -433,7 +447,7 @@ rule
   midrule_action:
       "{"
         {
-          if @prec_seen
+          if prec_seen?
             on_action_error("multiple User_code after %prec", val[0]) if @code_after_prec
             @code_after_prec = true
           end
@@ -536,8 +550,13 @@ end
 private
 
 def reset_precs
-  @prec_seen = false
+  @opening_prec_seen = false
+  @trailing_prec_seen = false
   @code_after_prec = false
+end
+
+def prec_seen?
+  @opening_prec_seen || @trailing_prec_seen
 end
 
 def begin_c_declaration(end_symbol)
