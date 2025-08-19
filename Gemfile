@@ -4,15 +4,15 @@ source 'https://rubygems.org'
 
 gemspec
 
+gem "memory_profiler"
 gem "pry"
 gem "racc", "1.8.1"
+gem "railroad_diagrams", "0.3.0"
 gem "rake"
 gem "rdoc"
 gem "rspec"
 gem "simplecov", require: false
 gem "stackprof", platforms: [:ruby] # stackprof doesn't support Windows
-gem "memory_profiler"
-gem "railroad_diagrams", "0.3.0"
 
 # Recent steep requires Ruby >= 3.0.0.
 # Then skip install on some CI jobs.
