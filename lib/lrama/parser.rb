@@ -686,7 +686,11 @@ def next_token
 end
 
 def on_error(error_token_id, error_value, value_stack)
-  if error_value.is_a?(Lrama::Lexer::Token)
+  case error_value
+  when Lrama::Lexer::Token::Int
+    location = error_value.location
+    value = "#{error_value.s_value}"
+  when Lrama::Lexer::Token
     location = error_value.location
     value = "'#{error_value.s_value}'"
   else
@@ -1371,7 +1375,7 @@ module_eval(<<'.,.,', 'parser.y', 77)
 
 module_eval(<<'.,.,', 'parser.y', 36)
   def _reduce_20(val, _values, result)
-              @grammar.expect = val[1]
+              @grammar.expect = val[1].s_value
 
     result
   end
@@ -1683,7 +1687,7 @@ module_eval(<<'.,.,', 'parser.y', 214)
 module_eval(<<'.,.,', 'parser.y', 202)
   def _reduce_58(val, _values, result)
               val[1].each {|token_declaration|
-            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[0], replace: true)
+            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1]&.s_value, tag: val[0], replace: true)
           }
 
     result
@@ -1693,7 +1697,7 @@ module_eval(<<'.,.,', 'parser.y', 202)
 module_eval(<<'.,.,', 'parser.y', 208)
   def _reduce_59(val, _values, result)
               val[2].each {|token_declaration|
-            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[1], replace: true)
+            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1]&.s_value, tag: val[1], replace: true)
           }
 
     result
@@ -2227,7 +2231,7 @@ module_eval(<<'.,.,', 'parser.y', 460)
 
 module_eval(<<'.,.,', 'parser.y', 471)
   def _reduce_134(val, _values, result)
-     result = Lrama::Lexer::Token::Ident.new(s_value: val[0])
+     result = Lrama::Lexer::Token::Ident.new(s_value: val[0].s_value)
     result
   end
 .,.,

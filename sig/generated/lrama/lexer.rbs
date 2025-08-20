@@ -4,7 +4,7 @@ module Lrama
   class Lexer
     type token = lexer_token | c_token
 
-    type lexer_token = [ String, String ] | [ ::Symbol, Token::Tag ] | [ ::Symbol, Token::Char ] | [ ::Symbol, String ] | [ ::Symbol, Integer ] | [ ::Symbol, Token::Ident ]
+    type lexer_token = [ String, String ] | [ ::Symbol, Token::Tag ] | [ ::Symbol, Token::Char ] | [ ::Symbol, Token::Str ] | [ ::Symbol, Token::Int ] | [ ::Symbol, Token::Ident ]
 
     type c_token = [ :C_DECLARATION, Token::UserCode ]
 

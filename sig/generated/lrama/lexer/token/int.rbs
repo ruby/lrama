@@ -1,0 +1,13 @@
+# Generated from lib/lrama/lexer/token/int.rb with RBS::Inline
+
+module Lrama
+  class Lexer
+    class Token
+      class Int < Token
+        def initialize: (s_value: Integer, ?alias_name: String, ?location: Location) -> void
+
+        def s_value: () -> Integer
+      end
+    end
+  end
+end

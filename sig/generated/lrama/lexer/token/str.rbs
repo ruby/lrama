@@ -1,0 +1,10 @@
+# Generated from lib/lrama/lexer/token/str.rb with RBS::Inline
+
+module Lrama
+  class Lexer
+    class Token
+      class Str < Token
+      end
+    end
+  end
+end

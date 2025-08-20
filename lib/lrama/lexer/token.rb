@@ -4,6 +4,8 @@
 require_relative 'token/char'
 require_relative 'token/ident'
 require_relative 'token/instantiate_rule'
+require_relative 'token/int'
+require_relative 'token/str'
 require_relative 'token/tag'
 require_relative 'token/user_code'
 
