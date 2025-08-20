@@ -14,11 +14,11 @@ module Lrama
       #   attr_accessor name: String
       #   attr_accessor number: Integer
       #   attr_accessor index: Integer
-      #   attr_accessor ex_tag: Lexer::Token?
+      #   attr_accessor ex_tag: Lexer::Token::Base?
       #   attr_accessor first_column: Integer
       #   attr_accessor last_column: Integer
       #
-      #   def initialize: (type: ::Symbol, ?name: String, ?number: Integer, ?index: Integer, ?ex_tag: Lexer::Token?, first_column: Integer, last_column: Integer) -> void
+      #   def initialize: (type: ::Symbol, ?name: String, ?number: Integer, ?index: Integer, ?ex_tag: Lexer::Token::Base?, first_column: Integer, last_column: Integer) -> void
 
       # @rbs () -> (String|Integer)
       def value

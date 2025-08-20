@@ -690,7 +690,7 @@ def on_error(error_token_id, error_value, value_stack)
   when Lrama::Lexer::Token::Int
     location = error_value.location
     value = "#{error_value.s_value}"
-  when Lrama::Lexer::Token
+  when Lrama::Lexer::Token::Base
     location = error_value.location
     value = "'#{error_value.s_value}'"
   else
@@ -704,7 +704,7 @@ def on_error(error_token_id, error_value, value_stack)
 end
 
 def on_action_error(error_message, error_value)
-  if error_value.is_a?(Lrama::Lexer::Token)
+  if error_value.is_a?(Lrama::Lexer::Token::Base)
     location = error_value.location
   else
     location = @lexer.location

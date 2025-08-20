@@ -8,13 +8,13 @@ RSpec.describe Lrama::Grammar do
     let(:grammar_file) { Lrama::Lexer::GrammarFile.new("test.y", "") }
 
     it 'sets the start non-terminal' do
-      token = Lrama::Lexer::Token.new(s_value: 'start', location: Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 1, last_line: 1, last_column: 5))
+      token = Lrama::Lexer::Token::Ident.new(s_value: 'start', location: Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 1, last_line: 1, last_column: 5))
       expect { grammar.set_start_nterm(token) }.not_to raise_error
     end
 
     it 'raises an error if start non-terminal is already set' do
-      token1 = Lrama::Lexer::Token.new(s_value: 'start1', location: Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 1, last_line: 1, last_column: 7))
-      token2 = Lrama::Lexer::Token.new(s_value: 'start2', location: Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 4, first_column: 1, last_line: 4, last_column: 7))
+      token1 = Lrama::Lexer::Token::Ident.new(s_value: 'start1', location: Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 1, last_line: 1, last_column: 7))
+      token2 = Lrama::Lexer::Token::Ident.new(s_value: 'start2', location: Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 4, first_column: 1, last_line: 4, last_column: 7))
       grammar.set_start_nterm(token1)
 
       expect {grammar.set_start_nterm(token2)}.to raise_error(RuntimeError, "Start non-terminal is already set to start1 (line: 1). Cannot set to start2 (line: 4).")

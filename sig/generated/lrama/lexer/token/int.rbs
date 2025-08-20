@@ -2,8 +2,8 @@
 
 module Lrama
   class Lexer
-    class Token
-      class Int < Token
+    module Token
+      class Int < Base
         def initialize: (s_value: Integer, ?alias_name: String, ?location: Location) -> void
 
         def s_value: () -> Integer

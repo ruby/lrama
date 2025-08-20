@@ -9,7 +9,7 @@
 module Lrama
   class Grammar
     class Symbol
-      attr_accessor :id #: Lexer::Token
+      attr_accessor :id #: Lexer::Token::Base
       attr_accessor :alias_name #: String?
       attr_reader :number #: Integer
       attr_accessor :number_bitmap #: Bitmap::bitmap
@@ -28,7 +28,7 @@ module Lrama
       attr_writer :undef_symbol #: bool
       attr_writer :accept_symbol #: bool
 
-      # @rbs (id: Lexer::Token, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token?,
+      # @rbs (id: Lexer::Token::Base, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token::Tag?,
       #      ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
       def initialize(id:, term:, alias_name: nil, number: nil, tag: nil, token_id: nil, nullable: nil, precedence: nil, printer: nil, destructor: nil)
         @id = id

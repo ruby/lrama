@@ -17,9 +17,9 @@ module Lrama
 
       @midrule_action_rules: Array[Rule]
 
-      @replaced_rhs: Array[Lexer::Token]?
+      @replaced_rhs: Array[Lexer::Token::Base]?
 
-      attr_accessor lhs: Lexer::Token?
+      attr_accessor lhs: Lexer::Token::Base?
 
       attr_accessor line: Integer?
 
@@ -31,7 +31,7 @@ module Lrama
 
       attr_reader lhs_tag: Lexer::Token::Tag?
 
-      attr_reader rhs: Array[Lexer::Token]
+      attr_reader rhs: Array[Lexer::Token::Base]
 
       attr_reader user_code: Lexer::Token::UserCode?
 
@@ -40,8 +40,8 @@ module Lrama
       # @rbs (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
       def initialize: (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
 
-      # @rbs (Lexer::Token rhs) -> void
-      def add_rhs: (Lexer::Token rhs) -> void
+      # @rbs (Lexer::Token::Base rhs) -> void
+      def add_rhs: (Lexer::Token::Base rhs) -> void
 
       # @rbs (Lexer::Token::UserCode? user_code) -> void
       def user_code=: (Lexer::Token::UserCode? user_code) -> void

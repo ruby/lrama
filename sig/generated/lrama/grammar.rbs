@@ -72,7 +72,7 @@ module Lrama
 
     @precedences: Array[Precedence]
 
-    @start_nterm: Lrama::Lexer::Token?
+    @start_nterm: Lrama::Lexer::Token::Base?
 
     extend Forwardable
 
@@ -106,15 +106,15 @@ module Lrama
 
     attr_accessor initial_action: Grammar::Code::InitialActionCode
 
-    attr_accessor after_shift: Lexer::Token
+    attr_accessor after_shift: Lexer::Token::Base
 
-    attr_accessor before_reduce: Lexer::Token
+    attr_accessor before_reduce: Lexer::Token::Base
 
-    attr_accessor after_reduce: Lexer::Token
+    attr_accessor after_reduce: Lexer::Token::Base
 
-    attr_accessor after_shift_error_token: Lexer::Token
+    attr_accessor after_shift_error_token: Lexer::Token::Base
 
-    attr_accessor after_pop_stack: Lexer::Token
+    attr_accessor after_pop_stack: Lexer::Token::Base
 
     attr_accessor symbols_resolver: Symbols::Resolver
 
@@ -140,8 +140,8 @@ module Lrama
     # @rbs (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
     def create_rule_builder: (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
 
-    # @rbs (id: Lexer::Token, code: Lexer::Token::UserCode) -> Array[PercentCode]
-    def add_percent_code: (id: Lexer::Token, code: Lexer::Token::UserCode) -> Array[PercentCode]
+    # @rbs (id: Lexer::Token::Base, code: Lexer::Token::UserCode) -> Array[PercentCode]
+    def add_percent_code: (id: Lexer::Token::Base, code: Lexer::Token::UserCode) -> Array[PercentCode]
 
     # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[Destructor]
     def add_destructor: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[Destructor]
@@ -152,8 +152,8 @@ module Lrama
     # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[ErrorToken]
     def add_error_token: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[ErrorToken]
 
-    # @rbs (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
-    def add_type: (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
+    # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> Array[Type]
+    def add_type: (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> Array[Type]
 
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_nonassoc: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
@@ -167,8 +167,8 @@ module Lrama
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_precedence: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
 
-    # @rbs (Lrama::Lexer::Token id) -> Lrama::Lexer::Token
-    def set_start_nterm: (Lrama::Lexer::Token id) -> Lrama::Lexer::Token
+    # @rbs (Lrama::Lexer::Token::Base id) -> Lrama::Lexer::Token::Base
+    def set_start_nterm: (Lrama::Lexer::Token::Base id) -> Lrama::Lexer::Token::Base
 
     # @rbs (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
     def set_precedence: (Grammar::Symbol sym, Precedence precedence) -> (Precedence | bot)
