@@ -9,13 +9,13 @@ module Lrama
       #       see: https://github.com/soutaro/rbs-inline/pull/149
       #
       # @rbs!
-      #   @id: Lexer::Token
+      #   @id: Lexer::Token::Base
       #   @tag: Lexer::Token::Tag
 
-      attr_reader :id #: Lexer::Token
+      attr_reader :id #: Lexer::Token::Base
       attr_reader :tag #: Lexer::Token::Tag
 
-      # @rbs (id: Lexer::Token, tag: Lexer::Token::Tag) -> void
+      # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> void
       def initialize(id:, tag:)
         @id = id
         @tag = tag

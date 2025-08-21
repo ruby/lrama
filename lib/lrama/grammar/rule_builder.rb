@@ -16,15 +16,15 @@ module Lrama
       #   @rule_builders_for_derived_rules: Array[RuleBuilder]
       #   @parameterized_rules: Array[Rule]
       #   @midrule_action_rules: Array[Rule]
-      #   @replaced_rhs: Array[Lexer::Token]?
+      #   @replaced_rhs: Array[Lexer::Token::Base]?
 
-      attr_accessor :lhs #: Lexer::Token?
+      attr_accessor :lhs #: Lexer::Token::Base?
       attr_accessor :line #: Integer?
       attr_reader :rule_counter #: Counter
       attr_reader :midrule_action_counter #: Counter
       attr_reader :parameterized_resolver #: Grammar::Parameterized::Resolver
       attr_reader :lhs_tag #: Lexer::Token::Tag?
-      attr_reader :rhs #: Array[Lexer::Token]
+      attr_reader :rhs #: Array[Lexer::Token::Base]
       attr_reader :user_code #: Lexer::Token::UserCode?
       attr_reader :precedence_sym #: Grammar::Symbol?
 
@@ -49,7 +49,7 @@ module Lrama
         @midrule_action_rules = []
       end
 
-      # @rbs (Lexer::Token rhs) -> void
+      # @rbs (Lexer::Token::Base rhs) -> void
       def add_rhs(rhs)
         @line ||= rhs.line
 
@@ -111,7 +111,7 @@ module Lrama
 
       # @rbs () -> void
       def build_rules
-        tokens = @replaced_rhs #: Array[Lexer::Token]
+        tokens = @replaced_rhs #: Array[Lexer::Token::Base]
         return if tokens.any? { |t| @parameterized_resolver.find_inline(t) }
 
         rule = Rule.new(
@@ -137,7 +137,7 @@ module Lrama
       def process_rhs
         return if @replaced_rhs
 
-        replaced_rhs = [] #: Array[Lexer::Token]
+        replaced_rhs = [] #: Array[Lexer::Token::Base]
 
         rhs.each_with_index do |token, i|
           case token
@@ -219,7 +219,7 @@ module Lrama
                 ref.name = '$'
               else
                 candidates = ([lhs] + rhs).each_with_index.select do |token, _i|
-                  # @type var token: Lexer::Token
+                  # @type var token: Lexer::Token::Base
                   token.referred_by?(ref_name)
                 end
 

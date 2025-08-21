@@ -3,8 +3,8 @@
 
 module Lrama
   class Lexer
-    class Token
-      class Char < Token
+    module Token
+      class Char < Base
         # @rbs () -> void
         def validate
           validate_ascii_code_range

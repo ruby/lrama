@@ -1,0 +1,53 @@
+# Generated from lib/lrama/lexer/token/base.rb with RBS::Inline
+
+module Lrama
+  class Lexer
+    module Token
+      class Base
+        attr_reader s_value: String
+
+        attr_reader location: Location
+
+        attr_accessor alias_name: String
+
+        attr_accessor referred: bool
+
+        attr_reader errors: Array[String]
+
+        # @rbs (s_value: String, ?alias_name: String, ?location: Location) -> void
+        def initialize: (s_value: String, ?alias_name: String, ?location: Location) -> void
+
+        # @rbs () -> String
+        def to_s: () -> String
+
+        # @rbs (String string) -> bool
+        def referred_by?: (String string) -> bool
+
+        # @rbs (Lexer::Token::Base other) -> bool
+        def ==: (Lexer::Token::Base other) -> bool
+
+        # @rbs () -> Integer
+        def first_line: () -> Integer
+
+        alias line first_line
+
+        # @rbs () -> Integer
+        def first_column: () -> Integer
+
+        alias column first_column
+
+        # @rbs () -> Integer
+        def last_line: () -> Integer
+
+        # @rbs () -> Integer
+        def last_column: () -> Integer
+
+        # @rbs (Lrama::Grammar::Reference ref, String message) -> bot
+        def invalid_ref: (Lrama::Grammar::Reference ref, String message) -> bot
+
+        # @rbs () -> bool
+        def validate: () -> bool
+      end
+    end
+  end
+end

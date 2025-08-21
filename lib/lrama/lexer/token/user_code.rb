@@ -5,8 +5,8 @@ require "strscan"
 
 module Lrama
   class Lexer
-    class Token
-      class UserCode < Token
+    module Token
+      class UserCode < Base
         attr_accessor :tag #: Lexer::Token::Tag
 
         # @rbs () -> Array[Lrama::Grammar::Reference]

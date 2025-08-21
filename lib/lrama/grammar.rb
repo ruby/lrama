@@ -66,7 +66,7 @@ module Lrama
     #   @required: bool
     #   @union: Union
     #   @precedences: Array[Precedence]
-    #   @start_nterm: Lrama::Lexer::Token?
+    #   @start_nterm: Lrama::Lexer::Token::Base?
 
     extend Forwardable
 
@@ -85,11 +85,11 @@ module Lrama
     attr_accessor :lex_param #: String
     attr_accessor :parse_param #: String
     attr_accessor :initial_action #: Grammar::Code::InitialActionCode
-    attr_accessor :after_shift #: Lexer::Token
-    attr_accessor :before_reduce #: Lexer::Token
-    attr_accessor :after_reduce #: Lexer::Token
-    attr_accessor :after_shift_error_token #: Lexer::Token
-    attr_accessor :after_pop_stack #: Lexer::Token
+    attr_accessor :after_shift #: Lexer::Token::Base
+    attr_accessor :before_reduce #: Lexer::Token::Base
+    attr_accessor :after_reduce #: Lexer::Token::Base
+    attr_accessor :after_shift_error_token #: Lexer::Token::Base
+    attr_accessor :after_pop_stack #: Lexer::Token::Base
     attr_accessor :symbols_resolver #: Symbols::Resolver
     attr_accessor :types #: Array[Type]
     attr_accessor :rules #: Array[Rule]
@@ -141,7 +141,7 @@ module Lrama
       RuleBuilder.new(rule_counter, midrule_action_counter, @parameterized_resolver)
     end
 
-    # @rbs (id: Lexer::Token, code: Lexer::Token::UserCode) -> Array[PercentCode]
+    # @rbs (id: Lexer::Token::Base, code: Lexer::Token::UserCode) -> Array[PercentCode]
     def add_percent_code(id:, code:)
       @percent_codes << PercentCode.new(id.s_value, code.s_value)
     end
@@ -161,7 +161,7 @@ module Lrama
       @error_tokens << ErrorToken.new(ident_or_tags: ident_or_tags, token_code: token_code, lineno: lineno)
     end
 
-    # @rbs (id: Lexer::Token, tag: Lexer::Token::Tag) -> Array[Type]
+    # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> Array[Type]
     def add_type(id:, tag:)
       @types << Type.new(id: id, tag: tag)
     end
@@ -186,7 +186,7 @@ module Lrama
       set_precedence(sym, Precedence.new(s_value: s_value, type: :precedence, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Lrama::Lexer::Token id) -> Lrama::Lexer::Token
+    # @rbs (Lrama::Lexer::Token::Base id) -> Lrama::Lexer::Token::Base
     def set_start_nterm(id)
       # When multiple `%start` directives are defined, Bison does not generate an error,
       # whereas Lrama does generate an error.
@@ -195,7 +195,7 @@ module Lrama
       if @start_nterm.nil?
         @start_nterm = id
       else
-        start = @start_nterm #: Lrama::Lexer::Token
+        start = @start_nterm #: Lrama::Lexer::Token::Base
         raise "Start non-terminal is already set to #{start.s_value} (line: #{start.first_line}). Cannot set to #{id.s_value} (line: #{id.first_line})."
       end
     end
@@ -459,12 +459,12 @@ module Lrama
     # Add $accept rule to the top of rules
     def add_accept_rule
       if @start_nterm
-        start = @start_nterm #: Lrama::Lexer::Token
+        start = @start_nterm #: Lrama::Lexer::Token::Base
         @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [start, @eof_symbol.id], token_code: nil, lineno: start.line)
       else
         rule_builder = @rule_builders.first # : RuleBuilder
         lineno = rule_builder ? rule_builder.line : 0
-        lhs = rule_builder.lhs # : Lexer::Token
+        lhs = rule_builder.lhs # : Lexer::Token::Base
         @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [lhs, @eof_symbol.id], token_code: nil, lineno: lineno)
       end
     end
@@ -477,7 +477,7 @@ module Lrama
         case s
         when Lrama::Lexer::Token::Char
           add_term(id: s)
-        when Lrama::Lexer::Token
+        when Lrama::Lexer::Token::Base
           # skip
         else
           raise "Unknown class: #{s}"

@@ -13,10 +13,10 @@ module Lrama
       #   end
       #
       #   attr_accessor id: Integer
-      #   attr_accessor _lhs: Lexer::Token
+      #   attr_accessor _lhs: Lexer::Token::Base
       #   attr_accessor lhs: Grammar::Symbol
       #   attr_accessor lhs_tag: Lexer::Token::Tag?
-      #   attr_accessor _rhs: Array[Lexer::Token]
+      #   attr_accessor _rhs: Array[Lexer::Token::Base]
       #   attr_accessor rhs: Array[Grammar::Symbol]
       #   attr_accessor token_code: Lexer::Token::UserCode?
       #   attr_accessor position_in_original_rule_rhs: Integer
@@ -25,7 +25,7 @@ module Lrama
       #   attr_accessor lineno: Integer?
       #
       #   def initialize: (
-      #     ?id: Integer, ?_lhs: Lexer::Token?, ?lhs: Lexer::Token, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Lexer::Token], ?rhs: Array[Grammar::Symbol],
+      #     ?id: Integer, ?_lhs: Lexer::Token::Base?, ?lhs: Lexer::Token::Base, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Lexer::Token::Base], ?rhs: Array[Grammar::Symbol],
       #     ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool,
       #     ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?
       #   ) -> void

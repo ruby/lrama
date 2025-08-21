@@ -4,16 +4,16 @@
 module Lrama
   class Grammar
     class Binding
-      # @rbs @actual_args: Array[Lexer::Token]
-      # @rbs @param_to_arg: Hash[String, Lexer::Token]
+      # @rbs @actual_args: Array[Lexer::Token::Base]
+      # @rbs @param_to_arg: Hash[String, Lexer::Token::Base]
 
-      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> void
+      # @rbs (Array[Lexer::Token::Base] params, Array[Lexer::Token::Base] actual_args) -> void
       def initialize(params, actual_args)
         @actual_args = actual_args
         @param_to_arg = build_param_to_arg(params, @actual_args)
       end
 
-      # @rbs (Lexer::Token sym) -> Lexer::Token
+      # @rbs (Lexer::Token::Base sym) -> Lexer::Token::Base
       def resolve_symbol(sym)
         return create_instantiate_rule(sym) if sym.is_a?(Lexer::Token::InstantiateRule)
         find_arg_for_param(sym)
@@ -36,12 +36,12 @@ module Lrama
         )
       end
 
-      # @rbs (Array[Lexer::Token]) -> Array[Lexer::Token]
+      # @rbs (Array[Lexer::Token::Base]) -> Array[Lexer::Token::Base]
       def resolve_args(args)
         args.map { |arg| resolve_symbol(arg) }
       end
 
-      # @rbs (Lexer::Token sym) -> Lexer::Token
+      # @rbs (Lexer::Token::Base sym) -> Lexer::Token::Base
       def find_arg_for_param(sym)
         if (arg = @param_to_arg[sym.s_value]&.dup)
           arg.alias_name = sym.alias_name
@@ -51,7 +51,7 @@ module Lrama
         end
       end
 
-      # @rbs (Array[Lexer::Token] params, Array[Lexer::Token] actual_args) -> Hash[String, Lexer::Token?]
+      # @rbs (Array[Lexer::Token::Base] params, Array[Lexer::Token::Base] actual_args) -> Hash[String, Lexer::Token::Base?]
       def build_param_to_arg(params, actual_args)
         params.zip(actual_args).map do |param, arg|
           [param.s_value, arg]

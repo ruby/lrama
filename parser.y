@@ -12,7 +12,6 @@ rule
       "%{"
         {
           begin_c_declaration("%}")
-          @grammar.prologue_first_lineno = @lexer.line
         }
       C_DECLARATION
         {
@@ -20,6 +19,7 @@ rule
         }
       "%}"
         {
+          @grammar.prologue_first_lineno = val[0].location.first_line
           @grammar.prologue = val[2].s_value
         }
     | "%require" STRING
@@ -34,7 +34,7 @@ rule
   parser_option:
       "%expect" INTEGER
         {
-          @grammar.expect = val[1]
+          @grammar.expect = val[1].s_value
         }
     | "%define" variable value
         {
@@ -201,13 +201,13 @@ rule
       TAG? token_declaration+
         {
           val[1].each {|token_declaration|
-            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[0], replace: true)
+            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1]&.s_value, tag: val[0], replace: true)
           }
         }
     | token_declarations TAG token_declaration+
         {
           val[2].each {|token_declaration|
-            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1], tag: val[1], replace: true)
+            @grammar.add_term(id: token_declaration[0], alias_name: token_declaration[2], token_id: token_declaration[1]&.s_value, tag: val[1], replace: true)
           }
         }
 
@@ -469,7 +469,7 @@ rule
        | STRING
        | "{...}"
 
-  string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0]) }
+  string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0].s_value) }
 end
 
 ---- inner
@@ -503,7 +503,14 @@ def next_token
 end
 
 def on_error(error_token_id, error_value, value_stack)
-  if error_value.is_a?(Lrama::Lexer::Token)
+  case error_value
+  when Lrama::Lexer::Token::Int
+    location = error_value.location
+    value = "#{error_value.s_value}"
+  when Lrama::Lexer::Token::Token
+    location = error_value.location
+    value = "\"#{error_value.s_value}\""
+  when Lrama::Lexer::Token::Base
     location = error_value.location
     value = "'#{error_value.s_value}'"
   else
@@ -517,7 +524,7 @@ def on_error(error_token_id, error_value, value_stack)
 end
 
 def on_action_error(error_message, error_value)
-  if error_value.is_a?(Lrama::Lexer::Token)
+  if error_value.is_a?(Lrama::Lexer::Token::Base)
     location = error_value.location
   else
     location = @lexer.location

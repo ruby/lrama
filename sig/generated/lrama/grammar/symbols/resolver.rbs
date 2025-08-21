@@ -11,15 +11,15 @@ module Lrama
 
           def terms: () -> Array[Grammar::Symbol]
 
-          def add_nterm: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
+          def add_nterm: (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
 
-          def add_term: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
+          def add_term: (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
 
           def find_symbol_by_number!: (Integer number) -> Grammar::Symbol
 
-          def find_symbol_by_id!: (Lexer::Token id) -> Grammar::Symbol
+          def find_symbol_by_id!: (Lexer::Token::Base id) -> Grammar::Symbol
 
-          def token_to_symbol: (Lexer::Token token) -> Grammar::Symbol
+          def token_to_symbol: (Lexer::Token::Base token) -> Grammar::Symbol
 
           def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
 
@@ -55,11 +55,11 @@ module Lrama
         # @rbs () -> Array[Grammar::Symbol]
         def sort_by_number!: () -> Array[Grammar::Symbol]
 
-        # @rbs (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
-        def add_term: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
+        # @rbs (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
+        def add_term: (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
 
-        # @rbs (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
-        def add_nterm: (id: Lexer::Token, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
+        # @rbs (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
+        def add_nterm: (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
 
         # @rbs (::String s_value) -> Grammar::Symbol?
         def find_term_by_s_value: (::String s_value) -> Grammar::Symbol?
@@ -70,11 +70,11 @@ module Lrama
         # @rbs (::String s_value) -> Grammar::Symbol
         def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
 
-        # @rbs (Lexer::Token id) -> Grammar::Symbol?
-        def find_symbol_by_id: (Lexer::Token id) -> Grammar::Symbol?
+        # @rbs (Lexer::Token::Base id) -> Grammar::Symbol?
+        def find_symbol_by_id: (Lexer::Token::Base id) -> Grammar::Symbol?
 
-        # @rbs (Lexer::Token id) -> Grammar::Symbol
-        def find_symbol_by_id!: (Lexer::Token id) -> Grammar::Symbol
+        # @rbs (Lexer::Token::Base id) -> Grammar::Symbol
+        def find_symbol_by_id!: (Lexer::Token::Base id) -> Grammar::Symbol
 
         # @rbs (Integer token_id) -> Grammar::Symbol?
         def find_symbol_by_token_id: (Integer token_id) -> Grammar::Symbol?
@@ -97,16 +97,16 @@ module Lrama
         # @rbs (Array[Grammar::ErrorToken] error_tokens) -> void
         def fill_error_token: (Array[Grammar::ErrorToken] error_tokens) -> void
 
-        # @rbs (Lexer::Token token) -> Grammar::Symbol
-        def token_to_symbol: (Lexer::Token token) -> Grammar::Symbol
+        # @rbs (Lexer::Token::Base token) -> Grammar::Symbol
+        def token_to_symbol: (Lexer::Token::Base token) -> Grammar::Symbol
 
         # @rbs () -> void
         def validate!: () -> void
 
         private
 
-        # @rbs (Lexer::Token id) -> Grammar::Symbol
-        def find_nterm_by_id!: (Lexer::Token id) -> Grammar::Symbol
+        # @rbs (Lexer::Token::Base id) -> Grammar::Symbol
+        def find_nterm_by_id!: (Lexer::Token::Base id) -> Grammar::Symbol
 
         # @rbs () -> void
         def fill_terms_number: () -> void
