@@ -1314,13 +1314,12 @@ module_eval(<<'.,.,', 'parser.y', 11)
 module_eval(<<'.,.,', 'parser.y', 13)
   def _reduce_10(val, _values, result)
               begin_c_declaration("%}")
-          @grammar.prologue_first_lineno = @lexer.line
 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 18)
+module_eval(<<'.,.,', 'parser.y', 17)
   def _reduce_11(val, _values, result)
               end_c_declaration
 
@@ -1328,9 +1327,10 @@ module_eval(<<'.,.,', 'parser.y', 18)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 22)
+module_eval(<<'.,.,', 'parser.y', 21)
   def _reduce_12(val, _values, result)
-              @grammar.prologue = val[2].s_value
+              @grammar.prologue_first_lineno = val[0].location.first_line
+          @grammar.prologue = val[2].s_value
 
     result
   end

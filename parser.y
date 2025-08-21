@@ -12,7 +12,6 @@ rule
       "%{"
         {
           begin_c_declaration("%}")
-          @grammar.prologue_first_lineno = @lexer.line
         }
       C_DECLARATION
         {
@@ -20,6 +19,7 @@ rule
         }
       "%}"
         {
+          @grammar.prologue_first_lineno = val[0].location.first_line
           @grammar.prologue = val[2].s_value
         }
     | "%require" STRING
