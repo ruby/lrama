@@ -13,7 +13,7 @@ module Lrama
     #
     #   type token = lexer_token | c_token
     #
-    #   type lexer_token = [String, String]        |
+    #   type lexer_token = [String, Token::Token]  |
     #                      [::Symbol, Token::Tag]  |
     #                      [::Symbol, Token::Char] |
     #                      [::Symbol, Token::Str]  |
@@ -120,11 +120,11 @@ module Lrama
       when @scanner.eos?
         return
       when @scanner.scan(/#{SYMBOLS.join('|')}/)
-        return [@scanner.matched, @scanner.matched]
+        return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
-        return [@scanner.matched, @scanner.matched]
+        return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/[\?\+\*]/)
-        return [@scanner.matched, @scanner.matched]
+        return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/<\w+>/)
         return [:TAG, Lrama::Lexer::Token::Tag.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/'.'/)

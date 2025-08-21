@@ -507,6 +507,9 @@ def on_error(error_token_id, error_value, value_stack)
   when Lrama::Lexer::Token::Int
     location = error_value.location
     value = "#{error_value.s_value}"
+  when Lrama::Lexer::Token::Token
+    location = error_value.location
+    value = "\"#{error_value.s_value}\""
   when Lrama::Lexer::Token::Base
     location = error_value.location
     value = "'#{error_value.s_value}'"

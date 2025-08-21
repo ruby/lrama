@@ -23,8 +23,8 @@ module Lrama
         # @rbs (String string) -> bool
         def referred_by?: (String string) -> bool
 
-        # @rbs (Token::Base other) -> bool
-        def ==: (Token::Base other) -> bool
+        # @rbs (Lexer::Token::Base other) -> bool
+        def ==: (Lexer::Token::Base other) -> bool
 
         # @rbs () -> Integer
         def first_line: () -> Integer

@@ -30,7 +30,7 @@ module Lrama
           [self.s_value, self.alias_name].compact.include?(string)
         end
 
-        # @rbs (Token::Base other) -> bool
+        # @rbs (Lexer::Token::Base other) -> bool
         def ==(other)
           self.class == other.class && self.s_value == other.s_value
         end
