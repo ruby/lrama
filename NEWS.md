@@ -49,6 +49,35 @@ https://github.com/ruby/lrama/pull/624
 
 ### Add ioption support to the Standard library
 
+Support `ioption` (inline option) rule, which is expanded inline without creating intermediate rules.
+
+Unlike the regular `option` rule that generates a separate rule, `ioption` directly expands at the point of use:
+
+```yacc
+program: ioption(number) expr
+
+// Expanded inline to:
+
+program: expr
+       | number expr
+```
+
+This differs from the regular `option` which would generate:
+
+```yacc
+program: option(number) expr
+
+// Expanded to:
+
+program: option_number expr
+option_number: %empty
+             | number
+```
+
+The `ioption` rule provides more compact grammar generation by avoiding intermediate rule creation, which can be beneficial for reducing the parser's rule count and potentially improving performance.
+
+This feature is inspired by Menhir's standard library and maintains compatibility with [Menhir's `ioption` behavior](https://github.com/let-def/menhir/blob/e8ba7bef219acd355798072c42abbd11335ecf09/src/standard.mly#L33-L41).
+
 https://github.com/ruby/lrama/pull/666
 
 ### Syntax Diagrams
