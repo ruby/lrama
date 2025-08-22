@@ -41,6 +41,41 @@ https://github.com/ruby/lrama/pull/726
 
 ### Add support for reporting Rule Usage Frequency
 
+Support to report rule usage frequency statistics for analyzing grammar characteristics.
+Run `exe/lrama --report=rules` to show how frequently each terminal and non-terminal symbol is used in the grammar rules.
+
+```console
+$ exe/lrama --report=rules sample/calc.y
+Rule Usage Frequency
+    0 tSTRING (4 times)
+    1 keyword_class (3 times)
+    2 keyword_end (3 times)
+    3 '+' (2 times)
+    4 string (2 times)
+    5 string_1 (2 times)
+    6 '!' (1 times)
+    7 '-' (1 times)
+    8 '?' (1 times)
+    9 EOI (1 times)
+   10 class (1 times)
+   11 program (1 times)
+   12 string_2 (1 times)
+   13 strings_1 (1 times)
+   14 strings_2 (1 times)
+   15 tNUMBER (1 times)
+```
+
+This feature provides insights into the language characteristics by showing:
+- Which symbols are most frequently used in the grammar
+- The distribution of terminal and non-terminal usage
+- Potential areas for grammar optimization or refactoring
+
+The frequency statistics help developers understand the grammar structure and can be useful for:
+- Grammar complexity analysis
+- Performance optimization hints
+- Language design decisions
+- Documentation and educational purposes
+
 https://github.com/ruby/lrama/pull/677
 
 ### Render Split States information on output file
