@@ -19,7 +19,7 @@ rule
         }
       "%}"
         {
-          @grammar.prologue_first_lineno = val[0].location.first_line
+          @grammar.prologue_first_lineno = val[0].first_line
           @grammar.prologue = val[2].s_value
         }
     | "%require" STRING
