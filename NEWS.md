@@ -25,6 +25,26 @@ https://github.com/ruby/lrama/pull/659
 
 ### Support parameterized rule's arguments include inline
 
+Allow to use %inline directive with Parameterized rules arguments. When an inline rule is used as an argument to a Parameterized rule, it expands inline at the point of use.
+
+```yacc
+%rule %inline op : '+'
+                 | '-'
+                 ;
+%%
+operation : op?
+          ;
+```
+
+This expands to:
+
+```yacc
+operation : /* empty */
+          | '+'
+          | '-'
+          ;
+```
+
 https://github.com/ruby/lrama/pull/637
 
 ### Print conflicts of each state on output file
