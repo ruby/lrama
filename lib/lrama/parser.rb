@@ -2207,15 +2207,15 @@ module_eval(<<'.,.,', 'parser.y', 450)
 module_eval(<<'.,.,', 'parser.y', 455)
   def _reduce_127(val, _values, result)
               begin_c_declaration('\Z')
-          @grammar.epilogue_first_lineno = @lexer.line + 1
 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 460)
+module_eval(<<'.,.,', 'parser.y', 459)
   def _reduce_128(val, _values, result)
               end_c_declaration
+          @grammar.epilogue_first_lineno = val[0].first_line + 1
           @grammar.epilogue = val[2].s_value
 
     result
