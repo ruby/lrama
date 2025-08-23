@@ -462,9 +462,9 @@ module Lrama
         start = @start_nterm #: Lrama::Lexer::Token::Base
         @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [start, @eof_symbol.id], token_code: nil, lineno: start.line)
       else
-        rule_builder = @rule_builders.first # : RuleBuilder
+        rule_builder = @rule_builders.first #: RuleBuilder
         lineno = rule_builder ? rule_builder.line : 0
-        lhs = rule_builder.lhs # : Lexer::Token::Base
+        lhs = rule_builder.lhs #: Lexer::Token::Base
         @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [lhs, @eof_symbol.id], token_code: nil, lineno: lineno)
       end
     end
