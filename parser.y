@@ -454,11 +454,11 @@ rule
       "%%"
         {
           begin_c_declaration('\Z')
-          @grammar.epilogue_first_lineno = @lexer.line + 1
         }
       C_DECLARATION
         {
           end_c_declaration
+          @grammar.epilogue_first_lineno = val[0].first_line + 1
           @grammar.epilogue = val[2].s_value
         }
 
