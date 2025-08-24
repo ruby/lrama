@@ -1241,7 +1241,7 @@ Racc_token_to_s_table = [
   "named_ref",
   "parameterized_suffix",
   "parameterized_args",
-  "midrule_action",
+  "action",
   "\"-option@%empty\"",
   "\"-option@named_ref\"",
   "string_as_id",
