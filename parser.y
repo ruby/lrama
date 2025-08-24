@@ -274,7 +274,7 @@ rule
           builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
           result = builder
         }
-    | rule_rhs midrule_action named_ref?
+    | rule_rhs action named_ref?
         {
           user_code = val[1]
           user_code.alias_name = val[2]
@@ -395,7 +395,7 @@ rule
           builder.line = val[1].first_line
           result = builder
         }
-    | rhs midrule_action named_ref? TAG?
+    | rhs action named_ref? TAG?
         {
           user_code = val[1]
           user_code.alias_name = val[2]
@@ -430,7 +430,7 @@ rule
     | parameterized_args ',' symbol { result = val[0].append(val[2]) }
     | IDENTIFIER "(" parameterized_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
 
-  midrule_action:
+  action:
       "{"
         {
           if @prec_seen
