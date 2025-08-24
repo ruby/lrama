@@ -720,11 +720,11 @@ RSpec.describe Lrama::Parser do
       grammar.validate!
 
       expect(grammar.nterms.sort_by(&:number)).to match_symbols([
-        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 13, tag: nil, term: false, token_id: 0, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 14, tag: nil, term: false, token_id: 1, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "expr"),    alias_name: nil, number: 15, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 2, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "term"),    alias_name: nil, number: 16, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 3, nullable: false),
-        Sym.new(id: T::Ident.new(s_value: "factor"),  alias_name: nil, number: 17, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 4, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 16, tag: nil, term: false, token_id: 0, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 17, tag: nil, term: false, token_id: 1, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "expr"),    alias_name: nil, number: 18, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 2, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "term"),    alias_name: nil, number: 19, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 3, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "factor"),  alias_name: nil, number: 20, tag: T::Tag.new(s_value: "<i>"), term: false, token_id: 4, nullable: false),
       ])
 
       expect(grammar.find_symbol_by_s_value!("PLUS").tag).to eq(T::Tag.new(s_value: "<i>"))
@@ -734,6 +734,9 @@ RSpec.describe Lrama::Parser do
       expect(grammar.find_symbol_by_s_value!("DIV").tag).to eq(T::Tag.new(s_value: "<i>"))
       expect(grammar.find_symbol_by_s_value!("MOD").tag).to eq(T::Tag.new(s_value: "<i>"))
       expect(grammar.find_symbol_by_s_value!("MULT_OP").tag).to eq(T::Tag.new(s_value: "<p>"))
+      expect(grammar.find_symbol_by_s_value!("DIV_OP").tag).to eq(nil)
+      expect(grammar.find_symbol_by_s_value!("P_MULT_OP").tag).to eq(nil)
+      expect(grammar.find_symbol_by_s_value!("P_DIV_OP").tag).to eq(T::Tag.new(s_value: "<p>"))
 
       expect(grammar.rules).to eq([
         Rule.new(
@@ -746,7 +749,7 @@ RSpec.describe Lrama::Parser do
           token_code: nil,
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
-          lineno: 25,
+          lineno: 26,
         ),
         Rule.new(
           id: 1,
@@ -757,7 +760,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " printf(\"Result: %d\\n\", $1); "),
           nullable: false,
           precedence_sym: nil,
-          lineno: 25,
+          lineno: 26,
         ),
         Rule.new(
           id: 2,
@@ -770,7 +773,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1 + $3; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("PLUS"),
-          lineno: 29,
+          lineno: 30,
         ),
         Rule.new(
           id: 3,
@@ -783,7 +786,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1 - $3; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("MINUS"),
-          lineno: 30,
+          lineno: 31,
         ),
         Rule.new(
           id: 4,
@@ -796,7 +799,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1 + $3; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("ADD_OP"),
-          lineno: 31,
+          lineno: 32,
         ),
         Rule.new(
           id: 5,
@@ -807,7 +810,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1; "),
           nullable: false,
           precedence_sym: nil,
-          lineno: 32,
+          lineno: 33,
         ),
         Rule.new(
           id: 6,
@@ -820,7 +823,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1 * $3; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("MULT"),
-          lineno: 36,
+          lineno: 37,
         ),
         Rule.new(
           id: 7,
@@ -833,7 +836,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1 / $3; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("DIV"),
-          lineno: 37,
+          lineno: 38,
         ),
         Rule.new(
           id: 8,
@@ -846,7 +849,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1 % $3; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("MOD"),
-          lineno: 38,
+          lineno: 39,
         ),
         Rule.new(
           id: 9,
@@ -859,7 +862,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1 * $3; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("MULT_OP"),
-          lineno: 39,
+          lineno: 40,
         ),
         Rule.new(
           id: 10,
@@ -870,7 +873,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1; "),
           nullable: false,
           precedence_sym: nil,
-          lineno: 40,
+          lineno: 41,
         ),
         Rule.new(
           id: 11,
@@ -881,7 +884,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $1; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("NUMBER"),
-          lineno: 44,
+          lineno: 45,
         ),
         Rule.new(
           id: 12,
@@ -894,7 +897,7 @@ RSpec.describe Lrama::Parser do
           token_code: T::UserCode.new(s_value: " $$ = $2; "),
           nullable: false,
           precedence_sym: grammar.find_symbol_by_s_value!("RPAREN"),
-          lineno: 45,
+          lineno: 46,
         ),
       ])
     end
