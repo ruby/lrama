@@ -13,6 +13,7 @@ void yyerror(const char *s);
 
 %left <i> PLUS MINUS <p> ADD_OP
 %left <i> MULT DIV MOD <p> MULT_OP
+%left DIV_OP P_MULT_OP <p> P_DIV_OP
 
 %token <i> NUMBER
 %token <i> LPAREN RPAREN

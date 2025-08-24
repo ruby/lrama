@@ -325,7 +325,7 @@ rule
   token_declarations_for_precedence:
       id+ { result = [{tag: nil, tokens: val[0]}] }
     | (TAG id+)+ { result = val[0].map {|tag, ids| {tag: tag, tokens: ids} } }
-    | id TAG id+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
+    | id+ TAG id+ { result = [{tag: nil, tokens: val[0]}, {tag: val[1], tokens: val[2]}] }
 
   id:
       IDENTIFIER { on_action_error("ident after %prec", val[0]) if @prec_seen }
