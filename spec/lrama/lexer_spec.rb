@@ -170,11 +170,11 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq([';', token_class::Token.new(s_value: ';')])
         expect(lexer.next_token).to eq([:IDENT_COLON, token_class::Ident.new(s_value: 'class')])
         expect(lexer.next_token).to eq([':', token_class::Token.new(s_value: ':')])
+        expect(lexer.next_token).to eq(['%prec', token_class::Token.new(s_value: '%prec')])
+        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'tPLUS')])
         expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'keyword_class')])
         expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'tSTRING')])
         expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'keyword_end')])
-        expect(lexer.next_token).to eq(['%prec', token_class::Token.new(s_value: '%prec')])
-        expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'tPLUS')])
         expect(lexer.next_token).to eq(['{', token_class::Token.new(s_value: '{')])
 
         lexer.status = :c_declaration
