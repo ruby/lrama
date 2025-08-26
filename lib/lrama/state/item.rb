@@ -6,7 +6,7 @@
 require "forwardable"
 
 module Lrama
-  class States
+  class State
     class Item < Struct.new(:rule, :position, keyword_init: true)
       # @rbs!
       #   include Grammar::Rule::_DelegatedMethods
@@ -72,7 +72,7 @@ module Lrama
         rule.initial_rule? && beginning_of_rule?
       end
 
-      # @rbs () -> States::Item
+      # @rbs () -> State::Item
       def new_by_next_position
         Item.new(rule: rule, position: position + 1)
       end
@@ -111,7 +111,7 @@ module Lrama
         ". #{r}  (rule #{rule_id})"
       end
 
-      # @rbs (States::Item other_item) -> bool
+      # @rbs (State::Item other_item) -> bool
       def predecessor_item_of?(other_item)
         rule == other_item.rule && position == other_item.position - 1
       end

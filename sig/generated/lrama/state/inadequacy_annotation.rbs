@@ -11,16 +11,16 @@ module Lrama
 
       attr_accessor actions: Array[action]
 
-      attr_accessor contribution_matrix: Hash[action, Hash[States::Item, bool]]
+      attr_accessor contribution_matrix: Hash[action, Hash[Item, bool]]
 
-      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[States::Item, bool]] contribution_matrix) -> void
-      def initialize: (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[States::Item, bool]] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[Item, bool]] contribution_matrix) -> void
+      def initialize: (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[Item, bool]] contribution_matrix) -> void
 
-      # @rbs (States::Item item) -> bool
-      def contributed?: (States::Item item) -> bool
+      # @rbs (Item item) -> bool
+      def contributed?: (Item item) -> bool
 
-      # @rbs (Array[Hash[action, Hash[States::Item, bool]]] another_matrixes) -> void
-      def merge_matrix: (Array[Hash[action, Hash[States::Item, bool]]] another_matrixes) -> void
+      # @rbs (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> void
+      def merge_matrix: (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> void
 
       # Definition 3.42 (dominant_contribution)
       #

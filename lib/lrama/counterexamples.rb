@@ -23,7 +23,7 @@ module Lrama
     #   @iterate_count: Integer
     #   @total_duration: Float
     #   @exceed_cumulative_time_limit: bool
-    #   @state_items: Hash[[State, States::Item], StateItem]
+    #   @state_items: Hash[[State, State::Item], StateItem]
     #   @triples: Hash[Integer, Triple]
     #   @transitions: Hash[[StateItem, Grammar::Symbol], StateItem]
     #   @reverse_transitions: Hash[[StateItem, Grammar::Symbol], Set[StateItem]]
@@ -76,7 +76,7 @@ module Lrama
 
     private
 
-    # @rbs (State state, States::Item item) -> StateItem
+    # @rbs (State state, State::Item item) -> StateItem
     def get_state_item(state, item)
       @state_items[[state, item]]
     end
@@ -179,7 +179,7 @@ module Lrama
     # @rbs (State conflict_state, State::ShiftReduceConflict conflict) -> Example
     def shift_reduce_example(conflict_state, conflict)
       conflict_symbol = conflict.symbols.first
-      # @type var shift_conflict_item: ::Lrama::States::Item
+      # @type var shift_conflict_item: ::Lrama::State::Item
       shift_conflict_item = conflict_state.items.find { |item| item.next_sym == conflict_symbol }
       path2 = with_timeout("#shortest_path:") do
         shortest_path(conflict_state, conflict.reduce.item, conflict_symbol)
@@ -204,7 +204,7 @@ module Lrama
       Example.new(path1, path2, conflict, conflict_symbol, self)
     end
 
-    # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, States::Item conflict_item) -> Array[StateItem]
+    # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, State::Item conflict_item) -> Array[StateItem]
     def find_shift_conflict_shortest_path(reduce_state_items, conflict_state, conflict_item)
       time1 = Time.now.to_f
       @iterate_count = 0
@@ -323,7 +323,7 @@ module Lrama
       result
     end
 
-    # @rbs (State conflict_state, States::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StateItem]?
+    # @rbs (State conflict_state, State::Item conflict_reduce_item, Grammar::Symbol conflict_term) -> ::Array[StateItem]?
     def shortest_path(conflict_state, conflict_reduce_item, conflict_term)
       time1 = Time.now.to_f
       @iterate_count = 0
@@ -388,7 +388,7 @@ module Lrama
       return nil
     end
 
-    # @rbs (States::Item item, Bitmap::bitmap current_l) -> Bitmap::bitmap
+    # @rbs (State::Item item, Bitmap::bitmap current_l) -> Bitmap::bitmap
     def follow_l(item, current_l)
       # 1. follow_L (A -> X1 ... Xn-1 • Xn) = L
       # 2. follow_L (A -> X1 ... Xk • Xk+1 Xk+2 ... Xn) = {Xk+2} if Xk+2 is a terminal

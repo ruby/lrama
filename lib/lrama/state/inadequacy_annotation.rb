@@ -10,9 +10,9 @@ module Lrama
       attr_accessor :state #: State
       attr_accessor :token #: Grammar::Symbol
       attr_accessor :actions #: Array[action]
-      attr_accessor :contribution_matrix #: Hash[action, Hash[States::Item, bool]]
+      attr_accessor :contribution_matrix #: Hash[action, Hash[Item, bool]]
 
-      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[States::Item, bool]] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[Item, bool]] contribution_matrix) -> void
       def initialize(state, token, actions, contribution_matrix)
         @state = state
         @token = token
@@ -20,12 +20,12 @@ module Lrama
         @contribution_matrix = contribution_matrix
       end
 
-      # @rbs (States::Item item) -> bool
+      # @rbs (Item item) -> bool
       def contributed?(item)
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
       end
 
-      # @rbs (Array[Hash[action, Hash[States::Item, bool]]] another_matrixes) -> void
+      # @rbs (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> void
       def merge_matrix(another_matrixes)
         another_matrixes.each do |another_matrix|
           @contribution_matrix.merge!(another_matrix) {|action, contributions, another_contributions|

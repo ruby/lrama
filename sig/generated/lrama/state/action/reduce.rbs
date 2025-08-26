@@ -4,7 +4,7 @@ module Lrama
   class State
     class Action
       class Reduce
-        @item: States::Item
+        @item: Item
 
         @look_ahead: Array[Grammar::Symbol]?
 
@@ -12,7 +12,7 @@ module Lrama
 
         @not_selected_symbols: Array[Grammar::Symbol]
 
-        attr_reader item: States::Item
+        attr_reader item: Item
 
         attr_reader look_ahead: Array[Grammar::Symbol]?
 
@@ -23,8 +23,8 @@ module Lrama
         # https://www.gnu.org/software/bison/manual/html_node/Default-Reductions.html
         attr_accessor default_reduction: bool
 
-        # @rbs (States::Item item) -> void
-        def initialize: (States::Item item) -> void
+        # @rbs (Item item) -> void
+        def initialize: (Item item) -> void
 
         # @rbs () -> Grammar::Rule
         def rule: () -> Grammar::Rule

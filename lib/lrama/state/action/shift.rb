@@ -12,16 +12,16 @@ module Lrama
         # @rbs!
         #   @from_state: State
         #   @next_sym: Grammar::Symbol
-        #   @to_items: Array[States::Item]
+        #   @to_items: Array[Item]
         #   @to_state: State
 
         attr_reader :from_state #: State
         attr_reader :next_sym #: Grammar::Symbol
-        attr_reader :to_items #: Array[States::Item]
+        attr_reader :to_items #: Array[Item]
         attr_reader :to_state #: State
         attr_accessor :not_selected #: bool
 
-        # @rbs (State from_state, Grammar::Symbol next_sym, Array[States::Item] to_items, State to_state) -> void
+        # @rbs (State from_state, Grammar::Symbol next_sym, Array[Item] to_items, State to_state) -> void
         def initialize(from_state, next_sym, to_items, to_state)
           @from_state = from_state
           @next_sym = next_sym
