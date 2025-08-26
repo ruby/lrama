@@ -5,7 +5,9 @@ module Lrama
     class Precedence
       include Comparable
 
-      attr_accessor type: ::Symbol
+      type type_enum = :left | :right | :nonassoc | :precedence
+
+      attr_accessor type: type_enum
 
       attr_accessor precedence: Integer
 
@@ -13,7 +15,7 @@ module Lrama
 
       attr_accessor lineno: Integer
 
-      def initialize: (?type: ::Symbol, ?precedence: Integer, ?s_value: ::String, ?lineno: Integer) -> void
+      def initialize: (?type: type_enum, ?precedence: Integer, ?s_value: ::String, ?lineno: Integer) -> void
 
       # @rbs (Precedence other) -> Integer
       def <=>: (Precedence other) -> Integer
