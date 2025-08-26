@@ -15,8 +15,8 @@ module Lrama
 
       alias s state
 
-      # @rbs () -> States::Item
-      def item: () -> States::Item
+      # @rbs () -> State::Item
+      def item: () -> State::Item
 
       alias itm item
 

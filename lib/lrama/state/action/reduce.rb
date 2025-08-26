@@ -10,12 +10,12 @@ module Lrama
         #       see: https://github.com/soutaro/rbs-inline/pull/149
         #
         # @rbs!
-        #   @item: States::Item
+        #   @item: Item
         #   @look_ahead: Array[Grammar::Symbol]?
         #   @look_ahead_sources: Hash[Grammar::Symbol, Array[Action::Goto]]?
         #   @not_selected_symbols: Array[Grammar::Symbol]
 
-        attr_reader :item #: States::Item
+        attr_reader :item #: Item
         attr_reader :look_ahead #: Array[Grammar::Symbol]?
         attr_reader :look_ahead_sources #: Hash[Grammar::Symbol, Array[Action::Goto]]?
         attr_reader :not_selected_symbols #: Array[Grammar::Symbol]
@@ -23,7 +23,7 @@ module Lrama
         # https://www.gnu.org/software/bison/manual/html_node/Default-Reductions.html
         attr_accessor :default_reduction #: bool
 
-        # @rbs (States::Item item) -> void
+        # @rbs (Item item) -> void
         def initialize(item)
           @item = item
           @look_ahead = nil

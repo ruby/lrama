@@ -6,17 +6,17 @@ module Lrama
 
     type transition = Action::Shift | Action::Goto
 
-    type lookahead_set = Hash[States::Item, Array[Grammar::Symbol]]
+    type lookahead_set = Hash[Item, Array[Grammar::Symbol]]
 
     @id: Integer
 
     @accessing_symbol: Grammar::Symbol
 
-    @kernels: Array[States::Item]
+    @kernels: Array[Item]
 
-    @items: Array[States::Item]
+    @items: Array[Item]
 
-    @items_to_state: Hash[Array[States::Item], State]
+    @items_to_state: Hash[Array[Item], State]
 
     @conflicts: Array[conflict]
 
@@ -24,7 +24,7 @@ module Lrama
 
     @default_reduction_rule: Grammar::Rule?
 
-    @closure: Array[States::Item]
+    @closure: Array[Item]
 
     @nterm_transitions: Array[Action::Goto]
 
@@ -40,7 +40,7 @@ module Lrama
 
     attr_reader accessing_symbol: Grammar::Symbol
 
-    attr_reader kernels: Array[States::Item]
+    attr_reader kernels: Array[Item]
 
     attr_reader conflicts: Array[conflict]
 
@@ -48,19 +48,19 @@ module Lrama
 
     attr_reader default_reduction_rule: Grammar::Rule?
 
-    attr_reader closure: Array[States::Item]
+    attr_reader closure: Array[Item]
 
-    attr_reader items: Array[States::Item]
+    attr_reader items: Array[Item]
 
     attr_reader annotation_list: Array[InadequacyAnnotation]
 
     attr_reader predecessors: Array[State]
 
-    attr_reader items_to_state: Hash[Array[States::Item], State]
+    attr_reader items_to_state: Hash[Array[Item], State]
 
-    attr_reader lane_items: Hash[State, Array[[ States::Item, States::Item ]]]
+    attr_reader lane_items: Hash[State, Array[[ Item, Item ]]]
 
-    attr_accessor _transitions: Array[[ Grammar::Symbol, Array[States::Item] ]]
+    attr_accessor _transitions: Array[[ Grammar::Symbol, Array[Item] ]]
 
     attr_accessor reduces: Array[Action::Reduce]
 
@@ -70,20 +70,20 @@ module Lrama
 
     attr_accessor lookaheads_recomputed: bool
 
-    attr_accessor follow_kernel_items: Hash[Action::Goto, Hash[States::Item, bool]]
+    attr_accessor follow_kernel_items: Hash[Action::Goto, Hash[Item, bool]]
 
     attr_accessor always_follows: Hash[Action::Goto, Array[Grammar::Symbol]]
 
     attr_accessor goto_follows: Hash[Action::Goto, Array[Grammar::Symbol]]
 
-    # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
-    def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
+    # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
+    def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
 
     # @rbs (State other) -> bool
     def ==: (State other) -> bool
 
-    # @rbs (Array[States::Item] closure) -> void
-    def closure=: (Array[States::Item] closure) -> void
+    # @rbs (Array[Item] closure) -> void
+    def closure=: (Array[Item] closure) -> void
 
     # @rbs () -> Array[Action::Reduce]
     def non_default_reduces: () -> Array[Action::Reduce]
@@ -94,8 +94,8 @@ module Lrama
     # @rbs (Grammar::Symbol next_sym, State next_state) -> void
     def set_lane_items: (Grammar::Symbol next_sym, State next_state) -> void
 
-    # @rbs (Array[States::Item] items, State next_state) -> void
-    def set_items_to_state: (Array[States::Item] items, State next_state) -> void
+    # @rbs (Array[Item] items, State next_state) -> void
+    def set_items_to_state: (Array[Item] items, State next_state) -> void
 
     # @rbs (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
     def set_look_ahead: (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
@@ -126,8 +126,8 @@ module Lrama
     # @rbs (Grammar::Symbol sym) -> State
     def transition: (Grammar::Symbol sym) -> State
 
-    # @rbs (States::Item item) -> Action::Reduce
-    def find_reduce_by_item!: (States::Item item) -> Action::Reduce
+    # @rbs (Item item) -> Action::Reduce
+    def find_reduce_by_item!: (Item item) -> Action::Reduce
 
     # @rbs (Grammar::Rule default_reduction_rule) -> void
     def default_reduction_rule=: (Grammar::Rule default_reduction_rule) -> void
@@ -183,16 +183,16 @@ module Lrama
     # @rbs (State predecessor) -> void
     def annotate_predecessor: (State predecessor) -> void
 
-    # @rbs () -> Array[States::Item]
-    def first_kernels: () -> Array[States::Item]
+    # @rbs () -> Array[Item]
+    def first_kernels: () -> Array[Item]
 
     # @rbs (Array[InadequacyAnnotation] propagating_list) -> void
     def append_annotation_list: (Array[InadequacyAnnotation] propagating_list) -> void
 
     # Definition 3.31 (compute_lhs_contributions)
     #
-    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[States::Item, bool])
-    def lhs_contributions: (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[States::Item, bool])
+    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[Item, bool])
+    def lhs_contributions: (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[Item, bool])
 
     # Definition 3.26 (item_lookahead_sets)
     #
@@ -202,8 +202,8 @@ module Lrama
     # @rbs (lookahead_set k) -> void
     def item_lookahead_set=: (lookahead_set k) -> void
 
-    # @rbs (States::Item item) -> Array[[State, States::Item]]
-    def predecessors_with_item: (States::Item item) -> Array[[ State, States::Item ]]
+    # @rbs (Item item) -> Array[[State, Item]]
+    def predecessors_with_item: (Item item) -> Array[[ State, Item ]]
 
     # @rbs (State prev_state) -> void
     def append_predecessor: (State prev_state) -> void

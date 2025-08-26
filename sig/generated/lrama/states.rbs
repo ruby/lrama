@@ -83,8 +83,8 @@ module Lrama
 
     private
 
-    # @rbs (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [State, bool]
-    def create_state: (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [ State, bool ]
+    # @rbs (Grammar::Symbol accessing_symbol, Array[State::Item] kernels, Hash[Array[State::Item], State] states_created) -> [State, bool]
+    def create_state: (Grammar::Symbol accessing_symbol, Array[State::Item] kernels, Hash[Array[State::Item], State] states_created) -> [ State, bool ]
 
     # @rbs (State state) -> void
     def setup_state: (State state) -> void

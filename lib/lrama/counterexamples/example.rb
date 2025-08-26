@@ -39,12 +39,12 @@ module Lrama
         @conflict.type
       end
 
-      # @rbs () -> States::Item
+      # @rbs () -> State::Item
       def path1_item
         @path1.last.item
       end
 
-      # @rbs () -> States::Item
+      # @rbs () -> State::Item
       def path2_item
         @path2.last.item
       end

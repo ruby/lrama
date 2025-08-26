@@ -34,11 +34,11 @@ module Lrama
       # @rbs () -> (:shift_reduce | :reduce_reduce)
       def type: () -> (:shift_reduce | :reduce_reduce)
 
-      # @rbs () -> States::Item
-      def path1_item: () -> States::Item
+      # @rbs () -> State::Item
+      def path1_item: () -> State::Item
 
-      # @rbs () -> States::Item
-      def path2_item: () -> States::Item
+      # @rbs () -> State::Item
+      def path2_item: () -> State::Item
 
       # @rbs () -> Derivation
       def derivations1: () -> Derivation

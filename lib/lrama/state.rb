@@ -2,10 +2,11 @@
 # frozen_string_literal: true
 
 require_relative "state/action"
+require_relative "state/inadequacy_annotation"
+require_relative "state/item"
 require_relative "state/reduce_reduce_conflict"
 require_relative "state/resolved_conflict"
 require_relative "state/shift_reduce_conflict"
-require_relative "state/inadequacy_annotation"
 
 module Lrama
   class State
@@ -16,17 +17,17 @@ module Lrama
     # @rbs!
     #   type conflict = State::ShiftReduceConflict | State::ReduceReduceConflict
     #   type transition = Action::Shift | Action::Goto
-    #   type lookahead_set = Hash[States::Item, Array[Grammar::Symbol]]
+    #   type lookahead_set = Hash[Item, Array[Grammar::Symbol]]
     #
     #   @id: Integer
     #   @accessing_symbol: Grammar::Symbol
-    #   @kernels: Array[States::Item]
-    #   @items: Array[States::Item]
-    #   @items_to_state: Hash[Array[States::Item], State]
+    #   @kernels: Array[Item]
+    #   @items: Array[Item]
+    #   @items_to_state: Hash[Array[Item], State]
     #   @conflicts: Array[conflict]
     #   @resolved_conflicts: Array[ResolvedConflict]
     #   @default_reduction_rule: Grammar::Rule?
-    #   @closure: Array[States::Item]
+    #   @closure: Array[Item]
     #   @nterm_transitions: Array[Action::Goto]
     #   @term_transitions: Array[Action::Shift]
     #   @transitions: Array[transition]
@@ -35,27 +36,27 @@ module Lrama
 
     attr_reader :id #: Integer
     attr_reader :accessing_symbol #: Grammar::Symbol
-    attr_reader :kernels #: Array[States::Item]
+    attr_reader :kernels #: Array[Item]
     attr_reader :conflicts #: Array[conflict]
     attr_reader :resolved_conflicts #: Array[ResolvedConflict]
     attr_reader :default_reduction_rule #: Grammar::Rule?
-    attr_reader :closure #: Array[States::Item]
-    attr_reader :items #: Array[States::Item]
+    attr_reader :closure #: Array[Item]
+    attr_reader :items #: Array[Item]
     attr_reader :annotation_list #: Array[InadequacyAnnotation]
     attr_reader :predecessors #: Array[State]
-    attr_reader :items_to_state #: Hash[Array[States::Item], State]
-    attr_reader :lane_items #: Hash[State, Array[[States::Item, States::Item]]]
+    attr_reader :items_to_state #: Hash[Array[Item], State]
+    attr_reader :lane_items #: Hash[State, Array[[Item, Item]]]
 
-    attr_accessor :_transitions #: Array[[Grammar::Symbol, Array[States::Item]]]
+    attr_accessor :_transitions #: Array[[Grammar::Symbol, Array[Item]]]
     attr_accessor :reduces #: Array[Action::Reduce]
     attr_accessor :ielr_isocores #: Array[State]
     attr_accessor :lalr_isocore #: State
     attr_accessor :lookaheads_recomputed #: bool
-    attr_accessor :follow_kernel_items #: Hash[Action::Goto, Hash[States::Item, bool]]
+    attr_accessor :follow_kernel_items #: Hash[Action::Goto, Hash[Item, bool]]
     attr_accessor :always_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
     attr_accessor :goto_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
 
-    # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[States::Item] kernels) -> void
+    # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
       @id = id
       @accessing_symbol = accessing_symbol
@@ -86,7 +87,7 @@ module Lrama
       self.id == other.id
     end
 
-    # @rbs (Array[States::Item] closure) -> void
+    # @rbs (Array[Item] closure) -> void
     def closure=(closure)
       @closure = closure
       @items = @kernels + @closure
@@ -132,7 +133,7 @@ module Lrama
       @lane_items[next_state] = @_lane_items[next_sym]
     end
 
-    # @rbs (Array[States::Item] items, State next_state) -> void
+    # @rbs (Array[Item] items, State next_state) -> void
     def set_items_to_state(items, next_state)
       @items_to_state[items] = next_state
     end
@@ -231,7 +232,7 @@ module Lrama
       result
     end
 
-    # @rbs (States::Item item) -> Action::Reduce
+    # @rbs (Item item) -> Action::Reduce
     def find_reduce_by_item!(item)
       reduces.find do |r|
         r.item == item
@@ -401,7 +402,7 @@ module Lrama
       predecessor.append_annotation_list(propagating_list)
     end
 
-    # @rbs () -> Array[States::Item]
+    # @rbs () -> Array[Item]
     def first_kernels
       @first_kernels ||= kernels.select {|kernel| kernel.position == 1 }
     end
@@ -419,7 +420,7 @@ module Lrama
 
     # Definition 3.31 (compute_lhs_contributions)
     #
-    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[States::Item, bool])
+    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[Item, bool])
     def lhs_contributions(sym, token)
       return @lhs_contributions[sym][token] unless @lhs_contributions.dig(sym, token).nil?
 
@@ -461,7 +462,7 @@ module Lrama
       @item_lookahead_set = k
     end
 
-    # @rbs (States::Item item) -> Array[[State, States::Item]]
+    # @rbs (Item item) -> Array[[State, Item]]
     def predecessors_with_item(item)
       result = []
       @predecessors.each do |pre|

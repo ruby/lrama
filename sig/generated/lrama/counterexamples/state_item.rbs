@@ -7,10 +7,10 @@ module Lrama
 
       attr_reader state: State
 
-      attr_reader item: States::Item
+      attr_reader item: State::Item
 
-      # @rbs (Integer id, State state, States::Item item) -> void
-      def initialize: (Integer id, State state, States::Item item) -> void
+      # @rbs (Integer id, State state, State::Item item) -> void
+      def initialize: (Integer id, State state, State::Item item) -> void
 
       # @rbs () -> (:start | :transition | :production)
       def type: () -> (:start | :transition | :production)

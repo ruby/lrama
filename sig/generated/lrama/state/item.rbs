@@ -1,7 +1,7 @@
-# Generated from lib/lrama/states/item.rb with RBS::Inline
+# Generated from lib/lrama/state/item.rb with RBS::Inline
 
 module Lrama
-  class States
+  class State
     class Item
       include Grammar::Rule::_DelegatedMethods
 
@@ -45,8 +45,8 @@ module Lrama
       # @rbs () -> bool
       def start_item?: () -> bool
 
-      # @rbs () -> States::Item
-      def new_by_next_position: () -> States::Item
+      # @rbs () -> State::Item
+      def new_by_next_position: () -> State::Item
 
       # @rbs () -> Array[Grammar::Symbol]
       def symbols_before_dot: () -> Array[Grammar::Symbol]
@@ -68,8 +68,8 @@ module Lrama
       # @rbs () -> ::String
       def display_rest: () -> ::String
 
-      # @rbs (States::Item other_item) -> bool
-      def predecessor_item_of?: (States::Item other_item) -> bool
+      # @rbs (State::Item other_item) -> bool
+      def predecessor_item_of?: (State::Item other_item) -> bool
     end
   end
 end

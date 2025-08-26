@@ -6,9 +6,9 @@ module Lrama
     class StateItem
       attr_reader :id #: Integer
       attr_reader :state #: State
-      attr_reader :item #: States::Item
+      attr_reader :item #: State::Item
 
-      # @rbs (Integer id, State state, States::Item item) -> void
+      # @rbs (Integer id, State state, State::Item item) -> void
       def initialize(id, state, item)
         @id = id
         @state = state

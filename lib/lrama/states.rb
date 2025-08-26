@@ -3,7 +3,7 @@
 
 require "forwardable"
 require_relative "tracer/duration"
-require_relative "states/item"
+require_relative "state/item"
 
 module Lrama
   # States is passed to a template file
@@ -229,7 +229,7 @@ module Lrama
 
     private
 
-    # @rbs (Grammar::Symbol accessing_symbol, Array[Item] kernels, Hash[Array[Item], State] states_created) -> [State, bool]
+    # @rbs (Grammar::Symbol accessing_symbol, Array[State::Item] kernels, Hash[Array[State::Item], State] states_created) -> [State, bool]
     def create_state(accessing_symbol, kernels, states_created)
       # A item can appear in some states,
       # so need to use `kernels` (not `kernels.first`) as a key.
@@ -293,7 +293,7 @@ module Lrama
 
         if (sym = item.next_sym) && sym.nterm?
           @grammar.find_rules_by_symbol!(sym).each do |rule|
-            i = Item.new(rule: rule, position: 0)
+            i = State::Item.new(rule: rule, position: 0)
             next if queued[i]
             closure << i
             items << i
@@ -325,7 +325,7 @@ module Lrama
       states = []
       states_created = {}
 
-      state, _ = create_state(symbols.first, [Item.new(rule: @grammar.rules.first, position: 0)], states_created)
+      state, _ = create_state(symbols.first, [State::Item.new(rule: @grammar.rules.first, position: 0)], states_created)
       enqueue_state(states, state)
 
       while (state = states.shift) do

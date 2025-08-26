@@ -20,7 +20,7 @@ module Lrama
       end
       alias :s :state
 
-      # @rbs () -> States::Item
+      # @rbs () -> State::Item
       def item
         @state_item.item
       end

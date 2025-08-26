@@ -5,14 +5,14 @@ module Lrama
   class Counterexamples
     class Derivation
       # @rbs!
-      #   @item: States::Item
+      #   @item: State::Item
       #   @left: Derivation?
 
-      attr_reader :item  #: States::Item
+      attr_reader :item  #: State::Item
       attr_reader :left  #: Derivation?
       attr_accessor :right #: Derivation?
 
-      # @rbs (States::Item item, Derivation? left) -> void
+      # @rbs (State::Item item, Derivation? left) -> void
       def initialize(item, left)
         @item = item
         @left = left
