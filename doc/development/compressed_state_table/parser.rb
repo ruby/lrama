@@ -1,3 +1,4 @@
+# :nodoc: all
 class Parser
   YYNTOKENS = 9
   YYLAST = 13
@@ -253,6 +254,7 @@ class Parser
   end
 end
 
+# :nodoc: all
 class Lexer
   def initialize(tokens)
     @tokens = tokens
