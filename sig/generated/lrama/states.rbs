@@ -137,6 +137,9 @@ module Lrama
     # @rbs () -> void
     def compute_shift_reduce_conflicts: () -> void
 
+    # @rbs (Grammar::Precedence shift_prec, Grammar::Precedence reduce_prec, State::ResolvedConflict resolved_conflict) -> void
+    def mark_precedences_used: (Grammar::Precedence shift_prec, Grammar::Precedence reduce_prec, State::ResolvedConflict resolved_conflict) -> void
+
     # @rbs () -> void
     def compute_reduce_reduce_conflicts: () -> void
 
