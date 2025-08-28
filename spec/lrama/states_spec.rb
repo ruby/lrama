@@ -2051,6 +2051,8 @@ RSpec.describe Lrama::States do
         // Prologue
         %}
 
+        %define lr.type ielr
+
         %token <val> NUM
         %token tEQ "=="
         %type <val> expr
@@ -2150,6 +2152,8 @@ RSpec.describe Lrama::States do
         %{
         // Prologue
         %}
+
+        %define lr.type ielr
 
         %token NUM
 
@@ -2299,6 +2303,8 @@ RSpec.describe Lrama::States do
         // Prologue
         %}
 
+        %define lr.type ielr
+
         %token a
         %token b
         %token c
@@ -2346,6 +2352,12 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
+        Split States
+
+            State 20 is split from state 5
+            State 21 is split from state 10
+            State 22 is split from state 15
+
         State 0
 
             0 $accept: • S "end of file"
@@ -2548,6 +2560,8 @@ RSpec.describe Lrama::States do
         // Prologue
         %}
 
+        %define lr.type ielr
+
         %token a
         %token b
         %token c
@@ -2582,6 +2596,10 @@ RSpec.describe Lrama::States do
       Lrama::Reporter.new(states: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
+        Split States
+
+            State 15 is split from state 5
+
         State 0
 
             0 $accept: • S "end of file"
