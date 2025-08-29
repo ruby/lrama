@@ -188,7 +188,7 @@ module Lrama
       validate_conflicts_within_threshold!(logger)
     end
 
-    def compute_la_sources
+    def compute_la_sources_for_conflicted_states
       reflexive = {}
       @states.each do |state|
         state.nterm_transitions.each do |goto|
@@ -201,7 +201,7 @@ module Lrama
       # compute_follow_sets
       follow_sets = Digraph.new(nterm_transitions, @includes_relation, read_sets).compute
 
-      @states.each do |state|
+      @states.select(&:has_conflicts?).each do |state|
         rules.each do |rule|
           sources = {}
           key = [state.id, rule.id] # @type var key: reduce

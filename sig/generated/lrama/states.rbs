@@ -79,7 +79,7 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate!: (Logger logger) -> void
 
-    def compute_la_sources: () -> untyped
+    def compute_la_sources_for_conflicted_states: () -> untyped
 
     private
 
