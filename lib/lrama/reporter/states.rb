@@ -17,7 +17,7 @@ module Lrama
       def report(io, states, ielr: false)
         cex = Counterexamples.new(states) if @counterexamples
 
-        states.compute_la_sources
+        states.compute_la_sources_for_conflicted_states
         report_split_states(io, states.states) if ielr
 
         states.states.each do |state|

@@ -147,28 +147,28 @@ module Lrama
 
     # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def direct_read_sets
-      @direct_read_sets.transform_values do |v|
+      @_direct_read_sets ||= @direct_read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
     # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def read_sets
-      @read_sets.transform_values do |v|
+      @_read_sets ||= @read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
     # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def follow_sets
-      @follow_sets.transform_values do |v|
+      @_follow_sets ||= @follow_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
     # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
     def la
-      @la.transform_values do |v|
+      @_la ||= @la.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
@@ -188,7 +188,7 @@ module Lrama
       validate_conflicts_within_threshold!(logger)
     end
 
-    def compute_la_sources
+    def compute_la_sources_for_conflicted_states
       reflexive = {}
       @states.each do |state|
         state.nterm_transitions.each do |goto|
@@ -201,7 +201,7 @@ module Lrama
       # compute_follow_sets
       follow_sets = Digraph.new(nterm_transitions, @includes_relation, read_sets).compute
 
-      @states.each do |state|
+      @states.select(&:has_conflicts?).each do |state|
         rules.each do |rule|
           sources = {}
           key = [state.id, rule.id] # @type var key: reduce
@@ -853,6 +853,11 @@ module Lrama
       @lookback_relation.clear
       @follow_sets.clear
       @la.clear
+
+      @_direct_read_sets = nil
+      @_read_sets = nil
+      @_follow_sets = nil
+      @_la = nil
     end
   end
 end

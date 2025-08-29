@@ -27,12 +27,12 @@ module Lrama
     # @rbs (File io, Lrama::States states) -> void
     def report(io, states)
       report_duration(:report) do
-        @rules.report(io, states)
-        @terms.report(io, states)
-        @conflicts.report(io, states)
-        @precedences.report(io, states)
-        @grammar.report(io, states)
-        @states.report(io, states, ielr: states.ielr_defined?)
+        report_duration(:report_rules) { @rules.report(io, states) }
+        report_duration(:report_terms) { @terms.report(io, states) }
+        report_duration(:report_conflicts) { @conflicts.report(io, states) }
+        report_duration(:report_precedences) { @precedences.report(io, states) }
+        report_duration(:report_grammar) { @grammar.report(io, states) }
+        report_duration(:report_states) { @states.report(io, states, ielr: states.ielr_defined?) }
       end
     end
   end
