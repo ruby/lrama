@@ -147,28 +147,28 @@ module Lrama
 
     # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def direct_read_sets
-      @direct_read_sets.transform_values do |v|
+      @_direct_read_sets ||= @direct_read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
     # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def read_sets
-      @read_sets.transform_values do |v|
+      @_read_sets ||= @read_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
     # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def follow_sets
-      @follow_sets.transform_values do |v|
+      @_follow_sets ||= @follow_sets.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
 
     # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
     def la
-      @la.transform_values do |v|
+      @_la ||= @la.transform_values do |v|
         bitmap_to_terms(v)
       end
     end
@@ -853,6 +853,11 @@ module Lrama
       @lookback_relation.clear
       @follow_sets.clear
       @la.clear
+
+      @_direct_read_sets = nil
+      @_read_sets = nil
+      @_follow_sets = nil
+      @_la = nil
     end
   end
 end
