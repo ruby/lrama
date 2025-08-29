@@ -1,8 +1,10 @@
 # NEWS for Lrama
 
-## Lrama 0.7.1 (2025-xx-xx)
+## Lrama 0.7.1 (2025-12-24)
 
 ### Optimize IELR
+
+Optimized performance to a level that allows for IELR testing in practical applications.
 
 https://github.com/ruby/lrama/pull/595
 https://github.com/ruby/lrama/pull/605
@@ -11,9 +13,18 @@ https://github.com/ruby/lrama/pull/700
 
 ### Introduce counterexamples timeout
 
+Counterexample searches can sometimes take a long time, so we've added a timeout to abort the process after a set period. The current limits are:
+
+* 10 seconds per case
+* 120 seconds total (cumulative)
+
+Please note that these are hard-coded and cannot be modified by the user in the current version.
+
 https://github.com/ruby/lrama/pull/623
 
 ### Optimize Counterexamples
+
+Optimized counterexample search performance.
 
 https://github.com/ruby/lrama/pull/607
 https://github.com/ruby/lrama/pull/610
@@ -47,17 +58,127 @@ operation : /* empty */
 
 https://github.com/ruby/lrama/pull/637
 
-### Print conflicts of each state on output file
+### Render conflicts of each state on output file
+
+Added token information for conflicts in the output file.
+These information are useful when a state has many actions.
 
 ```
-TODO example
+State 1
+
+    4 class: keyword_class • tSTRING "end"
+    5 $@1: ε •  [tSTRING]
+    7 class: keyword_class • $@1 tSTRING '!' "end" $@2
+    8 $@3: ε •  [tSTRING]
+   10 class: keyword_class • $@3 tSTRING '?' "end" $@4
+
+    Conflict on tSTRING. shift/reduce($@1)
+    Conflict on tSTRING. shift/reduce($@3)
+    Conflict on tSTRING. reduce($@1)/reduce($@3)
+
+    tSTRING  shift, and go to state 6
+
+    tSTRING  reduce using rule 5 ($@1)
+    tSTRING  reduce using rule 8 ($@3)
+
+    $@1  go to state 7
+    $@3  go to state 8
 ```
 
 https://github.com/ruby/lrama/pull/541
 
-### Print the origin of conflicted tokens on output file
+### Render the origin of conflicted tokens on output file
+
+For example, for the grammar file like below:
+
+```
+%%
+
+program: expr
+       ;
+
+expr: expr '+' expr
+    | tNUMBER
+    ;
+
+%%
+```
+
+Lrama generates output file which describes where `"plus"` (`'+'`) look ahead tokens come from:
+
+```
+State 6
+
+    2 expr: expr • "plus" expr
+    2     | expr "plus" expr •  ["end of file", "plus"]
+
+    Conflict on "plus". shift/reduce(expr)
+      "plus" comes from state 0 goto by expr
+      "plus" comes from state 5 goto by expr
+```
+
+state 0 and state 5 look like below:
+
+```
+State 0
+
+    0 $accept: • program "end of file"
+    1 program: • expr
+    2 expr: • expr "plus" expr
+    3     | • tNUMBER
+
+    tNUMBER  shift, and go to state 1
+
+    program  go to state 2
+    expr     go to state 3
+
+State 5
+
+    2 expr: • expr "plus" expr
+    2     | expr "plus" • expr
+    3     | • tNUMBER
+
+    tNUMBER  shift, and go to state 1
+
+    expr  go to state 6
+```
 
 https://github.com/ruby/lrama/pull/726
+
+### Render precedences usage information on output file
+
+For example, for the grammar file like below:
+
+```
+%left  tPLUS
+%right tUPLUS
+
+%%
+
+program: expr ;
+
+expr: tUPLUS expr
+    | expr tPLUS expr
+    | tNUMBER
+    ;
+
+%%
+```
+
+Lrama generates output file which describes where these precedences are used to resolve conflicts:
+
+```
+Precedences
+  precedence on "unary+" is used to resolve conflict on
+    LALR
+      state 5. Conflict between reduce by "expr -> tUPLUS expr" and shift "+" resolved as reduce ("+" < "unary+").
+  precedence on "+" is used to resolve conflict on
+    LALR
+      state 5. Conflict between reduce by "expr -> tUPLUS expr" and shift "+" resolved as reduce ("+" < "unary+").
+      state 8. Conflict between reduce by "expr -> expr tPLUS expr" and shift "+" resolved as reduce (%left "+").
+```
+
+https://github.com/ruby/lrama/pull/741
 
 ### Add support for reporting Rule Usage Frequency
 
@@ -99,6 +220,54 @@ The frequency statistics help developers understand the grammar structure and ca
 https://github.com/ruby/lrama/pull/677
 
 ### Render Split States information on output file
+
+For example, for the grammar file like below:
+
+```
+%token a
+%token b
+%token c
+%define lr.type ielr
+
+%precedence tLOWEST
+%precedence a
+%precedence tHIGHEST
+
+%%
+
+S: a A B a
+ | b A B b
+ ;
+
+A: a C D E
+ ;
+
+B: c
+ | // empty
+ ;
+
+C: D
+ ;
+
+D: a
+ ;
+
+E: a
+ | %prec tHIGHEST // empty
+ ;
+
+%%
+```
+
+Lrama generates output file which describes where which new states are created when IELR is enabled:
+
+```
+Split States
+
+    State 19 is split from state 4
+    State 20 is split from state 9
+    State 21 is split from state 14
+```
 
 https://github.com/ruby/lrama/pull/624
 
