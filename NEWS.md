@@ -2,6 +2,139 @@
 
 ## Lrama 0.7.1 (2025-xx-xx)
 
+### Optimize IELR
+
+https://github.com/ruby/lrama/pull/595
+https://github.com/ruby/lrama/pull/605
+https://github.com/ruby/lrama/pull/685
+https://github.com/ruby/lrama/pull/700
+
+### Introduce counterexamples timeout
+
+https://github.com/ruby/lrama/pull/623
+
+### Optimize Counterexamples
+
+https://github.com/ruby/lrama/pull/607
+https://github.com/ruby/lrama/pull/610
+https://github.com/ruby/lrama/pull/614
+https://github.com/ruby/lrama/pull/622
+https://github.com/ruby/lrama/pull/627
+https://github.com/ruby/lrama/pull/629
+https://github.com/ruby/lrama/pull/659
+
+### Support parameterized rule's arguments include inline
+
+Allow to use %inline directive with Parameterized rules arguments. When an inline rule is used as an argument to a Parameterized rule, it expands inline at the point of use.
+
+```yacc
+%rule %inline op : '+'
+                 | '-'
+                 ;
+%%
+operation : op?
+          ;
+```
+
+This expands to:
+
+```yacc
+operation : /* empty */
+          | '+'
+          | '-'
+          ;
+```
+
+https://github.com/ruby/lrama/pull/637
+
+### Print conflicts of each state on output file
+
+```
+TODO example
+```
+
+https://github.com/ruby/lrama/pull/541
+
+### Print the origin of conflicted tokens on output file
+
+https://github.com/ruby/lrama/pull/726
+
+### Add support for reporting Rule Usage Frequency
+
+Support to report rule usage frequency statistics for analyzing grammar characteristics.
+Run `exe/lrama --report=rules` to show how frequently each terminal and non-terminal symbol is used in the grammar rules.
+
+```console
+$ exe/lrama --report=rules sample/calc.y
+Rule Usage Frequency
+    0 tSTRING (4 times)
+    1 keyword_class (3 times)
+    2 keyword_end (3 times)
+    3 '+' (2 times)
+    4 string (2 times)
+    5 string_1 (2 times)
+    6 '!' (1 times)
+    7 '-' (1 times)
+    8 '?' (1 times)
+    9 EOI (1 times)
+   10 class (1 times)
+   11 program (1 times)
+   12 string_2 (1 times)
+   13 strings_1 (1 times)
+   14 strings_2 (1 times)
+   15 tNUMBER (1 times)
+```
+
+This feature provides insights into the language characteristics by showing:
+- Which symbols are most frequently used in the grammar
+- The distribution of terminal and non-terminal usage
+- Potential areas for grammar optimization or refactoring
+
+The frequency statistics help developers understand the grammar structure and can be useful for:
+- Grammar complexity analysis
+- Performance optimization hints
+- Language design decisions
+- Documentation and educational purposes
+
+https://github.com/ruby/lrama/pull/677
+
+### Render Split States information on output file
+
+https://github.com/ruby/lrama/pull/624
+
+### Add ioption support to the Standard library
+
+Support `ioption` (inline option) rule, which is expanded inline without creating intermediate rules.
+
+Unlike the regular `option` rule that generates a separate rule, `ioption` directly expands at the point of use:
+
+```yacc
+program: ioption(number) expr
+
+// Expanded inline to:
+
+program: expr
+       | number expr
+```
+
+This differs from the regular `option` which would generate:
+
+```yacc
+program: option(number) expr
+
+// Expanded to:
+
+program: option_number expr
+option_number: %empty
+             | number
+```
+
+The `ioption` rule provides more compact grammar generation by avoiding intermediate rule creation, which can be beneficial for reducing the parser's rule count and potentially improving performance.
+
+This feature is inspired by Menhir's standard library and maintains compatibility with [Menhir's `ioption` behavior](https://github.com/let-def/menhir/blob/e8ba7bef219acd355798072c42abbd11335ecf09/src/standard.mly#L33-L41).
+
+https://github.com/ruby/lrama/pull/666
+
 ### Syntax Diagrams
 
 Lrama provides an API for generating HTML syntax diagrams. These visual diagrams are highly useful as grammar development tools and can also serve as a form of automatic self-documentation.
@@ -13,6 +146,8 @@ If you use syntax diagrams, you add `--diagram` option.
 ```console
 $ exe/lrama --diagram sample.y
 ```
+
+https://github.com/ruby/lrama/pull/523
 
 ### Support `--profile` option
 
@@ -26,6 +161,10 @@ $ exe/lrama --profile=call-stack sample/calc.y
 Then "tmp/stackprof-cpu-myapp.dump" is generated.
 
 https://github.com/ruby/lrama/pull/525
+
+### Add support Start-Symbol: `%start`
+
+https://github.com/ruby/lrama/pull/576
 
 ## Lrama 0.7.0 (2025-01-21)
 
