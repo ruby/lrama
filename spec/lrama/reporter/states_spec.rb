@@ -129,6 +129,7 @@ RSpec.describe Lrama::Reporter::States do
               "plus" comes from state 0 goto by expr
               "plus" comes from state 5 goto by expr
 
+
             "plus"  shift, and go to state 5
 
             "end of file"  reduce using rule 2 (expr)

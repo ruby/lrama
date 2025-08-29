@@ -122,6 +122,8 @@ module Lrama
           else
             raise "Unknown conflict type #{conflict.type}"
           end
+
+          io << "\n"
         end
 
         io << "\n"
