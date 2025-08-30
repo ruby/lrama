@@ -3,6 +3,7 @@
 
 require_relative 'token/base'
 require_relative 'token/char'
+require_relative 'token/empty'
 require_relative 'token/ident'
 require_relative 'token/instantiate_rule'
 require_relative 'token/int'

@@ -358,6 +358,12 @@ rule
   rhs_list:
       rhs
         {
+          if val[0].rhs.count > 1
+            empties = val[0].rhs.select { |sym| sym.is_a?(Lrama::Lexer::Token::Empty) }
+            empties.each do |empty|
+              on_action_error("%empty on non-empty rule", empty)
+            end
+          end
           builder = val[0]
           if !builder.line
             builder.line = @lexer.line - 1
@@ -374,10 +380,16 @@ rule
         }
 
   rhs:
-      "%empty"?
+      /* empty */
         {
           reset_precs
           result = @grammar.create_rule_builder(@rule_counter, @midrule_action_counter)
+        }
+    | rhs "%empty"
+        {
+          builder = val[0]
+          builder.add_rhs(Lrama::Lexer::Token::Empty.new(location: @lexer.location))
+          result = builder
         }
     | rhs symbol named_ref?
         {
