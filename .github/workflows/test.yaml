@@ -47,21 +47,19 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
+      - name: Clean up existing MSYS2
+        run: |
+          if (Test-Path "$env:RUNNER_TEMP\msys64") {
+            Write-Host "Removing existing MSYS2 at $env:RUNNER_TEMP\msys64"
+            Remove-Item -Recurse -Force "$env:RUNNER_TEMP\msys64"
+          }
+        shell: powershell
       - uses: msys2/setup-msys2@v2
         id: setup-msys2
         with:
-          update: false
+          update: true
           install: >-
             flex
-        continue-on-error: true
-      - name: Manual MSYS2 setup if needed
-        if: steps.setup-msys2.outcome == 'failure'
-        shell: msys2 {0}
-        run: |
-          pacman-db-upgrade
-          pacman -Scc --noconfirm
-          pacman -Syy --noconfirm
-          pacman -S --noconfirm flex
       - run: flex --help
       - run: bundle install
       - run: bundle exec rspec
