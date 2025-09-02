@@ -3486,6 +3486,23 @@ RSpec.describe Lrama::Parser do
         expect { parser.parse }.not_to raise_error
       end
 
+      it "does not raises error if %prec with %empty" do
+        y = header + <<~INPUT
+          %%
+          
+          program: class ;
+          
+          class : %prec tPLUS %empty { code 1 }
+                | %empty %prec tMINUS { code 2 }
+                ;
+          %%
+          
+        INPUT
+
+        parser = Lrama::Parser.new(y, "parse.y")
+
+        expect { parser.parse }.not_to raise_error
+      end
     end
 
     describe "invalid prec" do
@@ -3925,7 +3942,7 @@ RSpec.describe Lrama::Parser do
               token_code: T::UserCode.new(s_value: " @$; "),
               nullable: true,
               precedence_sym: nil,
-              lineno: 19,
+              lineno: 18,
             ),
             Rule.new(
               id: 4,
@@ -3935,7 +3952,7 @@ RSpec.describe Lrama::Parser do
               token_code: T::UserCode.new(s_value: " @0; "),
               nullable: true,
               precedence_sym: nil,
-              lineno: 21,
+              lineno: 20,
             ),
           ])
         end
@@ -4246,9 +4263,9 @@ RSpec.describe Lrama::Parser do
           parser = Lrama::Parser.new(y, "error_messages/parse.y")
 
           expect { parser.parse }.to raise_error(ParseError, <<~'ERROR')
-            error_messages/parse.y:7:16: parse error on value "%empty" ("%empty")
+            error_messages/parse.y:7:9: %empty on non-empty rule
             program: %empty %empty
-                            ^^^^^^
+                     ^^^^^^
           ERROR
         end
       end
@@ -4271,7 +4288,7 @@ RSpec.describe Lrama::Parser do
           parser = Lrama::Parser.new(y, "error_messages/parse.y")
 
           expect { parser.parse }.to raise_error(ParseError, <<~'ERROR')
-            error_messages/parse.y:9:16: parse error on value "%empty" ("%empty")
+            error_messages/parse.y:9:16: %empty on non-empty rule
             program: NUMBER %empty
                             ^^^^^^
           ERROR

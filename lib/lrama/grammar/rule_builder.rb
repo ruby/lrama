@@ -182,6 +182,8 @@ module Lrama
             rule_builder.setup_rules
 
             @rule_builders_for_derived_rules << rule_builder
+          when Lrama::Lexer::Token::Empty
+            # Noop
           else
             raise "Unexpected token. #{token}"
           end
