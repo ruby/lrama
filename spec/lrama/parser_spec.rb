@@ -3523,8 +3523,8 @@ RSpec.describe Lrama::Parser do
 
         expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
           parse.y:31:78: multiple User_code after %prec
-          class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
-                                                                                        ^
+            31 | class : keyword_class { code 4 } tSTRING '?' keyword_end %prec tEQ { code 5 } { code 6 }
+               |                                                                               ^
         ERROR
       end
 
@@ -3544,8 +3544,8 @@ RSpec.describe Lrama::Parser do
 
         expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
           parse.y:31:34: intermediate %prec in a rule
-          class : keyword_class %prec tPLUS keyword_end { code 1 }
-                                            ^^^^^^^^^^^
+            31 | class : keyword_class %prec tPLUS keyword_end { code 1 }
+               |                                   ^~~~~~~~~~~
         ERROR
       end
 
@@ -3565,8 +3565,8 @@ RSpec.describe Lrama::Parser do
 
         expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
           parse.y:31:32: intermediate %prec in a rule
-          class : keyword_class %prec "=" keyword_end { code 1 }
-                                          ^^^^^^^^^^^
+            31 | class : keyword_class %prec "=" keyword_end { code 1 }
+               |                                 ^~~~~~~~~~~
         ERROR
       end
 
@@ -3586,8 +3586,8 @@ RSpec.describe Lrama::Parser do
 
         expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
           parse.y:31:40: multiple %prec in a rule
-          class : keyword_class %prec tPLUS %prec tMINUS keyword_end { code 1 }
-                                                  ^^^^^^
+            31 | class : keyword_class %prec tPLUS %prec tMINUS keyword_end { code 1 }
+               |                                         ^~~~~~
         ERROR
       end
     end
@@ -4131,8 +4131,8 @@ RSpec.describe Lrama::Parser do
 
             expected = <<~ERROR
               parse.y:27:18: Referring symbol `results` is not found.
-                                $results = $left + $right;
-                                ^^^^^^^^
+                27 |                   $results = $left + $right;
+                   |                   ^~~~~~~~
             ERROR
 
             expect do
@@ -4165,8 +4165,8 @@ RSpec.describe Lrama::Parser do
 
           expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
             error_messages/parse.y:5:8: parse error on value 'invalid' (IDENTIFIER)
-            %expect invalid
-                    ^^^^^^^
+               5 | %expect invalid
+                 |         ^~~~~~~
           ERROR
         end
       end
@@ -4190,8 +4190,8 @@ RSpec.describe Lrama::Parser do
 
           expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
             error_messages/parse.y:5:10: parse error on value 10 (INTEGER)
-            %expect 0 10
-                      ^^
+               5 | %expect 0 10
+                 |           ^~
           ERROR
         end
       end
@@ -4215,8 +4215,8 @@ RSpec.describe Lrama::Parser do
 
           expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
             error_messages/parse.y:5:9: parse error on value 'invalid' (IDENTIFIER)
-            %expect\t\tinvalid
-                   \t\t^^^^^^^
+               5 | %expect\t\tinvalid
+                 |        \t\t^~~~~~~
           ERROR
         end
       end
@@ -4241,8 +4241,8 @@ RSpec.describe Lrama::Parser do
 
           expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
             error_messages/parse.y:6:7: symbol EOI redeclared as a nonterminal
-            %nterm EOI
-                   ^^^
+               6 | %nterm EOI
+                 |        ^~~
           ERROR
         end
       end
@@ -4264,8 +4264,8 @@ RSpec.describe Lrama::Parser do
 
           expect { parser.parse }.to raise_error(ParseError, <<~'ERROR')
             error_messages/parse.y:7:9: %empty on non-empty rule
-            program: %empty %empty
-                     ^^^^^^
+               7 | program: %empty %empty
+                 |          ^~~~~~
           ERROR
         end
       end
@@ -4289,8 +4289,8 @@ RSpec.describe Lrama::Parser do
 
           expect { parser.parse }.to raise_error(ParseError, <<~'ERROR')
             error_messages/parse.y:9:16: %empty on non-empty rule
-            program: NUMBER %empty
-                            ^^^^^^
+               9 | program: NUMBER %empty
+                 |                 ^~~~~~
           ERROR
         end
       end
