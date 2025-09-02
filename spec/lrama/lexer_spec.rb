@@ -414,6 +414,20 @@ RSpec.describe Lrama::Lexer do
     end
   end
 
+  context 'missing_comment_end.y' do
+    it do
+      grammar_file = Lrama::Lexer::GrammarFile.new("invalid.y", "/* missing")
+      lexer = Lrama::Lexer.new(grammar_file)
+      lexer.status = :c_declaration
+
+      expect { lexer.next_token }.to raise_error(ParseError, <<~ERROR)
+        invalid.y:1:0: Missing ‘*/’ at end of file
+        /* missing
+        ^^
+      ERROR
+    end
+  end
+
   it 'lex a line comment without newline' do
     grammar_file = Lrama::Lexer::GrammarFile.new("comment.y", "// foo")
     lexer = Lrama::Lexer.new(grammar_file)
