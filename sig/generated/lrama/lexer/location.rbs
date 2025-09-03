@@ -29,7 +29,7 @@ module Lrama
       def generate_error_message: (String error_message) -> String
 
       # @rbs () -> String
-      def line_with_carets: () -> String
+      def error_with_carets: () -> String
 
       private
 
@@ -37,10 +37,19 @@ module Lrama
       def path: () -> String
 
       # @rbs () -> String
-      def blanks: () -> String
+      def carets_line: () -> String
 
       # @rbs () -> String
-      def carets: () -> String
+      def leading_whitespace: () -> String
+
+      # @rbs () -> String
+      def highlight_marker: () -> String
+
+      # @rbs () -> String
+      def formatted_first_lineno: () -> String
+
+      # @rbs () -> String
+      def line_number_padding: () -> String
 
       # @rbs () -> String
       def text: () -> String

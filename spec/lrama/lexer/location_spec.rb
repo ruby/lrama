@@ -26,8 +26,8 @@ RSpec.describe Lrama::Lexer::Location do
       location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 33, first_column: 12, last_line: 33, last_column: 15)
       expected = <<~TEXT
         #{path}:33:12: ERROR
-             | expr '+' expr { $$ = $1 + $3; }
-                    ^^^
+          33 |      | expr '+' expr { $$ = $1 + $3; }
+             |             ^~~
       TEXT
 
       expect(location.generate_error_message("ERROR")).to eq expected
@@ -40,11 +40,11 @@ RSpec.describe Lrama::Lexer::Location do
       grammar_file = Lrama::Lexer::GrammarFile.new(path, File.read(path))
       location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 33, first_column: 12, last_line: 33, last_column: 15)
       expected = <<-TEXT
-     | expr '+' expr { $$ = $1 + $3; }
-            ^^^
+  33 |      | expr '+' expr { $$ = $1 + $3; }
+     |             ^~~
       TEXT
 
-      expect(location.line_with_carets).to eq expected
+      expect(location.error_with_carets).to eq expected
     end
   end
 end
