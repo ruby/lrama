@@ -216,15 +216,9 @@ module Lrama
       result = nil
 
       if sym.term?
-        term_transitions.each do |shift|
-          term = shift.next_sym
-          result = shift.to_state if term == sym
-        end
+        result = term_transitions.find {|shift| shift.next_sym == sym }.to_state
       else
-        nterm_transitions.each do |goto|
-          nterm = goto.next_sym
-          result = goto.to_state if nterm == sym
-        end
+        result = nterm_transitions.find {|goto| goto.next_sym == sym }.to_state
       end
 
       raise "Can not transit by #{sym} #{self}" if result.nil?
