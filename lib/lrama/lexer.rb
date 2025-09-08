@@ -104,7 +104,7 @@ module Lrama
         when @scanner.scan(/\n/)
           newline
         when @scanner.scan(/\s+/)
-          # noop
+          @scanner.matched.count("\n").times { newline }
         when @scanner.scan(/\/\*/)
           lex_comment
         when @scanner.scan(/\/\/.*(?<newline>\n)?/)
