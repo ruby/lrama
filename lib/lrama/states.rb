@@ -290,7 +290,7 @@ module Lrama
       items = state.kernels.dup
 
       items.each do |item|
-        queued[item] = true
+        queued[item.rule_id] = true if item.position == 0
       end
 
       while (item = items.shift) do
@@ -298,11 +298,11 @@ module Lrama
 
         if (sym = item.next_sym) && sym.nterm?
           @grammar.find_rules_by_symbol!(sym).each do |rule|
+            next if queued[rule.id]
             i = State::Item.new(rule: rule, position: 0)
-            next if queued[i]
             closure << i
             items << i
-            queued[i] = true
+            queued[i.rule_id] = true
           end
         end
       end
