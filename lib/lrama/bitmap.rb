@@ -27,13 +27,13 @@ module Lrama
       a = [] #: Array[Integer]
       i = 0
 
-      while int > 0 do
-        if int & 1 == 1
+      len = int.bit_length
+      while i < len do
+        if int[i] == 1
           a << i
         end
 
         i += 1
-        int >>= 1
       end
 
       a
