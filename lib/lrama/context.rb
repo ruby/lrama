@@ -417,27 +417,25 @@ module Lrama
 
         res = lowzero - froms_and_tos.first[0]
 
+        # Find the smallest `res` such that `@table[res + from]` is empty for all `from` in `froms_and_tos`
         while true do
-          ok = true
+          advanced = false
+
+          while used_res[res]
+            res += 1
+            advanced = true
+          end
 
           froms_and_tos.each do |from, to|
-            loc = res + from
-
-            if @table[loc]
-              # If the cell of table is set, can not use the cell.
-              ok = false
-              break
+            while @table[res + from]
+              res += 1
+              advanced = true
             end
           end
 
-          if ok && used_res[res]
-            ok = false
-          end
-
-          if ok
+          unless advanced
+            # no advance means that the current `res` satisfies the condition
             break
-          else
-            res += 1
           end
         end
 
