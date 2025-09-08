@@ -330,7 +330,7 @@ module Lrama
         io << "  [Lookback Relation]\n"
 
         states.rules.each do |rule|
-          gotos = states.lookback_relation[[state.id, rule.id]]
+          gotos = states.lookback_relation.dig(state.id, rule.id)
           next unless gotos
 
           gotos.each do |goto2|
@@ -364,7 +364,7 @@ module Lrama
         look_ahead_rules = [] #: Array[[Lrama::Grammar::Rule, Array[Lrama::Grammar::Symbol]]]
 
         states.rules.each do |rule|
-          syms = states.la[[state.id, rule.id]]
+          syms = states.la.dig(state.id, rule.id)
           next unless syms
 
           look_ahead_rules << [rule, syms]
