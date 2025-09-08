@@ -420,4 +420,11 @@ RSpec.describe Lrama::Lexer do
 
     expect(lexer.next_token).to be_nil
   end
+
+  it 'lex a trailing space with newline' do
+    grammar_file = Lrama::Lexer::GrammarFile.new("trailing_space.y", " \n%require")
+    lexer = Lrama::Lexer.new(grammar_file)
+
+    expect(lexer.next_token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 2, first_column: 0, last_line: 2, last_column: 8)
+  end
 end
