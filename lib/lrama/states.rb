@@ -285,7 +285,6 @@ module Lrama
     def setup_state(state)
       # closure
       closure = []
-      visited = {}
       queued = {}
       items = state.kernels.dup
 
@@ -294,8 +293,6 @@ module Lrama
       end
 
       while (item = items.shift) do
-        visited[item] = true
-
         if (sym = item.next_sym) && sym.nterm?
           @grammar.find_rules_by_symbol!(sym).each do |rule|
             next if queued[rule.id]
