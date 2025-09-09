@@ -95,7 +95,7 @@ module Lrama
             when scanner[10] # $:$
               return Lrama::Grammar::Reference.new(type: :index, name: "$", first_column: start, last_column: scanner.pos)
             when scanner[11] # $:1
-              return Lrama::Grammar::Reference.new(type: :index, number: Integer(scanner[11]), first_column: start, last_column: scanner.pos)
+              return Lrama::Grammar::Reference.new(type: :index, number: Integer(scanner[11]), index: Integer(scanner[11]), first_column: start, last_column: scanner.pos)
             when scanner[12] # $:foo, $:expr (named reference without brackets)
               return Lrama::Grammar::Reference.new(type: :index, name: scanner[12], first_column: start, last_column: scanner.pos)
             when scanner[13] # $:[expr.right], $:[expr-right] (named reference with brackets)
