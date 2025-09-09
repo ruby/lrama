@@ -396,10 +396,14 @@ RSpec.describe Lrama::Lexer do
     it do
       path = fixture_path("common/unexpected_token.y")
       text = File.read(path)
-      grammar_file = Lrama::Lexer::GrammarFile.new(path, text)
+      grammar_file = Lrama::Lexer::GrammarFile.new("unexpected_token.y", text)
       lexer = Lrama::Lexer.new(grammar_file)
 
-      expect { lexer.next_token }.to raise_error(ParseError, "Unexpected token: @invalid.")
+      expect { lexer.next_token }.to raise_error(ParseError, <<~MSG)
+        unexpected_token.y:5:0: Unexpected token
+           5 | @invalid
+             | ^
+      MSG
     end
   end
 
@@ -410,7 +414,11 @@ RSpec.describe Lrama::Lexer do
       lexer.status = :c_declaration
       lexer.end_symbol = "%}"
 
-      expect { lexer.next_token }.to raise_error(ParseError, "Unexpected code: @invalid.")
+      expect { lexer.next_token }.to raise_error(ParseError, <<~MSG)
+        invalid.y:1:0: Unexpected code: @invalid
+           1 | @invalid
+             | ^~~~~~~~
+        MSG
     end
   end
 
