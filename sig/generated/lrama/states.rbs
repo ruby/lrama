@@ -10,8 +10,6 @@ module Lrama
 
     type rule_id = Integer
 
-    type reduce = [ state_id, rule_id ]
-
     include Grammar::_DelegatedMethods
 
     @grammar: Grammar
@@ -28,11 +26,11 @@ module Lrama
 
     @includes_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    @lookback_relation: Hash[reduce, Array[State::Action::Goto]]
+    @lookback_relation: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
 
     @follow_sets: Hash[State::Action::Goto, Bitmap::bitmap]
 
-    @la: Hash[reduce, Bitmap::bitmap]
+    @la: Hash[state_id, Hash[rule_id, Bitmap::bitmap]]
 
     extend Forwardable
 
@@ -44,7 +42,7 @@ module Lrama
 
     attr_reader includes_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
 
-    attr_reader lookback_relation: Hash[reduce, Array[State::Action::Goto]]
+    attr_reader lookback_relation: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize: (Grammar grammar, Tracer tracer) -> void
@@ -67,8 +65,8 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
     def follow_sets: () -> Hash[State::Action::Goto, Array[Grammar::Symbol]]
 
-    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
-    def la: () -> Hash[reduce, Array[Grammar::Symbol]]
+    # @rbs () -> Hash[state_id, Hash[rule_id, Array[Grammar::Symbol]]]
+    def la: () -> Hash[state_id, Hash[rule_id, Array[Grammar::Symbol]]]
 
     # @rbs () -> Integer
     def sr_conflicts_count: () -> Integer

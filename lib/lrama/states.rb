@@ -18,7 +18,6 @@ module Lrama
     # @rbs!
     #   type state_id = Integer
     #   type rule_id = Integer
-    #   type reduce = [state_id, rule_id]
     #
     #   include Grammar::_DelegatedMethods
     #
@@ -29,9 +28,9 @@ module Lrama
     #   @reads_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
     #   @read_sets: Hash[State::Action::Goto, Bitmap::bitmap]
     #   @includes_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
-    #   @lookback_relation: Hash[reduce, Array[State::Action::Goto]]
+    #   @lookback_relation: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
     #   @follow_sets: Hash[State::Action::Goto, Bitmap::bitmap]
-    #   @la: Hash[reduce, Bitmap::bitmap]
+    #   @la: Hash[state_id, Hash[rule_id, Bitmap::bitmap]]
 
     extend Forwardable
     include Lrama::Tracer::Duration
@@ -42,7 +41,7 @@ module Lrama
     attr_reader :states #: Array[State]
     attr_reader :reads_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
     attr_reader :includes_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
-    attr_reader :lookback_relation #: Hash[reduce, Array[State::Action::Goto]]
+    attr_reader :lookback_relation #: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
@@ -86,8 +85,9 @@ module Lrama
       # `(q, A -> ω) lookback (p, A) iff p -(ω)-> q`
       #   where p, q are state, A -> ω is rule, A is nterm, ω is sequence of symbol.
       #
-      # `@lookback_relation` is a hash whose
-      # key is reduce ([state.id, rule.id]),
+      # `@lookback_relation` is a two-stage hash whose
+      # first key is state_id,
+      # second key is rule_id,
       # value is array of goto.
       @lookback_relation = {}
 
@@ -100,8 +100,9 @@ module Lrama
 
       # `LA(q, A -> ω) = ∪{Follow(p, A) | (q, A -> ω) lookback (p, A)`
       #
-      # `@la` is a hash whose
-      # key is [state.id, rule.id],
+      # `@la` is a two-stage hash whose
+      # first key is state_id,
+      # second key is rule_id,
       # value is bitmap of term.
       @la = {}
     end
@@ -166,10 +167,12 @@ module Lrama
       end
     end
 
-    # @rbs () -> Hash[reduce, Array[Grammar::Symbol]]
+    # @rbs () -> Hash[state_id, Hash[rule_id, Array[Grammar::Symbol]]]
     def la
-      @_la ||= @la.transform_values do |v|
-        bitmap_to_terms(v)
+      @_la ||= @la.transform_values do |second_hash|
+        second_hash.transform_values do |v|
+          bitmap_to_terms(v)
+        end
       end
     end
 
@@ -202,11 +205,13 @@ module Lrama
       follow_sets = Digraph.new(nterm_transitions, @includes_relation, read_sets).compute
 
       @states.select(&:has_conflicts?).each do |state|
+        lookback_relation_on_state = @lookback_relation[state.id]
+        next unless lookback_relation_on_state
         rules.each do |rule|
-          sources = {}
-          key = [state.id, rule.id] # @type var key: reduce
-          ary = @lookback_relation[key]
+          ary = lookback_relation_on_state[rule.id]
           next unless ary
+
+          sources = {}
 
           ary.each do |goto|
             source = follow_sets[goto]
@@ -285,7 +290,7 @@ module Lrama
       items = state.kernels.dup
 
       items.each do |item|
-        queued[item] = true
+        queued[item.rule_id] = true if item.position == 0
       end
 
       while (item = items.shift) do
@@ -293,11 +298,11 @@ module Lrama
 
         if (sym = item.next_sym) && sym.nterm?
           @grammar.find_rules_by_symbol!(sym).each do |rule|
+            next if queued[rule.id]
             i = State::Item.new(rule: rule, position: 0)
-            next if queued[i]
             closure << i
             items << i
-            queued[i] = true
+            queued[i.rule_id] = true
           end
         end
       end
@@ -450,9 +455,9 @@ module Lrama
           @grammar.find_rules_by_symbol!(nterm).each do |rule|
             state2 = transition(state, rule.rhs)
             # p = state, A = nterm, q = state2, A -> ω = rule
-            key = [state2.id, rule.id] # @type var key: reduce
-            @lookback_relation[key] ||= []
-            @lookback_relation[key] << goto
+            @lookback_relation[state2.id] ||= {}
+            @lookback_relation[state2.id][rule.id] ||= []
+            @lookback_relation[state2.id][rule.id] << goto
           end
         end
       end
@@ -466,9 +471,10 @@ module Lrama
     # @rbs () -> void
     def compute_la
       @states.each do |state|
+        lookback_relation_on_state = @lookback_relation[state.id]
+        next unless lookback_relation_on_state
         rules.each do |rule|
-          key = [state.id, rule.id] # @type var key: reduce
-          ary = @lookback_relation[key]
+          ary = lookback_relation_on_state[rule.id]
           next unless ary
 
           ary.each do |goto|
@@ -477,9 +483,10 @@ module Lrama
 
             next if follows == 0
 
-            @la[key] ||= 0
-            look_ahead = @la[key] | follows
-            @la[key] |= look_ahead
+            @la[state.id] ||= {}
+            @la[state.id][rule.id] ||= 0
+            look_ahead = @la[state.id][rule.id] | follows
+            @la[state.id][rule.id] |= look_ahead
 
             # No risk of conflict when
             # * the state only has single reduce

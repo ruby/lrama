@@ -152,38 +152,38 @@ module Lrama
     # @rbs () -> c_token
     def lex_c_code
       nested = 0
-      code = ''
+      code = +''
       reset_first_position
 
       until @scanner.eos? do
         case
         when @scanner.scan(/{/)
-          code += @scanner.matched
+          code << @scanner.matched
           nested += 1
         when @scanner.scan(/}/)
           if nested == 0 && @end_symbol == '}'
             @scanner.unscan
             return [:C_DECLARATION, Lrama::Lexer::Token::UserCode.new(s_value: code, location: location)]
           else
-            code += @scanner.matched
+            code << @scanner.matched
             nested -= 1
           end
         when @scanner.check(/#{@end_symbol}/)
           return [:C_DECLARATION, Lrama::Lexer::Token::UserCode.new(s_value: code, location: location)]
         when @scanner.scan(/\n/)
-          code += @scanner.matched
+          code << @scanner.matched
           newline
         when @scanner.scan(/".*?"/)
-          code += %Q(#{@scanner.matched})
+          code << %Q(#{@scanner.matched})
           @line += @scanner.matched.count("\n")
         when @scanner.scan(/'.*?'/)
-          code += %Q(#{@scanner.matched})
+          code << %Q(#{@scanner.matched})
         when @scanner.scan(/[^\"'\{\}\n]+/)
-          code += @scanner.matched
+          code << @scanner.matched
         when @scanner.scan(/#{Regexp.escape(@end_symbol)}/) # steep:ignore
-          code += @scanner.matched
+          code << @scanner.matched
         else
-          code += @scanner.getch
+          code << @scanner.getch
         end
       end
       raise ParseError, "Unexpected code: #{code}." # steep:ignore UnknownConstant
