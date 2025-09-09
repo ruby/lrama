@@ -145,7 +145,7 @@ module Lrama
           end
         return [type, token]
       else
-        raise ParseError, "Unexpected token: #{@scanner.peek(10).chomp}." # steep:ignore UnknownConstant
+        raise ParseError, location.generate_error_message("Unexpected token") # steep:ignore UnknownConstant
       end
     end
 
@@ -186,7 +186,7 @@ module Lrama
           code << @scanner.getch
         end
       end
-      raise ParseError, "Unexpected code: #{code}." # steep:ignore UnknownConstant
+      raise ParseError, location.generate_error_message("Unexpected code: #{code}") # steep:ignore UnknownConstant
     end
 
     private
