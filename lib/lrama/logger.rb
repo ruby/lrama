@@ -20,12 +20,12 @@ module Lrama
 
     # @rbs (String message) -> void
     def warn(message)
-      @out << message << "\n"
+      @out << 'warning: ' << message << "\n"
     end
 
     # @rbs (String message) -> void
     def error(message)
-      @out << message << "\n"
+      @out << 'error: ' << message << "\n"
     end
   end
 end
