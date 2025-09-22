@@ -3,7 +3,11 @@
 
 module Lrama
   class Warnings
-    class Empty
+    # Warning rationale: Empty rules are easily overlooked and ambiguous
+    # - Empty alternatives like `rule: | "token";` can be missed during code reading
+    # - Difficult to distinguish between intentional empty rules vs. omissions
+    # - Explicit marking with %empty directive comment improves clarity
+    class ImplicitEmpty
       # @rbs (Lrama::Logger logger, bool warnings) -> void
       def initialize(logger, warnings)
         @logger = logger

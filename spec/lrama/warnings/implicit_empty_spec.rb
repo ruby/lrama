@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Lrama::Warnings::Empty do
+RSpec.describe Lrama::Warnings::ImplicitEmpty do
   describe "#warn" do
     let(:y) do
       <<~STR
