@@ -1,0 +1,17 @@
+# Generated from lib/lrama/warnings/implicit_empty.rb with RBS::Inline
+
+module Lrama
+  class Warnings
+    # Warning rationale: Empty rules are easily overlooked and ambiguous
+    # - Empty alternatives like `rule: | "token";` can be missed during code reading
+    # - Difficult to distinguish between intentional empty rules vs. omissions
+    # - Explicit marking with %empty directive comment improves clarity
+    class ImplicitEmpty
+      # @rbs (Lrama::Logger logger, bool warnings) -> void
+      def initialize: (Lrama::Logger logger, bool warnings) -> void
+
+      # @rbs (Lrama::Grammar grammar) -> void
+      def warn: (Lrama::Grammar grammar) -> void
+    end
+  end
+end
