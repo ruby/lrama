@@ -16,15 +16,14 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # Explicitly specifies an older compatible version of Ubuntu as the runner, for which pre-built Ruby 3.4 is available.
-    if: ${{ github.repository == 'ruby/lrama' && !startsWith(github.event_name, 'pull') }}
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Setup Ruby
         uses: ruby/setup-ruby@f26937343756480a8cb3ae1f623b9c8d89ed6984 # v1.196.0
         with:
-          ruby-version: "3.4"
+          ruby-version: "3.3" # TODO: Temporarily avoids the error if 3.4 is specified. (https://github.com/ruby/lrama/actions/runs/17967414950/job/51102512657)
           bundler-cache: true
       - name: Setup Pages
         id: pages
