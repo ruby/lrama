@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # Explicitly specifies an older compatible version of Ubuntu as the runner, for which pre-built Ruby 3.4 is available.
     if: ${{ github.repository == 'ruby/lrama' && !startsWith(github.event_name, 'pull') }}
     steps:
       - name: Checkout
@@ -38,7 +38,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - name: Deploy to GitHub Pages
