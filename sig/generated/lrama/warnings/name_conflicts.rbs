@@ -1,0 +1,31 @@
+# Generated from lib/lrama/warnings/name_conflicts.rb with RBS::Inline
+
+module Lrama
+  class Warnings
+    # Warning rationale: Parameterized rule names conflicting with symbol names
+    # - When a %rule name is identical to a terminal or non-terminal symbol name,
+    #   it reduces grammar readability and may cause unintended behavior
+    # - Detecting these conflicts helps improve grammar definition quality
+    class NameConflicts
+      # @rbs (Lrama::Logger logger, bool warnings) -> void
+      def initialize: (Lrama::Logger logger, bool warnings) -> void
+
+      # @rbs (Lrama::Grammar grammar) -> void
+      def warn: (Lrama::Grammar grammar) -> void
+
+      private
+
+      # @rbs (Lrama::Grammar grammar) -> Set[String]
+      def collect_symbol_names: (Lrama::Grammar grammar) -> Set[String]
+
+      # @rbs (Array[untyped] terms, Set[String] symbol_names) -> void
+      def collect_term_names: (Array[untyped] terms, Set[String] symbol_names) -> void
+
+      # @rbs (Array[untyped] nterms, Set[String] symbol_names) -> void
+      def collect_nterm_names: (Array[untyped] nterms, Set[String] symbol_names) -> void
+
+      # @rbs (Array[untyped] parameterized_rules, Set[String] symbol_names) -> void
+      def check_conflicts: (Array[untyped] parameterized_rules, Set[String] symbol_names) -> void
+    end
+  end
+end
