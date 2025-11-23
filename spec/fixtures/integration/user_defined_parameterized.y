@@ -3,6 +3,7 @@
 #define YYDEBUG 1
 
 #include <stdio.h>
+#include <stdint.h>
 
 #include "user_defined_parameterized.h"
 #include "user_defined_parameterized-lexer.h"
@@ -15,11 +16,15 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %union {
     int num;
+    void* ptr;
+    lrama_list_node_t* list;
 }
 
 %token <num> ODD EVEN
 
 %type <num> stmt
+%type <ptr> stmt_wrapped
+%type <list> stmts
 
 %rule pair(X, Y): X Y
                     {
@@ -34,14 +39,17 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %%
 
-program: stmts
+program: stmts { lrama_list_free($1);}
        ;
 
-stmts: separated_list(';', stmt)
+stmts: separated_list(';', stmt_wrapped) <list> { $$ = $1; }
      ;
 
-stmt: pair(ODD, EVEN) <num> { printf("pair odd even: %d\n", $1); }
-    | pair(EVEN, ODD)[result] <num> { printf("pair even odd: %d\n", $result); }
+stmt_wrapped: stmt { $$ = (void*)(intptr_t)$1; }
+            ;
+
+stmt: pair(ODD, EVEN) <num> { printf("pair odd even: %d\n", $1); $$ = $1; }
+    | pair(EVEN, ODD)[result] <num> { printf("pair even odd: %d\n", $result); $$ = $result; }
     ;
 
 %%
