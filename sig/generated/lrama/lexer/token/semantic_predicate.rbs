@@ -1,0 +1,17 @@
+# Generated from lib/lrama/lexer/token/semantic_predicate.rb with RBS::Inline
+
+module Lrama
+  class Lexer
+    module Token
+      class SemanticPredicate < Base
+        attr_reader code: String
+
+        # @rbs (s_value: String, code: String, ?location: Location) -> void
+        def initialize: (s_value: String, code: String, ?location: Location) -> void
+
+        # @rbs () -> String
+        def to_s: () -> String
+      end
+    end
+  end
+end

@@ -4,7 +4,7 @@ module Lrama
   class Lexer
     type token = lexer_token | c_token
 
-    type lexer_token = [ String, Token::Token ] | [ ::Symbol, Token::Tag ] | [ ::Symbol, Token::Char ] | [ ::Symbol, Token::Str ] | [ ::Symbol, Token::Int ] | [ ::Symbol, Token::Ident ]
+    type lexer_token = [ String, Token::Token ] | [ ::Symbol, Token::Tag ] | [ ::Symbol, Token::Char ] | [ ::Symbol, Token::Str ] | [ ::Symbol, Token::Int ] | [ ::Symbol, Token::Ident ] | [ ::Symbol, Token::SemanticPredicate ]
 
     type c_token = [ :C_DECLARATION, Token::UserCode ]
 
@@ -41,6 +41,9 @@ module Lrama
     def lex_c_code: () -> c_token
 
     private
+
+    # @rbs () -> Lrama::Lexer::Token::SemanticPredicate?
+    def try_scan_semantic_predicate: () -> Lrama::Lexer::Token::SemanticPredicate?
 
     # @rbs () -> void
     def lex_comment: () -> void

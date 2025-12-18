@@ -23,14 +23,15 @@ module Lrama
       #   attr_accessor nullable: bool
       #   attr_accessor precedence_sym: Grammar::Symbol?
       #   attr_accessor lineno: Integer?
-      #
-      #   def initialize: (
-      #     ?id: Integer, ?_lhs: Lexer::Token::Base?, ?lhs: Lexer::Token::Base, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Lexer::Token::Base], ?rhs: Array[Grammar::Symbol],
-      #     ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool,
-      #     ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?
-      #   ) -> void
 
       attr_accessor :original_rule #: Rule
+      attr_accessor :predicates #: Array[Grammar::SemanticPredicate]
+
+      # @rbs (**untyped kwargs) -> void
+      def initialize(**kwargs)
+        super(**kwargs)
+        @predicates = []
+      end
 
       # @rbs (Rule other) -> bool
       def ==(other)
