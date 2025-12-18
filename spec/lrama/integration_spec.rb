@@ -6,6 +6,12 @@ require "tmpdir"
 
 RSpec.describe "integration" do
   module IntegrationHelper
+    @compiled_parsers = {}
+
+    class << self
+      attr_accessor :compiled_parsers
+    end
+
     def exec_command(command)
       `#{command}`
       raise "#{command} failed." unless $?.success?
@@ -35,9 +41,14 @@ RSpec.describe "integration" do
         debug = true
       end
 
-      Lrama::Command.new(%W[-H#{parser_h_path} -o#{parser_c_path}] + lrama_command_args + %W[#{grammar_file_path}]).run
-      exec_command("flex --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
-      exec_command("#{compiler} -Wall -ggdb3 -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
+      cache_key = "#{parser_name}_#{lrama_command_args.join('_')}"
+
+      unless IntegrationHelper.compiled_parsers[cache_key] && File.exist?(obj_path)
+        Lrama::Command.new(%W[-H#{parser_h_path} -o#{parser_c_path}] + lrama_command_args + %W[#{grammar_file_path}]).run
+        exec_command("flex --header-file=#{lexer_h_path} -o #{lexer_c_path} #{lexer_file_path}")
+        exec_command("#{compiler} -Wall -O0 -g -I#{tmpdir} #{parser_c_path} #{lexer_c_path} -o #{obj_path}")
+        IntegrationHelper.compiled_parsers[cache_key] = true
+      end
 
       out = err = status = nil
 
@@ -58,11 +69,16 @@ RSpec.describe "integration" do
 
     def generate_object(grammar_file_path, c_path, obj_path, command_args: [])
       Lrama::Command.new(%W[-d -o #{c_path}] + command_args + %W[#{grammar_file_path}]).run
-      exec_command("#{compiler} -Wall #{c_path} -o #{obj_path}")
+      exec_command("#{compiler} -Wall -O0 #{c_path} -o #{obj_path}")
     end
   end
 
   include IntegrationHelper
+
+  # Clear cache after all tests to save memory
+  after(:all) do
+    IntegrationHelper.compiled_parsers.clear
+  end
 
   describe "calculator" do
     it "returns 9 for '(1+2)*3'" do
