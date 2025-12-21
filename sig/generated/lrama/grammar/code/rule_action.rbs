@@ -55,6 +55,9 @@ module Lrama
         # @rbs () -> Grammar::Symbol
         def lhs: () -> Grammar::Symbol
 
+        # @rbs () -> bool
+        def union_not_defined?: () -> bool
+
         # @rbs (Reference ref) -> bot
         def raise_tag_not_found_error: (Reference ref) -> bot
       end
