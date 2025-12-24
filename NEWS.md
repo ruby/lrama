@@ -1,6 +1,308 @@
 # NEWS for Lrama
 
-## Lrama 0.7.1 (2025-xx-xx)
+## Lrama 0.7.1 (2025-12-24)
+
+### Optimize IELR
+
+Optimized performance to a level that allows for IELR testing in practical applications.
+
+https://github.com/ruby/lrama/pull/595
+https://github.com/ruby/lrama/pull/605
+https://github.com/ruby/lrama/pull/685
+https://github.com/ruby/lrama/pull/700
+
+### Introduce counterexamples timeout
+
+Counterexample searches can sometimes take a long time, so we've added a timeout to abort the process after a set period. The current limits are:
+
+* 10 seconds per case
+* 120 seconds total (cumulative)
+
+Please note that these are hard-coded and cannot be modified by the user in the current version.
+
+https://github.com/ruby/lrama/pull/623
+
+### Optimize Counterexamples
+
+Optimized counterexample search performance.
+
+https://github.com/ruby/lrama/pull/607
+https://github.com/ruby/lrama/pull/610
+https://github.com/ruby/lrama/pull/614
+https://github.com/ruby/lrama/pull/622
+https://github.com/ruby/lrama/pull/627
+https://github.com/ruby/lrama/pull/629
+https://github.com/ruby/lrama/pull/659
+
+### Support parameterized rule's arguments include inline
+
+Allow to use %inline directive with Parameterized rules arguments. When an inline rule is used as an argument to a Parameterized rule, it expands inline at the point of use.
+
+```yacc
+%rule %inline op : '+'
+                 | '-'
+                 ;
+%%
+operation : op?
+          ;
+```
+
+This expands to:
+
+```yacc
+operation : /* empty */
+          | '+'
+          | '-'
+          ;
+```
+
+https://github.com/ruby/lrama/pull/637
+
+### Render conflicts of each state on output file
+
+Added token information for conflicts in the output file.
+These information are useful when a state has many actions.
+
+```
+State 1
+
+    4 class: keyword_class • tSTRING "end"
+    5 $@1: ε •  [tSTRING]
+    7 class: keyword_class • $@1 tSTRING '!' "end" $@2
+    8 $@3: ε •  [tSTRING]
+   10 class: keyword_class • $@3 tSTRING '?' "end" $@4
+
+    Conflict on tSTRING. shift/reduce($@1)
+    Conflict on tSTRING. shift/reduce($@3)
+    Conflict on tSTRING. reduce($@1)/reduce($@3)
+
+    tSTRING  shift, and go to state 6
+
+    tSTRING  reduce using rule 5 ($@1)
+    tSTRING  reduce using rule 8 ($@3)
+
+    $@1  go to state 7
+    $@3  go to state 8
+```
+
+https://github.com/ruby/lrama/pull/541
+
+### Render the origin of conflicted tokens on output file
+
+For example, for the grammar file like below:
+
+```
+%%
+
+program: expr
+       ;
+
+expr: expr '+' expr
+    | tNUMBER
+    ;
+
+%%
+```
+
+Lrama generates output file which describes where `"plus"` (`'+'`) look ahead tokens come from:
+
+```
+State 6
+
+    2 expr: expr • "plus" expr
+    2     | expr "plus" expr •  ["end of file", "plus"]
+
+    Conflict on "plus". shift/reduce(expr)
+      "plus" comes from state 0 goto by expr
+      "plus" comes from state 5 goto by expr
+```
+
+state 0 and state 5 look like below:
+
+```
+State 0
+
+    0 $accept: • program "end of file"
+    1 program: • expr
+    2 expr: • expr "plus" expr
+    3     | • tNUMBER
+
+    tNUMBER  shift, and go to state 1
+
+    program  go to state 2
+    expr     go to state 3
+
+State 5
+
+    2 expr: • expr "plus" expr
+    2     | expr "plus" • expr
+    3     | • tNUMBER
+
+    tNUMBER  shift, and go to state 1
+
+    expr  go to state 6
+```
+
+https://github.com/ruby/lrama/pull/726
+
+### Render precedences usage information on output file
+
+For example, for the grammar file like below:
+
+```
+%left  tPLUS
+%right tUPLUS
+
+%%
+
+program: expr ;
+
+expr: tUPLUS expr
+    | expr tPLUS expr
+    | tNUMBER
+    ;
+
+%%
+```
+
+Lrama generates output file which describes where these precedences are used to resolve conflicts:
+
+```
+Precedences
+  precedence on "unary+" is used to resolve conflict on
+    LALR
+      state 5. Conflict between reduce by "expr -> tUPLUS expr" and shift "+" resolved as reduce ("+" < "unary+").
+  precedence on "+" is used to resolve conflict on
+    LALR
+      state 5. Conflict between reduce by "expr -> tUPLUS expr" and shift "+" resolved as reduce ("+" < "unary+").
+      state 8. Conflict between reduce by "expr -> expr tPLUS expr" and shift "+" resolved as reduce (%left "+").
+```
+
+https://github.com/ruby/lrama/pull/741
+
+### Add support for reporting Rule Usage Frequency
+
+Support to report rule usage frequency statistics for analyzing grammar characteristics.
+Run `exe/lrama --report=rules` to show how frequently each terminal and non-terminal symbol is used in the grammar rules.
+
+```console
+$ exe/lrama --report=rules sample/calc.y
+Rule Usage Frequency
+    0 tSTRING (4 times)
+    1 keyword_class (3 times)
+    2 keyword_end (3 times)
+    3 '+' (2 times)
+    4 string (2 times)
+    5 string_1 (2 times)
+    6 '!' (1 times)
+    7 '-' (1 times)
+    8 '?' (1 times)
+    9 EOI (1 times)
+   10 class (1 times)
+   11 program (1 times)
+   12 string_2 (1 times)
+   13 strings_1 (1 times)
+   14 strings_2 (1 times)
+   15 tNUMBER (1 times)
+```
+
+This feature provides insights into the language characteristics by showing:
+- Which symbols are most frequently used in the grammar
+- The distribution of terminal and non-terminal usage
+- Potential areas for grammar optimization or refactoring
+
+The frequency statistics help developers understand the grammar structure and can be useful for:
+- Grammar complexity analysis
+- Performance optimization hints
+- Language design decisions
+- Documentation and educational purposes
+
+https://github.com/ruby/lrama/pull/677
+
+### Render Split States information on output file
+
+For example, for the grammar file like below:
+
+```
+%token a
+%token b
+%token c
+%define lr.type ielr
+
+%precedence tLOWEST
+%precedence a
+%precedence tHIGHEST
+
+%%
+
+S: a A B a
+ | b A B b
+ ;
+
+A: a C D E
+ ;
+
+B: c
+ | // empty
+ ;
+
+C: D
+ ;
+
+D: a
+ ;
+
+E: a
+ | %prec tHIGHEST // empty
+ ;
+
+%%
+```
+
+Lrama generates output file which describes where which new states are created when IELR is enabled:
+
+```
+Split States
+
+    State 19 is split from state 4
+    State 20 is split from state 9
+    State 21 is split from state 14
+```
+
+https://github.com/ruby/lrama/pull/624
+
+### Add ioption support to the Standard library
+
+Support `ioption` (inline option) rule, which is expanded inline without creating intermediate rules.
+
+Unlike the regular `option` rule that generates a separate rule, `ioption` directly expands at the point of use:
+
+```yacc
+program: ioption(number) expr
+
+// Expanded inline to:
+
+program: expr
+       | number expr
+```
+
+This differs from the regular `option` which would generate:
+
+```yacc
+program: option(number) expr
+
+// Expanded to:
+
+program: option_number expr
+option_number: %empty
+             | number
+```
+
+The `ioption` rule provides more compact grammar generation by avoiding intermediate rule creation, which can be beneficial for reducing the parser's rule count and potentially improving performance.
+
+This feature is inspired by Menhir's standard library and maintains compatibility with [Menhir's `ioption` behavior](https://github.com/let-def/menhir/blob/e8ba7bef219acd355798072c42abbd11335ecf09/src/standard.mly#L33-L41).
+
+https://github.com/ruby/lrama/pull/666
 
 ### Syntax Diagrams
 
@@ -14,6 +316,8 @@ If you use syntax diagrams, you add `--diagram` option.
 $ exe/lrama --diagram sample.y
 ```
 
+https://github.com/ruby/lrama/pull/523
+
 ### Support `--profile` option
 
 You can profile parser generation process without modification for Lrama source code.
@@ -26,6 +330,10 @@ $ exe/lrama --profile=call-stack sample/calc.y
 Then "tmp/stackprof-cpu-myapp.dump" is generated.
 
 https://github.com/ruby/lrama/pull/525
+
+### Add support Start-Symbol: `%start`
+
+https://github.com/ruby/lrama/pull/576
 
 ## Lrama 0.7.0 (2025-01-21)
 
