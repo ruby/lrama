@@ -117,6 +117,37 @@ RSpec.describe Lrama::Parser do
   end
 
   describe '#parse' do
+    it "no_union" do
+      path = "common/no_union.y"
+      y = File.read(fixture_path(path))
+      grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
+
+      expect(grammar.union).to be_nil
+      expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "expr"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 2, nullable: false),
+      ])
+    end
+
+    it "no_union_with_type" do
+      path = "common/no_union_with_type.y"
+      y = File.read(fixture_path(path))
+      grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
+
+      expect(grammar.union).to be_nil
+      expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+        Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 0, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
+        Sym.new(id: T::Ident.new(s_value: "expr"), alias_name: nil, number: 8, tag: T::Tag.new(s_value: "<val>"), term: false, token_id: 2, nullable: false),
+      ])
+      expect(grammar.terms.find {|t| t.id.s_value == "NUMBER" }.tag).to eq(T::Tag.new(s_value: "<val>"))
+    end
+
     it "basic" do
       path = "common/basic.y"
       y = File.read(fixture_path(path))
