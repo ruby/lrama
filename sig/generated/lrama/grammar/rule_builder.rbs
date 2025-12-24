@@ -19,6 +19,8 @@ module Lrama
 
       @replaced_rhs: Array[Lexer::Token::Base]?
 
+      @predicates: Array[[ Lexer::Token::SemanticPredicate, bool ]]
+
       attr_accessor lhs: Lexer::Token::Base?
 
       attr_accessor line: Integer?
@@ -29,6 +31,8 @@ module Lrama
 
       attr_reader parameterized_resolver: Grammar::Parameterized::Resolver
 
+      attr_reader predicate_counter: Counter
+
       attr_reader lhs_tag: Lexer::Token::Tag?
 
       attr_reader rhs: Array[Lexer::Token::Base]
@@ -37,8 +41,10 @@ module Lrama
 
       attr_reader precedence_sym: Grammar::Symbol?
 
-      # @rbs (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
-      def initialize: (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
+      attr_reader predicates: untyped
+
+      # @rbs (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, Counter? predicate_counter, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
+      def initialize: (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, Counter? predicate_counter, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
 
       # @rbs (Lexer::Token::Base rhs) -> void
       def add_rhs: (Lexer::Token::Base rhs) -> void
@@ -48,6 +54,9 @@ module Lrama
 
       # @rbs (Grammar::Symbol? precedence_sym) -> void
       def precedence_sym=: (Grammar::Symbol? precedence_sym) -> void
+
+      # @rbs (Lexer::Token::SemanticPredicate predicate) -> void
+      def add_predicate: (Lexer::Token::SemanticPredicate predicate) -> void
 
       # @rbs () -> void
       def complete_input: () -> void

@@ -235,6 +235,26 @@ module Lrama
       end.join
     end
 
+    # Generate semantic predicate functions
+    def predicate_functions
+      all_predicates = @grammar.rules.flat_map(&:predicates).compact.uniq { |p| p.index }
+      return "" if all_predicates.empty?
+
+      functions = all_predicates.map do |predicate|
+        <<-STR
+/* Semantic predicate: {#{predicate.code}}? */
+static int
+#{predicate.function_name} (void)
+{
+  return (#{predicate.code});
+}
+
+        STR
+      end
+
+      functions.join
+    end
+
     # b4_user_actions
     def user_actions
       action = @context.states.rules.map do |rule|

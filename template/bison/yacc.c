@@ -667,6 +667,9 @@ do {                                            \
 
 # ifndef YYLOCATION_PRINT
 
+<%# Semantic predicate functions -%>
+<%= output.predicate_functions %>
+
 #  if defined YY_LOCATION_PRINT
 
    /* Temporary convenience wrapper in case some people defined the

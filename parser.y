@@ -2,7 +2,7 @@ class Lrama::Parser
   expect 0
   error_on_expect_mismatch
 
-  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
+  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER SEMANTIC_PREDICATE STRING TAG
 
 rule
 
@@ -427,6 +427,12 @@ rule
           builder.user_code = user_code
           result = builder
         }
+    | rhs SEMANTIC_PREDICATE
+        {
+          builder = val[0]
+          builder.add_predicate(val[1])
+          result = builder
+        }
     | rhs "%prec" symbol
         {
           on_action_error("multiple %prec in a rule", val[0]) if prec_seen?
@@ -510,6 +516,7 @@ def initialize(text, path, debug = false, locations = false, define = {})
   @yydebug = debug || define.key?('parse.trace')
   @rule_counter = Lrama::Grammar::Counter.new(0)
   @midrule_action_counter = Lrama::Grammar::Counter.new(1)
+  @predicate_counter = Lrama::Grammar::Counter.new(0)
   @locations = locations
   @define = define
 end
@@ -518,7 +525,7 @@ def parse
   message = "parse '#{File.basename(@path)}'"
   report_duration(message) do
     @lexer = Lrama::Lexer.new(@grammar_file)
-    @grammar = Lrama::Grammar.new(@rule_counter, @locations, @define)
+    @grammar = Lrama::Grammar.new(@rule_counter, @predicate_counter, @locations, @define)
     @precedence_number = 0
     reset_precs
     do_parse
