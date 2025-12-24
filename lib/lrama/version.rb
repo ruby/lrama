@@ -2,5 +2,5 @@
 # frozen_string_literal: true
 
 module Lrama
-  VERSION = "0.7.0".freeze #: String
+  VERSION = "0.7.1".freeze #: String
 end
