@@ -84,9 +84,13 @@ https://ruby.github.io/lrama/ provides a comprehensive guide to Lrama's features
 
 ## Versions and Branches
 
-### v0_7 (`master` branch)
+### v0_8 (`master` branch)
 
-This branch is for Ruby 4.0. `lrama_0_7` branch is created from this branch, once Ruby 4.0 is released.
+This branch is for Ruby 4.1. `lrama_0_8` branch is created from this branch, once Ruby 4.1 is released.
+
+### v0_7 (`lrama_0_7` branch)
+
+This branch is for Ruby 4.0.
 
 ### v0_6 (`lrama_0_6` branch)
 
