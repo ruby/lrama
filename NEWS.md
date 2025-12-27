@@ -1,5 +1,7 @@
 # NEWS for Lrama
 
+## Lrama 0.8.0 (2026-xx-xx)
+
 ## Lrama 0.7.1 (2025-12-24)
 
 ### Optimize IELR
