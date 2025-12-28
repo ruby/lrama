@@ -269,6 +269,54 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "LAC (Lookahead Correction)" do
+    describe "%nonassoc operators" do
+      it "provides accurate error messages for chained comparisons" do
+        test_parser("lac_nonassoc", "1 < 2 < 3", "Error: syntax error, unexpected '<', expecting end of file\n", expect_success: false)
+      end
+
+      it "accepts valid single comparison" do
+        test_parser("lac_nonassoc", "1 < 2", "", expect_success: true)
+      end
+    end
+
+    describe "default reductions" do
+      it "detects errors early before default reductions" do
+        test_parser("lac_default_reduction", "x = 1 + *", "Error: syntax error, unexpected '*', expecting ID or NUM\n", expect_success: false)
+      end
+
+      it "accepts valid assignment" do
+        test_parser("lac_default_reduction", "x = 1 + 2;", "", expect_success: true)
+      end
+
+      it "accepts valid expression statement" do
+        test_parser("lac_default_reduction", "1 + 2 * 3;", "", expect_success: true)
+      end
+    end
+
+    describe "accurate expected token lists" do
+      it "detects invalid tokens in control flow statements" do
+        test_parser("lac_accurate_tokens", "if x do y", "Error: syntax error, unexpected DO\n", expect_success: false)
+      end
+
+      it "accepts valid if-then statement" do
+        test_parser("lac_accurate_tokens", "if x then y", "", expect_success: true)
+      end
+
+      it "accepts valid if-then-else statement" do
+        test_parser("lac_accurate_tokens", "if x then y else z", "", expect_success: true)
+      end
+
+      it "accepts valid while-do statement" do
+        test_parser("lac_accurate_tokens", "while x do y", "", expect_success: true)
+      end
+
+      it "accepts nested control flow" do
+        test_parser("lac_accurate_tokens", "if x then while y do z", "", expect_success: true)
+      end
+    end
+  end
+
   describe "sample files" do
     let(:c_path)   { Dir.tmpdir + "/test#{file_extension}" }
     let(:obj_path) { Dir.tmpdir + "/test" }
