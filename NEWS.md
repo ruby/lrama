@@ -2,6 +2,27 @@
 
 ## Lrama 0.8.0 (2026-xx-xx)
 
+### LAC (Lookahead Correction) Support
+
+Added support for LAC (Lookahead Correction), which improves syntax error reporting by providing more accurate error messages. LAC can be enabled using the `%define parse.lac full` directive in grammar files.
+
+Key features:
+- More precise "expected token" lists in syntax error messages
+- Early error detection (before default reductions)
+- Better handling of `%nonassoc` operators
+- Compatible with existing LALR parser generation
+
+Example usage:
+```yacc
+%define parse.lac full
+%define parse.error verbose
+
+%%
+expr: expr '+' expr
+    | NUMBER
+    ;
+```
+
 ## Lrama 0.7.1 (2025-12-24)
 
 ### Optimize IELR

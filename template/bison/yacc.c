@@ -858,14 +858,184 @@ int yydebug;
 # define YYMAXDEPTH 10000
 #endif
 
+<%- if output.lac_enabled? -%>
+
+/* LAC (Lookahead Correction) */
+
+/* YYLAC_ENABLED -- LAC is enabled.  */
+#define YYLAC_ENABLED 1
+
+/* Initial capacity of state stack for LAC exploratory stack.  */
+#ifndef YYLAC_STACK_INITIAL_SIZE
+# define YYLAC_STACK_INITIAL_SIZE 20
+#endif
+
+/* Maximum capacity of state stack for LAC exploratory stack.  */
+#ifndef YYLAC_STACK_MAX_SIZE
+# define YYLAC_STACK_MAX_SIZE YYMAXDEPTH
+#endif
+
+<%- else -%>
+#define YYLAC_ENABLED 0
+<%- end -%>
+
 
 /* Context of a parse error.  */
 typedef struct
 {
+<%- if output.lac_enabled? -%>
+  yy_state_t *yyss;
+<%- end -%>
   yy_state_t *yyssp;
   yysymbol_kind_t yytoken;
   YYLTYPE *yylloc;
 } yypcontext_t;
+
+<%- if output.lac_enabled? -%>
+
+/* Perform LAC (Lookahead Correction) to determine if the given token
+   is syntactically acceptable in the current parser state.
+
+   This function simulates parsing with the given token without modifying
+   the actual parser state.  It copies the parser stack to an exploratory
+   stack and performs reductions until a shift or error is determined.
+
+   Arguments:
+   - yyesa: Static array for exploratory stack (initial storage)
+   - yyes: Pointer to exploratory stack pointer (may be reallocated)
+   - yyes_capacity: Pointer to capacity of exploratory stack
+   - yyss: Base of the parser state stack
+   - yyssp: Top of the parser state stack
+   - yytoken: Token to check for acceptability
+
+   Returns:
+   - 0: Token is acceptable (can be shifted)
+   - 1: Token is not acceptable (syntax error)
+   - 2: Memory exhausted during stack reallocation
+*/
+static int
+yy_lac (yy_state_t *yyesa, yy_state_t **yyes,
+        YYPTRDIFF_T *yyes_capacity, yy_state_t *yyss, yy_state_t *yyssp,
+        yysymbol_kind_t yytoken)
+{
+  yy_state_t *yyesp;
+
+  /* Reset exploratory stack to static array.  */
+  *yyes = yyesa;
+
+  /* Copy the parser stack onto the exploratory stack.  */
+  {
+    YYPTRDIFF_T yysize = (YYPTRDIFF_T) (yyssp - yyss + 1);
+    if (*yyes_capacity < yysize)
+      {
+        YYPTRDIFF_T yyalloc = 2 * yysize;
+        if (YYLAC_STACK_MAX_SIZE < yyalloc)
+          yyalloc = YYLAC_STACK_MAX_SIZE;
+        if (*yyes_capacity < yyalloc)
+          {
+            *yyes_capacity = yyalloc;
+            {
+              yy_state_t *yyptr = *yyes;
+              *yyes = YY_CAST (yy_state_t *,
+                              YYSTACK_ALLOC (YY_CAST (YYSIZE_T,
+                                                      *yyes_capacity
+                                                      * sizeof **yyes)));
+              if (!*yyes)
+                {
+                  *yyes = yyptr;
+                  return 2;
+                }
+            }
+          }
+      }
+    {
+      yy_state_t *yyp1 = yyss;
+      yy_state_t *yyp2 = *yyes;
+      /* Copy from base to top including the initial state.  */
+      do
+        *yyp2++ = *yyp1++;
+      while (yyp1 <= yyssp);
+      yyesp = yyp2 - 1;
+    }
+  }
+
+  /* Explore the parse tree using the exploratory stack.  */
+  for (;;)
+    {
+      int yyn = yypact[+*yyesp];
+      if (yypact_value_is_default (yyn))
+        goto yydefault_lac;
+      yyn += yytoken;
+      if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken)
+        goto yydefault_lac;
+      yyn = yytable[yyn];
+      if (yyn <= 0)
+        {
+          if (yytable_value_is_error (yyn))
+            return 1;  /* Syntax error.  */
+          yyn = -yyn;
+          goto yyreduce_lac;
+        }
+      /* Token is syntactically acceptable.  */
+      return 0;
+
+    yydefault_lac:
+      yyn = yydefact[+*yyesp];
+      if (yyn == 0)
+        return 1;  /* Syntax error.  */
+
+    yyreduce_lac:
+      {
+        YYPTRDIFF_T yylen = yyr2[yyn];
+        yysymbol_kind_t yylhsNonterm = YY_CAST (yysymbol_kind_t, yyr1[yyn]);
+        yyesp -= yylen;
+        yyn = yypgoto[yylhsNonterm - YYNTOKENS] + *yyesp;
+        if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != *yyesp)
+          yyn = yydefgoto[yylhsNonterm - YYNTOKENS];
+        else
+          yyn = yytable[yyn];
+        ++yyesp;
+        if (yyesp == *yyes + *yyes_capacity)
+          {
+            YYPTRDIFF_T yysize = (YYPTRDIFF_T) (yyesp - *yyes);
+            if (YYLAC_STACK_MAX_SIZE <= yysize)
+              return 2;
+            {
+              YYPTRDIFF_T yyalloc = 2 * yysize;
+              if (YYLAC_STACK_MAX_SIZE < yyalloc)
+                yyalloc = YYLAC_STACK_MAX_SIZE;
+              {
+                yy_state_t *yyptr = *yyes;
+                yy_state_t *yynewptr =
+                  YY_CAST (yy_state_t *,
+                          YYSTACK_ALLOC (YY_CAST (YYSIZE_T,
+                                                  yyalloc * sizeof *yynewptr)));
+                if (!yynewptr)
+                  {
+                    YYSTACK_FREE (*yyes);
+                    *yyes = yyptr;
+                    return 2;
+                  }
+                *yyes = yynewptr;
+                yyesp = *yyes + yysize - 1;
+                *yyes_capacity = yyalloc;
+                {
+                  yy_state_t *yyp1 = yyptr;
+                  yy_state_t *yyp2 = *yyes;
+                  while (yyp1 != yyptr + yysize)
+                    *yyp2++ = *yyp1++;
+                }
+                if (yyptr != yyesa)
+                  YYSTACK_FREE (yyptr);
+              }
+            }
+          }
+        *yyesp = YY_CAST (yy_state_t, yyn);
+      }
+    }
+}
+
+<%- end -%>
 
 /* Put in YYARG at most YYARGN of the expected tokens given the
    current YYCTX, and return the number of tokens stored in YYARG.  If
@@ -879,6 +1049,43 @@ yypcontext_expected_tokens (const yypcontext_t *yyctx,
 {
   /* Actual size of YYARG. */
   int yycount = 0;
+<%- if output.lac_enabled? -%>
+  /* Use LAC to compute the set of expected tokens accurately.  */
+  yy_state_t yyesa_local[YYLAC_STACK_INITIAL_SIZE];
+  yy_state_t *yyes_local = yyesa_local;
+  YYPTRDIFF_T yyes_capacity_local = YYLAC_STACK_INITIAL_SIZE;
+  int yyx;
+  for (yyx = 0; yyx < YYNTOKENS; ++yyx)
+    {
+      yysymbol_kind_t yysym = YY_CAST (yysymbol_kind_t, yyx);
+      if (yysym != YYSYMBOL_YYerror && yysym != YYSYMBOL_YYUNDEF)
+        {
+          int yylac_status = yy_lac (yyesa_local, &yyes_local,
+                                     &yyes_capacity_local, yyctx->yyss, yyctx->yyssp, yysym);
+          if (yylac_status == 2)
+            {
+              if (yyes_local != yyesa_local)
+                YYSTACK_FREE (yyes_local);
+              return YYENOMEM;
+            }
+          if (yylac_status == 0)
+            {
+              if (!yyarg)
+                ++yycount;
+              else if (yycount == yyargn)
+                {
+                  if (yyes_local != yyesa_local)
+                    YYSTACK_FREE (yyes_local);
+                  return 0;
+                }
+              else
+                yyarg[yycount++] = yysym;
+            }
+        }
+    }
+  if (yyes_local != yyesa_local)
+    YYSTACK_FREE (yyes_local);
+<%- else -%>
   int yyn = yypact[+*yyctx->yyssp];
   if (!yypact_value_is_default (yyn))
     {
@@ -902,6 +1109,7 @@ yypcontext_expected_tokens (const yypcontext_t *yyctx,
               yyarg[yycount++] = YY_CAST (yysymbol_kind_t, yyx);
           }
     }
+<%- end -%>
   if (yyarg && yycount == 0 && 0 < yyargn)
     yyarg[0] = YYSYMBOL_YYEMPTY;
   return yycount;
@@ -1521,6 +1729,13 @@ YYLTYPE yylloc = yyloc_default;
     YYLTYPE *yyls = yylsa;
     YYLTYPE *yylsp = yyls;
 
+<%- if output.lac_enabled? -%>
+    /* LAC: exploratory state stack.  */
+    yy_state_t yyesa[YYLAC_STACK_INITIAL_SIZE];
+    yy_state_t *yyes = yyesa;
+    YYPTRDIFF_T yyes_capacity = YYLAC_STACK_INITIAL_SIZE;
+<%- end -%>
+
   int yyn;
   /* The return value of yyparse.  */
   int yyresult;
@@ -1736,6 +1951,17 @@ yybackup:
       YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
     }
 
+<%- if output.lac_enabled? -%>
+  /* LAC: Check if this token is syntactically acceptable.  */
+  {
+    int yylac_status = yy_lac (yyesa, &yyes, &yyes_capacity, yyss, yyssp, yytoken);
+    if (yylac_status == 2)
+      goto yyexhaustedlab;
+    if (yylac_status == 1)
+      goto yyerrlab;
+  }
+<%- end -%>
+
   /* If the proper action on seeing token YYTOKEN is to reduce or to
      detect an error, take that action.  */
   yyn += yytoken;
@@ -1854,7 +2080,7 @@ yyerrlab:
       ++yynerrs;
       {
         yypcontext_t yyctx
-          = {yyssp, yytoken, &yylloc};
+          = {<%- if output.lac_enabled? -%>yyss, <%- end -%>yyssp, yytoken, &yylloc};
         char const *yymsgp = YY_("syntax error");
         int yysyntax_error_status;
         yysyntax_error_status = yysyntax_error (&yymsg_alloc, &yymsg, &yyctx<%= output.user_args %>);
@@ -2055,6 +2281,10 @@ yyreturnlab:
   if (yyss != yyssa)
     YYSTACK_FREE (yyss);
 #endif
+<%- if output.lac_enabled? -%>
+  if (yyes != yyesa)
+    YYSTACK_FREE (yyes);
+<%- end -%>
   if (yymsg != yymsgbuf)
     YYSTACK_FREE (yymsg);
   return yyresult;
