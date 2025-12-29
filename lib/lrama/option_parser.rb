@@ -132,6 +132,9 @@ module Lrama
         o.separator 'Error Recovery:'
         o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }
         o.separator ''
+        o.separator 'Grammar Processing:'
+        o.on('--no-inline', 'ignore all %inline keywords') {|v| @options.no_inline = true }
+        o.separator ''
         o.separator 'Other options:'
         o.on('-V', '--version', "output version information and exit") {|v| puts "lrama #{Lrama::VERSION}"; exit 0 }
         o.on('-h', '--help', "display this help and exit") {|v| puts o; exit 0 }
