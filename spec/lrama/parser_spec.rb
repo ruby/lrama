@@ -3322,7 +3322,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 27,
@@ -3335,7 +3335,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'-'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  -  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '-';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
               lineno: 27,
@@ -3348,7 +3348,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'*'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  *  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '*';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'*'"),
               lineno: 27,
@@ -3361,7 +3361,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'/'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  /  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '/';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'/'"),
               lineno: 27,
@@ -3374,7 +3374,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'%'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  + 1 +  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '%';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'%'"),
               lineno: 28,
@@ -3387,7 +3387,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'&'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  - 1 -  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '&';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'&'"),
               lineno: 28,
@@ -3407,7 +3407,7 @@ RSpec.describe Lrama::Parser do
         end
 
         it "raises an error" do
-          expect { Timeout.timeout(1) { grammar } }.to raise_error(RuntimeError, "Recursive inline rule: a")
+          expect { Timeout.timeout(1) { grammar } }.to raise_error(Lrama::Grammar::Inline::Validator::RecursiveInlineError, /a -> a/)
         end
       end
 
@@ -3453,7 +3453,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3487,7 +3487,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'-'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  -  $4; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '-';  }  $$ = $1 _inline_2 $4; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
               lineno: 25,
@@ -3537,7 +3537,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3550,7 +3550,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'-'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  -  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '-';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
               lineno: 25,
@@ -3669,7 +3669,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $1 _inline_2 $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3683,7 +3683,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'='"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $1  +=  $4; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+=';  }  $$ = $1 _inline_2 $4; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'='"),
               lineno: 25,
@@ -3733,7 +3733,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = @1  +  @3; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = @1 _inline_2 @3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3747,7 +3747,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'='"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = @1  +=  @4; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+=';  }  $$ = @1 _inline_2 @4; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'='"),
               lineno: 25,
@@ -3797,7 +3797,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $3  +  $1; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $3 _inline_2 $1; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3811,7 +3811,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'='"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " $$ = $4  +=  $1; "),
+              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+=';  }  $$ = $4 _inline_2 $1; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'='"),
               lineno: 25,
@@ -3859,6 +3859,103 @@ RSpec.describe Lrama::Parser do
         rule = grammar.rules.last
 
         expect(rule.token_code.s_value).to eq(%q{ $$ = f( "\1" , $3, $4, $11, @2, @3, @11); })
+      end
+
+      it "discards an unused inline expression fragment" do
+        y = <<~GRAMMAR
+          %rule %inline op : '+' { + /* ; */ } ;
+          %%
+          expression : op { finish(); } ;
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        expect(grammar.rules.last.token_code.s_value).to eq(" finish(); ")
+      end
+
+      it "runs an inline action once when the outer action discards its value" do
+        y = <<~GRAMMAR
+          %rule %inline op : '+' { record_op(); /* done */ } ;
+          %%
+          expression : op { finish(); } ;
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        code = grammar.rules.last.token_code.s_value
+        expect(code.scan("record_op();")).to eq(["record_op();"])
+        expect(code.index("record_op();")).to be < code.index("finish();")
+      end
+
+      context 'when inline has direct recursion' do
+        let(:path) { "inlining/recursive_direct.y" }
+
+        it "raises RecursiveInlineError" do
+          expect { grammar }.to raise_error(
+            Lrama::Grammar::Inline::Validator::RecursiveInlineError,
+            /Recursive inline definition detected/
+          )
+        end
+      end
+
+      context 'when inline has mutual recursion' do
+        let(:path) { "inlining/recursive_mutual.y" }
+
+        it "raises RecursiveInlineError" do
+          expect { grammar }.to raise_error(
+            Lrama::Grammar::Inline::Validator::RecursiveInlineError,
+            /Recursive inline definition detected/
+          )
+        end
+      end
+
+      context 'when inline expansion for precedence resolution (Menhir core use case)' do
+        let(:path) { "inlining/precedence_test.y" }
+
+        it "expands inline rules and inherits correct precedence from terminals" do
+          expect(grammar.rules.size).to eq(4)
+
+          plus_rule = grammar.rules.find do |r|
+            r.rhs.any? { |s| s.name == "PLUS" }
+          end
+
+          times_rule = grammar.rules.find do |r|
+            r.rhs.any? { |s| s.name == "TIMES" }
+          end
+
+          expect(plus_rule).not_to be_nil
+          expect(plus_rule.precedence_sym.name).to eq("PLUS")
+
+          expect(times_rule).not_to be_nil
+          expect(times_rule.precedence_sym.name).to eq("TIMES")
+        end
+      end
+
+      context 'when inline action contains $$ (Menhir-style variable binding)' do
+        let(:path) { "inlining/menhir_style.y" }
+
+        it "uses variable binding instead of macro substitution" do
+          expect(grammar.rules.size).to eq(4)
+
+          plus_rule = grammar.rules.find do |r|
+            r.rhs.any? { |s| s.name == "'+'" }
+          end
+
+          times_rule = grammar.rules.find do |r|
+            r.rhs.any? { |s| s.name == "'*'" }
+          end
+
+          expect(plus_rule).not_to be_nil
+          expect(times_rule).not_to be_nil
+
+          expect(plus_rule.token_code.s_value).to include("YYSTYPE _inline_2")
+          expect(plus_rule.token_code.s_value).to include("_inline_2 = add")
+          expect(plus_rule.token_code.s_value).to include("$$ = _inline_2($1, $3)")
+
+          expect(times_rule.token_code.s_value).to include("YYSTYPE _inline_2")
+          expect(times_rule.token_code.s_value).to include("_inline_2 = mul")
+          expect(times_rule.token_code.s_value).to include("$$ = _inline_2($1, $3)")
+        end
       end
     end
 

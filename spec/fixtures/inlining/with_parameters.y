@@ -15,8 +15,8 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %token <i> NUM
 %type <i> expression
 
-%rule %inline op(p, m)  : p { + }
-                        | m { - }
+%rule %inline op(p, m)  : p { $$ = '+'; }
+                        | m { $$ = '-'; }
                         ;
 
 %%

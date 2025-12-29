@@ -140,6 +140,8 @@ module Lrama
 
     attr_accessor nodes: Array[Node::Base]
 
+    attr_accessor no_inline: bool
+
     # @rbs (Counter rule_counter, bool locations, Hash[String, String?] define) -> void
     def initialize: (Counter rule_counter, bool locations, Hash[String, String?] define) -> void
 
@@ -261,13 +263,10 @@ module Lrama
     def append_special_symbols: () -> Grammar::Symbol
 
     # @rbs () -> void
-    def resolve_inline_rules: () -> void
+    def validate_inline_rules: () -> void
 
     # @rbs () -> void
-    def validate_inline_rules!: () -> void
-
-    # @rbs (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
-    def validate_inline_rule!: (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
+    def resolve_inline_rules: () -> void
 
     # @rbs () -> void
     def normalize_rules: () -> void

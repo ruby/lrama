@@ -20,6 +20,9 @@ module Lrama
 
         # @rbs (Lrama::Grammar::Parameterized::Rhs rhs, Integer index) -> Node::RuleRhs::Action?
         def replace_action: (Lrama::Grammar::Parameterized::Rhs rhs, Integer index) -> Node::RuleRhs::Action?
+
+        # @rbs (String variable, Grammar::Reference ref) -> String
+        def inline_value: (String variable, Grammar::Reference ref) -> String
       end
     end
   end

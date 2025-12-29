@@ -9,6 +9,9 @@ module Lrama
         # @rbs () -> Array[Lrama::Grammar::Reference]
         def references: () -> Array[Lrama::Grammar::Reference]
 
+        # @rbs () -> bool
+        def ends_with_statement?: () -> bool
+
         private
 
         # @rbs () -> Array[Lrama::Grammar::Reference]

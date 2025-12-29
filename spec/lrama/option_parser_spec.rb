@@ -70,6 +70,9 @@ RSpec.describe Lrama::OptionParser do
           Error Recovery:
               -e                               enable error recovery
 
+          Grammar Processing:
+                  --no-inline                  ignore all %inline keywords
+
           Other options:
               -V, --version                    output version information and exit
               -h, --help                       display this help and exit
