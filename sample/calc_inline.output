@@ -1,0 +1,488 @@
+Rule Usage Frequency
+
+    0 expr (6 times)
+    1 program (3 times)
+    2 LF (2 times)
+    3 '(' (1 times)
+    4 ')' (1 times)
+    5 NUM (1 times)
+    6 PLUS (1 times)
+    7 TIMES (1 times)
+    8 YYEOF (1 times)
+
+
+9 Terms
+
+3 Non-Terminals
+
+2 Unused Terms
+
+    0 YYerror
+    1 YYUNDEF
+
+
+Precedences
+
+  precedence on PLUS is used to resolve conflict on
+    LALR
+      state 12. Conflict between reduce by "expr -> expr PLUS expr" and shift PLUS resolved as reduce (%left PLUS).
+      state 12. Conflict between reduce by "expr -> expr PLUS expr" and shift TIMES resolved as shift (PLUS < TIMES).
+      state 13. Conflict between reduce by "expr -> expr TIMES expr" and shift PLUS resolved as reduce (PLUS < TIMES).
+
+  precedence on TIMES is used to resolve conflict on
+    LALR
+      state 12. Conflict between reduce by "expr -> expr PLUS expr" and shift TIMES resolved as shift (PLUS < TIMES).
+      state 13. Conflict between reduce by "expr -> expr TIMES expr" and shift PLUS resolved as reduce (PLUS < TIMES).
+      state 13. Conflict between reduce by "expr -> expr TIMES expr" and shift TIMES resolved as reduce (%left TIMES).
+
+
+Grammar
+
+    0 $accept: program "end of file"
+
+    1 program: ε
+    2        | program expr LF
+    3        | program LF
+
+    4 expr: NUM
+    5     | expr PLUS expr
+    6     | expr TIMES expr
+    7     | '(' expr ')'
+
+
+State 0
+
+    0 $accept: • program "end of file"
+    1 program: ε •
+    2        | • program expr LF
+    3        | • program LF
+
+    $default  reduce using rule 1 (program)
+
+    program  go to state 1
+
+  [Direct Read sets]
+    read program  shift YYEOF, NUM, LF, '('
+
+  [Reads Relation]
+
+  [Read sets]
+    YYEOF
+    NUM
+    LF
+    '('
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: program -> ε) -> (State 0, program)
+
+  [Follow sets]
+    program -> YYEOF
+    program -> NUM
+    program -> LF
+    program -> '('
+
+  [Look-Ahead Sets]
+    YYEOF  reduce using rule 1 (program)
+    NUM    reduce using rule 1 (program)
+    LF     reduce using rule 1 (program)
+    '('    reduce using rule 1 (program)
+
+
+State 1
+
+    0 $accept: program • "end of file"
+    2 program: program • expr LF
+    3        | program • LF
+    4 expr: • NUM
+    5     | • expr PLUS expr
+    6     | • expr TIMES expr
+    7     | • '(' expr ')'
+
+    "end of file"  shift, and go to state 2
+    NUM            shift, and go to state 3
+    LF             shift, and go to state 4
+    '('            shift, and go to state 5
+
+    expr  go to state 6
+
+  [Direct Read sets]
+    read expr  shift PLUS, TIMES, LF
+
+  [Reads Relation]
+
+  [Read sets]
+    PLUS
+    TIMES
+    LF
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> PLUS
+    expr -> TIMES
+    expr -> LF
+
+  [Look-Ahead Sets]
+
+State 2
+
+    0 $accept: program "end of file" •
+
+    $default  accept
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+
+State 3
+
+    4 expr: NUM •
+
+    $default  reduce using rule 4 (expr)
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> NUM) -> (State 1, expr)
+    (Rule: expr -> NUM) -> (State 5, expr)
+    (Rule: expr -> NUM) -> (State 8, expr)
+    (Rule: expr -> NUM) -> (State 9, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    PLUS   reduce using rule 4 (expr)
+    TIMES  reduce using rule 4 (expr)
+    LF     reduce using rule 4 (expr)
+    ')'    reduce using rule 4 (expr)
+
+
+State 4
+
+    3 program: program LF •
+
+    $default  reduce using rule 3 (program)
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: program -> program LF) -> (State 0, program)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    YYEOF  reduce using rule 3 (program)
+    NUM    reduce using rule 3 (program)
+    LF     reduce using rule 3 (program)
+    '('    reduce using rule 3 (program)
+
+
+State 5
+
+    4 expr: • NUM
+    5     | • expr PLUS expr
+    6     | • expr TIMES expr
+    7     | • '(' expr ')'
+    7     | '(' • expr ')'
+
+    NUM  shift, and go to state 3
+    '('  shift, and go to state 5
+
+    expr  go to state 7
+
+  [Direct Read sets]
+    read expr  shift PLUS, TIMES, ')'
+
+  [Reads Relation]
+
+  [Read sets]
+    PLUS
+    TIMES
+    ')'
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> PLUS
+    expr -> TIMES
+    expr -> ')'
+
+  [Look-Ahead Sets]
+
+State 6
+
+    2 program: program expr • LF
+    5 expr: expr • PLUS expr
+    6     | expr • TIMES expr
+
+    PLUS   shift, and go to state 8
+    TIMES  shift, and go to state 9
+    LF     shift, and go to state 10
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+
+State 7
+
+    5 expr: expr • PLUS expr
+    6     | expr • TIMES expr
+    7     | '(' expr • ')'
+
+    PLUS   shift, and go to state 8
+    TIMES  shift, and go to state 9
+    ')'    shift, and go to state 11
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+
+State 8
+
+    4 expr: • NUM
+    5     | • expr PLUS expr
+    5     | expr PLUS • expr
+    6     | • expr TIMES expr
+    7     | • '(' expr ')'
+
+    NUM  shift, and go to state 3
+    '('  shift, and go to state 5
+
+    expr  go to state 12
+
+  [Direct Read sets]
+    read expr  shift PLUS, TIMES
+
+  [Reads Relation]
+
+  [Read sets]
+    PLUS
+    TIMES
+
+  [Includes Relation]
+    (State 8, expr) -> (State 1, expr)
+    (State 8, expr) -> (State 5, expr)
+    (State 8, expr) -> (State 8, expr)
+    (State 8, expr) -> (State 9, expr)
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> PLUS
+    expr -> TIMES
+    expr -> LF
+    expr -> ')'
+
+  [Look-Ahead Sets]
+
+State 9
+
+    4 expr: • NUM
+    5     | • expr PLUS expr
+    6     | • expr TIMES expr
+    6     | expr TIMES • expr
+    7     | • '(' expr ')'
+
+    NUM  shift, and go to state 3
+    '('  shift, and go to state 5
+
+    expr  go to state 13
+
+  [Direct Read sets]
+    read expr  shift PLUS, TIMES
+
+  [Reads Relation]
+
+  [Read sets]
+    PLUS
+    TIMES
+
+  [Includes Relation]
+    (State 9, expr) -> (State 1, expr)
+    (State 9, expr) -> (State 5, expr)
+    (State 9, expr) -> (State 8, expr)
+    (State 9, expr) -> (State 9, expr)
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> PLUS
+    expr -> TIMES
+    expr -> LF
+    expr -> ')'
+
+  [Look-Ahead Sets]
+
+State 10
+
+    2 program: program expr LF •
+
+    $default  reduce using rule 2 (program)
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: program -> program expr LF) -> (State 0, program)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    YYEOF  reduce using rule 2 (program)
+    NUM    reduce using rule 2 (program)
+    LF     reduce using rule 2 (program)
+    '('    reduce using rule 2 (program)
+
+
+State 11
+
+    7 expr: '(' expr ')' •
+
+    $default  reduce using rule 7 (expr)
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> '(' expr ')') -> (State 1, expr)
+    (Rule: expr -> '(' expr ')') -> (State 5, expr)
+    (Rule: expr -> '(' expr ')') -> (State 8, expr)
+    (Rule: expr -> '(' expr ')') -> (State 9, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    PLUS   reduce using rule 7 (expr)
+    TIMES  reduce using rule 7 (expr)
+    LF     reduce using rule 7 (expr)
+    ')'    reduce using rule 7 (expr)
+
+
+State 12
+
+    5 expr: expr • PLUS expr
+    5     | expr PLUS expr •  [PLUS, LF, ')']
+    6     | expr • TIMES expr
+
+    TIMES  shift, and go to state 9
+
+    $default  reduce using rule 5 (expr)
+
+    Conflict between rule 5 and token PLUS resolved as reduce (%left PLUS).
+    Conflict between rule 5 and token TIMES resolved as shift (PLUS < TIMES).
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> expr PLUS expr) -> (State 1, expr)
+    (Rule: expr -> expr PLUS expr) -> (State 5, expr)
+    (Rule: expr -> expr PLUS expr) -> (State 8, expr)
+    (Rule: expr -> expr PLUS expr) -> (State 9, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    PLUS   reduce using rule 5 (expr)
+    TIMES  reduce using rule 5 (expr)
+    LF     reduce using rule 5 (expr)
+    ')'    reduce using rule 5 (expr)
+
+
+State 13
+
+    5 expr: expr • PLUS expr
+    6     | expr • TIMES expr
+    6     | expr TIMES expr •  [PLUS, TIMES, LF, ')']
+
+    $default  reduce using rule 6 (expr)
+
+    Conflict between rule 6 and token PLUS resolved as reduce (PLUS < TIMES).
+    Conflict between rule 6 and token TIMES resolved as reduce (%left TIMES).
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> expr TIMES expr) -> (State 1, expr)
+    (Rule: expr -> expr TIMES expr) -> (State 5, expr)
+    (Rule: expr -> expr TIMES expr) -> (State 8, expr)
+    (Rule: expr -> expr TIMES expr) -> (State 9, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    PLUS   reduce using rule 6 (expr)
+    TIMES  reduce using rule 6 (expr)
+    LF     reduce using rule 6 (expr)
+    ')'    reduce using rule 6 (expr)
+
+

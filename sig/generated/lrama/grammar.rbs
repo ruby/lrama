@@ -136,6 +136,8 @@ module Lrama
 
     attr_accessor required: bool
 
+    attr_accessor no_inline: bool
+
     # @rbs (Counter rule_counter, bool locations, Hash[String, String] define) -> void
     def initialize: (Counter rule_counter, bool locations, Hash[String, String] define) -> void
 
@@ -243,6 +245,9 @@ module Lrama
 
     # @rbs () -> Grammar::Symbol
     def append_special_symbols: () -> Grammar::Symbol
+
+    # @rbs () -> void
+    def validate_inline_rules: () -> void
 
     # @rbs () -> void
     def resolve_inline_rules: () -> void

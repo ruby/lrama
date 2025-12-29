@@ -100,6 +100,7 @@ module Lrama
     attr_accessor :locations #: bool
     attr_accessor :define #: Hash[String, String]
     attr_accessor :required #: bool
+    attr_accessor :no_inline #: bool
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term, :find_term_by_s_value,
                                         :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
@@ -133,6 +134,7 @@ module Lrama
       @required = false
       @precedences = []
       @start_nterm = nil
+      @no_inline = false
 
       append_special_symbols
     end
@@ -254,7 +256,10 @@ module Lrama
 
     # @rbs () -> void
     def prepare
-      resolve_inline_rules
+      unless @no_inline
+        validate_inline_rules
+        resolve_inline_rules
+      end
       normalize_rules
       collect_symbols
       set_lhs_and_rhs
@@ -436,6 +441,12 @@ module Lrama
       term = add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "$accept"))
       term.accept_symbol = true
       @accept_symbol = term
+    end
+
+    # @rbs () -> void
+    def validate_inline_rules
+      validator = Inline::Validator.new(@parameterized_resolver, @start_nterm)
+      validator.validate!
     end
 
     # @rbs () -> void
