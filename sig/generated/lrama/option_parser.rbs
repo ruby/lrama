@@ -11,6 +11,8 @@ module Lrama
 
     @profile: Array[String]
 
+    @color: String?
+
     # @rbs (Array[String]) -> Lrama::Options
     def self.parse: (Array[String]) -> Lrama::Options
 
@@ -48,5 +50,10 @@ module Lrama
 
     # @rbs (Array[String]) -> Hash[Symbol, bool]
     def validate_profile: (Array[String]) -> Hash[Symbol, bool]
+
+    COLOR_OPTIONS: Hash[String, Symbol]
+
+    # @rbs (String?) -> Symbol
+    def validate_color: (String?) -> Symbol
   end
 end

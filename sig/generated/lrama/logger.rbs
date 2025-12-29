@@ -2,8 +2,10 @@
 
 module Lrama
   class Logger
-    # @rbs (IO out) -> void
-    def initialize: (IO out) -> void
+    attr_reader reporter: Diagnostics::Reporter
+
+    # @rbs (?IO out) -> void
+    def initialize: (?IO out) -> void
 
     # @rbs () -> void
     def line_break: () -> void
@@ -11,10 +13,25 @@ module Lrama
     # @rbs (String message) -> void
     def trace: (String message) -> void
 
-    # @rbs (String message) -> void
-    def warn: (String message) -> void
+    # @rbs (String message, ?location: untyped, ?source_line: String?) -> void
+    def warn: (String message, ?location: untyped, ?source_line: String?) -> void
 
-    # @rbs (String message) -> void
-    def error: (String message) -> void
+    # @rbs (String message, ?location: untyped, ?source_line: String?) -> void
+    def error: (String message, ?location: untyped, ?source_line: String?) -> void
+
+    # @rbs () -> Integer
+    def error_count: () -> Integer
+
+    # @rbs () -> Integer
+    def warning_count: () -> Integer
+
+    # @rbs () -> bool
+    def errors?: () -> bool
+
+    # @rbs () -> bool
+    def warnings?: () -> bool
+
+    # @rbs () -> String
+    def summary: () -> String
   end
 end

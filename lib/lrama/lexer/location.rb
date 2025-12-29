@@ -65,55 +65,26 @@ module Lrama
         "#{path} (#{first_line},#{first_column})-(#{last_line},#{last_column})"
       end
 
-      # @rbs (String error_message) -> String
-      def generate_error_message(error_message)
-        <<~ERROR.chomp
-          #{path}:#{first_line}:#{first_column}: #{error_message}
-          #{error_with_carets}
-        ERROR
-      end
-
-      # @rbs () -> String
-      def error_with_carets
-        <<~TEXT
-          #{formatted_first_lineno} | #{text}
-          #{line_number_padding} | #{carets_line}
-        TEXT
-      end
-
-      private
-
       # @rbs () -> String
       def path
         grammar_file.path
       end
 
-      # @rbs () -> String
-      def carets_line
-        leading_whitespace + highlight_marker
+      alias filename path
+
+      # @rbs (String error_message) -> String
+      def generate_error_message(error_message)
+        message = Diagnostics::Message.new(
+          type: :error,
+          location: self,
+          message: error_message,
+          source_line: text
+        )
+        formatter = Diagnostics::Formatter.new(color_enabled: Diagnostics::Color.enabled)
+        formatter.format(message)
       end
 
-      # @rbs () -> String
-      def leading_whitespace
-        (text[0...first_column] or raise "Invalid first_column: #{first_column}")
-          .gsub(/[^\t]/, ' ')
-      end
-
-      # @rbs () -> String
-      def highlight_marker
-        length = last_column - first_column
-        '^' + '~' * [0, length - 1].max
-      end
-
-      # @rbs () -> String
-      def formatted_first_lineno
-        first_line.to_s.rjust(4)
-      end
-
-      # @rbs () -> String
-      def line_number_padding
-        ' ' * formatted_first_lineno.length
-      end
+      private
 
       # @rbs () -> String
       def text
@@ -122,7 +93,7 @@ module Lrama
 
       # @rbs () -> Array[String]
       def _text
-        @_text ||=begin
+        @_text ||= begin
           range = (first_line - 1)...last_line
           grammar_file.lines[range] or raise "#{range} is invalid"
         end
