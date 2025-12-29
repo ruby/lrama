@@ -243,4 +243,93 @@ RSpec.describe Lrama::Grammar do
       end
     end
   end
+
+  describe '#api_token_raw?' do
+    context 'when api.token.raw is not defined' do
+      let(:grammar) { described_class.new(rule_counter, false, {}) }
+
+      it 'returns false' do
+        expect(grammar.api_token_raw?).to be false
+      end
+    end
+
+    context 'when api.token.raw is defined without value' do
+      let(:grammar) { described_class.new(rule_counter, false, { 'api.token.raw' => nil }) }
+
+      it 'returns true' do
+        expect(grammar.api_token_raw?).to be true
+      end
+    end
+
+    context 'when api.token.raw is defined with empty string' do
+      let(:grammar) { described_class.new(rule_counter, false, { 'api.token.raw' => '' }) }
+
+      it 'returns true' do
+        expect(grammar.api_token_raw?).to be true
+      end
+    end
+
+    context 'when api.token.raw is defined with "true"' do
+      let(:grammar) { described_class.new(rule_counter, false, { 'api.token.raw' => 'true' }) }
+
+      it 'returns true' do
+        expect(grammar.api_token_raw?).to be true
+      end
+    end
+
+    context 'when api.token.raw is defined with "false"' do
+      let(:grammar) { described_class.new(rule_counter, false, { 'api.token.raw' => 'false' }) }
+
+      it 'returns false' do
+        expect(grammar.api_token_raw?).to be false
+      end
+    end
+  end
+
+  describe '#validate! with api.token.raw' do
+    let(:grammar_file) { Lrama::Lexer::GrammarFile.new('parse.y', '') }
+
+    context 'when api.token.raw is enabled with character literal' do
+      let(:grammar) { described_class.new(rule_counter, false, { 'api.token.raw' => 'true' }) }
+
+      before do
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 5, first_column: 0, last_line: 5, last_column: 3)
+        grammar.add_term(id: Lrama::Lexer::Token::Char.new(s_value: "'+'", location: location))
+        grammar.fill_symbol_number
+      end
+
+      it 'raises error about character literal' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, /character literal '\+' cannot be used with %define api\.token\.raw/)
+      end
+    end
+
+    context 'when api.token.raw is enabled without character literal' do
+      let(:grammar) { described_class.new(rule_counter, false, { 'api.token.raw' => 'true' }) }
+
+      before do
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 5, first_column: 0, last_line: 5, last_column: 4)
+        grammar.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: 'PLUS', location: location))
+        grammar.fill_symbol_number
+      end
+
+      it 'does not raise error' do
+        expect { grammar.validate! }.not_to raise_error
+      end
+    end
+
+    context 'when api.token.raw is disabled with character literal' do
+      let(:grammar) { described_class.new(rule_counter, false, { 'api.token.raw' => 'false' }) }
+
+      before do
+        location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 5, first_column: 0, last_line: 5, last_column: 3)
+        grammar.add_term(id: Lrama::Lexer::Token::Char.new(s_value: "'+'", location: location))
+        grammar.fill_symbol_number
+      end
+
+      it 'does not raise error' do
+        expect { grammar.validate! }.not_to raise_error
+      end
+    end
+  end
 end

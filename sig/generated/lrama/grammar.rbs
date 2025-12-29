@@ -227,6 +227,9 @@ module Lrama
     # @rbs () -> bool
     def ielr_defined?: () -> bool
 
+    # @rbs () -> bool
+    def api_token_raw?: () -> bool
+
     private
 
     # @rbs () -> void
@@ -282,6 +285,9 @@ module Lrama
 
     # # @rbs () -> void
     def validate_duplicated_precedence!: () -> untyped
+
+    # @rbs () -> void
+    def validate_api_token_raw!: () -> void
 
     # @rbs () -> void
     def set_locations: () -> void

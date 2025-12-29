@@ -70,6 +70,39 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "api.token.raw" do
+    it "generates YYTRANSLATE as identity function without yytranslate array" do
+      tmpdir = Dir.tmpdir
+      grammar_file_path = fixture_path("integration/api_token_raw.y")
+      parser_c_path = tmpdir + "/api_token_raw_check.c"
+
+      Lrama::Command.new(%W[-o#{parser_c_path} #{grammar_file_path}]).run
+      generated_code = File.read(parser_c_path)
+
+      expect(generated_code).to include('#define YYTRANSLATE(YYX) ((yysymbol_kind_t) (YYX))')
+      expect(generated_code).not_to match(/static const .* yytranslate\[\]/)
+    end
+
+    it "assigns token IDs starting from 3 (after YYEOF=0, YYerror=1, YYUNDEF=2)" do
+      tmpdir = Dir.tmpdir
+      grammar_file_path = fixture_path("integration/api_token_raw.y")
+      parser_c_path = tmpdir + "/api_token_raw_check.c"
+
+      Lrama::Command.new(%W[-o#{parser_c_path} #{grammar_file_path}]).run
+      generated_code = File.read(parser_c_path)
+
+      expect(generated_code).to match(/NUM\s*=\s*3/)
+      expect(generated_code).to match(/PLUS\s*=\s*4/)
+      expect(generated_code).to match(/MINUS\s*=\s*5/)
+      expect(generated_code).to match(/STAR\s*=\s*6/)
+      expect(generated_code).to match(/SLASH\s*=\s*7/)
+    end
+
+    it "works correctly as a functional parser" do
+      test_parser("api_token_raw", "( 1 + 2 ) * 3", "=> 9")
+    end
+  end
+
   it "prologue and epilogue are optional" do
     test_parser("prologue_epilogue_optional", "", "")
   end

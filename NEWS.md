@@ -2,6 +2,29 @@
 
 ## Lrama 0.8.0 (2026-xx-xx)
 
+### Support `%define api.token.raw` directive
+
+Support `%define api.token.raw` directive for Bison compatibility.
+When enabled, external token numbers are unified with internal symbol numbers, eliminating the `yytranslate[]` array from generated code.
+
+This feature is useful for:
+- Reducing generated code size
+- Simplifying token handling (YYTRANSLATE becomes identity function)
+- Embedded systems with memory constraints
+- Debugging with unified token numbers
+
+```yacc
+%define api.token.raw
+
+%token NUM PLUS MINUS
+%%
+expr: NUM
+    | expr PLUS expr
+    ;
+```
+
+Note: Character literals (`'+'`, `';'`, etc.) cannot be used with this directive.
+
 ## Lrama 0.7.1 (2025-12-24)
 
 ### Optimize IELR

@@ -13,7 +13,7 @@ module Lrama
     def_delegators "@context", :yyfinal, :yylast, :yyntokens, :yynnts, :yynrules, :yynstates,
                                :yymaxutok, :yypact_ninf, :yytable_ninf
 
-    def_delegators "@grammar", :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol
+    def_delegators "@grammar", :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol, :api_token_raw?
 
     def initialize(
       out:, output_file_path:, template_name:, grammar_file_path:,

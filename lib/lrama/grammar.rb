@@ -277,6 +277,7 @@ module Lrama
       validate_no_precedence_for_nterm!
       validate_rule_lhs_is_nterm!
       validate_duplicated_precedence!
+      validate_api_token_raw!
     end
 
     # @rbs (Grammar::Symbol sym) -> Array[Rule]
@@ -302,6 +303,16 @@ module Lrama
     # @rbs () -> bool
     def ielr_defined?
       @define.key?('lr.type') && @define['lr.type'] == 'ielr'
+    end
+
+    # @rbs () -> bool
+    def api_token_raw?
+      return false unless @define.key?('api.token.raw')
+
+      value = @define['api.token.raw']
+      # When value is nil, empty string, or "true", it's enabled
+      # When value is "false", it's disabled
+      value != 'false'
     end
 
     private
@@ -529,7 +540,7 @@ module Lrama
 
     # @rbs () -> Array[Grammar::Symbol]
     def fill_symbols
-      fill_symbol_number
+      fill_symbol_number(api_token_raw: api_token_raw?)
       fill_nterm_type(@types)
       fill_printer(@printers)
       fill_destructor(@destructors)
@@ -588,6 +599,23 @@ module Lrama
         else
           seen[s_value] = prec
         end
+      end
+
+      return if errors.empty?
+
+      raise errors.join("\n")
+    end
+
+    # @rbs () -> void
+    def validate_api_token_raw!
+      return unless api_token_raw?
+
+      errors = [] #: Array[String]
+
+      terms.each do |term|
+        next unless term.id.is_a?(Lrama::Lexer::Token::Char)
+
+        errors << "character literal #{term.id.s_value} cannot be used with %define api.token.raw (line: #{term.id.first_line})"
       end
 
       return if errors.empty?

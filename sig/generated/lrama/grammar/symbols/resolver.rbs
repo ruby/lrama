@@ -25,7 +25,7 @@ module Lrama
 
           def fill_nterm_type: (Array[Grammar::Type] types) -> void
 
-          def fill_symbol_number: () -> void
+          def fill_symbol_number: (?api_token_raw: bool) -> void
 
           def fill_printer: (Array[Grammar::Printer] printers) -> void
 
@@ -82,8 +82,8 @@ module Lrama
         # @rbs (Integer number) -> Grammar::Symbol
         def find_symbol_by_number!: (Integer number) -> Grammar::Symbol
 
-        # @rbs () -> void
-        def fill_symbol_number: () -> void
+        # @rbs (?api_token_raw: bool) -> void
+        def fill_symbol_number: (?api_token_raw: bool) -> void
 
         # @rbs (Array[Grammar::Type] types) -> void
         def fill_nterm_type: (Array[Grammar::Type] types) -> void
@@ -110,6 +110,12 @@ module Lrama
 
         # @rbs () -> void
         def fill_terms_number: () -> void
+
+        # @rbs () -> void
+        def fill_terms_number_raw: () -> void
+
+        # @rbs () -> void
+        def fill_terms_number_normal: () -> void
 
         # @rbs () -> void
         def fill_nterms_number: () -> void

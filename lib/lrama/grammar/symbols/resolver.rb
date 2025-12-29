@@ -18,7 +18,7 @@ module Lrama
         #     def token_to_symbol: (Lexer::Token::Base token) -> Grammar::Symbol
         #     def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
         #     def fill_nterm_type: (Array[Grammar::Type] types) -> void
-        #     def fill_symbol_number: () -> void
+        #     def fill_symbol_number: (?api_token_raw: bool) -> void
         #     def fill_printer: (Array[Grammar::Printer] printers) -> void
         #     def fill_destructor: (Array[Destructor] destructors) -> (Destructor | bot)
         #     def fill_error_token: (Array[Grammar::ErrorToken] error_tokens) -> void
@@ -130,13 +130,14 @@ module Lrama
           sym
         end
 
-        # @rbs () -> void
-        def fill_symbol_number
+        # @rbs (?api_token_raw: bool) -> void
+        def fill_symbol_number(api_token_raw: false)
           # YYEMPTY = -2
           # YYEOF   =  0
           # YYerror =  1
           # YYUNDEF =  2
           @number = 3
+          @api_token_raw = api_token_raw
           fill_terms_number
           fill_nterms_number
         end
@@ -231,6 +232,34 @@ module Lrama
 
         # @rbs () -> void
         def fill_terms_number
+          if @api_token_raw
+            fill_terms_number_raw
+          else
+            fill_terms_number_normal
+          end
+        end
+
+        # @rbs () -> void
+        def fill_terms_number_raw
+          @terms.each do |sym|
+            while used_numbers[@number] do
+              @number += 1
+            end
+
+            if sym.number.nil?
+              sym.number = @number
+              used_numbers[@number] = true
+              @number += 1
+            end
+
+            if sym.token_id.nil?
+              sym.token_id = sym.number
+            end
+          end
+        end
+
+        # @rbs () -> void
+        def fill_terms_number_normal
           # Character literal in grammar file has
           # token id corresponding to ASCII code by default,
           # so start token_id from 256.

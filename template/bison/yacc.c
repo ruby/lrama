@@ -461,6 +461,10 @@ union yyalloc
 #define YYMAXUTOK   <%= output.yymaxutok %>
 
 
+<%- if output.api_token_raw? -%>
+/* api.token.raw: Token numbers are used directly without translation.  */
+#define YYTRANSLATE(YYX) ((yysymbol_kind_t) (YYX))
+<%- else -%>
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
    as returned by yylex, with out-of-bounds checking.  */
 #define YYTRANSLATE(YYX)                                \
@@ -474,6 +478,7 @@ static const <%= output.int_type_for(output.context.yytranslate) %> yytranslate[
 {
 <%= output.yytranslate %>
 };
+<%- end -%>
 
 <%- if output.error_recovery -%>
 /* YYTRANSLATE_INVERTED[SYMBOL-NUM] -- Token number corresponding to SYMBOL-NUM */
