@@ -140,14 +140,16 @@ rule
             }
           }
         }
-    | "%nterm" symbol_declarations
+    | "%nterm" nterm_declarations
         {
           val[1].each {|hash|
-            hash[:tokens].each {|id|
+            hash[:tokens].each {|token_info|
+              id = token_info[:id]
+              alias_name = token_info[:alias_name]
               if @grammar.find_term_by_s_value(id.s_value)
                 on_action_error("symbol #{id.s_value} redeclared as a nonterminal", id)
               else
-                @grammar.add_type(id: id, tag: hash[:tag])
+                @grammar.add_type(id: id, tag: hash[:tag], alias_name: alias_name)
               end
             }
           }
@@ -311,6 +313,26 @@ rule
           end
         }
     | symbol_declarations TAG symbol+ { result = val[0].append({tag: val[1], tokens: val[2]}) }
+
+  nterm_declarations:
+      TAG? nterm_declaration+
+        {
+          result = [{tag: val[0], tokens: val[1]}]
+        }
+    | nterm_declarations TAG nterm_declaration+
+        {
+          result = val[0].append({tag: val[1], tokens: val[2]})
+        }
+
+  nterm_declaration:
+      id
+        {
+          result = {id: val[0], alias_name: nil}
+        }
+    | id STRING
+        {
+          result = {id: val[0], alias_name: val[1].s_value}
+        }
 
   symbol:
       id

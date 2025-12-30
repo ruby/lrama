@@ -146,6 +146,7 @@ module Lrama
           types.each do |type|
             nterm = find_nterm_by_id!(type.id)
             nterm.tag = type.tag
+            nterm.alias_name = type.alias_name if type.alias_name
           end
         end
 

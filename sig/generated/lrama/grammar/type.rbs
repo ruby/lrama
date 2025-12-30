@@ -5,14 +5,18 @@ module Lrama
     class Type
       @id: Lexer::Token::Base
 
-      @tag: Lexer::Token::Tag
+      @tag: Lexer::Token::Tag?
+
+      @alias_name: String?
 
       attr_reader id: Lexer::Token::Base
 
-      attr_reader tag: Lexer::Token::Tag
+      attr_reader tag: Lexer::Token::Tag?
 
-      # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> void
-      def initialize: (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> void
+      attr_reader alias_name: String?
+
+      # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag?, ?alias_name: String?) -> void
+      def initialize: (id: Lexer::Token::Base, tag: Lexer::Token::Tag?, ?alias_name: String?) -> void
 
       # @rbs (Grammar::Type other) -> bool
       def ==: (Grammar::Type other) -> bool
