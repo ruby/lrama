@@ -4221,13 +4221,192 @@ RSpec.describe Lrama::Parser do
         end
       end
 
+      context "when %nterm with alias" do
+        context "basic alias" do
+          it "stores alias_name for nonterminal" do
+            y = <<~INPUT
+              %{
+              // Prologue
+              %}
+
+              %nterm expr "expression"
+
+              %%
+
+              expr: /* empty */
+                  ;
+            INPUT
+
+            grammar = Lrama::Parser.new(y, "nterm_alias.y").parse
+            grammar.prepare
+            grammar.validate!
+
+            expr = grammar.nterms.find { |n| n.id.s_value == "expr" }
+            expect(expr.alias_name).to eq("\"expression\"")
+          end
+        end
+
+        context "with tag" do
+          it "stores both tag and alias_name" do
+            y = <<~INPUT
+              %{
+              // Prologue
+              %}
+
+              %union {
+                  int i;
+              }
+
+              %nterm <i> expr "expression"
+
+              %%
+
+              expr: /* empty */
+                  ;
+            INPUT
+
+            grammar = Lrama::Parser.new(y, "nterm_alias.y").parse
+            grammar.prepare
+            grammar.validate!
+
+            expr = grammar.nterms.find { |n| n.id.s_value == "expr" }
+            expect(expr.tag.s_value).to eq("<i>")
+            expect(expr.alias_name).to eq("\"expression\"")
+          end
+        end
+
+        context "multiple declarations with aliases" do
+          it "stores aliases for all symbols" do
+            y = <<~INPUT
+              %{
+              // Prologue
+              %}
+
+              %nterm expr "expression" stmt "statement"
+
+              %%
+
+              expr: /* empty */
+                  ;
+
+              stmt: /* empty */
+                  ;
+            INPUT
+
+            grammar = Lrama::Parser.new(y, "nterm_alias.y").parse
+            grammar.prepare
+            grammar.validate!
+
+            expr = grammar.nterms.find { |n| n.id.s_value == "expr" }
+            stmt = grammar.nterms.find { |n| n.id.s_value == "stmt" }
+            expect(expr.alias_name).to eq("\"expression\"")
+            expect(stmt.alias_name).to eq("\"statement\"")
+          end
+        end
+
+        context "without alias (backward compatibility)" do
+          it "keeps alias_name as nil" do
+            y = <<~INPUT
+              %{
+              // Prologue
+              %}
+
+              %nterm expr
+
+              %%
+
+              expr: /* empty */
+                  ;
+            INPUT
+
+            grammar = Lrama::Parser.new(y, "nterm_alias.y").parse
+            grammar.prepare
+            grammar.validate!
+
+            expr = grammar.nterms.find { |n| n.id.s_value == "expr" }
+            expect(expr.alias_name).to be_nil
+          end
+        end
+
+        context "mixed declarations with and without aliases" do
+          it "correctly handles mixed declarations" do
+            y = <<~INPUT
+              %{
+              // Prologue
+              %}
+
+              %union {
+                  int i;
+              }
+
+              %nterm <i> expr "expression" stmt
+
+              %%
+
+              expr: /* empty */
+                  ;
+
+              stmt: /* empty */
+                  ;
+            INPUT
+
+            grammar = Lrama::Parser.new(y, "nterm_alias.y").parse
+            grammar.prepare
+            grammar.validate!
+
+            expr = grammar.nterms.find { |n| n.id.s_value == "expr" }
+            stmt = grammar.nterms.find { |n| n.id.s_value == "stmt" }
+            expect(expr.alias_name).to eq("\"expression\"")
+            expect(stmt.alias_name).to be_nil
+            expect(expr.tag.s_value).to eq("<i>")
+            expect(stmt.tag.s_value).to eq("<i>")
+          end
+        end
+
+        context "multiple tag groups" do
+          it "handles multiple tag groups with aliases" do
+            y = <<~INPUT
+              %{
+              // Prologue
+              %}
+
+              %union {
+                  int i;
+                  char *str;
+              }
+
+              %nterm <i> expr "expression" <str> name "identifier"
+
+              %%
+
+              expr: /* empty */
+                  ;
+
+              name: /* empty */
+                  ;
+            INPUT
+
+            grammar = Lrama::Parser.new(y, "nterm_alias.y").parse
+            grammar.prepare
+            grammar.validate!
+
+            expr = grammar.nterms.find { |n| n.id.s_value == "expr" }
+            name = grammar.nterms.find { |n| n.id.s_value == "name" }
+            expect(expr.tag.s_value).to eq("<i>")
+            expect(expr.alias_name).to eq("\"expression\"")
+            expect(name.tag.s_value).to eq("<str>")
+            expect(name.alias_name).to eq("\"identifier\"")
+          end
+        end
+      end
+
       context "when pass the terminal symbol to `%nterm`" do
         it "raises an error" do
           y = <<~INPUT
             %{
             // Prologue
             %}
-            
+
             %token EOI 0 "EOI"
             %nterm EOI
             

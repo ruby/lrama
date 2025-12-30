@@ -154,8 +154,8 @@ module Lrama
     # @rbs (ident_or_tags: Array[Lexer::Token::Ident|Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[ErrorToken]
     def add_error_token: (ident_or_tags: Array[Lexer::Token::Ident | Lexer::Token::Tag], token_code: Lexer::Token::UserCode, lineno: Integer) -> Array[ErrorToken]
 
-    # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> Array[Type]
-    def add_type: (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> Array[Type]
+    # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag?, ?alias_name: String?) -> Array[Type]
+    def add_type: (id: Lexer::Token::Base, tag: Lexer::Token::Tag?, ?alias_name: String?) -> Array[Type]
 
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
     def add_nonassoc: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
