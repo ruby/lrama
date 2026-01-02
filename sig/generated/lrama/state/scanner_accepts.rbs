@@ -1,0 +1,55 @@
+# Generated from lib/lrama/state/scanner_accepts.rb with RBS::Inline
+
+module Lrama
+  class State
+    # Scanner accepts table for PSLR(1)
+    # Based on Definition 3.2.14 from the PSLR dissertation
+    #
+    # scanner_accepts[sp, sa]: For parser state sp and accepting state sa,
+    # returns the token that should be selected
+    class ScannerAccepts
+      attr_reader table: Hash[[ Integer, Integer ], Grammar::TokenPattern?]
+
+      # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec) -> void
+      def initialize: (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec) -> void
+
+      # Build the scanner_accepts table
+      # Based on Definition 3.2.20 (compute_scanner_accepts)
+      # @rbs () -> void
+      def build: () -> void
+
+      # Get the accepted token for a parser state and accepting state
+      # @rbs (Integer parser_state_id, Integer accepting_state_id) -> Grammar::TokenPattern?
+      def []: (Integer parser_state_id, Integer accepting_state_id) -> Grammar::TokenPattern?
+
+      private
+
+      # Compute scanner_accepts for a single parser state
+      # Uses DFS to explore the FSA state space
+      # @rbs (State parser_state) -> void
+      def compute_for_parser_state: (State parser_state) -> void
+
+      # DFS exploration of FSA states
+      # @rbs (State parser_state, Integer fsa_state_id, Set[Integer] visited) -> void
+      def dfs: (State parser_state, Integer fsa_state_id, Set[Integer] visited) -> void
+
+      # Resolve which token should be accepted
+      # Based on Definition 3.2.19 (resolve)
+      # @rbs (State parser_state, ScannerFSA::State fsa_state) -> Grammar::TokenPattern?
+      def resolve: (State parser_state, ScannerFSA::State fsa_state) -> Grammar::TokenPattern?
+
+      # Compute acc(sp): set of terminal symbols acceptable at parser state sp
+      # @rbs (State parser_state) -> Set[String]
+      def compute_acc_sp: (State parser_state) -> Set[String]
+
+      # Select the best token from candidates based on precedence rules
+      # @rbs (Array[Grammar::TokenPattern] candidates) -> Grammar::TokenPattern?
+      def select_best_token: (Array[Grammar::TokenPattern] candidates) -> Grammar::TokenPattern?
+
+      # Compute priority rank for a token among candidates
+      # Lower rank = higher priority
+      # @rbs (Grammar::TokenPattern token, Array[Grammar::TokenPattern] candidates) -> [Integer, Integer]
+      def priority_rank: (Grammar::TokenPattern token, Array[Grammar::TokenPattern] candidates) -> [ Integer, Integer ]
+    end
+  end
+end

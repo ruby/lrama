@@ -1,0 +1,38 @@
+# Generated from lib/lrama/length_precedences.rb with RBS::Inline
+
+module Lrama
+  # Length precedences table for PSLR(1)
+  # Based on Definition 3.2.15 from the PSLR dissertation
+  #
+  # Determines which token should be preferred when there's a length conflict:
+  # - :left  - the shorter token (t1) should be preferred
+  # - :right - the longer token (t2) should be preferred
+  # - :undefined - no preference defined, use default (longest match)
+  class LengthPrecedences
+    # Result of length precedence lookup
+    LEFT: Symbol
+
+    RIGHT: Symbol
+
+    UNDEFINED: Symbol
+
+    attr_reader table: Hash[[ String, String ], Symbol]
+
+    # @rbs (Grammar::LexPrec lex_prec) -> void
+    def initialize: (Grammar::LexPrec lex_prec) -> void
+
+    # Get the length precedence between two tokens
+    # @rbs (String t1, String t2) -> Symbol
+    def precedence: (String t1, String t2) -> Symbol
+
+    # Check if t1 (shorter) should be preferred over t2 (longer)
+    # @rbs (String t1, String t2) -> bool
+    def prefer_shorter?: (String t1, String t2) -> bool
+
+    private
+
+    # Build the length precedence table from lex-prec rules
+    # @rbs (Grammar::LexPrec lex_prec) -> Hash[[String, String], Symbol]
+    def build_table: (Grammar::LexPrec lex_prec) -> Hash[[ String, String ], Symbol]
+  end
+end

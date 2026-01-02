@@ -44,6 +44,12 @@ module Lrama
 
     attr_reader lookback_relation: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
 
+    attr_reader scanner_fsa: ScannerFSA?
+
+    attr_reader length_precedences: LengthPrecedences?
+
+    attr_reader scanner_accepts_table: State::ScannerAccepts?
+
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize: (Grammar grammar, Tracer tracer) -> void
 
@@ -52,6 +58,11 @@ module Lrama
 
     # @rbs () -> void
     def compute_ielr: () -> void
+
+    # Compute PSLR(1) states
+    # Based on Section 3.4 of the PSLR dissertation
+    # @rbs () -> void
+    def compute_pslr: () -> void
 
     # @rbs () -> Integer
     def states_count: () -> Integer
@@ -211,5 +222,26 @@ module Lrama
 
     # @rbs () -> void
     def clear_look_ahead_sets: () -> void
+
+    # Build Scanner FSA from token patterns
+    # @rbs () -> void
+    def build_scanner_fsa: () -> void
+
+    # Build length precedences table
+    # @rbs () -> void
+    def build_length_precedences: () -> void
+
+    # Build scanner_accepts table
+    # @rbs () -> void
+    def build_scanner_accepts: () -> void
+
+    # Handle PSLR inadequacies
+    # Detects and splits states where pseudo-scanner behavior differs
+    # @rbs () -> void
+    def handle_pslr_inadequacies: () -> void
+
+    # Detect PSLR inadequacies in isocore groups
+    # @rbs () -> Array[State::PslrInadequacy]
+    def detect_pslr_inadequacies: () -> Array[State::PslrInadequacy]
   end
 end

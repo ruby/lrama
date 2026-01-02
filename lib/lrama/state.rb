@@ -4,8 +4,10 @@
 require_relative "state/action"
 require_relative "state/inadequacy_annotation"
 require_relative "state/item"
+require_relative "state/pslr_inadequacy"
 require_relative "state/reduce_reduce_conflict"
 require_relative "state/resolved_conflict"
+require_relative "state/scanner_accepts"
 require_relative "state/shift_reduce_conflict"
 
 module Lrama
