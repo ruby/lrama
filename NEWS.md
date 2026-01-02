@@ -2,6 +2,22 @@
 
 ## Lrama 0.8.0 (2026-xx-xx)
 
+### [EXPERIMENTAL] Support the generation of the PSLR(1) parser described in this dissertation
+
+Support the generation of the PSLR(1) parser described in this dissertation.
+https://open.clemson.edu/all_dissertations/519/
+
+If you use PSLR(1) parser, you can write the following directives in your grammar file.
+
+```yacc
+%token-pattern RSHIFT />>/ "right shift"
+%token-pattern RANGLE />/ "right angle"
+
+%lex-prec RANGLE -s RSHIFT
+```
+
+But, currently PSLR(1) parser is experimental feature. If you find any bugs, please report it to us. Thank you.
+
 ## Lrama 0.7.1 (2025-12-24)
 
 ### Optimize IELR

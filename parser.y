@@ -2,7 +2,7 @@ class Lrama::Parser
   expect 0
   error_on_expect_mismatch
 
-  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
+  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG REGEX
 
 rule
 
@@ -132,6 +132,8 @@ rule
 
   symbol_declaration:
       "%token" token_declarations
+    | "%token-pattern" token_pattern_declarations
+    | "%lex-prec" lex_prec_declarations
     | "%type" symbol_declarations
         {
           val[1].each {|hash|
@@ -212,6 +214,76 @@ rule
         }
 
   token_declaration: id INTEGER? alias { result = val }
+
+  token_pattern_declarations:
+      TAG? token_pattern_declaration+
+        {
+          val[1].each {|decl|
+            @grammar.add_token_pattern(
+              id: decl[:id],
+              pattern: decl[:pattern],
+              alias_name: decl[:alias],
+              tag: val[0],
+              lineno: decl[:id].first_line
+            )
+          }
+        }
+    | token_pattern_declarations TAG token_pattern_declaration+
+        {
+          val[2].each {|decl|
+            @grammar.add_token_pattern(
+              id: decl[:id],
+              pattern: decl[:pattern],
+              alias_name: decl[:alias],
+              tag: val[1],
+              lineno: decl[:id].first_line
+            )
+          }
+        }
+
+  token_pattern_declaration:
+      IDENTIFIER REGEX alias
+        {
+          result = { id: val[0], pattern: val[1], alias: val[2] }
+        }
+
+  lex_prec_declarations:
+      lex_prec_chain
+        {
+          val[0].each {|rule|
+            @grammar.add_lex_prec_rule(
+              left_token: rule[:left],
+              operator: rule[:op],
+              right_token: rule[:right],
+              lineno: rule[:left].first_line
+            )
+          }
+        }
+
+  lex_prec_chain:
+      IDENTIFIER lex_prec_op IDENTIFIER
+        {
+          result = [{ left: val[0], op: val[1], right: val[2] }]
+        }
+    | lex_prec_chain lex_prec_op IDENTIFIER
+        {
+          last_right = val[0].last[:right]
+          result = val[0] + [{ left: last_right, op: val[1], right: val[2] }]
+        }
+
+  lex_prec_op:
+      ","
+        {
+          result = Lrama::Grammar::LexPrec::SAME_PRIORITY
+        }
+    | "-"
+        {
+          result = Lrama::Grammar::LexPrec::HIGHER
+        }
+    | "-s"
+        {
+          result = Lrama::Grammar::LexPrec::SHORTER
+        }
 
   rule_declaration:
       "%rule" IDENTIFIER "(" rule_args ")" TAG? ":" rule_rhs_list

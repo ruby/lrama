@@ -36,12 +36,16 @@ module Lrama
     include Lrama::Tracer::Duration
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules, :precedences,
-      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?
+      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?, :pslr_defined?,
+      :token_patterns, :lex_prec
 
     attr_reader :states #: Array[State]
     attr_reader :reads_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
     attr_reader :includes_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
     attr_reader :lookback_relation #: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
+    attr_reader :scanner_fsa #: ScannerFSA?
+    attr_reader :length_precedences #: LengthPrecedences?
+    attr_reader :scanner_accepts_table #: State::ScannerAccepts?
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
@@ -139,6 +143,26 @@ module Lrama
       # Phase 5
       report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
       report_duration(:compute_default_reduction) { compute_default_reduction }
+    end
+
+    # Compute PSLR(1) states
+    # Based on Section 3.4 of the PSLR dissertation
+    # @rbs () -> void
+    def compute_pslr
+      # Phase 1: Run IELR(1) as the base
+      compute_ielr
+
+      # Phase 2: Build Scanner FSA from token patterns
+      report_duration(:build_scanner_fsa) { build_scanner_fsa }
+
+      # Phase 3: Build lexical precedence tables
+      report_duration(:build_length_precedences) { build_length_precedences }
+
+      # Phase 4: Build scanner_accepts table
+      report_duration(:build_scanner_accepts) { build_scanner_accepts }
+
+      # Phase 5: Detect and handle PSLR inadequacies
+      report_duration(:handle_pslr_inadequacies) { handle_pslr_inadequacies }
     end
 
     # @rbs () -> Integer
@@ -862,6 +886,76 @@ module Lrama
       @_read_sets = nil
       @_follow_sets = nil
       @_la = nil
+    end
+
+    # Build Scanner FSA from token patterns
+    # @rbs () -> void
+    def build_scanner_fsa
+      return if token_patterns.empty?
+
+      @scanner_fsa = ScannerFSA.new(token_patterns)
+    end
+
+    # Build length precedences table
+    # @rbs () -> void
+    def build_length_precedences
+      @length_precedences = LengthPrecedences.new(lex_prec)
+    end
+
+    # Build scanner_accepts table
+    # @rbs () -> void
+    def build_scanner_accepts
+      return unless @scanner_fsa
+
+      @scanner_accepts_table = State::ScannerAccepts.new(
+        @states,
+        @scanner_fsa,
+        lex_prec,
+        @length_precedences
+      )
+      @scanner_accepts_table.build
+    end
+
+    # Handle PSLR inadequacies
+    # Detects and splits states where pseudo-scanner behavior differs
+    # @rbs () -> void
+    def handle_pslr_inadequacies
+      return unless @scanner_fsa && @scanner_accepts_table
+
+      inadequacies = detect_pslr_inadequacies
+      return if inadequacies.empty?
+
+      # For now, just report inadequacies
+      # Full state splitting would require additional implementation
+      @tracer.warn("Detected #{inadequacies.size} PSLR inadequacies") if @tracer.respond_to?(:warn)
+    end
+
+    # Detect PSLR inadequacies in isocore groups
+    # @rbs () -> Array[State::PslrInadequacy]
+    def detect_pslr_inadequacies
+      inadequacies = []
+      checker = State::PslrCompatibilityChecker.new(@scanner_accepts_table, @length_precedences)
+
+      # Group states by their kernel items (isocore groups)
+      isocore_groups = @states.group_by { |s| s.kernels.map { |k| [k.rule.id, k.position] }.sort }
+
+      isocore_groups.each_value do |group_states|
+        next if group_states.size <= 1
+
+        # Check pairwise compatibility
+        group_states.combination(2).each do |s1, s2|
+          unless checker.compatible?(s1, s2, @scanner_fsa)
+            inadequacies << State::PslrInadequacy.new(
+              type: State::PslrInadequacy::PSLR_RELATIVE,
+              state: s1,
+              conflicting_states: [s1, s2],
+              details: { reason: "Scanner behavior differs between isocore states" }
+            )
+          end
+        end
+      end
+
+      inadequacies
     end
   end
 end

@@ -1,0 +1,129 @@
+# Generated from lib/lrama/scanner_fsa.rb with RBS::Inline
+
+module Lrama
+  # Scanner Finite State Automaton for PSLR(1)
+  # Built from token patterns defined by %token-pattern directives
+  # Based on Definitions 3.2.12, 3.2.13 from the PSLR dissertation
+  class ScannerFSA
+    # Represents a state in the scanner FSA
+    class State
+      attr_reader id: Integer
+
+      attr_reader transitions: Hash[String, Integer]
+
+      attr_reader accepting_tokens: Array[Grammar::TokenPattern]
+
+      # @rbs (Integer id) -> void
+      def initialize: (Integer id) -> void
+
+      # @rbs () -> bool
+      def accepting?: () -> bool
+
+      # @rbs (String char, Integer target_state_id) -> void
+      def add_transition: (String char, Integer target_state_id) -> void
+
+      # @rbs (Grammar::TokenPattern token_pattern) -> void
+      def add_accepting_token: (Grammar::TokenPattern token_pattern) -> void
+    end
+
+    attr_reader states: Array[State]
+
+    attr_reader initial_state: State
+
+    attr_reader token_patterns: Array[Grammar::TokenPattern]
+
+    # @rbs (Array[Grammar::TokenPattern] token_patterns) -> void
+    def initialize: (Array[Grammar::TokenPattern] token_patterns) -> void
+
+    # Returns the accepting state for a given FSA state
+    # Definition 3.2.13 (state_to_accepting_state)
+    # @rbs (Integer state_id) -> State?
+    def state_to_accepting_state: (Integer state_id) -> State?
+
+    # Returns the set of tokens accepted at FSA state ss
+    # Definition 3.2.12 acc(ss)
+    # @rbs (Integer state_id) -> Array[Grammar::TokenPattern]
+    def acc_ss: (Integer state_id) -> Array[Grammar::TokenPattern]
+
+    # Simulate the FSA on input string starting from initial state
+    # Returns all accepting states reached during the scan
+    # @rbs (String input) -> Array[{state: State, position: Integer, token: Grammar::TokenPattern}]
+    def scan: (String input) -> Array[{ state: State, position: Integer, token: Grammar::TokenPattern }]
+
+    private
+
+    # Build the FSA from token patterns
+    # Uses Thompson's construction for NFAs followed by subset construction for DFA
+    # @rbs () -> void
+    def build_fsa: () -> void
+
+    # @rbs () -> State
+    def create_state: () -> State
+
+    # Simple NFA state for regex compilation
+    class NFAState
+      attr_reader id: Integer
+
+      attr_accessor transitions: Hash[String?, Array[NFAState]]
+
+      attr_accessor accepting_token: Grammar::TokenPattern?
+
+      # @rbs (Integer id) -> void
+      def initialize: (Integer id) -> void
+
+      # @rbs (String? char, NFAState target) -> void
+      def add_transition: (String? char, NFAState target) -> void
+
+      # @rbs () -> bool
+      def accepting?: () -> bool
+    end
+
+    # Build NFA from all token patterns
+    # @rbs () -> Array[NFAState]
+    def build_nfa: () -> Array[NFAState]
+
+    # @rbs (Array[Integer] counter, Array[NFAState] states) -> NFAState
+    def create_nfa_state: (Array[Integer] counter, Array[NFAState] states) -> NFAState
+
+    # Compile a regex pattern to NFA fragment
+    # Returns [start_state, end_state]
+    # @rbs (String pattern, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    def compile_regex: (String pattern, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+
+    # Compile a sequence of regex elements
+    # @rbs (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    def compile_sequence: (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+
+    # Compile a single literal character
+    # @rbs (String char, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    def compile_literal: (String char, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+
+    # Compile a character class [...]
+    # @rbs (String char_class, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    def compile_char_class: (String char_class, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+
+    # Expand character class string to array of characters
+    # @rbs (String char_class) -> Array[String]
+    def expand_char_class: (String char_class) -> Array[String]
+
+    # Compile . (any character)
+    # @rbs (Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    def compile_any_char: (Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+
+    # Apply a quantifier to a fragment
+    # @rbs ([NFAState, NFAState] fragment, String quantifier, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    def apply_quantifier: ([ NFAState, NFAState ] fragment, String quantifier, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+
+    # Concatenate multiple NFA fragments into one
+    # @rbs (Array[[NFAState, NFAState]] fragments, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    def concatenate_fragments: (Array[[ NFAState, NFAState ]] fragments, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+
+    # Convert NFA to DFA using subset construction
+    # @rbs (Array[NFAState] nfa_states) -> void
+    def convert_nfa_to_dfa: (Array[NFAState] nfa_states) -> void
+
+    # Compute epsilon closure of a set of NFA states
+    # @rbs (Array[NFAState] nfa_states) -> Array[NFAState]
+    def epsilon_closure: (Array[NFAState] nfa_states) -> Array[NFAState]
+  end
+end
