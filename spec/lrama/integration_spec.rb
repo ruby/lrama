@@ -285,4 +285,231 @@ RSpec.describe "integration" do
       end
     end
   end
+
+  describe "PSLR context-dependent lexing" do
+    describe "Scanner FSA with overlapping patterns" do
+      let(:rangle) do
+        id = Lrama::Lexer::Token::Ident.new(s_value: "RANGLE")
+        regex = Lrama::Lexer::Token::Regex.new(s_value: "/>/")
+        Lrama::Grammar::TokenPattern.new(
+          id: id,
+          pattern: regex,
+          lineno: 1,
+          definition_order: 0
+        )
+      end
+
+      let(:rshift) do
+        id = Lrama::Lexer::Token::Ident.new(s_value: "RSHIFT")
+        regex = Lrama::Lexer::Token::Regex.new(s_value: "/>>/")
+        Lrama::Grammar::TokenPattern.new(
+          id: id,
+          pattern: regex,
+          lineno: 1,
+          definition_order: 1
+        )
+      end
+
+      let(:scanner_fsa) { Lrama::ScannerFSA.new([rangle, rshift]) }
+
+      it "recognizes both RANGLE and RSHIFT as possible matches for '>>'" do
+        results = scanner_fsa.scan(">>")
+
+        token_names = results.map { |r| r[:token].name }
+        expect(token_names).to include("RANGLE")
+        expect(token_names).to include("RSHIFT")
+      end
+
+      it "RANGLE matches at position 1, RSHIFT matches at position 2" do
+        results = scanner_fsa.scan(">>")
+
+        rangle_match = results.find { |r| r[:token].name == "RANGLE" }
+        rshift_match = results.find { |r| r[:token].name == "RSHIFT" }
+
+        expect(rangle_match[:position]).to eq(1)
+        expect(rshift_match[:position]).to eq(2)
+      end
+    end
+
+    describe "Length precedence resolution" do
+      let(:lex_prec) { Lrama::Grammar::LexPrec.new }
+
+      before do
+        left = Lrama::Lexer::Token::Ident.new(s_value: "RANGLE")
+        right = Lrama::Lexer::Token::Ident.new(s_value: "RSHIFT")
+        lex_prec.add_rule(
+          left_token: left,
+          operator: Lrama::Grammar::LexPrec::SHORTER,
+          right_token: right,
+          lineno: 1
+        )
+      end
+
+      let(:length_prec) { Lrama::LengthPrecedences.new(lex_prec) }
+
+      it "indicates RANGLE (shorter) should be preferred over RSHIFT (longer)" do
+        expect(length_prec.prefer_shorter?("RANGLE", "RSHIFT")).to be true
+      end
+
+      it "returns :left precedence for RANGLE vs RSHIFT" do
+        expect(length_prec.precedence("RANGLE", "RSHIFT")).to eq(:left)
+      end
+    end
+
+    describe "Keyword vs identifier precedence" do
+      let(:lex_prec) { Lrama::Grammar::LexPrec.new }
+
+      before do
+        left = Lrama::Lexer::Token::Ident.new(s_value: "IF")
+        right = Lrama::Lexer::Token::Ident.new(s_value: "ID")
+        lex_prec.add_rule(
+          left_token: left,
+          operator: Lrama::Grammar::LexPrec::HIGHER,
+          right_token: right,
+          lineno: 1
+        )
+      end
+
+      it "indicates IF has higher priority than ID" do
+        expect(lex_prec.higher_priority?("IF", "ID")).to be true
+      end
+
+      it "indicates ID does not have higher priority than IF" do
+        expect(lex_prec.higher_priority?("ID", "IF")).to be false
+      end
+    end
+
+    describe "Full PSLR grammar compilation" do
+      let(:grammar_text) do
+        <<~GRAMMAR
+          %token-pattern RSHIFT />>/ "right shift"
+          %token-pattern RANGLE />/ "right angle"
+          %token-pattern LANGLE /</ "left angle"
+          %token-pattern ID /[a-zA-Z_][a-zA-Z0-9_]*/
+
+          %lex-prec RANGLE -s RSHIFT
+
+          %%
+
+          program
+            : template_expr
+            | shift_expr
+            ;
+
+          template_expr
+            : ID LANGLE ID RANGLE
+            | ID LANGLE ID LANGLE ID RANGLE RANGLE
+            ;
+
+          shift_expr
+            : ID RSHIFT ID
+            ;
+        GRAMMAR
+      end
+
+      let(:grammar) do
+        g = Lrama::Parser.new(grammar_text, "pslr_test.y").parse
+        g.prepare
+        g.validate!
+        g
+      end
+
+      let(:states) do
+        s = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        s.compute
+        s.compute_pslr
+        s
+      end
+
+      it "builds Scanner FSA from token patterns" do
+        expect(states.scanner_fsa).not_to be_nil
+        expect(states.scanner_fsa.states).not_to be_empty
+      end
+
+      it "builds length precedences from lex-prec rules" do
+        expect(states.length_precedences).not_to be_nil
+        expect(states.length_precedences.prefer_shorter?("RANGLE", "RSHIFT")).to be true
+      end
+
+      it "parses all 4 token patterns" do
+        expect(grammar.token_patterns.size).to eq(4)
+        names = grammar.token_patterns.map(&:name)
+        expect(names).to include("RSHIFT", "RANGLE", "LANGLE", "ID")
+      end
+
+      it "Scanner FSA can match overlapping patterns" do
+        results = states.scanner_fsa.scan(">>")
+        token_names = results.map { |r| r[:token].name }
+
+        expect(token_names).to include("RANGLE")
+        expect(token_names).to include("RSHIFT")
+      end
+
+      describe "context-dependent token selection" do
+        it "scanner_accepts table is built" do
+          expect(states.scanner_accepts_table).not_to be_nil
+        end
+
+        it "different parser states may accept different tokens for same FSA state" do
+          scanner_accepts = states.scanner_accepts_table
+          scanner_fsa = states.scanner_fsa
+
+          results = scanner_fsa.scan(">>")
+          rshift_result = results.find { |r| r[:token].name == "RSHIFT" }
+          rangle_result = results.find { |r| r[:token].name == "RANGLE" }
+
+          expect(rshift_result).not_to be_nil
+          expect(rangle_result).not_to be_nil
+          expect(scanner_accepts.table).to be_a(Hash)
+        end
+      end
+
+      describe "generated C code output" do
+        let(:out) { StringIO.new }
+        let(:context) { Lrama::Context.new(states) }
+        let(:output) do
+          Lrama::Output.new(
+            out: out,
+            output_file_path: "pslr_test.c",
+            template_name: "bison/yacc.c",
+            grammar_file_path: "pslr_test.y",
+            context: context,
+            grammar: grammar
+          )
+        end
+
+        before do
+          output.render
+          out.rewind
+        end
+
+        let(:rendered) { out.read }
+
+        it "includes yy_scanner_transition table" do
+          expect(rendered).to include("yy_scanner_transition")
+          expect(rendered).to include("YY_SCANNER_NUM_STATES")
+        end
+
+        it "includes yy_state_to_accepting mapping" do
+          expect(rendered).to include("yy_state_to_accepting")
+          expect(rendered).to include("YY_ACCEPTING_NONE")
+        end
+
+        it "includes yy_length_precedences table" do
+          expect(rendered).to include("yy_length_precedences")
+          expect(rendered).to include("YY_LENGTH_PREC_LEFT")
+        end
+
+        it "includes yy_pseudo_scan function" do
+          expect(rendered).to include("yy_pseudo_scan")
+          expect(rendered).to include("parser_state")
+          expect(rendered).to include("match_length")
+        end
+
+        it "pseudo_scan function uses length precedences for token selection" do
+          expect(rendered).to include("yy_length_precedences[tbest][t]")
+        end
+      end
+    end
+  end
 end

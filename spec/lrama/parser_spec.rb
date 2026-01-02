@@ -4391,4 +4391,130 @@ RSpec.describe Lrama::Parser do
       end
     end
   end
+
+  describe "PSLR directives" do
+    describe "%token-pattern" do
+      it "parses a single token pattern" do
+        y = <<~GRAMMAR
+          %token-pattern RSHIFT />>/ "right shift"
+          %%
+          program: RSHIFT
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.size).to eq(1)
+        token_pattern = grammar.token_patterns.first
+        expect(token_pattern.name).to eq("RSHIFT")
+        expect(token_pattern.regex_pattern).to eq(">>")
+        expect(token_pattern.alias_name).to eq("\"right shift\"")
+      end
+
+      it "parses multiple token patterns" do
+        y = <<~GRAMMAR
+          %token-pattern RSHIFT />>/ "right shift"
+          %token-pattern RANGLE />/ "right angle"
+          %token-pattern LANGLE /</ "left angle"
+          %token-pattern ID /[a-zA-Z_][a-zA-Z0-9_]*/
+          %%
+          program: RSHIFT | RANGLE | LANGLE | ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.size).to eq(4)
+        names = grammar.token_patterns.map(&:name)
+        expect(names).to eq(["RSHIFT", "RANGLE", "LANGLE", "ID"])
+      end
+
+      it "parses token patterns with tags" do
+        y = <<~GRAMMAR
+          %token-pattern <str> RSHIFT />>/ "right shift"
+          %%
+          program: RSHIFT
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.size).to eq(1)
+        token_pattern = grammar.token_patterns.first
+        expect(token_pattern.tag.s_value).to eq("<str>")
+      end
+    end
+
+    describe "%lex-prec" do
+      it "parses shorter priority rule" do
+        y = <<~GRAMMAR
+          %token RANGLE RSHIFT
+          %lex-prec RANGLE -s RSHIFT
+          %%
+          program: RANGLE | RSHIFT
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.lex_prec.rules.size).to eq(1)
+        expect(grammar.lex_prec.shorter_priority?("RANGLE", "RSHIFT")).to be true
+      end
+
+      it "parses higher priority rule" do
+        y = <<~GRAMMAR
+          %token IF ID
+          %lex-prec IF - ID
+          %%
+          program: IF | ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.lex_prec.rules.size).to eq(1)
+        expect(grammar.lex_prec.higher_priority?("IF", "ID")).to be true
+      end
+
+      it "parses chained lex-prec rules" do
+        y = <<~GRAMMAR
+          %token IF ELSE WHILE ID
+          %lex-prec IF - ELSE - WHILE - ID
+          %%
+          program: IF | ELSE | WHILE | ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.lex_prec.rules.size).to eq(3)
+        expect(grammar.lex_prec.higher_priority?("IF", "ELSE")).to be true
+        expect(grammar.lex_prec.higher_priority?("ELSE", "WHILE")).to be true
+        expect(grammar.lex_prec.higher_priority?("WHILE", "ID")).to be true
+      end
+    end
+
+    describe "%define lr.type pslr" do
+      it "recognizes pslr lr.type" do
+        y = <<~GRAMMAR
+          %define lr.type pslr
+          %token ID
+          %%
+          program: ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.pslr_defined?).to be true
+      end
+    end
+  end
 end

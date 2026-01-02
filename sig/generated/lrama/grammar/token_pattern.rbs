@@ -1,0 +1,31 @@
+# Generated from lib/lrama/grammar/token_pattern.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    # Represents a token pattern defined by %token-pattern directive
+    # Example: %token-pattern RSHIFT />>/ "right shift"
+    class TokenPattern
+      attr_reader id: Lexer::Token::Ident
+
+      attr_reader pattern: Lexer::Token::Regex
+
+      attr_reader alias_name: String?
+
+      attr_reader tag: Lexer::Token::Tag?
+
+      attr_reader lineno: Integer
+
+      attr_reader definition_order: Integer
+
+      # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer, definition_order: Integer) -> void
+      def initialize: (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, lineno: Integer, definition_order: Integer, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> void
+
+      # @rbs () -> String
+      def name: () -> String
+
+      # Returns the regex pattern string (without slashes)
+      # @rbs () -> String
+      def regex_pattern: () -> String
+    end
+  end
+end
