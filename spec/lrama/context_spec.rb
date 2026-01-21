@@ -263,4 +263,84 @@ RSpec.describe Lrama::Context do
       end
     end
   end
+
+  describe "api.token.raw" do
+    it "assigns token_id equal to symbol number" do
+      y = <<~INPUT
+        %{
+        // Prologue
+        %}
+
+        %define api.token.raw
+
+        %union {
+          int i;
+        }
+
+        %token NUMBER
+        %token PLUS   "+"
+        %token MINUS  "-"
+
+        %%
+
+        program: expr ;
+
+        expr: NUMBER
+            | expr PLUS expr
+            | expr MINUS expr
+            ;
+
+        %%
+      INPUT
+
+      grammar = Lrama::Parser.new(y, "parse.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      context = Lrama::Context.new(states)
+
+      expect(context.api_token_raw?).to be true
+
+      number_term = states.terms.find { |t| t.id.s_value == 'NUMBER' }
+      plus_term = states.terms.find { |t| t.id.s_value == 'PLUS' }
+      minus_term = states.terms.find { |t| t.id.s_value == 'MINUS' }
+
+      expect(number_term.token_id).to eq(number_term.number)
+      expect(plus_term.token_id).to eq(plus_term.number)
+      expect(minus_term.token_id).to eq(minus_term.number)
+
+      expect([number_term.number, plus_term.number, minus_term.number].min).to be >= 3
+    end
+
+    it "does not have api_token_raw when directive is not specified" do
+      y = <<~INPUT
+        %{
+        // Prologue
+        %}
+
+        %union {
+          int i;
+        }
+
+        %token NUMBER
+
+        %%
+
+        program: NUMBER ;
+
+        %%
+      INPUT
+
+      grammar = Lrama::Parser.new(y, "parse.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      context = Lrama::Context.new(states)
+      expect(context.api_token_raw?).to be false
+      number_term = states.terms.find { |t| t.id.s_value == 'NUMBER' }
+      expect(number_term.token_id).to be >= 256
+    end
+  end
 end

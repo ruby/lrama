@@ -25,9 +25,15 @@ module Lrama
 
     # enum yytokentype
     def yytokentype
-      @states.terms.reject do |term|
-        0 < term.token_id && term.token_id < 128
-      end.map do |term|
+      terms = if api_token_raw?
+        @states.terms
+      else
+        @states.terms.reject do |term|
+          0 < term.token_id && term.token_id < 128
+        end
+      end
+
+      terms.map do |term|
         [term.id.s_value, term.token_id, term.display_name]
       end.unshift(["YYEMPTY", -2, nil])
     end
@@ -71,6 +77,11 @@ module Lrama
     # Last token number
     def yymaxutok
       @states.terms.map(&:token_id).max
+    end
+
+    # Check if api.token.raw is enabled
+    def api_token_raw?
+      @states.api_token_raw?
     end
 
     # YYTRANSLATE
