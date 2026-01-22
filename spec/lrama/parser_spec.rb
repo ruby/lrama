@@ -3957,6 +3957,52 @@ RSpec.describe Lrama::Parser do
           expect(times_rule.token_code.s_value).to include("$$ = _inline_2($1, $3)")
         end
       end
+
+      context 'when no_inline is true' do
+        let(:path) { "inlining/basic.y" }
+        let(:grammar) do
+          grammar = Lrama::Parser.new(y, path).parse
+          stdlib_grammar = Lrama::Parser.new(File.read("lib/lrama/grammar/stdlib.y"), "lib/lrama/grammar/stdlib.y").parse
+          grammar.prepend_parameterized_rules(stdlib_grammar.parameterized_rules)
+          grammar.no_inline = true
+          grammar.prepare
+          grammar.validate!
+          grammar
+        end
+
+        it "treats inline rules as regular non-terminal rules" do
+          nterm_names = grammar.nterms.map(&:name)
+          expect(nterm_names).to include("op")
+          expect(nterm_names).to include("other_op")
+
+          expression_rules = grammar.rules.select { |r| r.lhs.name == "expression" }
+          op_referenced = expression_rules.any? do |r|
+            r.rhs.any? { |s| s.name == "op" }
+          end
+          other_op_referenced = expression_rules.any? do |r|
+            r.rhs.any? { |s| s.name == "other_op" }
+          end
+          expect(op_referenced).to be true
+          expect(other_op_referenced).to be true
+        end
+
+        context "when an inline alternative is empty" do
+          let(:y) do
+            <<~GRAMMAR
+              %rule %inline maybe :
+                  %empty
+                | 'x' ;
+              %%
+              program : maybe ;
+            GRAMMAR
+          end
+
+          it "uses the declaration line for an empty alternative" do
+            empty_rule = grammar.rules.find { |rule| rule.lhs.name == "maybe" && rule.rhs.empty? }
+            expect(empty_rule.lineno).to eq(1)
+          end
+        end
+      end
     end
 
     it "; for rules is optional" do

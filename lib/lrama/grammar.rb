@@ -268,7 +268,9 @@ module Lrama
 
     # @rbs () -> void
     def prepare
-      unless @no_inline
+      if @no_inline
+        convert_inline_rules_to_regular_rules
+      else
         validate_inline_rules
         resolve_inline_rules
       end
@@ -496,6 +498,7 @@ module Lrama
         when Grammar::Node::ParameterizedRule
           rhs_list = node.rhs_list.map do |rhs|
             builder = Grammar::Parameterized::Rhs.new
+            builder.line = (rhs.first || node).location.first_line
 
             rhs.each do |rhs_node|
               case rhs_node
@@ -672,6 +675,33 @@ module Lrama
           else
             builder
           end
+        end
+      end
+    end
+
+    # Convert inline rules to regular rules when --no-inline is specified.
+    # This allows inline rules to be treated as ordinary non-terminal rules.
+    # Only non-parameterized inline rules can be converted (rules with parameters
+    # require instantiation and cannot be converted to simple rules).
+    #
+    # @rbs () -> void
+    def convert_inline_rules_to_regular_rules
+      inline_rules, remaining_rules = @parameterized_resolver.rules.partition { |rule| rule.inline? && rule.parameters.empty? }
+      @parameterized_resolver.rules = remaining_rules
+
+      inline_rules.each do |inline_rule|
+        lhs = Grammar::Symbol::Id.new(name: inline_rule.name, kind: :ident)
+        inline_rule.rhs.each do |rhs|
+          rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: inline_rule.tag)
+          rule_builder.lhs = lhs
+          rule_builder.line = rhs.line
+          rhs.symbols.each { |sym| rule_builder.add_rhs(sym) }
+          rule_builder.precedence_sym = rhs.precedence_sym
+          if (action = rhs.action)
+            rule_builder.add_rhs(action)
+          end
+          rule_builder.complete_input
+          add_rule_builder(rule_builder)
         end
       end
     end
