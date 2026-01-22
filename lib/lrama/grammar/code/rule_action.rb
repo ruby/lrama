@@ -11,11 +11,13 @@ module Lrama
         #
         # @rbs!
         #   @rule: Rule
+        #   @grammar: Grammar
 
-        # @rbs (type: ::Symbol, token_code: Lexer::Token::UserCode, rule: Rule) -> void
-        def initialize(type:, token_code:, rule:)
+        # @rbs (type: ::Symbol, token_code: Lexer::Token::UserCode, rule: Rule, grammar: Grammar) -> void
+        def initialize(type:, token_code:, rule:, grammar:)
           super(type: type, token_code: token_code)
           @rule = rule
+          @grammar = grammar
         end
 
         private
@@ -113,7 +115,7 @@ module Lrama
 
         # @rbs () -> bool
         def union_not_defined?
-          lhs.tag.nil? && rhs.all? { |sym| sym.tag.nil? }
+          @grammar.union.nil?
         end
 
         # @rbs (Reference ref) -> bot
