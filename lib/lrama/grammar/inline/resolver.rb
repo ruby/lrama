@@ -86,7 +86,7 @@ module Lrama
           # So we skip: nil ($$), and positions <= index + 1 (the inline position itself)
           outer_code = user_code.s_value
           user_code.references.each do |ref|
-            next if ref.index.nil? || ref.index <= index + 1 # nil は $$、index + 1 は inline 位置
+            next if ref.index.nil? || ref.index <= index + 1 # nil is $$, index + 1 is inline position
             outer_code = outer_code.gsub(/\$#{ref.index}/, "$#{ref.index + (rhs.symbols.count - 1)}")
             outer_code = outer_code.gsub(/@#{ref.index}/, "@#{ref.index + (rhs.symbols.count - 1)}")
           end
