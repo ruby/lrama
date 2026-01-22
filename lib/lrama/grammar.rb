@@ -256,7 +256,9 @@ module Lrama
 
     # @rbs () -> void
     def prepare
-      unless @no_inline
+      if @no_inline
+        convert_inline_rules_to_regular_rules
+      else
         validate_inline_rules
         resolve_inline_rules
       end
@@ -459,6 +461,40 @@ module Lrama
             builder
           end
         end
+      end
+    end
+
+    # Convert inline rules to regular rules when --no-inline is specified.
+    # This allows inline rules to be treated as ordinary non-terminal rules.
+    # Only non-parameterized inline rules can be converted (rules with parameters
+    # require instantiation and cannot be converted to simple rules).
+    #
+    # @rbs () -> void
+    def convert_inline_rules_to_regular_rules
+      inline_rules = @parameterized_resolver.rules.select { |rule| rule.inline? && rule.required_parameters_count == 0 }
+      return if inline_rules.empty?
+
+      converted_names = Set.new #: Set[String]
+
+      inline_rules.each do |inline_rule|
+        lhs_token = Lexer::Token::Ident.new(s_value: inline_rule.name)
+        converted_names << inline_rule.name
+
+        inline_rule.rhs.each do |rhs|
+          rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: inline_rule.tag)
+          rule_builder.lhs = lhs_token
+          rhs.symbols.each { |sym| rule_builder.add_rhs(sym) }
+          rule_builder.precedence_sym = rhs.precedence_sym
+          rule_builder.user_code = rhs.user_code
+          rule_builder.complete_input
+          @rule_builders << rule_builder
+        end
+      end
+
+      # Remove converted inline rules from the resolver so that find_inline
+      # won't find them, allowing rules that reference them to be built normally
+      @parameterized_resolver.rules = @parameterized_resolver.rules.reject do |rule|
+        rule.inline? && converted_names.include?(rule.name)
       end
     end
 
