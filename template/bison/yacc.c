@@ -582,6 +582,9 @@ static const <%= output.int_type_for(output.context.yyr2) %> yyr2[] =
 <%= output.int_array_to_string(output.context.yyr2) %>
 };
 
+<%- if output.pslr_enabled? -%>
+<%= output.pslr_tables_and_functions %>
+<%- end -%>
 
 enum { YYENOMEM = -2 };
 

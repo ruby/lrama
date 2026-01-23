@@ -18,7 +18,8 @@ module Lrama
     #                      [::Symbol, Token::Char] |
     #                      [::Symbol, Token::Str]  |
     #                      [::Symbol, Token::Int]  |
-    #                      [::Symbol, Token::Ident]
+    #                      [::Symbol, Token::Ident] |
+    #                      [::Symbol, Token::Regex]
     #
     #   type c_token = [:C_DECLARATION, Token::UserCode]
 
@@ -32,6 +33,7 @@ module Lrama
     PERCENT_TOKENS = %w(
       %union
       %token
+      %token-pattern
       %type
       %nterm
       %left
@@ -43,6 +45,7 @@ module Lrama
       %printer
       %destructor
       %lex-param
+      %lex-prec
       %parse-param
       %initial-action
       %precedence
@@ -121,7 +124,7 @@ module Lrama
         return
       when @scanner.scan(/#{SYMBOLS.join('|')}/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
+      when @scanner.scan(/#{PERCENT_TOKENS.sort_by { |s| -s.length }.join('|')}/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
@@ -133,6 +136,12 @@ module Lrama
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/".*?"/)
         return [:STRING, Lrama::Lexer::Token::Str.new(s_value: %Q(#{@scanner.matched}), location: location)]
+      when @scanner.scan(%r{/[^/]+/})
+        return [:REGEX, Lrama::Lexer::Token::Regex.new(s_value: @scanner.matched, location: location)]
+      when @scanner.scan(/-s(?=\s)/)
+        return ['-s', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
+      when @scanner.scan(/-(?=\s)/)
+        return ['-', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/\d+/)
         return [:INTEGER, Lrama::Lexer::Token::Int.new(s_value: Integer(@scanner.matched), location: location)]
       when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
