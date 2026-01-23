@@ -10,22 +10,26 @@ module Lrama
       #
       # @rbs!
       #   @id: Lexer::Token::Base
-      #   @tag: Lexer::Token::Tag
+      #   @tag: Lexer::Token::Tag?
+      #   @alias_name: String?
 
       attr_reader :id #: Lexer::Token::Base
-      attr_reader :tag #: Lexer::Token::Tag
+      attr_reader :tag #: Lexer::Token::Tag?
+      attr_reader :alias_name #: String?
 
-      # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> void
-      def initialize(id:, tag:)
+      # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag?, ?alias_name: String?) -> void
+      def initialize(id:, tag:, alias_name: nil)
         @id = id
         @tag = tag
+        @alias_name = alias_name
       end
 
       # @rbs (Grammar::Type other) -> bool
       def ==(other)
         self.class == other.class &&
         self.id == other.id &&
-        self.tag == other.tag
+        self.tag == other.tag &&
+        self.alias_name == other.alias_name
       end
     end
   end

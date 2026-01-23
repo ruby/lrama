@@ -162,9 +162,9 @@ module Lrama
       @error_tokens << ErrorToken.new(ident_or_tags: ident_or_tags, token_code: token_code, lineno: lineno)
     end
 
-    # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> Array[Type]
-    def add_type(id:, tag:)
-      @types << Type.new(id: id, tag: tag)
+    # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag?, ?alias_name: String?) -> Array[Type]
+    def add_type(id:, tag:, alias_name: nil)
+      @types << Type.new(id: id, tag: tag, alias_name: alias_name)
     end
 
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
