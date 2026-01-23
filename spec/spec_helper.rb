@@ -154,6 +154,8 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.order = :random
+
   config.include(RSpecHelper)
   config.include(LramaCustomMatchers)
 
