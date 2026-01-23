@@ -6,8 +6,10 @@ module Lrama
       class RuleAction < Code
         @rule: Rule
 
-        # @rbs (type: ::Symbol, token_code: Lexer::Token::UserCode, rule: Rule) -> void
-        def initialize: (type: ::Symbol, token_code: Lexer::Token::UserCode, rule: Rule) -> void
+        @grammar: Grammar
+
+        # @rbs (type: ::Symbol, token_code: Lexer::Token::UserCode, rule: Rule, grammar: Grammar) -> void
+        def initialize: (type: ::Symbol, token_code: Lexer::Token::UserCode, rule: Rule, grammar: Grammar) -> void
 
         private
 
@@ -54,6 +56,9 @@ module Lrama
         #
         # @rbs () -> Grammar::Symbol
         def lhs: () -> Grammar::Symbol
+
+        # @rbs () -> bool
+        def union_not_defined?: () -> bool
 
         # @rbs (Reference ref) -> bot
         def raise_tag_not_found_error: (Reference ref) -> bot

@@ -86,6 +86,12 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "parser without %union (YYSTYPE defaults to int)" do
+    it "returns 6 for '1 + 2 + 3'" do
+      test_parser("no_union", "1 + 2 + 3", "=> 6\n")
+    end
+  end
+
   it "prologue and epilogue are optional" do
     test_parser("prologue_epilogue_optional", "", "")
   end

@@ -68,8 +68,8 @@ module Lrama
       # @rbs () -> bool
       def initial_rule?: () -> bool
 
-      # @rbs () -> String?
-      def translated_code: () -> String?
+      # @rbs (Grammar grammar) -> String?
+      def translated_code: (Grammar grammar) -> String?
 
       # @rbs () -> bool
       def contains_at_reference?: () -> bool
