@@ -227,6 +227,12 @@ module Lrama
     # @rbs () -> bool
     def ielr_defined?: () -> bool
 
+    # @rbs () -> String
+    def parse_lac: () -> String
+
+    # @rbs () -> bool
+    def lac_enabled?: () -> bool
+
     private
 
     # @rbs () -> void
@@ -285,5 +291,8 @@ module Lrama
 
     # @rbs () -> void
     def set_locations: () -> void
+
+    # @rbs () -> void
+    def validate_parse_lac!: () -> void
   end
 end

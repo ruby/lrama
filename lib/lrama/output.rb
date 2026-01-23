@@ -372,6 +372,10 @@ module Lrama
       @grammar.aux
     end
 
+    def lac_enabled?
+      @grammar.lac_enabled?
+    end
+
     def int_array_to_string(ary)
       last = ary.count - 1
 
