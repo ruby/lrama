@@ -100,6 +100,7 @@ module Lrama
     attr_accessor :locations #: bool
     attr_accessor :define #: Hash[String, String]
     attr_accessor :required #: bool
+    attr_accessor :no_inline #: bool
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term, :find_term_by_s_value,
                                         :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
@@ -133,6 +134,7 @@ module Lrama
       @required = false
       @precedences = []
       @start_nterm = nil
+      @no_inline = false
 
       append_special_symbols
     end
@@ -254,7 +256,12 @@ module Lrama
 
     # @rbs () -> void
     def prepare
-      resolve_inline_rules
+      if @no_inline
+        convert_inline_rules_to_regular_rules
+      else
+        validate_inline_rules
+        resolve_inline_rules
+      end
       normalize_rules
       collect_symbols
       set_lhs_and_rhs
@@ -439,6 +446,12 @@ module Lrama
     end
 
     # @rbs () -> void
+    def validate_inline_rules
+      validator = Inline::Validator.new(@parameterized_resolver, @start_nterm)
+      validator.validate!
+    end
+
+    # @rbs () -> void
     def resolve_inline_rules
       while @rule_builders.any?(&:has_inline_rules?) do
         @rule_builders = @rule_builders.flat_map do |builder|
@@ -448,6 +461,40 @@ module Lrama
             builder
           end
         end
+      end
+    end
+
+    # Convert inline rules to regular rules when --no-inline is specified.
+    # This allows inline rules to be treated as ordinary non-terminal rules.
+    # Only non-parameterized inline rules can be converted (rules with parameters
+    # require instantiation and cannot be converted to simple rules).
+    #
+    # @rbs () -> void
+    def convert_inline_rules_to_regular_rules
+      inline_rules = @parameterized_resolver.rules.select { |rule| rule.inline? && rule.required_parameters_count == 0 }
+      return if inline_rules.empty?
+
+      converted_names = Set.new #: Set[String]
+
+      inline_rules.each do |inline_rule|
+        lhs_token = Lexer::Token::Ident.new(s_value: inline_rule.name)
+        converted_names << inline_rule.name
+
+        inline_rule.rhs.each do |rhs|
+          rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: inline_rule.tag)
+          rule_builder.lhs = lhs_token
+          rhs.symbols.each { |sym| rule_builder.add_rhs(sym) }
+          rule_builder.precedence_sym = rhs.precedence_sym
+          rule_builder.user_code = rhs.user_code
+          rule_builder.complete_input
+          @rule_builders << rule_builder
+        end
+      end
+
+      # Remove converted inline rules from the resolver so that find_inline
+      # won't find them, allowing rules that reference them to be built normally
+      @parameterized_resolver.rules = @parameterized_resolver.rules.reject do |rule|
+        rule.inline? && converted_names.include?(rule.name)
       end
     end
 

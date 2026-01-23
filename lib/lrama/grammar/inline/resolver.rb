@@ -66,13 +66,45 @@ module Lrama
           user_code = @rule_builder.user_code
           return user_code if rhs.user_code.nil? || user_code.nil?
 
-          code = user_code.s_value.gsub(/\$#{index + 1}/, rhs.user_code.s_value)
-          user_code.references.each do |ref|
-            next if ref.index.nil? || ref.index <= index # nil は $$ の場合
-            code = code.gsub(/\$#{ref.index}/, "$#{ref.index + (rhs.symbols.count - 1)}")
-            code = code.gsub(/@#{ref.index}/, "@#{ref.index + (rhs.symbols.count - 1)}")
+          inline_action = rhs.user_code.s_value
+          inline_var = "_inline_#{index + 1}"
+
+          # Replace $$ or $<tag>$ in inline action with the temporary variable
+          # $$ -> _inline_n, $<tag>$ -> _inline_n.tag
+          inline_action_with_var = inline_action.gsub(/\$(<(\w+)>)?\$/) do |_match|
+            if $2
+              "#{inline_var}.#{$2}"
+            else
+              inline_var
+            end
           end
-          Lrama::Lexer::Token::UserCode.new(s_value: code, location: user_code.location)
+
+          # Build the merged action with variable binding
+          # First, adjust $n references in the outer action for the expanded RHS
+          # index is 0-indexed position, ref.index is 1-indexed ($1, $2, etc.)
+          # We need to adjust references AFTER the inline position (index + 1 in 1-indexed terms)
+          # So we skip: nil ($$), and positions <= index + 1 (the inline position itself)
+          outer_code = user_code.s_value
+          user_code.references.each do |ref|
+            next if ref.index.nil? || ref.index <= index + 1 # nil is $$, index + 1 is inline position
+            outer_code = outer_code.gsub(/\$#{ref.index}/, "$#{ref.index + (rhs.symbols.count - 1)}")
+            outer_code = outer_code.gsub(/@#{ref.index}/, "@#{ref.index + (rhs.symbols.count - 1)}")
+          end
+
+          # Replace $n or $<tag>n (the inline symbol reference) with the temporary variable
+          # $n -> _inline_n, $<tag>n -> _inline_n.tag
+          outer_code = outer_code.gsub(/\$(<(\w+)>)?#{index + 1}/) do |_match|
+            if $2
+              "#{inline_var}.#{$2}"
+            else
+              inline_var
+            end
+          end
+
+          # Combine: declare temp var, execute inline action, then outer action
+          merged_code = " YYSTYPE #{inline_var}; { #{inline_action_with_var} } #{outer_code}"
+
+          Lrama::Lexer::Token::UserCode.new(s_value: merged_code, location: user_code.location)
         end
       end
     end

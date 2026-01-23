@@ -1,5 +1,6 @@
 /*
- * This is comment for this file.
+ * Test case for direct recursive inline rule.
+ * This should raise an error.
  */
 
 %{
@@ -13,17 +14,15 @@ static int yyerror(YYLTYPE *loc, const char *str);
 }
 
 %token <i> NUM
-%type <i> expression
 
-%rule %inline op  : '+' { $$ = '+'; }
-                  | '+' '=' { $$ = '+='; }
-                  ;
+%rule %inline a: NUM
+             | a '+' NUM
+             ;
 
 %%
 
-expression      : NUM
-                | expression op expression { $$ = $1 $2 $3; }
-                ;
+expression: a
+          ;
 
 %%
 

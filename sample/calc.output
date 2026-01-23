@@ -1,3 +1,71 @@
+Rule Usage Frequency
+
+    0 expr (10 times)
+    1 list (3 times)
+    2 LF (2 times)
+    3 '(' (1 times)
+    4 ')' (1 times)
+    5 '*' (1 times)
+    6 '+' (1 times)
+    7 '-' (1 times)
+    8 '/' (1 times)
+    9 NUM (1 times)
+   10 YYEOF (1 times)
+
+
+11 Terms
+
+3 Non-Terminals
+
+2 Unused Terms
+
+    0 YYerror
+    1 YYUNDEF
+
+
+Precedences
+
+  precedence on '+' is used to resolve conflict on
+    LALR
+      state 14. Conflict between reduce by "expr -> expr '+' expr" and shift '+' resolved as reduce (%left '+').
+      state 14. Conflict between reduce by "expr -> expr '+' expr" and shift '-' resolved as reduce (%left '-').
+      state 14. Conflict between reduce by "expr -> expr '+' expr" and shift '*' resolved as shift ('+' < '*').
+      state 14. Conflict between reduce by "expr -> expr '+' expr" and shift '/' resolved as shift ('+' < '/').
+      state 15. Conflict between reduce by "expr -> expr '-' expr" and shift '+' resolved as reduce (%left '+').
+      state 16. Conflict between reduce by "expr -> expr '*' expr" and shift '+' resolved as reduce ('+' < '*').
+      state 17. Conflict between reduce by "expr -> expr '/' expr" and shift '+' resolved as reduce ('+' < '/').
+
+  precedence on '-' is used to resolve conflict on
+    LALR
+      state 14. Conflict between reduce by "expr -> expr '+' expr" and shift '-' resolved as reduce (%left '-').
+      state 15. Conflict between reduce by "expr -> expr '-' expr" and shift '+' resolved as reduce (%left '+').
+      state 15. Conflict between reduce by "expr -> expr '-' expr" and shift '-' resolved as reduce (%left '-').
+      state 15. Conflict between reduce by "expr -> expr '-' expr" and shift '*' resolved as shift ('-' < '*').
+      state 15. Conflict between reduce by "expr -> expr '-' expr" and shift '/' resolved as shift ('-' < '/').
+      state 16. Conflict between reduce by "expr -> expr '*' expr" and shift '-' resolved as reduce ('-' < '*').
+      state 17. Conflict between reduce by "expr -> expr '/' expr" and shift '-' resolved as reduce ('-' < '/').
+
+  precedence on '*' is used to resolve conflict on
+    LALR
+      state 14. Conflict between reduce by "expr -> expr '+' expr" and shift '*' resolved as shift ('+' < '*').
+      state 15. Conflict between reduce by "expr -> expr '-' expr" and shift '*' resolved as shift ('-' < '*').
+      state 16. Conflict between reduce by "expr -> expr '*' expr" and shift '+' resolved as reduce ('+' < '*').
+      state 16. Conflict between reduce by "expr -> expr '*' expr" and shift '-' resolved as reduce ('-' < '*').
+      state 16. Conflict between reduce by "expr -> expr '*' expr" and shift '*' resolved as reduce (%left '*').
+      state 16. Conflict between reduce by "expr -> expr '*' expr" and shift '/' resolved as reduce (%left '/').
+      state 17. Conflict between reduce by "expr -> expr '/' expr" and shift '*' resolved as reduce (%left '*').
+
+  precedence on '/' is used to resolve conflict on
+    LALR
+      state 14. Conflict between reduce by "expr -> expr '+' expr" and shift '/' resolved as shift ('+' < '/').
+      state 15. Conflict between reduce by "expr -> expr '-' expr" and shift '/' resolved as shift ('-' < '/').
+      state 16. Conflict between reduce by "expr -> expr '*' expr" and shift '/' resolved as reduce (%left '/').
+      state 17. Conflict between reduce by "expr -> expr '/' expr" and shift '+' resolved as reduce ('+' < '/').
+      state 17. Conflict between reduce by "expr -> expr '/' expr" and shift '-' resolved as reduce ('-' < '/').
+      state 17. Conflict between reduce by "expr -> expr '/' expr" and shift '*' resolved as reduce (%left '*').
+      state 17. Conflict between reduce by "expr -> expr '/' expr" and shift '/' resolved as reduce (%left '/').
+
+
 Grammar
 
     0 $accept: list "end of file"
@@ -25,6 +93,34 @@ State 0
 
     list  go to state 1
 
+  [Direct Read sets]
+    read list  shift YYEOF, LF, NUM, '('
+
+  [Reads Relation]
+
+  [Read sets]
+    YYEOF
+    LF
+    NUM
+    '('
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: list -> ε) -> (State 0, list)
+
+  [Follow sets]
+    list -> YYEOF
+    list -> LF
+    list -> NUM
+    list -> '('
+
+  [Look-Ahead Sets]
+    YYEOF  reduce using rule 1 (list)
+    LF     reduce using rule 1 (list)
+    NUM    reduce using rule 1 (list)
+    '('    reduce using rule 1 (list)
+
 
 State 1
 
@@ -45,6 +141,30 @@ State 1
 
     expr  go to state 6
 
+  [Direct Read sets]
+    read expr  shift LF, '+', '-', '*', '/'
+
+  [Reads Relation]
+
+  [Read sets]
+    LF
+    '+'
+    '-'
+    '*'
+    '/'
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> LF
+    expr -> '+'
+    expr -> '-'
+    expr -> '*'
+    expr -> '/'
+
+  [Look-Ahead Sets]
 
 State 2
 
@@ -52,6 +172,19 @@ State 2
 
     $default  accept
 
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
 
 State 3
 
@@ -59,12 +192,57 @@ State 3
 
     $default  reduce using rule 2 (list)
 
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: list -> list LF) -> (State 0, list)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    YYEOF  reduce using rule 2 (list)
+    LF     reduce using rule 2 (list)
+    NUM    reduce using rule 2 (list)
+    '('    reduce using rule 2 (list)
+
 
 State 4
 
     4 expr: NUM •
 
     $default  reduce using rule 4 (expr)
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> NUM) -> (State 1, expr)
+    (Rule: expr -> NUM) -> (State 5, expr)
+    (Rule: expr -> NUM) -> (State 9, expr)
+    (Rule: expr -> NUM) -> (State 10, expr)
+    (Rule: expr -> NUM) -> (State 11, expr)
+    (Rule: expr -> NUM) -> (State 12, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    LF   reduce using rule 4 (expr)
+    '+'  reduce using rule 4 (expr)
+    '-'  reduce using rule 4 (expr)
+    '*'  reduce using rule 4 (expr)
+    '/'  reduce using rule 4 (expr)
+    ')'  reduce using rule 4 (expr)
 
 
 State 5
@@ -82,6 +260,30 @@ State 5
 
     expr  go to state 7
 
+  [Direct Read sets]
+    read expr  shift '+', '-', '*', '/', ')'
+
+  [Reads Relation]
+
+  [Read sets]
+    '+'
+    '-'
+    '*'
+    '/'
+    ')'
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> '+'
+    expr -> '-'
+    expr -> '*'
+    expr -> '/'
+    expr -> ')'
+
+  [Look-Ahead Sets]
 
 State 6
 
@@ -97,6 +299,19 @@ State 6
     '*'  shift, and go to state 11
     '/'  shift, and go to state 12
 
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
 
 State 7
 
@@ -112,12 +327,44 @@ State 7
     '/'  shift, and go to state 12
     ')'  shift, and go to state 13
 
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
 
 State 8
 
     3 list: list expr LF •
 
     $default  reduce using rule 3 (list)
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: list -> list expr LF) -> (State 0, list)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    YYEOF  reduce using rule 3 (list)
+    LF     reduce using rule 3 (list)
+    NUM    reduce using rule 3 (list)
+    '('    reduce using rule 3 (list)
 
 
 State 9
@@ -135,6 +382,36 @@ State 9
 
     expr  go to state 14
 
+  [Direct Read sets]
+    read expr  shift '+', '-', '*', '/'
+
+  [Reads Relation]
+
+  [Read sets]
+    '+'
+    '-'
+    '*'
+    '/'
+
+  [Includes Relation]
+    (State 9, expr) -> (State 1, expr)
+    (State 9, expr) -> (State 5, expr)
+    (State 9, expr) -> (State 9, expr)
+    (State 9, expr) -> (State 10, expr)
+    (State 9, expr) -> (State 11, expr)
+    (State 9, expr) -> (State 12, expr)
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> LF
+    expr -> '+'
+    expr -> '-'
+    expr -> '*'
+    expr -> '/'
+    expr -> ')'
+
+  [Look-Ahead Sets]
 
 State 10
 
@@ -151,6 +428,36 @@ State 10
 
     expr  go to state 15
 
+  [Direct Read sets]
+    read expr  shift '+', '-', '*', '/'
+
+  [Reads Relation]
+
+  [Read sets]
+    '+'
+    '-'
+    '*'
+    '/'
+
+  [Includes Relation]
+    (State 10, expr) -> (State 1, expr)
+    (State 10, expr) -> (State 5, expr)
+    (State 10, expr) -> (State 9, expr)
+    (State 10, expr) -> (State 10, expr)
+    (State 10, expr) -> (State 11, expr)
+    (State 10, expr) -> (State 12, expr)
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> LF
+    expr -> '+'
+    expr -> '-'
+    expr -> '*'
+    expr -> '/'
+    expr -> ')'
+
+  [Look-Ahead Sets]
 
 State 11
 
@@ -167,6 +474,36 @@ State 11
 
     expr  go to state 16
 
+  [Direct Read sets]
+    read expr  shift '+', '-', '*', '/'
+
+  [Reads Relation]
+
+  [Read sets]
+    '+'
+    '-'
+    '*'
+    '/'
+
+  [Includes Relation]
+    (State 11, expr) -> (State 1, expr)
+    (State 11, expr) -> (State 5, expr)
+    (State 11, expr) -> (State 9, expr)
+    (State 11, expr) -> (State 10, expr)
+    (State 11, expr) -> (State 11, expr)
+    (State 11, expr) -> (State 12, expr)
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> LF
+    expr -> '+'
+    expr -> '-'
+    expr -> '*'
+    expr -> '/'
+    expr -> ')'
+
+  [Look-Ahead Sets]
 
 State 12
 
@@ -183,12 +520,68 @@ State 12
 
     expr  go to state 17
 
+  [Direct Read sets]
+    read expr  shift '+', '-', '*', '/'
+
+  [Reads Relation]
+
+  [Read sets]
+    '+'
+    '-'
+    '*'
+    '/'
+
+  [Includes Relation]
+    (State 12, expr) -> (State 1, expr)
+    (State 12, expr) -> (State 5, expr)
+    (State 12, expr) -> (State 9, expr)
+    (State 12, expr) -> (State 10, expr)
+    (State 12, expr) -> (State 11, expr)
+    (State 12, expr) -> (State 12, expr)
+
+  [Lookback Relation]
+
+  [Follow sets]
+    expr -> LF
+    expr -> '+'
+    expr -> '-'
+    expr -> '*'
+    expr -> '/'
+    expr -> ')'
+
+  [Look-Ahead Sets]
 
 State 13
 
     9 expr: '(' expr ')' •
 
     $default  reduce using rule 9 (expr)
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> '(' expr ')') -> (State 1, expr)
+    (Rule: expr -> '(' expr ')') -> (State 5, expr)
+    (Rule: expr -> '(' expr ')') -> (State 9, expr)
+    (Rule: expr -> '(' expr ')') -> (State 10, expr)
+    (Rule: expr -> '(' expr ')') -> (State 11, expr)
+    (Rule: expr -> '(' expr ')') -> (State 12, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    LF   reduce using rule 9 (expr)
+    '+'  reduce using rule 9 (expr)
+    '-'  reduce using rule 9 (expr)
+    '*'  reduce using rule 9 (expr)
+    '/'  reduce using rule 9 (expr)
+    ')'  reduce using rule 9 (expr)
 
 
 State 14
@@ -209,6 +602,32 @@ State 14
     Conflict between rule 5 and token '*' resolved as shift ('+' < '*').
     Conflict between rule 5 and token '/' resolved as shift ('+' < '/').
 
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> expr '+' expr) -> (State 1, expr)
+    (Rule: expr -> expr '+' expr) -> (State 5, expr)
+    (Rule: expr -> expr '+' expr) -> (State 9, expr)
+    (Rule: expr -> expr '+' expr) -> (State 10, expr)
+    (Rule: expr -> expr '+' expr) -> (State 11, expr)
+    (Rule: expr -> expr '+' expr) -> (State 12, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    LF   reduce using rule 5 (expr)
+    '+'  reduce using rule 5 (expr)
+    '-'  reduce using rule 5 (expr)
+    '*'  reduce using rule 5 (expr)
+    '/'  reduce using rule 5 (expr)
+    ')'  reduce using rule 5 (expr)
+
 
 State 15
 
@@ -228,6 +647,32 @@ State 15
     Conflict between rule 6 and token '*' resolved as shift ('-' < '*').
     Conflict between rule 6 and token '/' resolved as shift ('-' < '/').
 
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> expr '-' expr) -> (State 1, expr)
+    (Rule: expr -> expr '-' expr) -> (State 5, expr)
+    (Rule: expr -> expr '-' expr) -> (State 9, expr)
+    (Rule: expr -> expr '-' expr) -> (State 10, expr)
+    (Rule: expr -> expr '-' expr) -> (State 11, expr)
+    (Rule: expr -> expr '-' expr) -> (State 12, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    LF   reduce using rule 6 (expr)
+    '+'  reduce using rule 6 (expr)
+    '-'  reduce using rule 6 (expr)
+    '*'  reduce using rule 6 (expr)
+    '/'  reduce using rule 6 (expr)
+    ')'  reduce using rule 6 (expr)
+
 
 State 16
 
@@ -244,6 +689,32 @@ State 16
     Conflict between rule 7 and token '*' resolved as reduce (%left '*').
     Conflict between rule 7 and token '/' resolved as reduce (%left '/').
 
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> expr '*' expr) -> (State 1, expr)
+    (Rule: expr -> expr '*' expr) -> (State 5, expr)
+    (Rule: expr -> expr '*' expr) -> (State 9, expr)
+    (Rule: expr -> expr '*' expr) -> (State 10, expr)
+    (Rule: expr -> expr '*' expr) -> (State 11, expr)
+    (Rule: expr -> expr '*' expr) -> (State 12, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    LF   reduce using rule 7 (expr)
+    '+'  reduce using rule 7 (expr)
+    '-'  reduce using rule 7 (expr)
+    '*'  reduce using rule 7 (expr)
+    '/'  reduce using rule 7 (expr)
+    ')'  reduce using rule 7 (expr)
+
 
 State 17
 
@@ -259,5 +730,31 @@ State 17
     Conflict between rule 8 and token '-' resolved as reduce ('-' < '/').
     Conflict between rule 8 and token '*' resolved as reduce (%left '*').
     Conflict between rule 8 and token '/' resolved as reduce (%left '/').
+
+  [Direct Read sets]
+
+  [Reads Relation]
+
+  [Read sets]
+
+  [Includes Relation]
+
+  [Lookback Relation]
+    (Rule: expr -> expr '/' expr) -> (State 1, expr)
+    (Rule: expr -> expr '/' expr) -> (State 5, expr)
+    (Rule: expr -> expr '/' expr) -> (State 9, expr)
+    (Rule: expr -> expr '/' expr) -> (State 10, expr)
+    (Rule: expr -> expr '/' expr) -> (State 11, expr)
+    (Rule: expr -> expr '/' expr) -> (State 12, expr)
+
+  [Follow sets]
+
+  [Look-Ahead Sets]
+    LF   reduce using rule 8 (expr)
+    '+'  reduce using rule 8 (expr)
+    '-'  reduce using rule 8 (expr)
+    '*'  reduce using rule 8 (expr)
+    '/'  reduce using rule 8 (expr)
+    ')'  reduce using rule 8 (expr)
 
 
