@@ -17,22 +17,26 @@ module Lrama
       #   @parameterized_rules: Array[Rule]
       #   @midrule_action_rules: Array[Rule]
       #   @replaced_rhs: Array[Lexer::Token::Base]?
+      #   @predicates: Array[[Lexer::Token::SemanticPredicate, bool]]
 
       attr_accessor :lhs #: Lexer::Token::Base?
       attr_accessor :line #: Integer?
       attr_reader :rule_counter #: Counter
       attr_reader :midrule_action_counter #: Counter
       attr_reader :parameterized_resolver #: Grammar::Parameterized::Resolver
+      attr_reader :predicate_counter #: Counter
       attr_reader :lhs_tag #: Lexer::Token::Tag?
       attr_reader :rhs #: Array[Lexer::Token::Base]
       attr_reader :user_code #: Lexer::Token::UserCode?
       attr_reader :precedence_sym #: Grammar::Symbol?
+      attr_reader :predicates
 
-      # @rbs (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
-      def initialize(rule_counter, midrule_action_counter, parameterized_resolver, position_in_original_rule_rhs = nil, lhs_tag: nil, skip_preprocess_references: false)
+      # @rbs (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, Counter? predicate_counter, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
+      def initialize(rule_counter, midrule_action_counter, parameterized_resolver, predicate_counter = nil, position_in_original_rule_rhs = nil, lhs_tag: nil, skip_preprocess_references: false)
         @rule_counter = rule_counter
         @midrule_action_counter = midrule_action_counter
         @parameterized_resolver = parameterized_resolver
+        @predicate_counter = predicate_counter || Counter.new(0)
         @position_in_original_rule_rhs = position_in_original_rule_rhs
         @skip_preprocess_references = skip_preprocess_references
 
@@ -41,6 +45,7 @@ module Lrama
         @rhs = []
         @user_code = nil
         @precedence_sym = nil
+        @predicates = []
         @line = nil
         @rules = []
         @rule_builders_for_parameterized = []
@@ -72,6 +77,14 @@ module Lrama
         flush_user_code
 
         @precedence_sym = precedence_sym
+      end
+
+      # @rbs (Lexer::Token::SemanticPredicate predicate) -> void
+      def add_predicate(predicate)
+        @line ||= predicate.line
+        flush_user_code
+        predicate_with_position = [predicate, @rhs.empty?]
+        @predicates << predicate_with_position
       end
 
       # @rbs () -> void
@@ -118,6 +131,14 @@ module Lrama
           id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
           position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
         )
+
+        rule.predicates = @predicates.map do |(pred_token, is_leading)|
+          pred = Grammar::SemanticPredicate.new(pred_token)
+          pred.index = @predicate_counter.increment
+          pred.position = is_leading ? :leading : :trailing
+          pred
+        end
+
         @rules = [rule]
         @parameterized_rules = @rule_builders_for_parameterized.map do |rule_builder|
           rule_builder.rules
@@ -158,7 +179,7 @@ module Lrama
               replaced_rhs << lhs_token
               @parameterized_resolver.created_lhs_list << lhs_token
               parameterized_rule.rhs.each do |r|
-                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: token.lhs_tag || parameterized_rule.tag)
+                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, @predicate_counter, lhs_tag: token.lhs_tag || parameterized_rule.tag)
                 rule_builder.lhs = lhs_token
                 r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
@@ -175,7 +196,7 @@ module Lrama
             new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
             replaced_rhs << new_token
 
-            rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, i, lhs_tag: tag, skip_preprocess_references: true)
+            rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, @predicate_counter, i, lhs_tag: tag, skip_preprocess_references: true)
             rule_builder.lhs = new_token
             rule_builder.user_code = token
             rule_builder.complete_input

@@ -18,7 +18,8 @@ module Lrama
     #                      [::Symbol, Token::Char] |
     #                      [::Symbol, Token::Str]  |
     #                      [::Symbol, Token::Int]  |
-    #                      [::Symbol, Token::Ident]
+    #                      [::Symbol, Token::Ident] |
+    #                      [::Symbol, Token::SemanticPredicate]
     #
     #   type c_token = [:C_DECLARATION, Token::UserCode]
 
@@ -119,6 +120,13 @@ module Lrama
       case
       when @scanner.eos?
         return
+      when @scanner.check(/{/)
+        if predicate_token = try_scan_semantic_predicate
+          return [:SEMANTIC_PREDICATE, predicate_token]
+        else
+          @scanner.scan(/{/)
+          return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
+        end
       when @scanner.scan(/#{SYMBOLS.join('|')}/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
@@ -190,6 +198,70 @@ module Lrama
     end
 
     private
+
+    # @rbs () -> Lrama::Lexer::Token::SemanticPredicate?
+    def try_scan_semantic_predicate
+      start_pos = @scanner.pos
+      start_line = @line
+      start_head = @head
+      return nil unless @scanner.scan(/{/)
+
+      code = +''
+      nested = 1
+      until @scanner.eos? do
+        case
+        when @scanner.scan(/{/)
+          code << @scanner.matched
+          nested += 1
+        when @scanner.scan(/}/)
+          if nested == 1
+            if @scanner.scan(/\?/)
+              return Lrama::Lexer::Token::SemanticPredicate.new(
+                s_value: "{#{code}}?",
+                code: code.strip,
+                location: location
+              )
+            else
+              @scanner.pos = start_pos
+              @line = start_line
+              @head = start_head
+              return nil
+            end
+          else
+            code << @scanner.matched
+            nested -= 1
+          end
+        when @scanner.scan(/\n/)
+          code << @scanner.matched
+          newline
+        when @scanner.scan(/"[^"]*"/)
+          code << @scanner.matched
+          @line += @scanner.matched.count("\n")
+        when @scanner.scan(/'[^']*'/)
+          code << @scanner.matched
+        when @scanner.scan(/\/\*/)
+          code << @scanner.matched
+          until @scanner.eos?
+            if @scanner.scan_until(/\*\//)
+              code << @scanner.matched
+              @scanner.matched.count("\n").times { newline }
+              break
+            end
+          end
+        when @scanner.scan(/\/\/[^\n]*/)
+          code << @scanner.matched
+        when @scanner.scan(/[^{}"'\n\/]+/)
+          code << @scanner.matched
+        else
+          code << @scanner.getch
+        end
+      end
+
+      @scanner.pos = start_pos
+      @line = start_line
+      @head = start_head
+      nil
+    end
 
     # @rbs () -> void
     def lex_comment

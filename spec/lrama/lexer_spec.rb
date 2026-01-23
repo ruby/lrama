@@ -435,4 +435,127 @@ RSpec.describe Lrama::Lexer do
 
     expect(lexer.next_token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 2, first_column: 0, last_line: 2, last_column: 8)
   end
+
+  describe 'semantic predicates' do
+    context 'simple semantic predicate' do
+      it 'recognizes {expr}? as SEMANTIC_PREDICATE token' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("predicate.y", "{x > 0}?")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token = lexer.next_token
+        expect(token[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token[1]).to be_a(Lrama::Lexer::Token::SemanticPredicate)
+        expect(token[1].code).to eq("x > 0")
+        expect(token[1].s_value).to eq("{x > 0}?")
+      end
+    end
+
+    context 'semantic predicate with whitespace' do
+      it 'recognizes predicate with spaces' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("predicate.y", "{ version >= 2 }?")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token = lexer.next_token
+        expect(token[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token[1].code).to eq("version >= 2")
+      end
+    end
+
+    context 'semantic predicate with nested braces' do
+      it 'recognizes predicate with nested braces' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("predicate.y", "{func() && (a > b)}?")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token = lexer.next_token
+        expect(token[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token[1].code).to eq("func() && (a > b)")
+      end
+    end
+
+    context 'semantic predicate with strings' do
+      it 'recognizes predicate with string literals' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("predicate.y", '{strcmp(s, "test") == 0}?')
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token = lexer.next_token
+        expect(token[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token[1].code).to eq('strcmp(s, "test") == 0')
+      end
+    end
+
+    context 'semantic predicate with comments' do
+      it 'recognizes predicate with C comments' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("predicate.y", "{/* check */ x > 0}?")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token = lexer.next_token
+        expect(token[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token[1].code).to include("x > 0")
+        expect(token[1].code).to include("*/")  # Comment end marker present
+      end
+
+      it 'recognizes predicate with C++ comments' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("predicate.y", "{x > 0 // comment\n}?")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token = lexer.next_token
+        expect(token[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token[1].code).to include("// comment")
+      end
+    end
+
+    context 'regular action without question mark' do
+      it 'recognizes { code } as regular { token' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("action.y", "{ x = 1; }")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token = lexer.next_token
+        expect(token[0]).to eq('{')
+        expect(token[1]).to be_a(Lrama::Lexer::Token::Token)
+        expect(token[1].s_value).to eq('{')
+      end
+    end
+
+    context 'semantic predicate in grammar rule' do
+      it 'recognizes predicate before tokens' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("grammar.y", "{new_syntax}? NEW_FEATURE")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token1 = lexer.next_token
+        expect(token1[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token1[1].code).to eq("new_syntax")
+
+        token2 = lexer.next_token
+        expect(token2[0]).to eq(:IDENTIFIER)
+        expect(token2[1].s_value).to eq("NEW_FEATURE")
+      end
+    end
+
+    context 'multiple semantic predicates' do
+      it 'recognizes multiple predicates in sequence' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("grammar.y", "{a}? {b}?")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token1 = lexer.next_token
+        expect(token1[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token1[1].code).to eq("a")
+
+        token2 = lexer.next_token
+        expect(token2[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token2[1].code).to eq("b")
+      end
+    end
+
+    context 'semantic predicate with newlines' do
+      it 'recognizes multiline predicate' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("predicate.y", "{\n  x > 0 &&\n  y < 10\n}?")
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        token = lexer.next_token
+        expect(token[0]).to eq(:SEMANTIC_PREDICATE)
+        expect(token[1].code).to include("x > 0")
+        expect(token[1].code).to include("y < 10")
+      end
+    end
+  end
 end

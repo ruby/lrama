@@ -16,6 +16,7 @@ require_relative "grammar/printer"
 require_relative "grammar/reference"
 require_relative "grammar/rule"
 require_relative "grammar/rule_builder"
+require_relative "grammar/semantic_predicate"
 require_relative "grammar/symbol"
 require_relative "grammar/symbols"
 require_relative "grammar/type"
@@ -106,9 +107,10 @@ module Lrama
                                         :find_symbol_by_s_value!, :fill_symbol_number, :fill_nterm_type,
                                         :fill_printer, :fill_destructor, :fill_error_token, :sort_by_number!
 
-    # @rbs (Counter rule_counter, bool locations, Hash[String, String] define) -> void
-    def initialize(rule_counter, locations, define = {})
+    # @rbs (Counter rule_counter, Counter predicate_counter, bool locations, Hash[String, String] define) -> void
+    def initialize(rule_counter, predicate_counter, locations, define = {})
       @rule_counter = rule_counter
+      @predicate_counter = predicate_counter
 
       # Code defined by "%code"
       @percent_codes = []
@@ -139,7 +141,7 @@ module Lrama
 
     # @rbs (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
     def create_rule_builder(rule_counter, midrule_action_counter)
-      RuleBuilder.new(rule_counter, midrule_action_counter, @parameterized_resolver)
+      RuleBuilder.new(rule_counter, midrule_action_counter, @parameterized_resolver, @predicate_counter)
     end
 
     # @rbs (id: Lexer::Token::Base, code: Lexer::Token::UserCode) -> Array[PercentCode]

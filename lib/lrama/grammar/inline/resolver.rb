@@ -33,6 +33,7 @@ module Lrama
             @rule_builder.rule_counter,
             @rule_builder.midrule_action_counter,
             @rule_builder.parameterized_resolver,
+            @rule_builder.predicate_counter,
             lhs_tag: @rule_builder.lhs_tag
           )
           resolve_rhs(builder, rhs, index, token, rule)

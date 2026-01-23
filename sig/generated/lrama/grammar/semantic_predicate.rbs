@@ -1,0 +1,35 @@
+# Generated from lib/lrama/grammar/semantic_predicate.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class SemanticPredicate
+      type position = :leading | :trailing | :middle | :unknown
+
+      attr_reader token: Lexer::Token::SemanticPredicate
+
+      attr_reader code: String
+
+      attr_accessor position: position
+
+      attr_accessor index: Integer?
+
+      # @rbs (Lexer::Token::SemanticPredicate token) -> void
+      def initialize: (Lexer::Token::SemanticPredicate token) -> void
+
+      # @rbs () -> bool
+      def visible?: () -> bool
+
+      # @rbs () -> String
+      def function_name: () -> String
+
+      # @rbs () -> String
+      def error_message: () -> String
+
+      # @rbs () -> Lexer::Location
+      def location: () -> Lexer::Location
+
+      # @rbs () -> String
+      def to_s: () -> String
+    end
+  end
+end

@@ -306,6 +306,33 @@ This feature is inspired by Menhir's standard library and maintains compatibilit
 
 https://github.com/ruby/lrama/pull/666
 
+### Semantic Predicates
+
+Support semantic predicates to conditionally enable grammar rules based on runtime conditions.
+Predicates are evaluated at parse time, similar to ANTLR4's semantic predicates.
+
+```yacc
+rule : {expression}? TOKEN { action }
+     | TOKEN { action }
+     ;
+```
+
+The predicate `{expression}?` is evaluated at parse time. If it returns true (non-zero), the alternative is enabled.
+
+Example:
+
+```yacc
+widget
+    : {new_syntax}? WIDGET ID NEW_ARG
+      { printf("New syntax\n"); }
+    | {!new_syntax}? WIDGET ID OLD_ARG
+      { printf("Old syntax\n"); }
+    ;
+```
+
+Predicates are compiled into static functions in the generated parser.
+Leading predicates (at the start of a rule) affect prediction, while trailing predicates act as validation.
+
 ### Syntax Diagrams
 
 Lrama provides an API for generating HTML syntax diagrams. These visual diagrams are highly useful as grammar development tools and can also serve as a form of automatic self-documentation.
