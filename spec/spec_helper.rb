@@ -157,6 +157,13 @@ RSpec.configure do |config|
   config.include(RSpecHelper)
   config.include(LramaCustomMatchers)
 
+  # Ensure color is disabled by default for consistent test behavior.
+  # Tests that want to test colored output should enable it explicitly
+  # in their own `before` block.
+  config.before(:each) do
+    Lrama::Diagnostics::Color.enabled = false
+  end
+
   # Allow to limit the run of the specs
   # NOTE: Please do not commit the filter option.
   # config.filter_run_when_matching :focus
