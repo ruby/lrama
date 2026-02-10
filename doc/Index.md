@@ -3,7 +3,6 @@
 [![Gem Version](https://badge.fury.io/rb/lrama.svg)](https://badge.fury.io/rb/lrama)
 [![build](https://github.com/ruby/lrama/actions/workflows/test.yaml/badge.svg)](https://github.com/ruby/lrama/actions/workflows/test.yaml)
 
-
 ## Overview
 
 Lrama is LALR (1) parser generator written by Ruby. The first goal of this project is providing error tolerant parser for CRuby with minimal changes on CRuby parse.y file.
@@ -46,6 +45,29 @@ Enter the formula:
 (1+2)*3
 => 9
 ```
+
+## Documentation (Draft)
+
+Chapters are split into individual files under `doc/` to make the structure easy to extend.
+
+1. [Concepts](chapters/01-concepts.md)
+2. [Examples](chapters/02-examples.md)
+3. [Grammar Files](chapters/03-grammar-files.md)
+4. [Parser Interface](chapters/04-parser-interface.md)
+5. [Parser Algorithm](chapters/05-parser-algorithm.md)
+6. [Error Recovery](chapters/06-error-recovery.md)
+7. [Handling Context Dependencies](chapters/07-context-dependencies.md)
+8. [Debugging](chapters/08-debugging.md)
+9. [Invoking Lrama](chapters/09-invoking-lrama.md)
+10. [Parsers in Other Languages](chapters/10-other-languages.md)
+11. [History](chapters/11-history.md)
+12. [Version Compatibility](chapters/12-version-compatibility.md)
+13. [FAQ](chapters/13-faq.md)
+
+## Development
+
+1. [Compressed State Table](development/compressed_state_table/main.md)
+2. [Profiling](development/profiling.md)
 
 ## Supported Ruby version
 
