@@ -14,7 +14,7 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %%
 
-program : /* empty */ { (void)@1; }
+program : /* empty */ { (void)@0; }
         ;
 
 %%
