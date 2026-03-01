@@ -270,11 +270,11 @@ rule
           builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2], location: @lexer.location, args: [val[1]])
           result = builder
         }
-    | rule_rhs IDENTIFIER "(" parameterized_args ")" TAG?
+    | rule_rhs IDENTIFIER "(" parameterized_args ")" named_ref? TAG?
         {
           on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           builder = val[0]
-          builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
+          builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, alias_name: val[5], location: @lexer.location, args: val[3], lhs_tag: val[6])
           result = builder
         }
     | rule_rhs action named_ref?

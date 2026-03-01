@@ -767,14 +767,14 @@ racc_action_table = [
    105,    53,    53,    52,    52,   110,   110,    53,    53,    52,
    209,   110,   110,    53,    53,   209,    52,   110,   110,    53,
     53,   209,    52,   110,   193,   194,   195,   137,   216,   222,
-   229,   217,   217,   217,    53,    53,    52,    52,   193,   194,
+   230,   217,   217,   217,    53,    53,    52,    52,   193,   194,
    195,    57,    57,    57,    57,    66,    67,    68,    69,    70,
     72,    72,    72,    86,    89,    47,    57,    57,   113,   117,
    117,    79,   123,   124,   131,    47,   133,   137,   139,   143,
    149,   150,   151,   152,   133,   155,   156,   157,   110,   166,
    149,   169,   172,   173,    72,   175,   176,   183,   189,   166,
    196,   137,   200,   202,   137,   166,   211,   166,   137,    72,
-   176,   218,   176,    72,    72,   227,   137,    72 ]
+   176,   218,   176,    72,   137,   227,   137,    72,    72 ]
 
 racc_action_check = [
     51,    97,    51,    97,    41,    75,   165,    75,   165,    75,
@@ -806,7 +806,7 @@ racc_action_check = [
    124,   125,   126,   127,   133,   136,   137,   138,   144,   150,
    151,   153,   156,   158,   162,   163,   164,   170,   174,   176,
    178,   179,   182,   184,   187,   189,   199,   200,   204,   205,
-   207,   209,   212,   214,   216,   221,   222,   228 ]
+   207,   209,   212,   214,   216,   221,   222,   224,   228 ]
 
 racc_action_pointer = [
     32,    23,    52,    93,   nil,    31,    63,   nil,   123,    68,
@@ -830,16 +830,16 @@ racc_action_pointer = [
    189,   nil,   236,   nil,   239,   nil,   162,   229,   194,   235,
     10,   nil,   nil,   nil,   nil,   nil,   195,   nil,   nil,   284,
    237,    15,   200,   nil,   233,   281,   nil,   241,   173,   247,
-   176,   nil,   243,   174,   285,   nil,   286,   201,   206,   nil,
-   nil,   278,   241,   nil,   nil,   nil,   175,   nil,   289,   nil,
-   nil ]
+   176,   nil,   243,   174,   285,   nil,   239,   201,   206,   nil,
+   nil,   278,   241,   nil,   289,   nil,   175,   nil,   290,   nil,
+   nil,   nil ]
 
 racc_action_default = [
     -1,  -136,    -1,    -3,   -10,  -136,  -136,    -2,    -3,  -136,
    -14,   -14,  -136,  -136,  -136,  -136,  -136,  -136,  -136,   -28,
    -29,   -34,   -35,   -36,  -136,  -136,  -136,  -136,  -136,  -136,
   -136,  -136,  -136,   -54,   -54,   -54,  -136,  -136,  -136,  -136,
-  -136,  -136,  -136,   -13,   231,    -4,  -136,   -14,   -16,   -17,
+  -136,  -136,  -136,   -13,   232,    -4,  -136,   -14,   -16,   -17,
    -20,  -131,  -100,  -101,  -130,   -18,   -23,   -89,   -24,   -25,
   -136,   -27,   -37,  -136,  -136,  -136,   -41,   -42,   -43,   -44,
    -45,   -46,   -55,  -136,   -47,  -136,   -48,   -49,   -92,  -136,
@@ -856,9 +856,9 @@ racc_action_default = [
   -136,  -124,  -136,  -109,  -100,  -110,   -72,   -72,  -136,   -70,
    -69,   -75,   -76,  -116,  -117,  -118,  -136,   -78,   -79,  -136,
    -70,  -108,  -136,  -111,   -72,   -54,  -115,   -63,  -136,  -100,
-  -119,  -125,   -65,  -136,   -54,  -114,   -54,  -136,  -136,  -120,
-  -121,  -136,   -72,  -112,   -77,  -122,  -136,  -126,   -54,  -123,
-  -113 ]
+  -119,  -125,   -65,  -136,   -54,  -114,   -72,  -136,  -136,  -120,
+  -121,  -136,   -72,  -112,   -54,  -122,  -136,  -126,   -54,   -77,
+  -123,  -113 ]
 
 racc_goto_table = [
     73,   118,   136,    54,    48,    49,   164,    96,    91,   120,
@@ -873,14 +873,14 @@ racc_goto_table = [
    170,   177,   220,   199,   203,   205,   221,   186,   153,   nil,
    nil,   nil,   nil,   116,   116,   nil,   198,   nil,   nil,   nil,
    nil,   nil,   214,    78,   206,   nil,   177,   nil,   nil,   nil,
-   nil,   nil,   210,   nil,   nil,   nil,   nil,   186,   210,   174,
+   nil,   nil,   210,   nil,   224,   nil,   nil,   186,   210,   174,
    228,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
    nil,   nil,   nil,   225,   210,   nil,   nil,   nil,   nil,   nil,
    nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
    nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
    nil,   nil,   215,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,   223,   nil,   224,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,   nil,   nil,   nil,   nil,   230 ]
+   nil,   223,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,   229,   nil,   nil,   nil,   231 ]
 
 racc_goto_check = [
     29,    22,    42,    31,    14,    14,    35,    16,     8,    48,
@@ -895,14 +895,14 @@ racc_goto_check = [
     53,    22,    55,    56,    42,    42,    57,    22,    58,   nil,
    nil,   nil,   nil,    31,    31,   nil,    22,   nil,   nil,   nil,
    nil,   nil,    42,    31,    22,   nil,    22,   nil,   nil,   nil,
-   nil,   nil,    22,   nil,   nil,   nil,   nil,    22,    22,    29,
+   nil,   nil,    22,   nil,    42,   nil,   nil,    22,    22,    29,
     42,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
    nil,   nil,   nil,    22,    22,   nil,   nil,   nil,   nil,   nil,
    nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
    nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
    nil,   nil,    29,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,    29,   nil,    29,   nil,   nil,   nil,   nil,   nil,   nil,
-   nil,   nil,   nil,   nil,   nil,    29 ]
+   nil,    29,   nil,   nil,   nil,   nil,   nil,   nil,   nil,   nil,
+   nil,    29,   nil,   nil,   nil,    29 ]
 
 racc_goto_pointer = [
    nil,    38,   nil,   nil,   nil,   -52,    23,    68,   -38,   -29,
@@ -998,7 +998,7 @@ racc_reduce_table = [
   1, 94, :_reduce_74,
   3, 94, :_reduce_75,
   3, 94, :_reduce_76,
-  6, 94, :_reduce_77,
+  7, 94, :_reduce_77,
   3, 94, :_reduce_78,
   3, 94, :_reduce_79,
   0, 102, :_reduce_none,
@@ -1060,7 +1060,7 @@ racc_reduce_table = [
 
 racc_reduce_n = 136
 
-racc_shift_n = 231
+racc_shift_n = 232
 
 racc_token_table = {
   false => 0,
@@ -1828,7 +1828,7 @@ module_eval(<<'.,.,', 'parser.y', 274)
   def _reduce_77(val, _values, result)
               on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           builder = val[0]
-          builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[3], lhs_tag: val[5])
+          builder.symbols << Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, alias_name: val[5], location: @lexer.location, args: val[3], lhs_tag: val[6])
           result = builder
 
     result
