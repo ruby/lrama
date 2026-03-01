@@ -2734,6 +2734,109 @@ RSpec.describe Lrama::Parser do
           end
         end
 
+        context "when nested rules in args" do
+          let(:path) { "parameterized/user_defined/nested_rules_in_args.y" }
+
+          it "expands parameterized rules" do
+            expect(grammar.nterms.sort_by(&:number)).to match_symbols([
+              Sym.new(id: T::Ident.new(s_value: "$accept"), alias_name: nil, number: 5, tag: nil, term: false, token_id: 0, nullable: false),
+              Sym.new(id: T::Ident.new(s_value: "f_opt_number"), alias_name: nil, number: 6, tag: nil, term: false, token_id: 1, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "args_list_f_opt_number_opt_tail_string_number"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 2, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "opt_tail_string"), alias_name: nil, number: 8, tag: nil, term: false, token_id: 3, nullable: true),
+              Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 9, tag: nil, term: false, token_id: 4, nullable: true),
+            ])
+
+            expect(grammar.rules).to eq([
+              Rule.new(
+                id: 0,
+                lhs: grammar.find_symbol_by_s_value!("$accept"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("program"),
+                  grammar.find_symbol_by_s_value!("YYEOF"),
+                ],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("YYEOF"),
+                lineno: 33,
+              ),
+              Rule.new(
+                id: 1,
+                lhs: grammar.find_symbol_by_s_value!("f_opt_number"),
+                rhs: [],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 33,
+              ),
+              Rule.new(
+                id: 2,
+                lhs: grammar.find_symbol_by_s_value!("f_opt_number"),
+                rhs: [grammar.find_symbol_by_s_value!("number")],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("number"),
+                lineno: 33,
+              ),
+              Rule.new(
+                id: 3,
+                lhs: grammar.find_symbol_by_s_value!("args_list_f_opt_number_opt_tail_string_number"),
+                rhs: [grammar.find_symbol_by_s_value!("f_opt_number")],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 33,
+              ),
+              Rule.new(
+                id: 4,
+                lhs: grammar.find_symbol_by_s_value!("opt_tail_string"),
+                rhs: [],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 33,
+              ),
+              Rule.new(
+                id: 5,
+                lhs: grammar.find_symbol_by_s_value!("opt_tail_string"),
+                rhs: [grammar.find_symbol_by_s_value!("string")],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("string"),
+                lineno: 33,
+              ),
+              Rule.new(
+                id: 6,
+                lhs: grammar.find_symbol_by_s_value!("args_list_f_opt_number_opt_tail_string_number"),
+                rhs: [grammar.find_symbol_by_s_value!("opt_tail_string")],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 33,
+              ),
+              Rule.new(
+                id: 7,
+                lhs: grammar.find_symbol_by_s_value!("args_list_f_opt_number_opt_tail_string_number"),
+                rhs: [grammar.find_symbol_by_s_value!("number")],
+                token_code: nil,
+                nullable: false,
+                precedence_sym: grammar.find_symbol_by_s_value!("number"),
+                lineno: 33,
+              ),
+              Rule.new(
+                id: 8,
+                lhs: grammar.find_symbol_by_s_value!("program"),
+                rhs: [
+                  grammar.find_symbol_by_s_value!("args_list_f_opt_number_opt_tail_string_number"),
+                ],
+                token_code: nil,
+                nullable: true,
+                precedence_sym: nil,
+                lineno: 33,
+              ),
+            ])
+          end
+        end
+
         context "when recursive" do
           let(:path) { "parameterized/user_defined/recursive.y" }
 
