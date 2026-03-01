@@ -456,6 +456,7 @@ rule
           end
         }
     | parameterized_args ',' symbol { result = val[0].append(val[2]) }
+    | parameterized_args ',' IDENTIFIER "(" parameterized_args ")" { result = val[0].append(Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2].s_value, location: @lexer.location, args: val[4])) }
     | IDENTIFIER "(" parameterized_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
 
   action:
