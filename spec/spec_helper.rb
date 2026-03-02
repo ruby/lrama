@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+require "fileutils"
+require "tmpdir"
+
+ENV["TMPDIR"] = tmpdir = Dir.mktmpdir("lrama-test-")
+at_exit { FileUtils.rmtree(tmpdir) }
+
 require "simplecov"
 
 SimpleCov.start do
