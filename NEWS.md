@@ -1,8 +1,6 @@
 # NEWS for Lrama
 
-## Lrama 0.8.0 (2026-xx-xx)
-
-## Lrama 0.7.2 (2026-03-01)
+## Lrama 0.8.0 (2026-03-01)
 
 ### Support parser generation without %union directive (Bison compatibility)
 
