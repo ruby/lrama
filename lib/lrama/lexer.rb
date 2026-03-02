@@ -157,6 +157,28 @@ module Lrama
 
       until @scanner.eos? do
         case
+        when @scanner.check(/\/\*/)
+          start_line = @line
+          start_column = column
+
+          @scanner.scan(/\/\*/)
+          comment_start = @scanner.matched
+
+          comment_location = Location.new(
+            grammar_file: @grammar_file,
+            first_line: start_line, first_column: start_column,
+            last_line: @line, last_column: column
+          )
+
+          comment_body = @scanner.scan_until(/\*\//)
+
+          if comment_body
+            chunk = comment_start + comment_body
+            code += chunk
+            chunk.count("\n").times { newline }
+          else
+            raise ParseError, comment_location.generate_error_message('Missing ‘*/’ at end of file') # steep:ignore
+          end
         when @scanner.scan(/{/)
           code << @scanner.matched
           nested += 1
@@ -202,6 +224,7 @@ module Lrama
           newline
         end
       end
+      raise "Unterminated comment."
     end
 
     # @rbs () -> void
