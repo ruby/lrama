@@ -20,6 +20,8 @@ require_relative "grammar/symbol"
 require_relative "grammar/symbols"
 require_relative "grammar/type"
 require_relative "grammar/union"
+require_relative "grammar/token_pattern"
+require_relative "grammar/lex_prec"
 require_relative "lexer"
 
 module Lrama
@@ -68,6 +70,8 @@ module Lrama
     #   @union: Union
     #   @precedences: Array[Precedence]
     #   @start_nterm: Lrama::Lexer::Token::Base?
+    #   @token_patterns: Array[Grammar::TokenPattern]
+    #   @lex_prec: Grammar::LexPrec
 
     extend Forwardable
 
@@ -100,6 +104,8 @@ module Lrama
     attr_accessor :locations #: bool
     attr_accessor :define #: Hash[String, String]
     attr_accessor :required #: bool
+    attr_reader :token_patterns #: Array[Grammar::TokenPattern]
+    attr_reader :lex_prec #: Grammar::LexPrec
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term, :find_term_by_s_value,
                                         :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
@@ -133,6 +139,9 @@ module Lrama
       @required = false
       @precedences = []
       @start_nterm = nil
+      @token_patterns = []
+      @lex_prec = Grammar::LexPrec.new
+      @token_pattern_counter = 0
 
       append_special_symbols
     end
@@ -302,6 +311,48 @@ module Lrama
     # @rbs () -> bool
     def ielr_defined?
       @define.key?('lr.type') && @define['lr.type'] == 'ielr'
+    end
+
+    # @rbs () -> bool
+    def pslr_defined?
+      @define.key?('lr.type') && @define['lr.type'] == 'pslr'
+    end
+
+    # Add a token pattern from %token-pattern directive
+    # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer) -> Grammar::TokenPattern
+    def add_token_pattern(id:, pattern:, alias_name: nil, tag: nil, lineno:)
+      token_pattern = Grammar::TokenPattern.new(
+        id: id,
+        pattern: pattern,
+        alias_name: alias_name,
+        tag: tag,
+        lineno: lineno,
+        definition_order: @token_pattern_counter
+      )
+      @token_pattern_counter += 1
+      @token_patterns << token_pattern
+
+      # Also register as a terminal symbol
+      add_term(id: id, alias_name: alias_name, tag: tag)
+
+      token_pattern
+    end
+
+    # Add a lex-prec rule from %lex-prec directive
+    # @rbs (left_token: Lexer::Token::Ident, operator: Symbol, right_token: Lexer::Token::Ident, lineno: Integer) -> Grammar::LexPrec::Rule
+    def add_lex_prec_rule(left_token:, operator:, right_token:, lineno:)
+      @lex_prec.add_rule(
+        left_token: left_token,
+        operator: operator,
+        right_token: right_token,
+        lineno: lineno
+      )
+    end
+
+    # Find a token pattern by its name
+    # @rbs (String name) -> Grammar::TokenPattern?
+    def find_token_pattern(name)
+      @token_patterns.find { |tp| tp.name == name }
     end
 
     private

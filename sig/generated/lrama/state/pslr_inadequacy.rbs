@@ -1,0 +1,44 @@
+# Generated from lib/lrama/state/pslr_inadequacy.rb with RBS::Inline
+
+module Lrama
+  class State
+    # PSLR Inadequacy detection
+    # Based on Section 3.4.3 from the PSLR dissertation
+    #
+    # PSLR inadequacy occurs when state merging causes different
+    # pseudo-scanner behavior
+    class PslrInadequacy
+      # Inadequacy types
+      LR_RELATIVE: Symbol
+
+      PSLR_RELATIVE: Symbol
+
+      attr_reader type: Symbol
+
+      attr_reader state: State
+
+      attr_reader conflicting_states: Array[State]
+
+      attr_reader details: Hash[Symbol, Object]
+
+      # @rbs (type: Symbol, state: State, conflicting_states: Array[State], details: Hash[Symbol, untyped]) -> void
+      def initialize: (type: Symbol, state: State, conflicting_states: Array[State], details: Hash[Symbol, untyped]) -> void
+
+      # @rbs () -> String
+      def to_s: () -> String
+    end
+
+    # PSLR Compatibility checker
+    # Based on Definition 3.4.1 from the dissertation
+    class PslrCompatibilityChecker
+      # @rbs (ScannerAccepts scanner_accepts, LengthPrecedences length_prec) -> void
+      def initialize: (ScannerAccepts scanner_accepts, LengthPrecedences length_prec) -> void
+
+      # Check if two states are PSLR-compatible
+      # Definition 3.4.1: States are compatible if for any input,
+      # the pseudo-scanner selects the same token
+      # @rbs (State s1, State s2, ScannerFSA scanner_fsa) -> bool
+      def compatible?: (State s1, State s2, ScannerFSA scanner_fsa) -> bool
+    end
+  end
+end
