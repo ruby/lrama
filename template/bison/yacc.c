@@ -586,6 +586,32 @@ static const <%= output.int_type_for(output.context.yyr2) %> yyr2[] =
 <%= output.pslr_tables_and_functions %>
 <%- end -%>
 
+<%- if output.parse_param_name -%>
+#ifndef YYSETSTATE_CONTEXT
+# define YYSETSTATE_CONTEXT(CurrentState, ParseParam) ((void) 0)
+#endif
+<%- end -%>
+
+static int
+yy_state_accepts_token (yy_state_fast_t yystate, int yychar)
+{
+  yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
+  int yyn = yypact[yystate];
+
+  if (yypact_value_is_default (yyn))
+    return 0;
+
+  yyn += yytoken;
+  if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken)
+    return 0;
+
+  yyn = yytable[yyn];
+  if (yyn <= 0)
+    return !yytable_value_is_error (yyn);
+
+  return 1;
+}
+
 enum { YYENOMEM = -2 };
 
 #define yyerrok         (yyerrstatus = 0)
@@ -1585,6 +1611,9 @@ yysetstate:
   YY_IGNORE_USELESS_CAST_BEGIN
   *yyssp = YY_CAST (yy_state_t, yystate);
   YY_IGNORE_USELESS_CAST_END
+<%- if output.parse_param_name -%>
+  YYSETSTATE_CONTEXT (yystate, <%= output.parse_param_name %>);
+<%- end -%>
   YY_STACK_PRINT (yyss, yyssp<%= output.user_args %>);
 
   if (yyss + yystacksize - 1 <= yyssp)
@@ -2068,4 +2097,3 @@ yyreturnlab:
 #line <%= output.aux.epilogue_first_lineno - 1 %> "<%= output.grammar_file_path %>"
 <%= output.aux.epilogue -%>
 <%- end -%>
-
