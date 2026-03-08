@@ -583,6 +583,10 @@ static const <%= output.int_type_for(output.context.yyr2) %> yyr2[] =
 };
 
 <%- if output.pslr_enabled? -%>
+<%= output.pslr_function_declarations %>
+<%- end -%>
+
+<%- if output.pslr_enabled? -%>
 <%= output.pslr_tables_and_functions %>
 <%- end -%>
 
