@@ -3440,4 +3440,80 @@ RSpec.describe Lrama::States do
       end
     end
   end
+
+  describe "PSLR chained shift/angle split regression" do
+    let(:y) do
+      <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern LT /</
+        %token-pattern START /@/
+        %token-pattern MARK /#/
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %token-pattern ID /[a-z]+/
+        %lex-prec RANGLE -s RSHIFT
+
+        %%
+
+        program
+          : template_expr
+          | shift_expr
+          ;
+
+        template_expr
+          : LT shared RANGLE
+          ;
+
+        shift_expr
+          : START shared RSHIFT ID
+          ;
+
+        shared
+          : n1
+          ;
+
+        n1
+          : n2
+          ;
+
+        n2
+          : MARK
+          ;
+      GRAMMAR
+    end
+
+    let(:grammar) do
+      g = Lrama::Parser.new(y, "states/pslr_shift_chain.y").parse
+      g.prepare
+      g.validate!
+      g
+    end
+
+    it "splits every chained reduce state by shift/angle scanner profile" do
+      ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      ielr_states.compute
+      ielr_states.compute_ielr
+
+      pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      pslr_states.compute
+      pslr_states.compute_pslr
+
+      reduce_states = pslr_states.states
+        .select { |state| state.reduces.any? }
+        .group_by { |state| state.reduces.first.rule.display_name }
+
+      expect(pslr_states.states_count).to be > ielr_states.states_count
+      expect(pslr_states.pslr_inadequacies).to be_empty
+
+      ["shared -> n1", "n1 -> n2", "n2 -> MARK"].each do |rule_name|
+        states_for_rule = reduce_states.fetch(rule_name)
+        token_sets = states_for_rule.map { |state| pslr_states.send(:acceptable_tokens_for_pslr, state) }
+
+        expect(states_for_rule.size).to eq(2)
+        expect(states_for_rule.count(&:split_state?)).to eq(1)
+        expect(token_sets.any? { |set| set.include?("RANGLE") && !set.include?("RSHIFT") }).to be(true)
+        expect(token_sets.any? { |set| set.include?("RSHIFT") && !set.include?("RANGLE") }).to be(true)
+      end
+    end
+  end
 end

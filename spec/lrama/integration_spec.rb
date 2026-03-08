@@ -143,6 +143,11 @@ RSpec.describe "integration" do
       test_parser("pslr_keyword_context", "p x if", "kw\n")
       test_parser("pslr_keyword_context", "q x if", "id\n")
     end
+
+    it "keeps chained shift and template contexts distinct" do
+      test_parser("pslr_shift_chain", "< # >", "template\n")
+      test_parser("pslr_shift_chain", "@ # >> foo", "shift\n")
+    end
   end
 
   describe "user defined parameterized rules" do
