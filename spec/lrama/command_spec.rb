@@ -81,5 +81,24 @@ RSpec.describe Lrama::Command do
         File.delete("report.output")
       end
     end
+
+    context "when PSLR inadequacies remain unresolved" do
+      let(:outfile) { File.join(Dir.tmpdir, "pslr-unresolved.c") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      it "fails before writing parser output" do
+        command = Lrama::Command.new(["-o", outfile, fixture_path("command/pslr_unresolved.y")])
+
+        expect { command.run }.to raise_error(SystemExit)
+        expect(File).not_to exist(outfile)
+      end
+    end
   end
 end
