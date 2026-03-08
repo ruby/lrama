@@ -38,7 +38,7 @@ module Lrama
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules, :precedences,
       :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?, :pslr_defined?,
-      :token_patterns, :lex_prec
+      :token_patterns, :lex_prec, :pslr_max_states, :pslr_max_state_ratio
 
     attr_reader :states #: Array[State]
     attr_reader :reads_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
@@ -48,6 +48,7 @@ module Lrama
     attr_reader :length_precedences #: LengthPrecedences?
     attr_reader :scanner_accepts_table #: State::ScannerAccepts?
     attr_reader :pslr_inadequacies #: Array[State::PslrInadequacy]
+    attr_reader :pslr_metrics #: Hash[Symbol, Integer | Float | nil]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
@@ -112,6 +113,16 @@ module Lrama
       # value is bitmap of term.
       @la = {}
       @pslr_inadequacies = []
+      @pslr_metrics = {
+        base_states_count: nil,
+        total_states_count: nil,
+        split_state_count: 0,
+        growth_count: 0,
+        growth_ratio: nil,
+        token_pattern_count: 0,
+        scanner_fsa_state_count: 0,
+        inadequacies_count: 0
+      }
     end
 
     # @rbs () -> void
@@ -152,6 +163,7 @@ module Lrama
     # Based on Section 3.4 of the PSLR dissertation
     # @rbs () -> void
     def compute_pslr
+      capture_pslr_metrics_before_split
       # Preparation
       report_duration(:clear_conflicts) { clear_conflicts }
       # Phase 1
@@ -175,6 +187,7 @@ module Lrama
       report_duration(:compute_default_reduction) { compute_default_reduction }
       report_duration(:build_scanner_accepts) { build_scanner_accepts }
       report_duration(:handle_pslr_inadequacies) { handle_pslr_inadequacies }
+      finalize_pslr_metrics
     end
 
     # @rbs () -> Integer
@@ -225,6 +238,7 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate!(logger)
       validate_conflicts_within_threshold!(logger)
+      validate_pslr_state_growth!(logger)
       validate_pslr_inadequacies!(logger)
     end
 
@@ -799,6 +813,20 @@ module Lrama
     end
 
     # @rbs () -> void
+    def capture_pslr_metrics_before_split
+      @pslr_metrics = {
+        base_states_count: @states.count,
+        total_states_count: @states.count,
+        split_state_count: 0,
+        growth_count: 0,
+        growth_ratio: 1.0,
+        token_pattern_count: token_patterns.size,
+        scanner_fsa_state_count: 0,
+        inadequacies_count: 0
+      }
+    end
+
+    # @rbs () -> void
     def compute_inadequacy_annotations
       @states.each do |state|
         state.annotate_manifestation
@@ -1015,6 +1043,25 @@ module Lrama
       @tracer.warn("Detected #{@pslr_inadequacies.size} unresolved PSLR inadequacies") if @tracer.respond_to?(:warn)
     end
 
+    # @rbs () -> void
+    def finalize_pslr_metrics
+      return unless pslr_defined?
+
+      base_states_count = @pslr_metrics[:base_states_count] || @states.count
+      total_states_count = @states.count
+
+      @pslr_metrics = {
+        base_states_count: base_states_count,
+        total_states_count: total_states_count,
+        split_state_count: @states.count(&:split_state?),
+        growth_count: total_states_count - base_states_count,
+        growth_ratio: base_states_count.zero? ? nil : total_states_count.to_f / base_states_count,
+        token_pattern_count: token_patterns.size,
+        scanner_fsa_state_count: @scanner_fsa ? @scanner_fsa.states.size : 0,
+        inadequacies_count: @pslr_inadequacies.size
+      }
+    end
+
     # Detect PSLR inadequacies in isocore groups
     # @rbs () -> Array[State::PslrInadequacy]
     def detect_pslr_inadequacies
@@ -1061,6 +1108,33 @@ module Lrama
 
       @pslr_inadequacies.each do |inadequacy|
         logger.error(inadequacy.to_s)
+      end
+
+      exit false
+    end
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_state_growth!(logger)
+      return unless pslr_defined?
+
+      errors = []
+      base_states_count = @pslr_metrics[:base_states_count] || @states.count
+      total_states_count = @pslr_metrics[:total_states_count] || @states.count
+      split_state_count = @pslr_metrics[:split_state_count] || @states.count(&:split_state?)
+      growth_ratio = @pslr_metrics[:growth_ratio] || 1.0
+
+      if (limit = pslr_max_states) && limit < total_states_count
+        errors << "PSLR state growth exceeded pslr.max-states=#{limit} (total=#{total_states_count}, base=#{base_states_count}, split=#{split_state_count})"
+      end
+
+      if (limit = pslr_max_state_ratio) && limit < growth_ratio
+        errors << "PSLR state growth exceeded pslr.max-state-ratio=#{limit} (ratio=#{format('%.2f', growth_ratio)}x, total=#{total_states_count}, base=#{base_states_count})"
+      end
+
+      return if errors.empty?
+
+      errors.each do |message|
+        logger.error(message)
       end
 
       exit false

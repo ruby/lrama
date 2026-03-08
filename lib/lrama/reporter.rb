@@ -5,6 +5,7 @@ require_relative 'reporter/conflicts'
 require_relative 'reporter/grammar'
 require_relative 'reporter/precedences'
 require_relative 'reporter/profile'
+require_relative 'reporter/pslr'
 require_relative 'reporter/rules'
 require_relative 'reporter/states'
 require_relative 'reporter/terms'
@@ -20,6 +21,7 @@ module Lrama
       @terms = Terms.new(**options)
       @conflicts = Conflicts.new
       @precedences = Precedences.new
+      @pslr = Pslr.new(**options)
       @grammar = Grammar.new(**options)
       @states = States.new(**options)
     end
@@ -31,6 +33,7 @@ module Lrama
         report_duration(:report_terms) { @terms.report(io, states) }
         report_duration(:report_conflicts) { @conflicts.report(io, states) }
         report_duration(:report_precedences) { @precedences.report(io, states) }
+        report_duration(:report_pslr) { @pslr.report(io, states) }
         report_duration(:report_grammar) { @grammar.report(io, states) }
         report_duration(:report_states) { @states.report(io, states, ielr: states.ielr_defined?) }
       end
