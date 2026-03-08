@@ -42,6 +42,11 @@ module Lrama
     #     def nterms: () -> Array[Grammar::Symbol]
     #     def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
     #     def ielr_defined?: () -> bool
+    #     def pslr_defined?: () -> bool
+    #     def token_patterns: () -> Array[Grammar::TokenPattern]
+    #     def lex_prec: () -> Grammar::LexPrec
+    #     def pslr_max_states: () -> Integer?
+    #     def pslr_max_state_ratio: () -> Float?
     #   end
     #
     #   include Symbols::Resolver::_DelegatedMethods

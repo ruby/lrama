@@ -24,6 +24,16 @@ module Lrama
       def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
 
       def ielr_defined?: () -> bool
+
+      def pslr_defined?: () -> bool
+
+      def token_patterns: () -> Array[Grammar::TokenPattern]
+
+      def lex_prec: () -> Grammar::LexPrec
+
+      def pslr_max_states: () -> Integer?
+
+      def pslr_max_state_ratio: () -> Float?
     end
 
     include Symbols::Resolver::_DelegatedMethods
@@ -238,6 +248,15 @@ module Lrama
     # @rbs () -> bool
     def pslr_defined?: () -> bool
 
+    # @rbs () -> String?
+    def pslr_state_member: () -> String?
+
+    # @rbs () -> Integer?
+    def pslr_max_states: () -> Integer?
+
+    # @rbs () -> Float?
+    def pslr_max_state_ratio: () -> Float?
+
     # Add a token pattern from %token-pattern directive
     # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer) -> Grammar::TokenPattern
     def add_token_pattern: (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, lineno: Integer, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::TokenPattern
@@ -251,6 +270,15 @@ module Lrama
     def find_token_pattern: (String name) -> Grammar::TokenPattern?
 
     private
+
+    # @rbs () -> void
+    def validate_pslr_configuration!: () -> void
+
+    # @rbs (String key) -> Integer?
+    def parse_pslr_positive_integer: (String key) -> Integer?
+
+    # @rbs (String key) -> Float?
+    def parse_pslr_positive_float: (String key) -> Float?
 
     # @rbs () -> void
     def sort_precedence: () -> void

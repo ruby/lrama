@@ -19,7 +19,7 @@ module Lrama
 
       attr_reader conflicting_states: Array[State]
 
-      attr_reader details: Hash[Symbol, Object]
+      attr_reader details: Hash[Symbol, untyped]
 
       # @rbs (type: Symbol, state: State, conflicting_states: Array[State], details: Hash[Symbol, untyped]) -> void
       def initialize: (type: Symbol, state: State, conflicting_states: Array[State], details: Hash[Symbol, untyped]) -> void
@@ -33,6 +33,14 @@ module Lrama
     class PslrCompatibilityChecker
       # @rbs (ScannerAccepts scanner_accepts, LengthPrecedences length_prec) -> void
       def initialize: (ScannerAccepts scanner_accepts, LengthPrecedences length_prec) -> void
+
+      # Build a stable scanner profile for a parser state
+      # @rbs (State state, ScannerFSA scanner_fsa) -> Array[[Integer, String?]]
+      def profile: (State state, ScannerFSA scanner_fsa) -> Array[[ Integer, String? ]]
+
+      # Partition states by scanner profile
+      # @rbs (Array[State] states, ScannerFSA scanner_fsa) -> Hash[Array[[Integer, String?]], Array[State]]
+      def group_by_profile: (Array[State] states, ScannerFSA scanner_fsa) -> Hash[Array[[ Integer, String? ]], Array[State]]
 
       # Check if two states are PSLR-compatible
       # Definition 3.4.1: States are compatible if for any input,

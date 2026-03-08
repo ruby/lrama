@@ -232,11 +232,11 @@ module Lrama
         end
 
         # @rbs (Grammar::Symbol sym, id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?) -> void
-        def replace_term_attributes(sym, id:, alias_name:, tag:, token_id:)
+        def replace_term_attributes(sym, id:, alias_name: nil, tag: nil, token_id: nil)
           sym.id = id
           sym.alias_name = alias_name
           sym.tag = tag
-          sym.token_id = token_id
+          sym.token_id = token_id if token_id
         end
 
         # @rbs () -> void

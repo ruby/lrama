@@ -50,6 +50,10 @@ module Lrama
 
     attr_reader scanner_accepts_table: State::ScannerAccepts?
 
+    attr_reader pslr_inadequacies: Array[State::PslrInadequacy]
+
+    attr_reader pslr_metrics: Hash[Symbol, Integer | Float | nil]
+
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize: (Grammar grammar, Tracer tracer) -> void
 
@@ -200,13 +204,31 @@ module Lrama
     def split_states: () -> void
 
     # @rbs () -> void
+    def capture_pslr_metrics_before_split: () -> void
+
+    # @rbs () -> void
     def compute_inadequacy_annotations: () -> void
 
     # @rbs (State state, State::lookahead_set filtered_lookaheads) -> void
     def merge_lookaheads: (State state, State::lookahead_set filtered_lookaheads) -> void
 
+    # @rbs (State state, State::lookahead_set pslr_lookaheads) -> void
+    def merge_pslr_lookaheads: (State state, State::lookahead_set pslr_lookaheads) -> void
+
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state: (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
+
+    # @rbs (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
+    def compatible_split_state?: (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
+    def pslr_state_signature: (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[ Integer, String? ]]
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Set[String]
+    def acceptable_tokens_for_pslr: (State state, ?State::lookahead_set filtered_lookaheads) -> Set[String]
+
+    # @rbs (Array[Grammar::TokenPattern] candidates) -> Grammar::TokenPattern?
+    def select_best_pslr_token: (Array[Grammar::TokenPattern] candidates) -> Grammar::TokenPattern?
 
     # @rbs (Logger logger) -> void
     def validate_conflicts_within_threshold!: (Logger logger) -> void
@@ -240,8 +262,17 @@ module Lrama
     # @rbs () -> void
     def handle_pslr_inadequacies: () -> void
 
+    # @rbs () -> void
+    def finalize_pslr_metrics: () -> void
+
     # Detect PSLR inadequacies in isocore groups
     # @rbs () -> Array[State::PslrInadequacy]
     def detect_pslr_inadequacies: () -> Array[State::PslrInadequacy]
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_inadequacies!: (Logger logger) -> void
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_state_growth!: (Logger logger) -> void
   end
 end

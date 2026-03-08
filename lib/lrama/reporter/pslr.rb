@@ -1,3 +1,4 @@
+# rbs_inline: enabled
 # frozen_string_literal: true
 
 module Lrama
@@ -30,7 +31,7 @@ module Lrama
 
       private
 
-      # @rbs (Float?) -> String
+      # @rbs (Numeric?) -> String
       def format_ratio(value)
         return "n/a" if value.nil?
 

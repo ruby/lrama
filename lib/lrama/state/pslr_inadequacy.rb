@@ -16,7 +16,7 @@ module Lrama
       attr_reader :type #: Symbol
       attr_reader :state #: State
       attr_reader :conflicting_states #: Array[State]
-      attr_reader :details #: Hash[Symbol, Object]
+      attr_reader :details #: Hash[Symbol, untyped]
 
       # @rbs (type: Symbol, state: State, conflicting_states: Array[State], details: Hash[Symbol, untyped]) -> void
       def initialize(type:, state:, conflicting_states:, details:)
