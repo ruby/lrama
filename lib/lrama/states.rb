@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "forwardable"
+require "set"
 require_relative "tracer/duration"
 require_relative "state/item"
 
@@ -151,19 +152,28 @@ module Lrama
     # Based on Section 3.4 of the PSLR dissertation
     # @rbs () -> void
     def compute_pslr
-      # Phase 1: Run IELR(1) as the base
-      compute_ielr
-
-      # Phase 2: Build Scanner FSA from token patterns
+      # Preparation
+      report_duration(:clear_conflicts) { clear_conflicts }
+      # Phase 1
+      report_duration(:compute_predecessors) { compute_predecessors }
+      report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
+      report_duration(:compute_always_follows) { compute_always_follows }
+      report_duration(:compute_goto_follows) { compute_goto_follows }
+      # Phase 2
       report_duration(:build_scanner_fsa) { build_scanner_fsa }
-
-      # Phase 3: Build lexical precedence tables
       report_duration(:build_length_precedences) { build_length_precedences }
-
-      # Phase 4: Build scanner_accepts table
+      report_duration(:compute_inadequacy_annotations) { compute_inadequacy_annotations }
+      # Phase 3
+      @pslr_split_enabled = true
+      report_duration(:split_states) { split_states }
+      @pslr_split_enabled = false
+      # Phase 4
+      report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
+      report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
+      # Phase 5
+      report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
+      report_duration(:compute_default_reduction) { compute_default_reduction }
       report_duration(:build_scanner_accepts) { build_scanner_accepts }
-
-      # Phase 5: Detect and handle PSLR inadequacies
       report_duration(:handle_pslr_inadequacies) { handle_pslr_inadequacies }
     end
 
@@ -819,7 +829,7 @@ module Lrama
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state(state, transition, next_state)
       propagating_lookaheads = state.propagate_lookaheads(next_state)
-      s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
+      s = next_state.ielr_isocores.find {|st| compatible_split_state?(st, propagating_lookaheads) }
 
       if s.nil?
         s = next_state.lalr_isocore
@@ -844,6 +854,71 @@ module Lrama
       else
         merge_lookaheads(s, propagating_lookaheads)
         state.update_transition(transition, s) if state.items_to_state[transition.to_items].id != s.id
+      end
+    end
+
+    # @rbs (State state, State::lookahead_set filtered_lookaheads) -> bool
+    def compatible_split_state?(state, filtered_lookaheads)
+      return false unless state.is_compatible?(filtered_lookaheads)
+      return true unless @pslr_split_enabled && @scanner_fsa
+
+      pslr_state_signature(state) == pslr_state_signature(state, filtered_lookaheads)
+    end
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
+    def pslr_state_signature(state, filtered_lookaheads = nil)
+      return [] unless @scanner_fsa
+
+      acc_sp = acceptable_tokens_for_pslr(state, filtered_lookaheads)
+
+      @scanner_fsa.states.each_with_object([]) do |fsa_state, signature|
+        next unless fsa_state.accepting?
+
+        candidates = fsa_state.accepting_tokens.select do |token_pattern|
+          acc_sp.include?(token_pattern.name)
+        end
+        signature << [fsa_state.id, select_best_pslr_token(candidates)&.name]
+      end
+    end
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Set[String]
+    def acceptable_tokens_for_pslr(state, filtered_lookaheads = nil)
+      tokens = Set.new
+      kernel_reduce_items = state.kernels.select(&:end_of_rule?).to_set
+
+      state.term_transitions.each do |shift|
+        next_sym = shift.next_sym
+        tokens << next_sym.id.s_value if next_sym.term?
+      end
+
+      state.reduces.each do |reduce|
+        look_ahead =
+          if filtered_lookaheads && kernel_reduce_items.include?(reduce.item)
+            filtered_lookaheads[reduce.item] || []
+          else
+            reduce.look_ahead || []
+          end
+
+        look_ahead.each do |la|
+          tokens << la.id.s_value
+        end
+      end
+
+      tokens
+    end
+
+    # @rbs (Array[Grammar::TokenPattern] candidates) -> Grammar::TokenPattern?
+    def select_best_pslr_token(candidates)
+      return nil if candidates.empty?
+      return candidates.first if candidates.size == 1
+
+      candidates.min_by do |token|
+        higher_count = candidates.count do |other|
+          next false if other == token
+          lex_prec.higher_priority?(token.name, other.name)
+        end
+
+        [-higher_count, token.definition_order]
       end
     end
 
@@ -935,26 +1010,36 @@ module Lrama
     # @rbs () -> Array[State::PslrInadequacy]
     def detect_pslr_inadequacies
       inadequacies = []
-      checker = State::PslrCompatibilityChecker.new(@scanner_accepts_table, @length_precedences)
 
-      # Group states by their kernel items (isocore groups)
-      isocore_groups = @states.group_by { |s| s.kernels.map { |k| [k.rule.id, k.position] }.sort }
+      @states.each do |state|
+        state.transitions.each do |transition|
+          next_state = transition.to_state
+          next unless next_state
 
-      isocore_groups.each_value do |group_states|
-        next if group_states.size <= 1
+          propagating_lookaheads = state.propagate_lookaheads(next_state.lalr_isocore)
+          expected_profile = pslr_state_signature(next_state, propagating_lookaheads)
+          actual_profile = pslr_state_signature(next_state)
 
-        profiles = checker.group_by_profile(group_states, @scanner_fsa)
-        next if profiles.size <= 1
+          next if expected_profile == actual_profile
 
-        inadequacies << State::PslrInadequacy.new(
-          type: State::PslrInadequacy::PSLR_RELATIVE,
-          state: group_states.first,
-          conflicting_states: group_states,
-          details: {
-            reason: "Scanner behavior differs between isocore states",
-            profiles: profiles.transform_values { |states| states.map(&:id) }
-          }
-        )
+          matching_state = next_state.ielr_isocores.find do |candidate|
+            pslr_state_signature(candidate) == expected_profile
+          end
+
+          inadequacies << State::PslrInadequacy.new(
+            type: State::PslrInadequacy::PSLR_RELATIVE,
+            state: next_state,
+            conflicting_states: [matching_state, next_state].compact.uniq,
+            details: {
+              reason: "Transition reaches a state with an incompatible PSLR scanner profile",
+              from_state_id: state.id,
+              transition_symbol: transition.next_sym.id.s_value,
+              expected_profile: expected_profile,
+              actual_profile: actual_profile,
+              matching_state_id: matching_state&.id
+            }
+          )
+        end
       end
 
       inadequacies

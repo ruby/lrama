@@ -3198,4 +3198,93 @@ RSpec.describe Lrama::States do
       end
     end
   end
+
+  describe "PSLR split helpers" do
+    let(:y) do
+      <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %lex-prec RANGLE -s RSHIFT
+
+        %%
+
+        program: RSHIFT | RANGLE
+      GRAMMAR
+    end
+
+    let(:grammar) do
+      g = Lrama::Parser.new(y, "states/pslr_split.y").parse
+      g.prepare
+      g.validate!
+      g
+    end
+
+    let(:states) { Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new)) }
+    let(:kernel_item) { instance_double(Lrama::State::Item, end_of_rule?: true) }
+    let(:reduce) { instance_double(Lrama::State::Action::Reduce, item: kernel_item, look_ahead: [grammar.find_symbol_by_s_value!("RSHIFT")]) }
+    let(:mock_state) do
+      instance_double(
+        Lrama::State,
+        is_compatible?: true,
+        kernels: [kernel_item],
+        term_transitions: [],
+        reduces: [reduce],
+      )
+    end
+
+    before do
+      states.instance_variable_set(:@scanner_fsa, Lrama::ScannerFSA.new(grammar.token_patterns))
+      states.instance_variable_set(:@pslr_split_enabled, true)
+    end
+
+    it "derives different PSLR signatures from different propagated lookaheads" do
+      current = states.send(:pslr_state_signature, mock_state)
+      filtered = states.send(
+        :pslr_state_signature,
+        mock_state,
+        { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] },
+      )
+
+      expect(current.map(&:last)).to include("RSHIFT")
+      expect(current.map(&:last)).not_to include("RANGLE")
+      expect(filtered.map(&:last)).to include("RANGLE")
+      expect(filtered.map(&:last)).not_to include("RSHIFT")
+    end
+
+    it "treats states with different PSLR signatures as incompatible during splitting" do
+      filtered_lookaheads = { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] }
+      expect(states.send(:compatible_split_state?, mock_state, filtered_lookaheads)).to be false
+    end
+
+    it "detects unresolved PSLR inadequacies per transition" do
+      propagated = { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] }
+      matching_state = instance_double(Lrama::State, id: 8)
+      next_state = instance_double(Lrama::State, id: 4)
+      transition_symbol = instance_double(
+        Lrama::Grammar::Symbol,
+        id: instance_double(Lrama::Lexer::Token::Ident, s_value: "RSHIFT"),
+      )
+      transition = instance_double(Lrama::State::Action::Shift, to_state: next_state, next_sym: transition_symbol)
+      from_state = instance_double(
+        Lrama::State,
+        id: 1,
+        transitions: [transition],
+        propagate_lookaheads: propagated,
+      )
+
+      allow(next_state).to receive(:lalr_isocore).and_return(next_state)
+      allow(next_state).to receive(:ielr_isocores).and_return([next_state, matching_state])
+      allow(states).to receive(:pslr_state_signature).with(next_state, propagated).and_return([[1, "RANGLE"]])
+      allow(states).to receive(:pslr_state_signature).with(next_state).and_return([[1, "RSHIFT"]])
+      allow(states).to receive(:pslr_state_signature).with(matching_state).and_return([[1, "RANGLE"]])
+      states.instance_variable_set(:@states, [from_state])
+
+      inadequacies = states.send(:detect_pslr_inadequacies)
+
+      expect(inadequacies.size).to eq(1)
+      expect(inadequacies.first.details[:matching_state_id]).to eq(8)
+      expect(inadequacies.first.details[:transition_symbol]).to eq("RSHIFT")
+    end
+  end
 end
