@@ -286,6 +286,7 @@ module Lrama
       validate_no_precedence_for_nterm!
       validate_rule_lhs_is_nterm!
       validate_duplicated_precedence!
+      validate_pslr_configuration!
     end
 
     # @rbs (Grammar::Symbol sym) -> Array[Rule]
@@ -316,6 +317,21 @@ module Lrama
     # @rbs () -> bool
     def pslr_defined?
       @define.key?('lr.type') && @define['lr.type'] == 'pslr'
+    end
+
+    # @rbs () -> String?
+    def pslr_state_member
+      @define['api.pslr.state-member']
+    end
+
+    # @rbs () -> Integer?
+    def pslr_max_states
+      parse_pslr_positive_integer('pslr.max-states')
+    end
+
+    # @rbs () -> Float?
+    def pslr_max_state_ratio
+      parse_pslr_positive_float('pslr.max-state-ratio')
     end
 
     # Add a token pattern from %token-pattern directive
@@ -356,6 +372,45 @@ module Lrama
     end
 
     private
+
+    # @rbs () -> void
+    def validate_pslr_configuration!
+      return unless pslr_defined?
+
+      member = pslr_state_member
+      if member && member !~ /\A[a-zA-Z_][a-zA-Z0-9_]*\z/
+        raise %(%define api.pslr.state-member must be a valid C identifier, got "#{member}".)
+      end
+
+      pslr_max_states
+      pslr_max_state_ratio
+    end
+
+    # @rbs (String key) -> Integer?
+    def parse_pslr_positive_integer(key)
+      value = @define[key]
+      return nil if value.nil? || value.empty?
+
+      parsed = Integer(value, 10)
+      raise %(%define #{key} must be greater than 0, got "#{value}".) unless 0 < parsed
+
+      parsed
+    rescue ArgumentError
+      raise %(%define #{key} must be an integer, got "#{value}".)
+    end
+
+    # @rbs (String key) -> Float?
+    def parse_pslr_positive_float(key)
+      value = @define[key]
+      return nil if value.nil? || value.empty?
+
+      parsed = Float(value)
+      raise %(%define #{key} must be greater than or equal to 1.0, got "#{value}".) unless 1.0 <= parsed
+
+      parsed
+    rescue ArgumentError
+      raise %(%define #{key} must be a number, got "#{value}".)
+    end
 
     # @rbs () -> void
     def sort_precedence

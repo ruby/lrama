@@ -586,9 +586,9 @@ static const <%= output.int_type_for(output.context.yyr2) %> yyr2[] =
 <%= output.pslr_tables_and_functions %>
 <%- end -%>
 
-<%- if output.parse_param_name -%>
+<%- if output.pslr_enabled? -%>
 #ifndef YYSETSTATE_CONTEXT
-# define YYSETSTATE_CONTEXT(CurrentState, ParseParam) ((void) 0)
+# define YYSETSTATE_CONTEXT(CurrentState) ((void) 0)
 #endif
 <%- end -%>
 
@@ -1611,8 +1611,8 @@ yysetstate:
   YY_IGNORE_USELESS_CAST_BEGIN
   *yyssp = YY_CAST (yy_state_t, yystate);
   YY_IGNORE_USELESS_CAST_END
-<%- if output.parse_param_name -%>
-  YYSETSTATE_CONTEXT (yystate, <%= output.parse_param_name %>);
+<%- if output.pslr_enabled? -%>
+  YYSETSTATE_CONTEXT (yystate);
 <%- end -%>
   YY_STACK_PRINT (yyss, yyssp<%= output.user_args %>);
 

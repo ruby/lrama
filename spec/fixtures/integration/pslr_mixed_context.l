@@ -13,7 +13,7 @@
     (void)yylval;
 
     int match_length = 0;
-    int token = yy_pseudo_scan(p->current_state, yytext, &match_length);
+    int token = YYPSLR_PSEUDO_SCAN(p, yytext, &match_length);
 
     if (token == YYEMPTY) {
         token = ID;
@@ -41,7 +41,7 @@
 
 [>]{1,2} {
     int match_length = 0;
-    int token = yy_pseudo_scan(p->current_state, yytext, &match_length);
+    int token = YYPSLR_PSEUDO_SCAN(p, yytext, &match_length);
 
     if (token == YYEMPTY) {
         token = (yyleng == 2) ? RSHIFT : RANGLE;

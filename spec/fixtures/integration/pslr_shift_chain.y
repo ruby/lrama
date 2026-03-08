@@ -1,8 +1,6 @@
 %{
 #include <stdio.h>
 
-#define YYSETSTATE_CONTEXT(CurrentState, ParseParam) ((ParseParam)->current_state = (CurrentState))
-
 #include "pslr_shift_chain.h"
 #include "pslr_shift_chain-lexer.h"
 
@@ -18,6 +16,7 @@ static int yyerror(YYLTYPE *loc, struct parse_params *p, const char *str);
 
 %define api.pure
 %define lr.type pslr
+%define api.pslr.state-member current_state
 
 %lex-param {struct parse_params *p}
 %parse-param {struct parse_params *p}

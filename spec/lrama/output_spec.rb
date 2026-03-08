@@ -242,8 +242,9 @@ RSpec.describe Lrama::Output do
         undef_symbol: nil,
         accept_symbol: nil,
         locations: false,
-        parse_param: nil,
-        lex_param: nil
+        parse_param: "struct parse_params *p",
+        lex_param: "struct parse_params *p",
+        pslr_state_member: "current_state"
       )
     end
 
@@ -318,6 +319,9 @@ RSpec.describe Lrama::Output do
         result = pslr_output.pslr_function_declarations
         expect(result).to include("int yy_state_accepts_token")
         expect(result).to include("int yy_pseudo_scan")
+        expect(result).to include("YYPSLR_PSEUDO_SCAN_STATE")
+        expect(result).to include("YYPSLR_PSEUDO_SCAN")
+        expect(result).to include("YYSETSTATE_CONTEXT(CurrentState)")
       end
     end
 
@@ -346,6 +350,14 @@ RSpec.describe Lrama::Output do
   describe "PSLR integration in render" do
     let(:pslr_grammar_text) do
       <<~GRAMMAR
+        %code requires {
+          struct parse_params {
+            int current_state;
+          };
+        }
+        %define api.pslr.state-member current_state
+        %parse-param {struct parse_params *p}
+        %lex-param {struct parse_params *p}
         %token-pattern RSHIFT />>/ "right shift"
         %token-pattern RANGLE />/ "right angle"
         %lex-prec RANGLE -s RSHIFT
@@ -398,6 +410,8 @@ RSpec.describe Lrama::Output do
       expect(rendered).to include("yy_token_pattern_to_token_id")
       expect(rendered_header).to include("int yy_state_accepts_token")
       expect(rendered_header).to include("int yy_pseudo_scan")
+      expect(rendered_header).to include("YYSETSTATE_CONTEXT(CurrentState)")
+      expect(rendered_header).to include("YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength)")
     end
   end
 end

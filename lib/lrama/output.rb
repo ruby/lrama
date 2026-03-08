@@ -413,10 +413,55 @@ module Lrama
     def pslr_function_declarations
       return "" unless pslr_enabled?
 
-      <<~C_CODE
+      declarations = [<<~C_CODE]
         int yy_state_accepts_token (int yystate, int yychar);
         int yy_pseudo_scan (int parser_state, const char *input, int *match_length);
       C_CODE
+
+      declarations << <<~C_CODE
+        #define YYPSLR_ENABLED 1
+        #define YYPSLR_NO_MATCH YYEMPTY
+
+        #ifndef YYPSLR_PSEUDO_SCAN_STATE
+        # define YYPSLR_PSEUDO_SCAN_STATE(ParserState, Input, MatchLength) \\
+          yy_pseudo_scan ((ParserState), (Input), (MatchLength))
+        #endif
+      C_CODE
+
+      if (member = pslr_state_member)
+        declarations << <<~C_CODE
+          #ifndef YYGETSTATE_CONTEXT
+          # define YYGETSTATE_CONTEXT(Context) ((Context)->#{member})
+          #endif
+
+          #ifndef YYPSLR_PSEUDO_SCAN
+          # define YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength) \\
+            ((Context) != 0 \\
+             ? YYPSLR_PSEUDO_SCAN_STATE (YYGETSTATE_CONTEXT (Context), (Input), (MatchLength)) \\
+             : YYEMPTY)
+          #endif
+        C_CODE
+
+        if !parse_param_name.empty?
+          declarations << <<~C_CODE
+            #ifndef YYSETSTATE_CONTEXT
+            # define YYSETSTATE_CONTEXT(CurrentState) \\
+              do { \\
+                if (#{parse_param_name} != 0) { \\
+                  YYGETSTATE_CONTEXT (#{parse_param_name}) = (CurrentState); \\
+                } \\
+              } while (0)
+            #endif
+          C_CODE
+        end
+      end
+
+      declarations.join("\n")
+    end
+
+    def pslr_state_member
+      member = @grammar.pslr_state_member
+      member&.strip
     end
 
     def pslr_accepting_states
