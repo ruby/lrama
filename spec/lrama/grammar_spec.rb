@@ -242,5 +242,47 @@ RSpec.describe Lrama::Grammar do
           end
       end
     end
+
+    context 'when PSLR state member is not a valid C identifier' do
+      before do
+        grammar.define = {
+          'lr.type' => 'pslr',
+          'api.pslr.state-member' => 'current-state'
+        }
+      end
+
+      it 'raises an error with the invalid member name' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, '%define api.pslr.state-member must be a valid C identifier, got "current-state".')
+      end
+    end
+
+    context 'when PSLR max states is not an integer' do
+      before do
+        grammar.define = {
+          'lr.type' => 'pslr',
+          'pslr.max-states' => 'many'
+        }
+      end
+
+      it 'raises an error with the invalid value' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, '%define pslr.max-states must be an integer, got "many".')
+      end
+    end
+
+    context 'when PSLR max state ratio is smaller than one' do
+      before do
+        grammar.define = {
+          'lr.type' => 'pslr',
+          'pslr.max-state-ratio' => '0.5'
+        }
+      end
+
+      it 'raises an error with the invalid ratio' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, '%define pslr.max-state-ratio must be greater than or equal to 1.0, got "0.5".')
+      end
+    end
   end
 end
