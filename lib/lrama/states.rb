@@ -854,6 +854,14 @@ module Lrama
       end
     end
 
+    # @rbs (State state, State::lookahead_set pslr_lookaheads) -> void
+    def merge_pslr_lookaheads(state, pslr_lookaheads)
+      state.pslr_item_lookahead_set ||= state.kernels.map {|kernel| [kernel, []] }.to_h
+      return if state.kernels.all? {|item| (pslr_lookaheads[item] - state.pslr_item_lookahead_set[item]).empty? }
+
+      state.pslr_item_lookahead_set = state.pslr_item_lookahead_set.merge(pslr_lookaheads) {|_, v1, v2| v1 | v2 }
+    end
+
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state(state, transition, next_state)
       propagating_lookaheads = state.propagate_lookaheads(next_state)
@@ -882,11 +890,14 @@ module Lrama
         end
         new_state.lookaheads_recomputed = true
         new_state.item_lookahead_set = pslr_lookaheads
+        new_state.pslr_item_lookahead_set = pslr_lookaheads
         state.update_transition(transition, new_state)
       elsif(!s.lookaheads_recomputed)
         s.lookaheads_recomputed = true
         s.item_lookahead_set = pslr_lookaheads
+        s.pslr_item_lookahead_set = pslr_lookaheads
       else
+        merge_pslr_lookaheads(s, pslr_lookaheads) if @pslr_split_enabled
         merge_lookaheads(s, propagating_lookaheads)
         state.update_transition(transition, s) if state.items_to_state[transition.to_items].id != s.id
       end
@@ -933,7 +944,7 @@ module Lrama
           if filtered_lookaheads && kernel_reduce_items.include?(reduce.item)
             filtered_lookaheads[reduce.item] || []
           else
-            state.acceptable_reduce_lookahead(reduce)
+            state.acceptable_pslr_reduce_lookahead(reduce)
           end
 
         look_ahead.each do |la|

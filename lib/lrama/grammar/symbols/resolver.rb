@@ -52,15 +52,17 @@ module Lrama
         def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
           if token_id && (sym = find_symbol_by_token_id(token_id))
             if replace
-              sym.id = id
-              sym.alias_name = alias_name
-              sym.tag = tag
+              replace_term_attributes(sym, id: id, alias_name: alias_name, tag: tag, token_id: token_id)
             end
 
             return sym
           end
 
           if (sym = find_symbol_by_id(id))
+            if replace
+              replace_term_attributes(sym, id: id, alias_name: alias_name, tag: tag, token_id: token_id)
+            end
+
             return sym
           end
 
@@ -227,6 +229,14 @@ module Lrama
           @nterms.find do |s|
             s.id == id
           end || (raise "Symbol not found. #{id}")
+        end
+
+        # @rbs (Grammar::Symbol sym, id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?) -> void
+        def replace_term_attributes(sym, id:, alias_name:, tag:, token_id:)
+          sym.id = id
+          sym.alias_name = alias_name
+          sym.tag = tag
+          sym.token_id = token_id
         end
 
         # @rbs () -> void

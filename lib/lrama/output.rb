@@ -404,8 +404,13 @@ module Lrama
     # PSLR Output Helper Methods
     # Based on PSLR::OutputHelper - generates PSLR-specific C code
 
-    # Check if PSLR output is needed
+    # Check if the grammar requested PSLR output.
     def pslr_enabled?
+      @grammar.pslr_defined?
+    end
+
+    # Check if PSLR scanner tables are available.
+    def pslr_scanner_enabled?
       scanner_fsa = @context.states.scanner_fsa
       !scanner_fsa.nil? && !scanner_fsa.states.empty?
     end
@@ -415,32 +420,41 @@ module Lrama
 
       declarations = [<<~C_CODE]
         int yy_state_accepts_token (int yystate, int yychar);
-        int yy_pseudo_scan (int parser_state, const char *input, int *match_length);
       C_CODE
 
-      declarations << <<~C_CODE
-        #define YYPSLR_ENABLED 1
-        #define YYPSLR_NO_MATCH YYEMPTY
+      if pslr_scanner_enabled?
+        declarations << <<~C_CODE
+          int yy_pseudo_scan (int parser_state, const char *input, int *match_length);
+        C_CODE
 
-        #ifndef YYPSLR_PSEUDO_SCAN_STATE
-        # define YYPSLR_PSEUDO_SCAN_STATE(ParserState, Input, MatchLength) \\
-          yy_pseudo_scan ((ParserState), (Input), (MatchLength))
-        #endif
-      C_CODE
+        declarations << <<~C_CODE
+          #define YYPSLR_ENABLED 1
+          #define YYPSLR_NO_MATCH YYEMPTY
+
+          #ifndef YYPSLR_PSEUDO_SCAN_STATE
+          # define YYPSLR_PSEUDO_SCAN_STATE(ParserState, Input, MatchLength) \\
+            yy_pseudo_scan ((ParserState), (Input), (MatchLength))
+          #endif
+        C_CODE
+      end
 
       if (member = pslr_state_member)
         declarations << <<~C_CODE
           #ifndef YYGETSTATE_CONTEXT
           # define YYGETSTATE_CONTEXT(Context) ((Context)->#{member})
           #endif
-
-          #ifndef YYPSLR_PSEUDO_SCAN
-          # define YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength) \\
-            ((Context) != 0 \\
-             ? YYPSLR_PSEUDO_SCAN_STATE (YYGETSTATE_CONTEXT (Context), (Input), (MatchLength)) \\
-             : YYEMPTY)
-          #endif
         C_CODE
+
+        if pslr_scanner_enabled?
+          declarations << <<~C_CODE
+            #ifndef YYPSLR_PSEUDO_SCAN
+            # define YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength) \\
+              ((Context) != 0 \\
+               ? YYPSLR_PSEUDO_SCAN_STATE (YYGETSTATE_CONTEXT (Context), (Input), (MatchLength)) \\
+               : YYEMPTY)
+            #endif
+          C_CODE
+        end
 
         if !parse_param_name.empty?
           declarations << <<~C_CODE
@@ -465,7 +479,7 @@ module Lrama
     end
 
     def pslr_accepting_states
-      return [] unless pslr_enabled?
+      return [] unless pslr_scanner_enabled?
 
       @context.states.scanner_fsa.states.select(&:accepting?)
     end
@@ -480,7 +494,7 @@ module Lrama
 
     # Generate Scanner FSA transition table as C code
     def scanner_transition_table
-      return "" unless pslr_enabled?
+      return "" unless pslr_scanner_enabled?
       scanner_fsa = @context.states.scanner_fsa
 
       lines = []
@@ -504,7 +518,7 @@ module Lrama
 
     # Generate state_to_accepting table as C code
     def state_to_accepting_table
-      return "" unless pslr_enabled?
+      return "" unless pslr_scanner_enabled?
       scanner_fsa = @context.states.scanner_fsa
       accepting_indices = Array.new(scanner_fsa.states.size, -1)
 
@@ -524,7 +538,7 @@ module Lrama
     end
 
     def token_pattern_token_ids_table
-      return "" unless pslr_enabled?
+      return "" unless pslr_scanner_enabled?
 
       lines = []
       lines << ""
@@ -540,7 +554,7 @@ module Lrama
 
     # Generate token IDs for accepting states as C code
     def accepting_tokens_table
-      return "" unless pslr_enabled?
+      return "" unless pslr_scanner_enabled?
       scanner_fsa = @context.states.scanner_fsa
 
       lines = []
@@ -567,7 +581,7 @@ module Lrama
 
     # Generate scanner_accepts table as C code
     def scanner_accepts_table_code
-      return "" unless pslr_enabled?
+      return "" unless pslr_scanner_enabled?
       scanner_fsa = @context.states.scanner_fsa
       scanner_accepts = @context.states.scanner_accepts_table
       return "" unless scanner_accepts
@@ -610,7 +624,7 @@ module Lrama
 
     # Generate length_precedences table as C code
     def length_precedences_table_code
-      return "" unless pslr_enabled?
+      return "" unless pslr_scanner_enabled?
       length_precedences = @context.states.length_precedences
       return "" unless length_precedences
 
@@ -645,7 +659,7 @@ module Lrama
 
     # Generate pseudo_scan function as C code
     def pseudo_scan_function
-      return "" unless pslr_enabled?
+      return "" unless pslr_scanner_enabled?
 
       <<~C_CODE
 
@@ -718,7 +732,7 @@ module Lrama
 
     # Generate all PSLR C code
     def pslr_tables_and_functions
-      return "" unless pslr_enabled?
+      return "" unless pslr_scanner_enabled?
 
       [
         "/* PSLR(1) Scanner Tables and Functions */",
