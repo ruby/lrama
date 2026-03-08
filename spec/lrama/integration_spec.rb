@@ -148,6 +148,13 @@ RSpec.describe "integration" do
       test_parser("pslr_shift_chain", "< # >", "template\n")
       test_parser("pslr_shift_chain", "@ # >> foo", "shift\n")
     end
+
+    it "handles mixed keyword, identifier, template, and shift contexts in one grammar" do
+      test_parser("pslr_mixed_context", "p # if", "kw\n")
+      test_parser("pslr_mixed_context", "q # if", "id\n")
+      test_parser("pslr_mixed_context", "< # >", "template\n")
+      test_parser("pslr_mixed_context", "@ # >> foo", "shift\n")
+    end
   end
 
   describe "user defined parameterized rules" do

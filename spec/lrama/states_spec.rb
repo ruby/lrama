@@ -3516,4 +3516,134 @@ RSpec.describe Lrama::States do
       end
     end
   end
+
+  describe "PSLR mixed family regressions" do
+    {
+      "empty shared wrapper" => {
+        path: "states/pslr_mixed_empty.y",
+        grammar: <<~GRAMMAR,
+          %define lr.type pslr
+          %token-pattern LT /</
+          %token-pattern START /@/
+          %token-pattern P /p/
+          %token-pattern Q /q/
+          %token-pattern MARK /#/
+          %token-pattern IF /if/
+          %token-pattern ID /[a-z]+/
+          %token-pattern RSHIFT />>/
+          %token-pattern RANGLE />/
+          %lex-prec IF - ID
+          %lex-prec RANGLE -s RSHIFT
+
+          %%
+
+          program
+            : kw
+            | ident
+            | templ
+            | shift_expr
+            ;
+
+          kw
+            : P shared IF
+            ;
+
+          ident
+            : Q shared ID
+            ;
+
+          templ
+            : LT shared RANGLE
+            ;
+
+          shift_expr
+            : START shared RSHIFT ID
+            ;
+
+          shared
+            : opt n1
+            ;
+
+          opt
+            :
+            ;
+
+          n1
+            : MARK
+            ;
+        GRAMMAR
+      },
+      "chain2 shared wrapper" => {
+        path: "states/pslr_mixed_chain2.y",
+        grammar: <<~GRAMMAR,
+          %define lr.type pslr
+          %token-pattern LT /</
+          %token-pattern START /@/
+          %token-pattern P /p/
+          %token-pattern Q /q/
+          %token-pattern MARK /#/
+          %token-pattern IF /if/
+          %token-pattern ID /[a-z]+/
+          %token-pattern RSHIFT />>/
+          %token-pattern RANGLE />/
+          %lex-prec IF - ID
+          %lex-prec RANGLE -s RSHIFT
+
+          %%
+
+          program
+            : kw
+            | ident
+            | templ
+            | shift_expr
+            ;
+
+          kw
+            : P shared IF
+            ;
+
+          ident
+            : Q shared ID
+            ;
+
+          templ
+            : LT shared RANGLE
+            ;
+
+          shift_expr
+            : START shared RSHIFT ID
+            ;
+
+          shared
+            : n1
+            ;
+
+          n1
+            : n2
+            ;
+
+          n2
+            : MARK
+            ;
+        GRAMMAR
+      }
+    }.each do |label, attrs|
+      it "keeps #{label} scanner-compatible" do
+        grammar = Lrama::Parser.new(attrs[:grammar], attrs[:path]).parse
+        grammar.prepare
+        grammar.validate!
+
+        ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        ielr_states.compute
+        ielr_states.compute_ielr
+
+        pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        pslr_states.compute
+        pslr_states.compute_pslr
+
+        expect(pslr_states.states_count).to be > ielr_states.states_count
+        expect(pslr_states.pslr_inadequacies).to be_empty
+      end
+    end
+  end
 end
