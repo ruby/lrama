@@ -792,7 +792,7 @@ module Lrama
     # @rbs () -> void
     def split_states
       @states.each do |state|
-        state.transitions.each do |transition|
+        state.transitions.dup.each do |transition|
           compute_state(state, transition, transition.to_state)
         end
       end

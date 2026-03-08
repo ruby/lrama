@@ -46,6 +46,14 @@ id_context
   ;
 
 shared
+  : n1
+  ;
+
+n1
+  : n2
+  ;
+
+n2
   : X
   ;
 

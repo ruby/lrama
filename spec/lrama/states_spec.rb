@@ -3366,7 +3366,7 @@ RSpec.describe Lrama::States do
     end
   end
 
-  describe "PSLR keyword split regression" do
+  describe "PSLR chained keyword split regression" do
     let(:y) do
       <<~GRAMMAR
         %define lr.type pslr
@@ -3393,6 +3393,14 @@ RSpec.describe Lrama::States do
           ;
 
         shared
+          : n1
+          ;
+
+        n1
+          : n2
+          ;
+
+        n2
           : X
           ;
       GRAMMAR
@@ -3405,7 +3413,7 @@ RSpec.describe Lrama::States do
       g
     end
 
-    it "splits the shared reduce state by scanner profile" do
+    it "splits every chained reduce state by scanner profile" do
       ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       ielr_states.compute
       ielr_states.compute_ielr
@@ -3414,21 +3422,22 @@ RSpec.describe Lrama::States do
       pslr_states.compute
       pslr_states.compute_pslr
 
-      base_state = pslr_states.states.find do |state|
-        !state.split_state? && state.reduces.any? { |reduce| reduce.rule.display_name == "shared -> X" }
-      end
-      split_state = pslr_states.states.find do |state|
-        state.split_state? && state.lalr_isocore == base_state
-      end
+      reduce_states = pslr_states.states
+        .select { |state| state.reduces.any? }
+        .group_by { |state| state.reduces.first.rule.display_name }
 
       expect(pslr_states.states_count).to be > ielr_states.states_count
       expect(pslr_states.pslr_inadequacies).to be_empty
-      expect(base_state).not_to be_nil
-      expect(split_state).not_to be_nil
-      expect(pslr_states.send(:acceptable_tokens_for_pslr, base_state).to_a).to include("IF")
-      expect(pslr_states.send(:acceptable_tokens_for_pslr, base_state).to_a).not_to include("ID")
-      expect(pslr_states.send(:acceptable_tokens_for_pslr, split_state).to_a).to include("ID")
-      expect(pslr_states.send(:acceptable_tokens_for_pslr, split_state).to_a).not_to include("IF")
+
+      ["shared -> n1", "n1 -> n2", "n2 -> X"].each do |rule_name|
+        states_for_rule = reduce_states.fetch(rule_name)
+        token_sets = states_for_rule.map { |state| pslr_states.send(:acceptable_tokens_for_pslr, state) }
+
+        expect(states_for_rule.size).to eq(2)
+        expect(states_for_rule.count(&:split_state?)).to eq(1)
+        expect(token_sets.any? { |set| set.include?("IF") && !set.include?("ID") }).to be(true)
+        expect(token_sets.any? { |set| set.include?("ID") && !set.include?("IF") }).to be(true)
+      end
     end
   end
 end
