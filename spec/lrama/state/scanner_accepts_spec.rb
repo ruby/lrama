@@ -182,7 +182,7 @@ RSpec.describe Lrama::State::ScannerAccepts do
     end
 
     it "uses propagated item lookaheads when explicit reduce lookahead is absent" do
-      allow(parser_state).to receive(:acceptable_reduce_lookahead).with(reduce).and_return([
+      allow(parser_state).to receive(:acceptable_pslr_reduce_lookahead).with(reduce).and_return([
         instance_double(Lrama::Grammar::Symbol, id: instance_double(Lrama::Lexer::Token::Ident, s_value: "RANGLE")),
         instance_double(Lrama::Grammar::Symbol, id: instance_double(Lrama::Lexer::Token::Ident, s_value: "RSHIFT")),
       ])

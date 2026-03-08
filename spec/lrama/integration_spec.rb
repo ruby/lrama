@@ -431,6 +431,7 @@ RSpec.describe "integration" do
     describe "Full PSLR grammar compilation" do
       let(:grammar_text) do
         <<~GRAMMAR
+          %define lr.type pslr
           %token-pattern RSHIFT />>/ "right shift"
           %token-pattern RANGLE />/ "right angle"
           %token-pattern LANGLE /</ "left angle"

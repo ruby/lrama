@@ -244,6 +244,7 @@ RSpec.describe Lrama::Output do
         locations: false,
         parse_param: "struct parse_params *p",
         lex_param: "struct parse_params *p",
+        pslr_defined?: true,
         pslr_state_member: "current_state"
       )
     end
@@ -261,19 +262,30 @@ RSpec.describe Lrama::Output do
     end
 
     describe "#pslr_enabled?" do
-      it "returns true when scanner FSA is built with states" do
+      it "returns true when grammar requested PSLR output" do
         expect(pslr_output.pslr_enabled?).to be true
+      end
+
+      it "returns false when grammar did not request PSLR output" do
+        allow(mock_grammar).to receive(:pslr_defined?).and_return(false)
+        expect(pslr_output.pslr_enabled?).to be false
+      end
+    end
+
+    describe "#pslr_scanner_enabled?" do
+      it "returns true when scanner FSA is built with states" do
+        expect(pslr_output.pslr_scanner_enabled?).to be true
       end
 
       it "returns false when scanner FSA is nil" do
         allow(mock_states).to receive(:scanner_fsa).and_return(nil)
-        expect(pslr_output.pslr_enabled?).to be false
+        expect(pslr_output.pslr_scanner_enabled?).to be false
       end
 
       it "returns false when scanner FSA has no states" do
         empty_fsa = Lrama::ScannerFSA.new([])
         allow(mock_states).to receive(:scanner_fsa).and_return(empty_fsa)
-        expect(pslr_output.pslr_enabled?).to be false
+        expect(pslr_output.pslr_scanner_enabled?).to be false
       end
     end
 
@@ -355,6 +367,7 @@ RSpec.describe Lrama::Output do
             int current_state;
           };
         }
+        %define lr.type pslr
         %define api.pslr.state-member current_state
         %parse-param {struct parse_params *p}
         %lex-param {struct parse_params *p}

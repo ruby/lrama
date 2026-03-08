@@ -3231,6 +3231,7 @@ RSpec.describe Lrama::States do
         term_transitions: [],
         reduces: [reduce],
         acceptable_reduce_lookahead: [grammar.find_symbol_by_s_value!("RSHIFT")],
+        acceptable_pslr_reduce_lookahead: [grammar.find_symbol_by_s_value!("RSHIFT")],
       )
     end
 
