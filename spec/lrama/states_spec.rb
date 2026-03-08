@@ -3230,6 +3230,7 @@ RSpec.describe Lrama::States do
         kernels: [kernel_item],
         term_transitions: [],
         reduces: [reduce],
+        acceptable_reduce_lookahead: [grammar.find_symbol_by_s_value!("RSHIFT")],
       )
     end
 
@@ -3288,7 +3289,7 @@ RSpec.describe Lrama::States do
     end
   end
 
-  describe "PSLR full-lookahead regression" do
+  describe "PSLR pure-reduce profile regression" do
     let(:y) do
       <<~GRAMMAR
         %define lr.type pslr
@@ -3319,13 +3320,13 @@ RSpec.describe Lrama::States do
     end
 
     let(:grammar) do
-      g = Lrama::Parser.new(y, "states/pslr_unresolved.y").parse
+      g = Lrama::Parser.new(y, "states/pslr_pure_reduce.y").parse
       g.prepare
       g.validate!
       g
     end
 
-    it "keeps the attempted PSLR split visible and fails fast when it is still unresolved" do
+    it "keeps pure reduce states scanner-compatible without forcing a split" do
       ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
       ielr_states.compute
       ielr_states.compute_ielr
@@ -3334,12 +3335,13 @@ RSpec.describe Lrama::States do
       pslr_states.compute
       pslr_states.compute_pslr
 
-      expect(pslr_states.states_count).to be > ielr_states.states_count
-      expect(pslr_states.pslr_inadequacies.size).to eq(1)
-      expect(pslr_states.pslr_inadequacies.first.details).to include(
-        from_state_id: 0,
-        transition_symbol: "ID",
-      )
+      reduce_state = pslr_states.states.find do |state|
+        state.reduces.any? { |reduce| reduce.rule.display_name == "a -> ID" }
+      end
+
+      expect(pslr_states.states_count).to eq(ielr_states.states_count)
+      expect(pslr_states.pslr_inadequacies).to be_empty
+      expect(pslr_states.send(:acceptable_tokens_for_pslr, reduce_state).to_a).to contain_exactly("RANGLE", "RSHIFT")
     end
   end
 end

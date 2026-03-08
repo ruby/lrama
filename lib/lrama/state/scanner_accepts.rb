@@ -101,7 +101,7 @@ module Lrama
 
         # Add tokens from reduce actions (lookahead)
         parser_state.reduces.each do |reduce|
-          reduce.look_ahead&.each do |la|
+          parser_state.acceptable_reduce_lookahead(reduce).each do |la|
             tokens << la.id.s_value
           end
         end

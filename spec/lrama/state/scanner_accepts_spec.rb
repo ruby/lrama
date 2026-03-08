@@ -145,4 +145,56 @@ RSpec.describe Lrama::State::ScannerAccepts do
       expect(length_prec).to be_a(Lrama::LengthPrecedences)
     end
   end
+
+  describe "pure reduce states" do
+    let(:rangle) do
+      id = Lrama::Lexer::Token::Ident.new(s_value: "RANGLE")
+      regex = Lrama::Lexer::Token::Regex.new(s_value: "/>/")
+      Lrama::Grammar::TokenPattern.new(
+        id: id,
+        pattern: regex,
+        lineno: 1,
+        definition_order: 0
+      )
+    end
+
+    let(:rshift) do
+      id = Lrama::Lexer::Token::Ident.new(s_value: "RSHIFT")
+      regex = Lrama::Lexer::Token::Regex.new(s_value: "/>>/")
+      Lrama::Grammar::TokenPattern.new(
+        id: id,
+        pattern: regex,
+        lineno: 1,
+        definition_order: 1
+      )
+    end
+
+    let(:scanner_fsa) { Lrama::ScannerFSA.new([rangle, rshift]) }
+    let(:lex_prec) { Lrama::Grammar::LexPrec.new }
+    let(:length_prec) { Lrama::LengthPrecedences.new(lex_prec) }
+    let(:reduce) { instance_double(Lrama::State::Action::Reduce) }
+    let(:parser_state) do
+      instance_double(
+        Lrama::State,
+        term_transitions: [],
+        reduces: [reduce],
+      )
+    end
+
+    it "uses propagated item lookaheads when explicit reduce lookahead is absent" do
+      allow(parser_state).to receive(:acceptable_reduce_lookahead).with(reduce).and_return([
+        instance_double(Lrama::Grammar::Symbol, id: instance_double(Lrama::Lexer::Token::Ident, s_value: "RANGLE")),
+        instance_double(Lrama::Grammar::Symbol, id: instance_double(Lrama::Lexer::Token::Ident, s_value: "RSHIFT")),
+      ])
+
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [parser_state],
+        scanner_fsa,
+        lex_prec,
+        length_prec
+      )
+
+      expect(scanner_accepts.send(:compute_acc_sp, parser_state).to_a).to contain_exactly("RANGLE", "RSHIFT")
+    end
+  end
 end

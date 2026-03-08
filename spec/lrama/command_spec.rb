@@ -82,8 +82,27 @@ RSpec.describe Lrama::Command do
       end
     end
 
-    context "when PSLR inadequacies remain unresolved" do
-      let(:outfile) { File.join(Dir.tmpdir, "pslr-unresolved.c") }
+    context "when a PSLR grammar needs pure-reduce lookahead to choose tokens" do
+      let(:outfile) { File.join(Dir.tmpdir, "pslr-pure-reduce.c") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      it "emits parser output successfully" do
+        command = Lrama::Command.new(["-o", outfile, fixture_path("command/pslr_pure_reduce.y")])
+
+        expect(command.run).to be_nil
+        expect(File).to exist(outfile)
+      end
+    end
+
+    context "when validation aborts" do
+      let(:outfile) { File.join(Dir.tmpdir, "validate-abort.c") }
 
       before do
         File.delete(outfile) if File.exist?(outfile)
@@ -94,7 +113,9 @@ RSpec.describe Lrama::Command do
       end
 
       it "fails before writing parser output" do
-        command = Lrama::Command.new(["-o", outfile, fixture_path("command/pslr_unresolved.y")])
+        allow_any_instance_of(Lrama::States).to receive(:validate!).and_raise(SystemExit)
+
+        command = Lrama::Command.new(["-o", outfile, fixture_path("command/basic.y")])
 
         expect { command.run }.to raise_error(SystemExit)
         expect(File).not_to exist(outfile)

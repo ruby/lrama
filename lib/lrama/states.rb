@@ -905,7 +905,7 @@ module Lrama
           if filtered_lookaheads && kernel_reduce_items.include?(reduce.item)
             filtered_lookaheads[reduce.item] || []
           else
-            reduce.look_ahead || []
+            state.acceptable_reduce_lookahead(reduce)
           end
 
         look_ahead.each do |la|

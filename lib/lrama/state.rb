@@ -149,6 +149,11 @@ module Lrama
       reduce.look_ahead = look_ahead
     end
 
+    # @rbs (Action::Reduce reduce) -> Array[Grammar::Symbol]
+    def acceptable_reduce_lookahead(reduce)
+      reduce.look_ahead || item_lookahead_set[reduce.item] || []
+    end
+
     # @rbs (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
     def set_look_ahead_sources(rule, sources)
       reduce = reduces.find do |r|
