@@ -1,28 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe "PSLR family regressions" do
-  def build_grammar(source, path)
-    grammar = Lrama::Parser.new(source, path).parse
-    grammar.prepare
-    grammar.validate!
-    grammar
-  end
-
-  def compute_ielr_and_pslr(grammar)
-    ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
-    ielr_states.compute
-    ielr_states.compute_ielr
-
-    pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
-    pslr_states.compute
-    pslr_states.compute_pslr
-
-    [ielr_states, pslr_states]
-  end
-
-  def acceptable_tokens(states, state)
-    states.send(:acceptable_tokens_for_pslr, state).to_a
-  end
+  include PslrFamilyHelper
 
   describe "pure-reduce profile" do
     let(:grammar) do
