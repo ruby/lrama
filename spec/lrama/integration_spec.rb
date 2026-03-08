@@ -138,6 +138,11 @@ RSpec.describe "integration" do
     it "can prefer the shorter match in template contexts" do
       test_parser("pslr_context", "foo<bar<baz>>", "template\n")
     end
+
+    it "splits keyword and identifier contexts with the same lexeme" do
+      test_parser("pslr_keyword_context", "p x if", "kw\n")
+      test_parser("pslr_keyword_context", "q x if", "id\n")
+    end
   end
 
   describe "user defined parameterized rules" do

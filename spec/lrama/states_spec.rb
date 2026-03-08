@@ -3287,6 +3287,27 @@ RSpec.describe Lrama::States do
       expect(inadequacies.first.details[:matching_state_id]).to eq(8)
       expect(inadequacies.first.details[:transition_symbol]).to eq("RSHIFT")
     end
+
+    it "merges propagated lookaheads into an existing split state" do
+      current_lookaheads = { kernel_item => [grammar.find_symbol_by_s_value!("RSHIFT")] }
+      incoming_lookaheads = { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] }
+      target_state = instance_double(Lrama::State, lookaheads_recomputed: true)
+      transition = instance_double(Lrama::State::Action::Shift, to_state: target_state)
+      split_state = instance_double(
+        Lrama::State,
+        kernels: [kernel_item],
+        item_lookahead_set: current_lookaheads,
+        transitions: [transition],
+      )
+
+      allow(split_state).to receive(:item_lookahead_set=)
+
+      states.send(:merge_lookaheads, split_state, incoming_lookaheads)
+
+      expect(split_state).to have_received(:item_lookahead_set=).with(
+        kernel_item => [grammar.find_symbol_by_s_value!("RSHIFT"), grammar.find_symbol_by_s_value!("RANGLE")],
+      )
+    end
   end
 
   describe "PSLR pure-reduce profile regression" do
@@ -3342,6 +3363,72 @@ RSpec.describe Lrama::States do
       expect(pslr_states.states_count).to eq(ielr_states.states_count)
       expect(pslr_states.pslr_inadequacies).to be_empty
       expect(pslr_states.send(:acceptable_tokens_for_pslr, reduce_state).to_a).to contain_exactly("RANGLE", "RSHIFT")
+    end
+  end
+
+  describe "PSLR keyword split regression" do
+    let(:y) do
+      <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern P /p/
+        %token-pattern Q /q/
+        %token-pattern X /x/
+        %token-pattern IF /if/
+        %token-pattern ID /[a-z]+/
+        %lex-prec IF - ID
+
+        %%
+
+        program
+          : kw_context
+          | id_context
+          ;
+
+        kw_context
+          : P shared IF
+          ;
+
+        id_context
+          : Q shared ID
+          ;
+
+        shared
+          : X
+          ;
+      GRAMMAR
+    end
+
+    let(:grammar) do
+      g = Lrama::Parser.new(y, "states/pslr_keyword_context.y").parse
+      g.prepare
+      g.validate!
+      g
+    end
+
+    it "splits the shared reduce state by scanner profile" do
+      ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      ielr_states.compute
+      ielr_states.compute_ielr
+
+      pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      pslr_states.compute
+      pslr_states.compute_pslr
+
+      base_state = pslr_states.states.find do |state|
+        !state.split_state? && state.reduces.any? { |reduce| reduce.rule.display_name == "shared -> X" }
+      end
+      split_state = pslr_states.states.find do |state|
+        state.split_state? && state.lalr_isocore == base_state
+      end
+
+      expect(pslr_states.states_count).to be > ielr_states.states_count
+      expect(pslr_states.pslr_inadequacies).to be_empty
+      expect(base_state).not_to be_nil
+      expect(split_state).not_to be_nil
+      expect(pslr_states.send(:acceptable_tokens_for_pslr, base_state).to_a).to include("IF")
+      expect(pslr_states.send(:acceptable_tokens_for_pslr, base_state).to_a).not_to include("ID")
+      expect(pslr_states.send(:acceptable_tokens_for_pslr, split_state).to_a).to include("ID")
+      expect(pslr_states.send(:acceptable_tokens_for_pslr, split_state).to_a).not_to include("IF")
     end
   end
 end
