@@ -92,6 +92,9 @@ RSpec.describe Lrama::State::PslrCompatibilityChecker do
   let(:scanner_fsa) { Lrama::ScannerFSA.new([rangle, rshift]) }
   let(:lex_prec) { Lrama::Grammar::LexPrec.new }
   let(:length_prec) { Lrama::LengthPrecedences.new(lex_prec) }
+  let(:accepting_state_ids) { scanner_fsa.states.select(&:accepting?).map(&:id) }
+  let(:short_state_id) { accepting_state_ids.min }
+  let(:long_state_id) { accepting_state_ids.max }
 
   describe "#initialize" do
     it "creates a compatibility checker" do
@@ -163,6 +166,69 @@ RSpec.describe Lrama::State::PslrCompatibilityChecker do
 
         expect(checker.compatible?(state1, state2, scanner_fsa)).to be false
       end
+    end
+  end
+
+  describe "#profile" do
+    it "returns a stable accepting-state profile" do
+      scanner_accepts = instance_double(Lrama::State::ScannerAccepts)
+      allow(scanner_accepts).to receive(:[]) do |state_id, fsa_state_id|
+        if state_id == 0
+          fsa_state_id == short_state_id ? rangle : rshift
+        else
+          fsa_state_id == short_state_id ? rangle : nil
+        end
+      end
+
+      checker = Lrama::State::PslrCompatibilityChecker.new(
+        scanner_accepts,
+        length_prec
+      )
+
+      state = instance_double(Lrama::State, id: 0)
+
+      expect(checker.profile(state, scanner_fsa)).to eq([
+        [short_state_id, "RANGLE"],
+        [long_state_id, "RSHIFT"],
+      ])
+    end
+  end
+
+  describe "#group_by_profile" do
+    it "partitions states by scanner behavior" do
+      scanner_accepts = instance_double(Lrama::State::ScannerAccepts)
+      allow(scanner_accepts).to receive(:[]) do |state_id, fsa_state_id|
+        case [state_id, fsa_state_id]
+        when [0, short_state_id], [1, short_state_id]
+          rangle
+        when [0, long_state_id]
+          rshift
+        when [1, long_state_id]
+          nil
+        when [2, short_state_id]
+          rshift
+        when [2, long_state_id]
+          rshift
+        end
+      end
+
+      checker = Lrama::State::PslrCompatibilityChecker.new(
+        scanner_accepts,
+        length_prec
+      )
+
+      state1 = instance_double(Lrama::State, id: 0)
+      state2 = instance_double(Lrama::State, id: 1)
+      state3 = instance_double(Lrama::State, id: 2)
+
+      grouped = checker.group_by_profile([state1, state2, state3], scanner_fsa)
+
+      expect(grouped.values.map(&:size)).to contain_exactly(1, 1, 1)
+      expect(grouped.keys).to include(
+        [[short_state_id, "RANGLE"], [long_state_id, "RSHIFT"]],
+        [[short_state_id, "RANGLE"], [long_state_id, nil]],
+        [[short_state_id, "RSHIFT"], [long_state_id, "RSHIFT"]],
+      )
     end
   end
 end

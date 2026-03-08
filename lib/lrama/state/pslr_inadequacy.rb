@@ -28,7 +28,14 @@ module Lrama
 
       # @rbs () -> String
       def to_s
-        "PSLR Inadequacy (#{type}): state #{state.id} conflicts with states #{conflicting_states.map(&:id).join(', ')}"
+        message = "PSLR Inadequacy (#{type}): state #{state.id} conflicts with states #{conflicting_states.map(&:id).join(', ')}"
+        return message if details[:profiles].nil?
+
+        profiles = details[:profiles].map do |profile, state_ids|
+          "#{state_ids.join(', ')} => #{profile.inspect}"
+        end
+
+        "#{message} (profiles: #{profiles.join(' | ')})"
       end
     end
 
@@ -41,26 +48,31 @@ module Lrama
         @length_prec = length_prec
       end
 
+      # Build a stable scanner profile for a parser state
+      # @rbs (State state, ScannerFSA scanner_fsa) -> Array[[Integer, String?]]
+      def profile(state, scanner_fsa)
+        scanner_fsa.states.each_with_object([]) do |fsa_state, result|
+          next unless fsa_state.accepting?
+
+          token = @scanner_accepts[state.id, fsa_state.id]
+          result << [fsa_state.id, token&.name]
+        end
+      end
+
+      # Partition states by scanner profile
+      # @rbs (Array[State] states, ScannerFSA scanner_fsa) -> Hash[Array[[Integer, String?]], Array[State]]
+      def group_by_profile(states, scanner_fsa)
+        states.group_by do |state|
+          profile(state, scanner_fsa)
+        end
+      end
+
       # Check if two states are PSLR-compatible
       # Definition 3.4.1: States are compatible if for any input,
       # the pseudo-scanner selects the same token
       # @rbs (State s1, State s2, ScannerFSA scanner_fsa) -> bool
       def compatible?(s1, s2, scanner_fsa)
-        # For all accepting states in the FSA, check if the selected tokens match
-        scanner_fsa.states.each do |fsa_state|
-          next unless fsa_state.accepting?
-
-          token1 = @scanner_accepts[s1.id, fsa_state.id]
-          token2 = @scanner_accepts[s2.id, fsa_state.id]
-
-          # Both undefined is compatible
-          next if token1.nil? && token2.nil?
-
-          # Different tokens are incompatible
-          return false if token1 != token2
-        end
-
-        true
+        profile(s1, scanner_fsa) == profile(s2, scanner_fsa)
       end
     end
   end

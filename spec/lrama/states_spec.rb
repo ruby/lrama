@@ -3158,5 +3158,44 @@ RSpec.describe Lrama::States do
         expect(logger).not_to have_received(:error)
       end
     end
+
+    context "when unresolved PSLR inadequacies remain" do
+      let(:header) do
+        <<~STR
+          %define lr.type pslr
+          %token-pattern RSHIFT />>/
+          %token-pattern RANGLE />/
+          %lex-prec RANGLE -s RSHIFT
+
+          %%
+
+          program: RSHIFT | RANGLE
+        STR
+      end
+
+      it "fails fast instead of silently generating a parser" do
+        grammar = Lrama::Parser.new(header, "states/pslr_inadequacy.y").parse
+        grammar.prepare
+        grammar.validate!
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        states.instance_variable_set(
+          :@pslr_inadequacies,
+          [
+            Lrama::State::PslrInadequacy.new(
+              type: Lrama::State::PslrInadequacy::PSLR_RELATIVE,
+              state: instance_double(Lrama::State, id: 3),
+              conflicting_states: [instance_double(Lrama::State, id: 3), instance_double(Lrama::State, id: 4)],
+              details: { reason: "Scanner behavior differs between isocore states" }
+            )
+          ]
+        )
+        logger = Lrama::Logger.new
+        allow(logger).to receive(:error)
+
+        expect { states.validate!(logger) }.to raise_error(SystemExit)
+        expect(logger).to have_received(:error).with(include("PSLR Inadequacy"))
+      end
+    end
   end
 end

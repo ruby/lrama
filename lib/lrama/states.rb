@@ -46,6 +46,7 @@ module Lrama
     attr_reader :scanner_fsa #: ScannerFSA?
     attr_reader :length_precedences #: LengthPrecedences?
     attr_reader :scanner_accepts_table #: State::ScannerAccepts?
+    attr_reader :pslr_inadequacies #: Array[State::PslrInadequacy]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
@@ -109,6 +110,7 @@ module Lrama
       # second key is rule_id,
       # value is bitmap of term.
       @la = {}
+      @pslr_inadequacies = []
     end
 
     # @rbs () -> void
@@ -213,6 +215,7 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate!(logger)
       validate_conflicts_within_threshold!(logger)
+      validate_pslr_inadequacies!(logger)
     end
 
     def compute_la_sources_for_conflicted_states
@@ -922,12 +925,10 @@ module Lrama
     def handle_pslr_inadequacies
       return unless @scanner_fsa && @scanner_accepts_table
 
-      inadequacies = detect_pslr_inadequacies
-      return if inadequacies.empty?
+      @pslr_inadequacies = detect_pslr_inadequacies
+      return if @pslr_inadequacies.empty?
 
-      # For now, just report inadequacies
-      # Full state splitting would require additional implementation
-      @tracer.warn("Detected #{inadequacies.size} PSLR inadequacies") if @tracer.respond_to?(:warn)
+      @tracer.warn("Detected #{@pslr_inadequacies.size} unresolved PSLR inadequacies") if @tracer.respond_to?(:warn)
     end
 
     # Detect PSLR inadequacies in isocore groups
@@ -942,20 +943,33 @@ module Lrama
       isocore_groups.each_value do |group_states|
         next if group_states.size <= 1
 
-        # Check pairwise compatibility
-        group_states.combination(2).each do |s1, s2|
-          unless checker.compatible?(s1, s2, @scanner_fsa)
-            inadequacies << State::PslrInadequacy.new(
-              type: State::PslrInadequacy::PSLR_RELATIVE,
-              state: s1,
-              conflicting_states: [s1, s2],
-              details: { reason: "Scanner behavior differs between isocore states" }
-            )
-          end
-        end
+        profiles = checker.group_by_profile(group_states, @scanner_fsa)
+        next if profiles.size <= 1
+
+        inadequacies << State::PslrInadequacy.new(
+          type: State::PslrInadequacy::PSLR_RELATIVE,
+          state: group_states.first,
+          conflicting_states: group_states,
+          details: {
+            reason: "Scanner behavior differs between isocore states",
+            profiles: profiles.transform_values { |states| states.map(&:id) }
+          }
+        )
       end
 
       inadequacies
+    end
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_inadequacies!(logger)
+      return unless pslr_defined?
+      return if @pslr_inadequacies.empty?
+
+      @pslr_inadequacies.each do |inadequacy|
+        logger.error(inadequacy.to_s)
+      end
+
+      exit false
     end
   end
 end
