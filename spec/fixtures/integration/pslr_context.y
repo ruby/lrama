@@ -1,6 +1,8 @@
 %{
 #include <stdio.h>
 
+#define YY_DECL int yylex(YYSTYPE *lval, struct parse_params *p)
+
 #include "pslr_context.h"
 #include "pslr_context-lexer.h"
 
