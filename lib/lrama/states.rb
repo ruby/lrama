@@ -829,7 +829,14 @@ module Lrama
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state(state, transition, next_state)
       propagating_lookaheads = state.propagate_lookaheads(next_state)
-      s = next_state.ielr_isocores.find {|st| compatible_split_state?(st, propagating_lookaheads) }
+      pslr_lookaheads =
+        if @pslr_split_enabled
+          state.propagate_lookaheads_without_filter(next_state)
+        else
+          propagating_lookaheads
+        end
+
+      s = next_state.ielr_isocores.find {|st| compatible_split_state?(st, propagating_lookaheads, pslr_lookaheads) }
 
       if s.nil?
         s = next_state.lalr_isocore
@@ -846,23 +853,25 @@ module Lrama
           st.ielr_isocores = s.ielr_isocores
         end
         new_state.lookaheads_recomputed = true
-        new_state.item_lookahead_set = propagating_lookaheads
+        new_state.item_lookahead_set = pslr_lookaheads
         state.update_transition(transition, new_state)
       elsif(!s.lookaheads_recomputed)
         s.lookaheads_recomputed = true
-        s.item_lookahead_set = propagating_lookaheads
+        s.item_lookahead_set = pslr_lookaheads
       else
         merge_lookaheads(s, propagating_lookaheads)
         state.update_transition(transition, s) if state.items_to_state[transition.to_items].id != s.id
       end
     end
 
-    # @rbs (State state, State::lookahead_set filtered_lookaheads) -> bool
-    def compatible_split_state?(state, filtered_lookaheads)
+    # @rbs (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
+    def compatible_split_state?(state, filtered_lookaheads, pslr_lookaheads = nil)
       return false unless state.is_compatible?(filtered_lookaheads)
       return true unless @pslr_split_enabled && @scanner_fsa
 
-      pslr_state_signature(state) == pslr_state_signature(state, filtered_lookaheads)
+      pslr_lookaheads ||= filtered_lookaheads
+
+      pslr_state_signature(state) == pslr_state_signature(state, pslr_lookaheads)
     end
 
     # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
@@ -1016,7 +1025,7 @@ module Lrama
           next_state = transition.to_state
           next unless next_state
 
-          propagating_lookaheads = state.propagate_lookaheads(next_state.lalr_isocore)
+          propagating_lookaheads = state.propagate_lookaheads_without_filter(next_state.lalr_isocore)
           expected_profile = pslr_state_signature(next_state, propagating_lookaheads)
           actual_profile = pslr_state_signature(next_state)
 

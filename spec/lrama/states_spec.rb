@@ -3270,7 +3270,7 @@ RSpec.describe Lrama::States do
         Lrama::State,
         id: 1,
         transitions: [transition],
-        propagate_lookaheads: propagated,
+        propagate_lookaheads_without_filter: propagated,
       )
 
       allow(next_state).to receive(:lalr_isocore).and_return(next_state)
@@ -3285,6 +3285,61 @@ RSpec.describe Lrama::States do
       expect(inadequacies.size).to eq(1)
       expect(inadequacies.first.details[:matching_state_id]).to eq(8)
       expect(inadequacies.first.details[:transition_symbol]).to eq("RSHIFT")
+    end
+  end
+
+  describe "PSLR full-lookahead regression" do
+    let(:y) do
+      <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %token-pattern ID /[a-z]+/
+        %lex-prec RANGLE -s RSHIFT
+
+        %%
+
+        program
+          : templ
+          | rshift_expr
+          ;
+
+        templ
+          : a RANGLE
+          ;
+
+        rshift_expr
+          : a RSHIFT ID
+          ;
+
+        a
+          : ID
+          ;
+      GRAMMAR
+    end
+
+    let(:grammar) do
+      g = Lrama::Parser.new(y, "states/pslr_unresolved.y").parse
+      g.prepare
+      g.validate!
+      g
+    end
+
+    it "keeps the attempted PSLR split visible and fails fast when it is still unresolved" do
+      ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      ielr_states.compute
+      ielr_states.compute_ielr
+
+      pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      pslr_states.compute
+      pslr_states.compute_pslr
+
+      expect(pslr_states.states_count).to be > ielr_states.states_count
+      expect(pslr_states.pslr_inadequacies.size).to eq(1)
+      expect(pslr_states.pslr_inadequacies.first.details).to include(
+        from_state_id: 0,
+        transition_symbol: "ID",
+      )
     end
   end
 end

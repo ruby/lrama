@@ -290,6 +290,16 @@ module Lrama
     #
     # @rbs (State next_state) -> lookahead_set
     def propagate_lookaheads(next_state)
+      propagate_lookaheads_with_filter(next_state, true)
+    end
+
+    # @rbs (State next_state) -> lookahead_set
+    def propagate_lookaheads_without_filter(next_state)
+      propagate_lookaheads_with_filter(next_state, false)
+    end
+
+    # @rbs (State next_state, bool apply_filter) -> lookahead_set
+    def propagate_lookaheads_with_filter(next_state, apply_filter)
       next_state.kernels.map {|next_kernel|
         lookahead_sets =
           if next_kernel.position > 1
@@ -299,7 +309,14 @@ module Lrama
             goto_follow_set(next_kernel.lhs)
           end
 
-        [next_kernel, lookahead_sets & next_state.lookahead_set_filters[next_kernel]]
+        lookahead_sets =
+          if apply_filter
+            lookahead_sets & next_state.lookahead_set_filters[next_kernel]
+          else
+            lookahead_sets
+          end
+
+        [next_kernel, lookahead_sets]
       }.to_h
     end
 
