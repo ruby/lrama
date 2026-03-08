@@ -225,7 +225,8 @@ RSpec.describe Lrama::Output do
         scanner_accepts_table: nil,
         length_precedences: nil,
         token_patterns: [token_pattern],
-        states: []
+        states: [],
+        find_symbol_by_s_value!: instance_double(Lrama::Grammar::Symbol, token_id: 301)
       )
     end
 
@@ -289,6 +290,7 @@ RSpec.describe Lrama::Output do
         expect(result).to include("yy_pseudo_scan")
         expect(result).to include("parser_state")
         expect(result).to include("match_length")
+        expect(result).to include("yy_token_pattern_to_token_id")
       end
     end
 
@@ -299,6 +301,7 @@ RSpec.describe Lrama::Output do
         expect(result).to include("YY_SCANNER_NUM_STATES")
         expect(result).to include("yy_scanner_transition")
         expect(result).to include("yy_pseudo_scan")
+        expect(result).to include("yy_token_pattern_to_token_id")
       end
     end
 
@@ -307,6 +310,14 @@ RSpec.describe Lrama::Output do
         result = pslr_output.state_to_accepting_table
         expect(result).to include("yy_state_to_accepting")
         expect(result).to include("YY_ACCEPTING_NONE")
+      end
+    end
+
+    describe "#pslr_function_declarations" do
+      it "declares the PSLR helper entry points" do
+        result = pslr_output.pslr_function_declarations
+        expect(result).to include("int yy_state_accepts_token")
+        expect(result).to include("int yy_pseudo_scan")
       end
     end
 
@@ -366,6 +377,8 @@ RSpec.describe Lrama::Output do
         output_file_path: "pslr_test.c",
         template_name: "bison/yacc.c",
         grammar_file_path: "pslr_test.y",
+        header_out: header_out,
+        header_file_path: "pslr_test.h",
         context: pslr_context,
         grammar: pslr_grammar
       )
@@ -374,12 +387,17 @@ RSpec.describe Lrama::Output do
     it "includes PSLR tables in rendered output" do
       pslr_full_output.render
       pslr_out.rewind
+      header_out.rewind
       rendered = pslr_out.read
+      rendered_header = header_out.read
 
       expect(rendered).to include("PSLR(1) Scanner Tables and Functions")
       expect(rendered).to include("YY_SCANNER_NUM_STATES")
       expect(rendered).to include("yy_scanner_transition")
       expect(rendered).to include("yy_pseudo_scan")
+      expect(rendered).to include("yy_token_pattern_to_token_id")
+      expect(rendered_header).to include("int yy_state_accepts_token")
+      expect(rendered_header).to include("int yy_pseudo_scan")
     end
   end
 end

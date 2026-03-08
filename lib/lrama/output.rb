@@ -410,6 +410,29 @@ module Lrama
       !scanner_fsa.nil? && !scanner_fsa.states.empty?
     end
 
+    def pslr_function_declarations
+      return "" unless pslr_enabled?
+
+      <<~C_CODE
+        int yy_state_accepts_token (int yystate, int yychar);
+        int yy_pseudo_scan (int parser_state, const char *input, int *match_length);
+      C_CODE
+    end
+
+    def pslr_accepting_states
+      return [] unless pslr_enabled?
+
+      @context.states.scanner_fsa.states.select(&:accepting?)
+    end
+
+    def pslr_token_pattern_count
+      @context.states.token_patterns.size
+    end
+
+    def pslr_token_id(token_pattern)
+      @context.states.find_symbol_by_s_value!(token_pattern.name).token_id
+    end
+
     # Generate Scanner FSA transition table as C code
     def scanner_transition_table
       return "" unless pslr_enabled?
@@ -438,19 +461,34 @@ module Lrama
     def state_to_accepting_table
       return "" unless pslr_enabled?
       scanner_fsa = @context.states.scanner_fsa
+      accepting_indices = Array.new(scanner_fsa.states.size, -1)
+
+      pslr_accepting_states.each_with_index do |state, index|
+        accepting_indices[state.id] = index
+      end
 
       lines = []
       lines << ""
-      lines << "/* FSA state -> accepting state mapping */"
+      lines << "/* FSA state -> accepting state index mapping */"
       lines << "#define YY_ACCEPTING_NONE (-1)"
       lines << ""
       lines << "static const int yy_state_to_accepting[YY_SCANNER_NUM_STATES] = {"
+      lines << "  #{accepting_indices.join(', ')}"
+      lines << "};"
+      lines.join("\n")
+    end
 
-      accepting_ids = scanner_fsa.states.map do |state|
-        state.accepting? ? state.id : -1
-      end
+    def token_pattern_token_ids_table
+      return "" unless pslr_enabled?
 
-      lines << "  #{accepting_ids.join(', ')}"
+      lines = []
+      lines << ""
+      lines << "/* token pattern index -> parser token id */"
+      lines << "#define YY_PSLR_EMPTY_PATTERN (-1)"
+      lines << "#define YY_NUM_TOKEN_PATTERNS #{pslr_token_pattern_count}"
+      lines << ""
+      lines << "static const int yy_token_pattern_to_token_id[YY_NUM_TOKEN_PATTERNS] = {"
+      lines << "  #{@context.states.token_patterns.map {|token_pattern| pslr_token_id(token_pattern) }.join(', ')}"
       lines << "};"
       lines.join("\n")
     end
@@ -491,12 +529,12 @@ module Lrama
 
       lines = []
       lines << ""
-      lines << "/* scanner_accepts[parser_state][accepting_state] -> token_id */"
-      lines << "/* YYEMPTY = -2, means no token accepted */"
+      lines << "/* scanner_accepts[parser_state][accepting_state] -> token pattern index */"
+      lines << "/* YY_PSLR_EMPTY_PATTERN means no token accepted */"
       lines << ""
 
       num_parser_states = @context.states.states.size
-      num_accepting_states = scanner_fsa.states.count(&:accepting?)
+      num_accepting_states = pslr_accepting_states.size
 
       lines << "#define YY_NUM_PARSER_STATES #{num_parser_states}"
       lines << "#define YY_NUM_ACCEPTING_STATES #{num_accepting_states}"
@@ -507,15 +545,12 @@ module Lrama
 
         @context.states.states.each_with_index do |parser_state, ps_idx|
           row = []
-          scanner_fsa.states.each do |fsa_state|
-            next unless fsa_state.accepting?
-
+          pslr_accepting_states.each do |fsa_state|
             token = scanner_accepts[parser_state.id, fsa_state.id]
             if token
-              # Use definition order as token ID for now
               row << token.definition_order
             else
-              row << -2 # YYEMPTY
+              row << -1
             end
           end
 
@@ -542,7 +577,7 @@ module Lrama
       lines << "#define YY_LENGTH_PREC_RIGHT 2     /* longer token wins */"
       lines << ""
 
-      num_tokens = @context.states.token_patterns.size
+      num_tokens = pslr_token_pattern_count
       if num_tokens > 0
         lines << "static const int yy_length_precedences[#{num_tokens}][#{num_tokens}] = {"
 
@@ -578,15 +613,26 @@ module Lrama
          *   input: Input buffer pointer
          *   match_length: Output parameter for matched length
          *
-         * Returns: Selected token ID, or YYEMPTY if no match
+         * Returns: Selected parser token ID, or YYEMPTY if no match
          */
-        static int
+        int
         yy_pseudo_scan(int parser_state, const char *input, int *match_length)
         {
+          int local_match_length = 0;
           int ss = 0;  /* FSA initial state */
           int ibest = 0;
-          int tbest = YYEMPTY;
+          int pbest = YY_PSLR_EMPTY_PATTERN;
           int i = 0;
+
+          if (match_length == NULL) {
+            match_length = &local_match_length;
+          }
+
+          *match_length = 0;
+
+          if (parser_state < 0 || parser_state >= YY_NUM_PARSER_STATES || input == NULL) {
+            return YYEMPTY;
+          }
 
           while (input[i] != '\\0') {
             int c = (unsigned char)input[i];
@@ -602,13 +648,13 @@ module Lrama
             /* Check if this is an accepting state */
             int sa = yy_state_to_accepting[ss];
             if (sa != YY_ACCEPTING_NONE) {
-              int t = yy_scanner_accepts[parser_state][sa];
-              if (t != YYEMPTY) {
+              int pattern_index = yy_scanner_accepts[parser_state][sa];
+              if (pattern_index != YY_PSLR_EMPTY_PATTERN) {
                 /* Check length precedences */
-                if (tbest == YYEMPTY ||
-                    (i > ibest && yy_length_precedences[tbest][t] != YY_LENGTH_PREC_LEFT) ||
-                    (i == ibest && yy_length_precedences[t][tbest] == YY_LENGTH_PREC_LEFT)) {
-                  tbest = t;
+                if (pbest == YY_PSLR_EMPTY_PATTERN ||
+                    (i > ibest && yy_length_precedences[pbest][pattern_index] != YY_LENGTH_PREC_LEFT) ||
+                    (i == ibest && yy_length_precedences[pattern_index][pbest] == YY_LENGTH_PREC_LEFT)) {
+                  pbest = pattern_index;
                   ibest = i;
                 }
               }
@@ -616,7 +662,11 @@ module Lrama
           }
 
           *match_length = ibest;
-          return tbest;
+          if (pbest == YY_PSLR_EMPTY_PATTERN) {
+            return YYEMPTY;
+          }
+
+          return yy_token_pattern_to_token_id[pbest];
         }
       C_CODE
     end
@@ -631,6 +681,7 @@ module Lrama
         "",
         scanner_transition_table,
         state_to_accepting_table,
+        token_pattern_token_ids_table,
         accepting_tokens_table,
         scanner_accepts_table_code,
         length_precedences_table_code,

@@ -130,6 +130,16 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "PSLR parser and lexer integration" do
+    it "selects the longer token in shift contexts" do
+      test_parser("pslr_context", "foo>>bar", "shift\n")
+    end
+
+    it "can prefer the shorter match in template contexts" do
+      test_parser("pslr_context", "foo<bar<baz>>", "template\n")
+    end
+  end
+
   describe "user defined parameterized rules" do
     it "prints messages corresponding to rules" do
       expected = <<~STR
@@ -529,7 +539,7 @@ RSpec.describe "integration" do
         end
 
         it "pseudo_scan function uses length precedences for token selection" do
-          expect(rendered).to include("yy_length_precedences[tbest][t]")
+          expect(rendered).to include("yy_length_precedences[pbest][pattern_index]")
         end
       end
     end

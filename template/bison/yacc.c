@@ -592,8 +592,8 @@ static const <%= output.int_type_for(output.context.yyr2) %> yyr2[] =
 #endif
 <%- end -%>
 
-static int
-yy_state_accepts_token (yy_state_fast_t yystate, int yychar)
+int
+yy_state_accepts_token (int yystate, int yychar)
 {
   yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
   int yyn = yypact[yystate];
