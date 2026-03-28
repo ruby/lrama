@@ -435,4 +435,21 @@ RSpec.describe Lrama::Lexer do
 
     expect(lexer.next_token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 2, first_column: 0, last_line: 2, last_column: 8)
   end
+
+  it 'lexes c code until EOF for epilogue declarations' do
+    grammar_file = Lrama::Lexer::GrammarFile.new("epilogue.y", <<~INPUT)
+      static int yyerror(void) {
+        return 0;
+      }
+    INPUT
+    lexer = Lrama::Lexer.new(grammar_file)
+    lexer.status = :c_declaration
+    lexer.end_symbol = '\Z'
+
+    expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: <<~CODE.chomp)])
+      static int yyerror(void) {
+        return 0;
+      }
+    CODE
+  end
 end

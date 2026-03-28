@@ -186,6 +186,11 @@ module Lrama
           code << @scanner.getch
         end
       end
+
+      if @end_symbol == '\Z'
+        return [:C_DECLARATION, Lrama::Lexer::Token::UserCode.new(s_value: code, location: location)]
+      end
+
       raise ParseError, location.generate_error_message("Unexpected code: #{code}") # steep:ignore UnknownConstant
     end
 
