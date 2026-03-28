@@ -22,6 +22,8 @@ module Lrama
 
     PERCENT_TOKENS: Array[String]
 
+    IDENTIFIER_PATTERN: Regexp
+
     # @rbs (GrammarFile grammar_file) -> void
     def initialize: (GrammarFile grammar_file) -> void
 
@@ -41,6 +43,12 @@ module Lrama
     def lex_c_code: () -> c_token
 
     private
+
+    # @rbs () -> bool
+    def identifier_colon?: () -> bool
+
+    # @rbs (StringScanner scanner) -> void
+    def skip_trivia: (StringScanner scanner) -> void
 
     # @rbs () -> void
     def lex_comment: () -> void

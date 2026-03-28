@@ -4299,6 +4299,25 @@ RSpec.describe Lrama::Parser do
           end
         end
 
+        it "can parse a rule when a block comment appears before the colon" do
+          y = <<~INPUT
+            %%
+
+            program:
+                stmt
+            ;
+
+            stmt
+                /* some block comment */
+                : %empty
+            ;
+          INPUT
+
+          parser = Lrama::Parser.new(y, "parse.y")
+
+          expect { parser.parse }.not_to raise_error
+        end
+
         context "includes invalid named references" do
           it "raise an error" do
             y = <<~INPUT
