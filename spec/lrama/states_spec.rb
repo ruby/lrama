@@ -397,6 +397,33 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe '#compute_follow_kernel_items' do
+    it 'stores follow kernel items per kernel as booleans' do
+      path = "common/basic.y"
+      y = File.read(fixture_path(path))
+      grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+
+      state = states.states.find {|s| s.id == 1 }
+      goto = state.nterm_transitions.find {|transition| transition.next_sym.name == "$@1" }
+      bool_array = [true, false, true]
+
+      allow(states).to receive(:nterm_transitions).and_return([goto])
+      allow(states).to receive(:compute_goto_internal_relation).and_return({ goto => [] })
+      allow(states).to receive(:compute_goto_bitmaps).and_return({ goto => Lrama::Bitmap.from_array([0, 2]) })
+
+      state.follow_kernel_items.clear
+      states.send(:compute_follow_kernel_items)
+
+      expect(state.follow_kernel_items[goto]).to eq(
+        state.kernels.each_with_index.to_h {|kernel, i| [kernel, bool_array[i]] }
+      )
+    end
+  end
+
   describe '#reads_relation' do
     it do
       path = "states/reads_relation.y"
