@@ -3654,6 +3654,30 @@ RSpec.describe Lrama::Parser do
       ])
     end
 
+    it "stores epilogue code after the second %%" do
+      y = <<~INPUT
+        %%
+
+        stmt: %empty ;
+
+        %%
+        static int yyerror(void) {
+          return 0;
+        }
+      INPUT
+
+      grammar = Lrama::Parser.new(y, "parse.y").parse
+      aux = grammar.instance_variable_get(:@aux)
+
+      expect(aux.epilogue_first_lineno).to eq(6)
+      expect(aux.epilogue).to eq((<<~CODE).chomp)
+        
+        static int yyerror(void) {
+          return 0;
+        }
+      CODE
+    end
+
     describe "valid prec" do
       it "does not raises error if ident appears after %prec, unless it is intermediate" do
         y = header + <<~INPUT
