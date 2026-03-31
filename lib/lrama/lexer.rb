@@ -62,6 +62,7 @@ module Lrama
       %categories
       %start
     ).freeze #: Array[String]
+    IDENTIFIER_PATTERN = /[a-zA-Z_.][-a-zA-Z0-9_.]*/.freeze #: Regexp
 
     # @rbs (GrammarFile grammar_file) -> void
     def initialize(grammar_file)
@@ -135,10 +136,10 @@ module Lrama
         return [:STRING, Lrama::Lexer::Token::Str.new(s_value: %Q(#{@scanner.matched}), location: location)]
       when @scanner.scan(/\d+/)
         return [:INTEGER, Lrama::Lexer::Token::Int.new(s_value: Integer(@scanner.matched), location: location)]
-      when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
+      when @scanner.scan(IDENTIFIER_PATTERN)
         token = Lrama::Lexer::Token::Ident.new(s_value: @scanner.matched, location: location)
         type =
-          if @scanner.check(/\s*(\[\s*[a-zA-Z_.][-a-zA-Z0-9_.]*\s*\])?\s*:/)
+          if identifier_colon?
             :IDENT_COLON
           else
             :IDENTIFIER
@@ -190,6 +191,36 @@ module Lrama
     end
 
     private
+
+    # @rbs () -> bool
+    def identifier_colon?
+      scanner = StringScanner.new(@scanner.rest)
+      skip_trivia(scanner)
+
+      if scanner.scan(/\[/)
+        skip_trivia(scanner)
+        return false unless scanner.scan(IDENTIFIER_PATTERN)
+
+        skip_trivia(scanner)
+        return false unless scanner.scan(/\]/)
+      end
+
+      skip_trivia(scanner)
+      !scanner.scan(/:/).nil?
+    end
+
+    # @rbs (StringScanner scanner) -> void
+    def skip_trivia(scanner)
+      loop do
+        case
+        when scanner.scan(/\s+/)
+        when scanner.scan(/\/\*[\s\S]*?\*\//)
+        when scanner.scan(%r{//.*(?:\n|$)})
+        else
+          return
+        end
+      end
+    end
 
     # @rbs () -> void
     def lex_comment
