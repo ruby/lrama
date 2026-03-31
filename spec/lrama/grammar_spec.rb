@@ -242,5 +242,57 @@ RSpec.describe Lrama::Grammar do
           end
       end
     end
+
+    context 'when parse.lac has an invalid value' do
+      it 'raises an error' do
+        grammar.define['parse.lac'] = 'invalid'
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, "Invalid value for parse.lac: 'invalid'. Expected 'none' or 'full'.")
+      end
+    end
+  end
+
+  describe '#parse_lac' do
+    context 'when parse.lac is not set' do
+      it 'returns "none" as default' do
+        expect(grammar.parse_lac).to eq('none')
+      end
+    end
+
+    context 'when parse.lac is set to "none"' do
+      it 'returns "none"' do
+        grammar.define['parse.lac'] = 'none'
+        expect(grammar.parse_lac).to eq('none')
+      end
+    end
+
+    context 'when parse.lac is set to "full"' do
+      it 'returns "full"' do
+        grammar.define['parse.lac'] = 'full'
+        expect(grammar.parse_lac).to eq('full')
+      end
+    end
+  end
+
+  describe '#lac_enabled?' do
+    context 'when parse.lac is not set (default)' do
+      it 'returns false' do
+        expect(grammar.lac_enabled?).to be false
+      end
+    end
+
+    context 'when parse.lac is "none"' do
+      it 'returns false' do
+        grammar.define['parse.lac'] = 'none'
+        expect(grammar.lac_enabled?).to be false
+      end
+    end
+
+    context 'when parse.lac is "full"' do
+      it 'returns true' do
+        grammar.define['parse.lac'] = 'full'
+        expect(grammar.lac_enabled?).to be true
+      end
+    end
   end
 end
