@@ -1,0 +1,64 @@
+# Generated from lib/lrama/grammar/lex_prec.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    # Represents lexical precedence rules defined by %lex-prec directive
+    # Based on Definition 3.2.3, 3.2.4, 3.2.10 from the PSLR dissertation
+    #
+    # Example: %lex-prec RANGLE -s RSHIFT    # RANGLE is shorter than RSHIFT
+    #          %lex-prec IF - ID             # IF has higher priority than ID (same length)
+    class LexPrec
+      # Precedence relation types
+      # ","  : Same priority (lex-tie)
+      # "-"  : Left has higher priority than right
+      # "-s" : Left is shorter match priority over right
+      SAME_PRIORITY: Symbol
+
+      HIGHER: Symbol
+
+      SHORTER: Symbol
+
+      # Represents a single precedence rule
+      class Rule
+        attr_reader left_token: Lexer::Token::Ident
+
+        attr_reader operator: Symbol
+
+        attr_reader right_token: Lexer::Token::Ident
+
+        attr_reader lineno: Integer
+
+        # @rbs (left_token: Lexer::Token::Ident, operator: Symbol, right_token: Lexer::Token::Ident, lineno: Integer) -> void
+        def initialize: (left_token: Lexer::Token::Ident, operator: Symbol, right_token: Lexer::Token::Ident, lineno: Integer) -> void
+
+        # @rbs () -> String
+        def left_name: () -> String
+
+        # @rbs () -> String
+        def right_name: () -> String
+      end
+
+      attr_reader rules: Array[Rule]
+
+      # @rbs () -> void
+      def initialize: () -> void
+
+      # @rbs (left_token: Lexer::Token::Ident, operator: Symbol, right_token: Lexer::Token::Ident, lineno: Integer) -> Rule
+      def add_rule: (left_token: Lexer::Token::Ident, operator: Symbol, right_token: Lexer::Token::Ident, lineno: Integer) -> Rule
+
+      # Check if token t1 has higher priority than t2
+      # Based on Definition 3.2.4
+      # @rbs (String t1, String t2) -> bool
+      def higher_priority?: (String t1, String t2) -> bool
+
+      # Check if token t1 has shorter-match priority over t2
+      # Based on Definition 3.2.15
+      # @rbs (String t1, String t2) -> bool
+      def shorter_priority?: (String t1, String t2) -> bool
+
+      # Check if tokens t1 and t2 are in a lex-tie relationship
+      # @rbs (String t1, String t2) -> bool
+      def same_priority?: (String t1, String t2) -> bool
+    end
+  end
+end

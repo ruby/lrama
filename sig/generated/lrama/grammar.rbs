@@ -24,6 +24,16 @@ module Lrama
       def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
 
       def ielr_defined?: () -> bool
+
+      def pslr_defined?: () -> bool
+
+      def token_patterns: () -> Array[Grammar::TokenPattern]
+
+      def lex_prec: () -> Grammar::LexPrec
+
+      def pslr_max_states: () -> Integer?
+
+      def pslr_max_state_ratio: () -> Float?
     end
 
     include Symbols::Resolver::_DelegatedMethods
@@ -75,6 +85,10 @@ module Lrama
     @precedences: Array[Precedence]
 
     @start_nterm: Lrama::Lexer::Token::Base?
+
+    @token_patterns: Array[Grammar::TokenPattern]
+
+    @lex_prec: Grammar::LexPrec
 
     extend Forwardable
 
@@ -135,6 +149,10 @@ module Lrama
     attr_accessor define: Hash[String, String]
 
     attr_accessor required: bool
+
+    attr_reader token_patterns: Array[Grammar::TokenPattern]
+
+    attr_reader lex_prec: Grammar::LexPrec
 
     # @rbs (Counter rule_counter, bool locations, Hash[String, String] define) -> void
     def initialize: (Counter rule_counter, bool locations, Hash[String, String] define) -> void
@@ -227,7 +245,40 @@ module Lrama
     # @rbs () -> bool
     def ielr_defined?: () -> bool
 
+    # @rbs () -> bool
+    def pslr_defined?: () -> bool
+
+    # @rbs () -> String?
+    def pslr_state_member: () -> String?
+
+    # @rbs () -> Integer?
+    def pslr_max_states: () -> Integer?
+
+    # @rbs () -> Float?
+    def pslr_max_state_ratio: () -> Float?
+
+    # Add a token pattern from %token-pattern directive
+    # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer) -> Grammar::TokenPattern
+    def add_token_pattern: (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, lineno: Integer, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::TokenPattern
+
+    # Add a lex-prec rule from %lex-prec directive
+    # @rbs (left_token: Lexer::Token::Ident, operator: Symbol, right_token: Lexer::Token::Ident, lineno: Integer) -> Grammar::LexPrec::Rule
+    def add_lex_prec_rule: (left_token: Lexer::Token::Ident, operator: Symbol, right_token: Lexer::Token::Ident, lineno: Integer) -> Grammar::LexPrec::Rule
+
+    # Find a token pattern by its name
+    # @rbs (String name) -> Grammar::TokenPattern?
+    def find_token_pattern: (String name) -> Grammar::TokenPattern?
+
     private
+
+    # @rbs () -> void
+    def validate_pslr_configuration!: () -> void
+
+    # @rbs (String key) -> Integer?
+    def parse_pslr_positive_integer: (String key) -> Integer?
+
+    # @rbs (String key) -> Float?
+    def parse_pslr_positive_float: (String key) -> Float?
 
     # @rbs () -> void
     def sort_precedence: () -> void

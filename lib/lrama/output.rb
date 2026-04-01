@@ -401,6 +401,353 @@ module Lrama
       end.join
     end
 
+    # PSLR Output Helper Methods
+    # Based on PSLR::OutputHelper - generates PSLR-specific C code
+
+    # Check if the grammar requested PSLR output.
+    def pslr_enabled?
+      @grammar.pslr_defined?
+    end
+
+    # Check if PSLR scanner tables are available.
+    def pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+      !scanner_fsa.nil? && !scanner_fsa.states.empty?
+    end
+
+    def pslr_function_declarations
+      return "" unless pslr_enabled?
+
+      declarations = [<<~C_CODE]
+        int yy_state_accepts_token (int yystate, int yychar);
+      C_CODE
+
+      if pslr_scanner_enabled?
+        declarations << <<~C_CODE
+          int yy_pseudo_scan (int parser_state, const char *input, int *match_length);
+        C_CODE
+
+        declarations << <<~C_CODE
+          #define YYPSLR_ENABLED 1
+          #define YYPSLR_NO_MATCH YYEMPTY
+
+          #ifndef YYPSLR_PSEUDO_SCAN_STATE
+          # define YYPSLR_PSEUDO_SCAN_STATE(ParserState, Input, MatchLength) \\
+            yy_pseudo_scan ((ParserState), (Input), (MatchLength))
+          #endif
+        C_CODE
+      end
+
+      if (member = pslr_state_member)
+        declarations << <<~C_CODE
+          #ifndef YYGETSTATE_CONTEXT
+          # define YYGETSTATE_CONTEXT(Context) ((Context)->#{member})
+          #endif
+        C_CODE
+
+        if pslr_scanner_enabled?
+          declarations << <<~C_CODE
+            #ifndef YYPSLR_PSEUDO_SCAN
+            # define YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength) \\
+              ((Context) != 0 \\
+               ? YYPSLR_PSEUDO_SCAN_STATE (YYGETSTATE_CONTEXT (Context), (Input), (MatchLength)) \\
+               : YYEMPTY)
+            #endif
+          C_CODE
+        end
+
+        if !parse_param_name.empty?
+          declarations << <<~C_CODE
+            #ifndef YYSETSTATE_CONTEXT
+            # define YYSETSTATE_CONTEXT(CurrentState) \\
+              do { \\
+                if (#{parse_param_name} != 0) { \\
+                  YYGETSTATE_CONTEXT (#{parse_param_name}) = (CurrentState); \\
+                } \\
+              } while (0)
+            #endif
+          C_CODE
+        end
+      end
+
+      declarations.join("\n")
+    end
+
+    def pslr_state_member
+      member = @grammar.pslr_state_member
+      member&.strip
+    end
+
+    def pslr_accepting_states
+      return [] unless pslr_scanner_enabled?
+
+      @context.states.scanner_fsa.states.select(&:accepting?)
+    end
+
+    def pslr_token_pattern_count
+      @context.states.token_patterns.size
+    end
+
+    def pslr_token_id(token_pattern)
+      @context.states.find_symbol_by_s_value!(token_pattern.name).token_id
+    end
+
+    # Generate Scanner FSA transition table as C code
+    def scanner_transition_table
+      return "" unless pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+
+      lines = []
+      lines << "/* Scanner FSA transition table */"
+      lines << "#define YY_SCANNER_NUM_STATES #{scanner_fsa.states.size}"
+      lines << "#define YY_SCANNER_INVALID_STATE (-1)"
+      lines << ""
+      lines << "static const int yy_scanner_transition[YY_SCANNER_NUM_STATES][256] = {"
+
+      scanner_fsa.states.each_with_index do |state, idx|
+        transitions = Array.new(256, -1)
+        state.transitions.each do |char, target_id|
+          transitions[char.ord] = target_id
+        end
+        lines << "  /* state #{idx} */ {#{transitions.join(', ')}}#{idx < scanner_fsa.states.size - 1 ? ',' : ''}"
+      end
+
+      lines << "};"
+      lines.join("\n")
+    end
+
+    # Generate state_to_accepting table as C code
+    def state_to_accepting_table
+      return "" unless pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+      accepting_indices = Array.new(scanner_fsa.states.size, -1)
+
+      pslr_accepting_states.each_with_index do |state, index|
+        accepting_indices[state.id] = index
+      end
+
+      lines = []
+      lines << ""
+      lines << "/* FSA state -> accepting state index mapping */"
+      lines << "#define YY_ACCEPTING_NONE (-1)"
+      lines << ""
+      lines << "static const int yy_state_to_accepting[YY_SCANNER_NUM_STATES] = {"
+      lines << "  #{accepting_indices.join(', ')}"
+      lines << "};"
+      lines.join("\n")
+    end
+
+    def token_pattern_token_ids_table
+      return "" unless pslr_scanner_enabled?
+
+      lines = []
+      lines << ""
+      lines << "/* token pattern index -> parser token id */"
+      lines << "#define YY_PSLR_EMPTY_PATTERN (-1)"
+      lines << "#define YY_NUM_TOKEN_PATTERNS #{pslr_token_pattern_count}"
+      lines << ""
+      lines << "static const int yy_token_pattern_to_token_id[YY_NUM_TOKEN_PATTERNS] = {"
+      lines << "  #{@context.states.token_patterns.map {|token_pattern| pslr_token_id(token_pattern) }.join(', ')}"
+      lines << "};"
+      lines.join("\n")
+    end
+
+    # Generate token IDs for accepting states as C code
+    def accepting_tokens_table
+      return "" unless pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+
+      lines = []
+      lines << ""
+      lines << "/* Accepting state token IDs */"
+      lines << "/* For each accepting state, list of (token_id, definition_order) pairs */"
+      lines << ""
+
+      # Collect all unique tokens
+      all_tokens = @context.states.token_patterns.map(&:name)
+      lines << "/* Token pattern names: #{all_tokens.join(', ')} */"
+      lines << ""
+
+      # Generate accepting tokens for each FSA state
+      scanner_fsa.states.each do |state|
+        next unless state.accepting?
+
+        token_names = state.accepting_tokens.map(&:name)
+        lines << "/* State #{state.id} accepts: #{token_names.join(', ')} */"
+      end
+
+      lines.join("\n")
+    end
+
+    # Generate scanner_accepts table as C code
+    def scanner_accepts_table_code
+      return "" unless pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+      scanner_accepts = @context.states.scanner_accepts_table
+      return "" unless scanner_accepts
+
+      lines = []
+      lines << ""
+      lines << "/* scanner_accepts[parser_state][accepting_state] -> token pattern index */"
+      lines << "/* YY_PSLR_EMPTY_PATTERN means no token accepted */"
+      lines << ""
+
+      num_parser_states = @context.states.states.size
+      num_accepting_states = pslr_accepting_states.size
+
+      lines << "#define YY_NUM_PARSER_STATES #{num_parser_states}"
+      lines << "#define YY_NUM_ACCEPTING_STATES #{num_accepting_states}"
+      lines << ""
+
+      if num_accepting_states > 0
+        lines << "static const int yy_scanner_accepts[YY_NUM_PARSER_STATES][YY_NUM_ACCEPTING_STATES] = {"
+
+        @context.states.states.each_with_index do |parser_state, ps_idx|
+          row = []
+          pslr_accepting_states.each do |fsa_state|
+            token = scanner_accepts[parser_state.id, fsa_state.id]
+            if token
+              row << token.definition_order
+            else
+              row << -1
+            end
+          end
+
+          lines << "  /* parser state #{ps_idx} */ {#{row.join(', ')}}#{ps_idx < num_parser_states - 1 ? ',' : ''}"
+        end
+
+        lines << "};"
+      end
+
+      lines.join("\n")
+    end
+
+    # Generate length_precedences table as C code
+    def length_precedences_table_code
+      return "" unless pslr_scanner_enabled?
+      length_precedences = @context.states.length_precedences
+      return "" unless length_precedences
+
+      lines = []
+      lines << ""
+      lines << "/* length_precedences[token1][token2] -> precedence */"
+      lines << "#define YY_LENGTH_PREC_UNDEFINED 0"
+      lines << "#define YY_LENGTH_PREC_LEFT 1      /* shorter token wins */"
+      lines << "#define YY_LENGTH_PREC_RIGHT 2     /* longer token wins */"
+      lines << ""
+
+      num_tokens = pslr_token_pattern_count
+      if num_tokens > 0
+        lines << "static const int yy_length_precedences[#{num_tokens}][#{num_tokens}] = {"
+
+        @context.states.token_patterns.each_with_index do |t1, i|
+          row = @context.states.token_patterns.map do |t2|
+            case length_precedences.precedence(t1.name, t2.name)
+            when :left then 1
+            when :right then 2
+            else 0
+            end
+          end
+          lines << "  /* #{t1.name} */ {#{row.join(', ')}}#{i < num_tokens - 1 ? ',' : ''}"
+        end
+
+        lines << "};"
+      end
+
+      lines.join("\n")
+    end
+
+    # Generate pseudo_scan function as C code
+    def pseudo_scan_function
+      return "" unless pslr_scanner_enabled?
+
+      <<~C_CODE
+
+        /*
+         * pseudo_scan: PSLR(1) scanning function
+         * Based on Definition 3.2.16 from the PSLR dissertation
+         *
+         * Input:
+         *   parser_state: Current parser state
+         *   input: Input buffer pointer
+         *   match_length: Output parameter for matched length
+         *
+         * Returns: Selected parser token ID, or YYEMPTY if no match
+         */
+        int
+        yy_pseudo_scan(int parser_state, const char *input, int *match_length)
+        {
+          int local_match_length = 0;
+          int ss = 0;  /* FSA initial state */
+          int ibest = 0;
+          int pbest = YY_PSLR_EMPTY_PATTERN;
+          int i = 0;
+
+          if (match_length == NULL) {
+            match_length = &local_match_length;
+          }
+
+          *match_length = 0;
+
+          if (parser_state < 0 || parser_state >= YY_NUM_PARSER_STATES || input == NULL) {
+            return YYEMPTY;
+          }
+
+          while (input[i] != '\\0') {
+            int c = (unsigned char)input[i];
+            int next_ss = yy_scanner_transition[ss][c];
+
+            if (next_ss == YY_SCANNER_INVALID_STATE) {
+              break;
+            }
+
+            ss = next_ss;
+            i++;
+
+            /* Check if this is an accepting state */
+            int sa = yy_state_to_accepting[ss];
+            if (sa != YY_ACCEPTING_NONE) {
+              int pattern_index = yy_scanner_accepts[parser_state][sa];
+              if (pattern_index != YY_PSLR_EMPTY_PATTERN) {
+                /* Check length precedences */
+                if (pbest == YY_PSLR_EMPTY_PATTERN ||
+                    (i > ibest && yy_length_precedences[pbest][pattern_index] != YY_LENGTH_PREC_LEFT) ||
+                    (i == ibest && yy_length_precedences[pattern_index][pbest] == YY_LENGTH_PREC_LEFT)) {
+                  pbest = pattern_index;
+                  ibest = i;
+                }
+              }
+            }
+          }
+
+          *match_length = ibest;
+          if (pbest == YY_PSLR_EMPTY_PATTERN) {
+            return YYEMPTY;
+          }
+
+          return yy_token_pattern_to_token_id[pbest];
+        }
+      C_CODE
+    end
+
+    # Generate all PSLR C code
+    def pslr_tables_and_functions
+      return "" unless pslr_scanner_enabled?
+
+      [
+        "/* PSLR(1) Scanner Tables and Functions */",
+        "/* Generated by Lrama PSLR implementation */",
+        "",
+        scanner_transition_table,
+        state_to_accepting_table,
+        token_pattern_token_ids_table,
+        accepting_tokens_table,
+        scanner_accepts_table_code,
+        length_precedences_table_code,
+        pseudo_scan_function
+      ].join("\n")
+    end
+
     private
 
     def eval_template(file, path)

@@ -203,4 +203,228 @@ RSpec.describe Lrama::Output do
       end
     end
   end
+
+  describe "PSLR methods" do
+    let(:token_pattern) do
+      id = Lrama::Lexer::Token::Ident.new(s_value: "ID")
+      regex = Lrama::Lexer::Token::Regex.new(s_value: "/[a-z]+/")
+      Lrama::Grammar::TokenPattern.new(
+        id: id,
+        pattern: regex,
+        lineno: 1,
+        definition_order: 0
+      )
+    end
+
+    let(:scanner_fsa) { Lrama::ScannerFSA.new([token_pattern]) }
+
+    let(:mock_states) do
+      instance_double(
+        Lrama::States,
+        scanner_fsa: scanner_fsa,
+        scanner_accepts_table: nil,
+        length_precedences: nil,
+        token_patterns: [token_pattern],
+        states: [],
+        find_symbol_by_s_value!: instance_double(Lrama::Grammar::Symbol, token_id: 301)
+      )
+    end
+
+    let(:mock_context) do
+      instance_double(Lrama::Context, states: mock_states)
+    end
+
+    let(:mock_grammar) do
+      instance_double(
+        Lrama::Grammar,
+        eof_symbol: nil,
+        error_symbol: nil,
+        undef_symbol: nil,
+        accept_symbol: nil,
+        locations: false,
+        parse_param: "struct parse_params *p",
+        lex_param: "struct parse_params *p",
+        pslr_defined?: true,
+        pslr_state_member: "current_state"
+      )
+    end
+
+    let(:pslr_output) do
+      out = StringIO.new
+      Lrama::Output.new(
+        out: out,
+        output_file_path: "test.c",
+        template_name: "bison/yacc.c",
+        grammar_file_path: "test.y",
+        context: mock_context,
+        grammar: mock_grammar
+      )
+    end
+
+    describe "#pslr_enabled?" do
+      it "returns true when grammar requested PSLR output" do
+        expect(pslr_output.pslr_enabled?).to be true
+      end
+
+      it "returns false when grammar did not request PSLR output" do
+        allow(mock_grammar).to receive(:pslr_defined?).and_return(false)
+        expect(pslr_output.pslr_enabled?).to be false
+      end
+    end
+
+    describe "#pslr_scanner_enabled?" do
+      it "returns true when scanner FSA is built with states" do
+        expect(pslr_output.pslr_scanner_enabled?).to be true
+      end
+
+      it "returns false when scanner FSA is nil" do
+        allow(mock_states).to receive(:scanner_fsa).and_return(nil)
+        expect(pslr_output.pslr_scanner_enabled?).to be false
+      end
+
+      it "returns false when scanner FSA has no states" do
+        empty_fsa = Lrama::ScannerFSA.new([])
+        allow(mock_states).to receive(:scanner_fsa).and_return(empty_fsa)
+        expect(pslr_output.pslr_scanner_enabled?).to be false
+      end
+    end
+
+    describe "#scanner_transition_table" do
+      it "generates C code for scanner transitions" do
+        result = pslr_output.scanner_transition_table
+        expect(result).to include("YY_SCANNER_NUM_STATES")
+        expect(result).to include("yy_scanner_transition")
+      end
+    end
+
+    describe "#pseudo_scan_function" do
+      it "generates the pseudo_scan C function" do
+        result = pslr_output.pseudo_scan_function
+        expect(result).to include("yy_pseudo_scan")
+        expect(result).to include("parser_state")
+        expect(result).to include("match_length")
+        expect(result).to include("yy_token_pattern_to_token_id")
+      end
+    end
+
+    describe "#pslr_tables_and_functions" do
+      it "generates all PSLR C code" do
+        result = pslr_output.pslr_tables_and_functions
+        expect(result).to include("PSLR(1) Scanner Tables and Functions")
+        expect(result).to include("YY_SCANNER_NUM_STATES")
+        expect(result).to include("yy_scanner_transition")
+        expect(result).to include("yy_pseudo_scan")
+        expect(result).to include("yy_token_pattern_to_token_id")
+      end
+    end
+
+    describe "#state_to_accepting_table" do
+      it "generates state to accepting mapping" do
+        result = pslr_output.state_to_accepting_table
+        expect(result).to include("yy_state_to_accepting")
+        expect(result).to include("YY_ACCEPTING_NONE")
+      end
+    end
+
+    describe "#pslr_function_declarations" do
+      it "declares the PSLR helper entry points" do
+        result = pslr_output.pslr_function_declarations
+        expect(result).to include("int yy_state_accepts_token")
+        expect(result).to include("int yy_pseudo_scan")
+        expect(result).to include("YYPSLR_PSEUDO_SCAN_STATE")
+        expect(result).to include("YYPSLR_PSEUDO_SCAN")
+        expect(result).to include("YYSETSTATE_CONTEXT(CurrentState)")
+      end
+    end
+
+    describe "#length_precedences_table_code" do
+      let(:mock_length_prec) { Lrama::LengthPrecedences.new(Lrama::Grammar::LexPrec.new) }
+
+      before do
+        allow(mock_states).to receive(:length_precedences).and_return(mock_length_prec)
+      end
+
+      it "generates length precedences table" do
+        result = pslr_output.length_precedences_table_code
+        expect(result).to include("length_precedences")
+        expect(result).to include("YY_LENGTH_PREC_UNDEFINED")
+      end
+    end
+
+    describe "#accepting_tokens_table" do
+      it "generates accepting tokens information" do
+        result = pslr_output.accepting_tokens_table
+        expect(result).to include("Accepting state token IDs")
+      end
+    end
+  end
+
+  describe "PSLR integration in render" do
+    let(:pslr_grammar_text) do
+      <<~GRAMMAR
+        %code requires {
+          struct parse_params {
+            int current_state;
+          };
+        }
+        %define lr.type pslr
+        %define api.pslr.state-member current_state
+        %parse-param {struct parse_params *p}
+        %lex-param {struct parse_params *p}
+        %token-pattern RSHIFT />>/ "right shift"
+        %token-pattern RANGLE />/ "right angle"
+        %lex-prec RANGLE -s RSHIFT
+        %%
+        program: RSHIFT | RANGLE
+      GRAMMAR
+    end
+
+    let(:pslr_grammar) do
+      grammar = Lrama::Parser.new(pslr_grammar_text, "pslr_test.y").parse
+      grammar.prepare
+      grammar.validate!
+      grammar
+    end
+
+    let(:pslr_states) do
+      s = Lrama::States.new(pslr_grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      s.compute
+      s.compute_pslr
+      s
+    end
+
+    let(:pslr_context) { Lrama::Context.new(pslr_states) }
+    let(:pslr_out) { StringIO.new }
+
+    let(:pslr_full_output) do
+      Lrama::Output.new(
+        out: pslr_out,
+        output_file_path: "pslr_test.c",
+        template_name: "bison/yacc.c",
+        grammar_file_path: "pslr_test.y",
+        header_out: header_out,
+        header_file_path: "pslr_test.h",
+        context: pslr_context,
+        grammar: pslr_grammar
+      )
+    end
+
+    it "includes PSLR tables in rendered output" do
+      pslr_full_output.render
+      pslr_out.rewind
+      header_out.rewind
+      rendered = pslr_out.read
+      rendered_header = header_out.read
+
+      expect(rendered).to include("PSLR(1) Scanner Tables and Functions")
+      expect(rendered).to include("YY_SCANNER_NUM_STATES")
+      expect(rendered).to include("yy_scanner_transition")
+      expect(rendered).to include("yy_pseudo_scan")
+      expect(rendered).to include("yy_token_pattern_to_token_id")
+      expect(rendered_header).to include("int yy_state_accepts_token")
+      expect(rendered_header).to include("int yy_pseudo_scan")
+      expect(rendered_header).to include("YYSETSTATE_CONTEXT(CurrentState)")
+      expect(rendered_header).to include("YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength)")
+    end
+  end
 end

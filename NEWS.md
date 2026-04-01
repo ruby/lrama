@@ -40,6 +40,45 @@ program: args_list(f_opt(number), opt_tail(string), number)
 
 https://github.com/ruby/lrama/pull/779
 
+### [EXPERIMENTAL] Support the generation of the PSLR(1) parser described in this dissertation
+
+Added experimental support for generating the PSLR(1) parser described in this dissertation.
+https://open.clemson.edu/all_dissertations/519/
+
+This adds the following PSLR-related grammar directives and integration points:
+
+- `%define lr.type pslr` enables PSLR parser generation
+- `%token-pattern` declares token candidates and their regular expressions for PSLR-aware lexical disambiguation
+- `%lex-prec` declares how overlapping token patterns should be prioritized
+- `%define api.pslr.state-member` names the parser-state field to be shared with the lexer when using the generated helper macros
+
+Typical usage looks like this:
+
+```yacc
+%define api.pure
+%define lr.type pslr
+%define api.pslr.state-member current_state
+
+%parse-param {struct parse_params *p}
+%lex-param {struct parse_params *p}
+
+%token-pattern RSHIFT />>/ "right shift"
+%token-pattern RANGLE />/ "right angle"
+%token-pattern ID /[a-z]+/
+
+%lex-prec RANGLE -s RSHIFT
+```
+
+In this setup, `%token-pattern` lists the tokens that the PSLR scanner should consider, and `%lex-prec`
+resolves conflicts between overlapping matches. For example, `%lex-prec RANGLE -s RSHIFT` tells Lrama to
+prefer `RANGLE` over `RSHIFT` when the shorter token should win.
+
+When the parser and lexer share a context through `%parse-param` / `%lex-param`, the generated header also
+provides helpers such as `YYPSLR_PSEUDO_SCAN(...)`, so the lexer can choose a token based on the current parser
+state.
+
+But, currently PSLR(1) parser is experimental feature. If you find any bugs, please report it to us. Thank you.
+
 ## Lrama 0.7.1 (2025-12-24)
 
 ### Optimize IELR
