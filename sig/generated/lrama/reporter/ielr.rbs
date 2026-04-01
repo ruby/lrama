@@ -1,0 +1,48 @@
+# Generated from lib/lrama/reporter/ielr.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    class Ielr
+      # @rbs (?ielr: bool, **bool _) -> void
+      def initialize: (?ielr: bool, **bool _) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report: (IO io, Lrama::States states) -> void
+
+      private
+
+      # @rbs (Lrama::States states) -> Array[Lrama::State]
+      def split_groups: (Lrama::States states) -> Array[Lrama::State]
+
+      # @rbs (Lrama::States states) -> Hash[Lrama::State, Array[Lrama::State::Action::Shift | Lrama::State::Action::Goto]]
+      def build_incoming_index: (Lrama::States states) -> Hash[Lrama::State, Array[Lrama::State::Action::Shift | Lrama::State::Action::Goto]]
+
+      # @rbs (IO io, Lrama::State core) -> void
+      def report_group: (IO io, Lrama::State core) -> void
+
+      # @rbs (IO io, Array[Lrama::State] variants) -> void
+      def report_incoming_transitions: (IO io, Array[Lrama::State] variants) -> void
+
+      # @rbs (IO io, Array[Lrama::State] variants) -> void
+      def report_lookahead_differences: (IO io, Array[Lrama::State] variants) -> void
+
+      # @rbs (IO io, Array[Lrama::State] variants) -> void
+      def report_split_reasons: (IO io, Array[Lrama::State] variants) -> void
+
+      # @rbs (Array[Lrama::Grammar::Symbol] syms) -> Array[Integer]
+      def lookahead_signature: (Array[Lrama::Grammar::Symbol] syms) -> Array[Integer]
+
+      # @rbs (Array[Lrama::Grammar::Symbol] syms) -> String
+      def format_lookaheads: (Array[Lrama::Grammar::Symbol] syms) -> String
+
+      # @rbs (Lrama::State state, Lrama::State::InadequacyAnnotation annotation) -> String
+      def dominant_actions: (Lrama::State state, Lrama::State::InadequacyAnnotation annotation) -> String
+
+      # @rbs (Lrama::State state, Lrama::State::Action::Shift | Lrama::State::Action::Reduce action) -> String
+      def format_action: (Lrama::State state, Lrama::State::Action::Shift | Lrama::State::Action::Reduce action) -> String
+
+      # @rbs (Lrama::State state) -> String
+      def state_role: (Lrama::State state) -> String
+    end
+  end
+end
