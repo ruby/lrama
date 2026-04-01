@@ -2,8 +2,8 @@
 
 module Lrama
   class Warnings
-    # @rbs (Logger logger, bool warnings) -> void
-    def initialize: (Logger logger, bool warnings) -> void
+    # @rbs (Logger logger, bool warnings, Hash[Symbol, bool] warning_opts) -> void
+    def initialize: (Logger logger, bool warnings, Hash[Symbol, bool] warning_opts) -> void
 
     # @rbs (Lrama::Grammar grammar, Lrama::States states) -> void
     def warn: (Lrama::Grammar grammar, Lrama::States states) -> void

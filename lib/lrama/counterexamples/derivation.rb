@@ -36,6 +36,11 @@ module Lrama
         render_strings_for_report.join("\n")
       end
 
+      # @rbs (?Derivation derivation) -> Array[String]
+      def render_symbols_for_example(derivation = self)
+        _render_symbols_for_example(derivation)
+      end
+
       private
 
       # @rbs (Derivation derivation, Integer offset, Array[String] strings, Integer index) -> Integer
@@ -70,6 +75,36 @@ module Lrama
         end
 
         return str.length
+      end
+
+      # @rbs (Derivation derivation) -> Array[String]
+      def _render_symbols_for_example(derivation)
+        item = derivation.item
+        result = item.symbols_before_dot.map do |symbol|
+          normalize_symbol_for_example(symbol.display_name)
+        end
+
+        if derivation.left
+          result.concat(_render_symbols_for_example(derivation.left))
+        else
+          result << "•"
+          result.concat(item.symbols_after_dot.map { |symbol| normalize_symbol_for_example(symbol.display_name) })
+          return result
+        end
+
+        if (right = derivation.right&.left)
+          result.concat(_render_symbols_for_example(right))
+          tail = item.symbols_after_dot.drop(2)
+        else
+          tail = item.symbols_after_dot.drop(1)
+        end
+
+        result.concat(tail.map { |symbol| normalize_symbol_for_example(symbol.display_name) })
+      end
+
+      # @rbs (String name) -> String
+      def normalize_symbol_for_example(name)
+        name == '"end of file"' ? "$end" : name
       end
     end
   end

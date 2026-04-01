@@ -10,7 +10,7 @@ module Lrama
       @options = OptionParser.parse(argv)
       @tracer = Tracer.new(STDERR, **@options.trace_opts)
       @reporter = Reporter.new(**@options.report_opts)
-      @warnings = Warnings.new(@logger, @options.warnings)
+      @warnings = Warnings.new(@logger, @options.warnings, @options.warning_opts || {})
     rescue => e
       abort format_error_message(e.message)
     end

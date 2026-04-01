@@ -15,6 +15,9 @@ module Lrama
     def warn: (String message) -> void
 
     # @rbs (String message) -> void
+    def note: (String message) -> void
+
+    # @rbs (String message) -> void
     def error: (String message) -> void
   end
 end
