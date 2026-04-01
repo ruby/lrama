@@ -27,10 +27,19 @@ module Lrama
       # @rbs () -> String
       def render_for_report: () -> String
 
+      # @rbs (?Derivation derivation) -> Array[String]
+      def render_symbols_for_example: (?Derivation derivation) -> Array[String]
+
       private
 
       # @rbs (Derivation derivation, Integer offset, Array[String] strings, Integer index) -> Integer
       def _render_for_report: (Derivation derivation, Integer offset, Array[String] strings, Integer index) -> Integer
+
+      # @rbs (Derivation derivation) -> Array[String]
+      def _render_symbols_for_example: (Derivation derivation) -> Array[String]
+
+      # @rbs (String name) -> String
+      def normalize_symbol_for_example: (String name) -> String
     end
   end
 end

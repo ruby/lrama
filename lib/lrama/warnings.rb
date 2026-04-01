@@ -10,9 +10,9 @@ require_relative 'warnings/useless_precedence'
 
 module Lrama
   class Warnings
-    # @rbs (Logger logger, bool warnings) -> void
-    def initialize(logger, warnings)
-      @conflicts = Conflicts.new(logger, warnings)
+    # @rbs (Logger logger, bool warnings, Hash[Symbol, bool] warning_opts) -> void
+    def initialize(logger, warnings, warning_opts = {})
+      @conflicts = Conflicts.new(logger, warnings, counterexamples: warning_opts[:counterexamples] || false)
       @implicit_empty = ImplicitEmpty.new(logger, warnings)
       @name_conflicts = NameConflicts.new(logger, warnings)
       @redefined_rules = RedefinedRules.new(logger, warnings)

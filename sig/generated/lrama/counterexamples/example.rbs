@@ -9,6 +9,8 @@ module Lrama
 
       @conflict: State::conflict
 
+      @conflict_symbols: ::Array[Grammar::Symbol]
+
       @conflict_symbol: Grammar::Symbol
 
       @counterexamples: Counterexamples
@@ -23,13 +25,15 @@ module Lrama
 
       attr_reader conflict: State::conflict
 
+      attr_reader conflict_symbols: ::Array[Grammar::Symbol]
+
       attr_reader conflict_symbol: Grammar::Symbol
 
       # path1 is shift conflict when S/R conflict
       # path2 is always reduce conflict
       #
-      # @rbs (Array[StateItem]? path1, Array[StateItem]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
-      def initialize: (Array[StateItem]? path1, Array[StateItem]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
+      # @rbs (Array[StateItem]? path1, Array[StateItem]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples, ?conflict_symbols: Array[Grammar::Symbol]) -> void
+      def initialize: (Array[StateItem]? path1, Array[StateItem]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples, ?conflict_symbols: Array[Grammar::Symbol]) -> void
 
       # @rbs () -> (:shift_reduce | :reduce_reduce)
       def type: () -> (:shift_reduce | :reduce_reduce)
@@ -46,6 +50,36 @@ module Lrama
       # @rbs () -> Derivation
       def derivations2: () -> Derivation
 
+      # @rbs () -> String
+      def example1: () -> String
+
+      # @rbs () -> String
+      def example2: () -> String
+
+      # @rbs () -> bool
+      def same_example?: () -> bool
+
+      # @rbs () -> String
+      def example1_label: () -> String
+
+      # @rbs () -> String
+      def example2_label: () -> String
+
+      # @rbs () -> String
+      def derivation_label1: () -> String
+
+      # @rbs () -> String
+      def derivation_label2: () -> String
+
+      # @rbs () -> String
+      def conflict_label: () -> String
+
+      # @rbs (Array[Grammar::Symbol]) -> Example
+      def merge_conflict_symbols!: (Array[Grammar::Symbol]) -> Example
+
+      # @rbs () -> Array[untyped]
+      def merge_key: () -> Array[untyped]
+
       private
 
       # @rbs (Array[StateItem] state_items) -> Derivation
@@ -53,6 +87,24 @@ module Lrama
 
       # @rbs (StateItem state_item, Grammar::Symbol sym) -> Derivation?
       def find_derivation_for_symbol: (StateItem state_item, Grammar::Symbol sym) -> Derivation?
+
+      # @rbs (String name) -> String
+      def normalize_symbol_for_example: (String name) -> String
+
+      # @rbs () -> Array[String]
+      def full_example_symbols1: () -> Array[String]
+
+      # @rbs () -> Array[String]
+      def full_example_symbols2: () -> Array[String]
+
+      # @rbs () -> Array[String]?
+      def shared_example_symbols: () -> Array[String]?
+
+      # @rbs () -> Array[String]?
+      def build_shared_example_symbols: () -> Array[String]?
+
+      # @rbs (Array[String] a, Array[String] b) -> Array[String]
+      def common_prefix: (Array[String] a, Array[String] b) -> Array[String]
     end
   end
 end
