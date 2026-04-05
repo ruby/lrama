@@ -1,0 +1,55 @@
+# Generated from lib/lrama/diagnostics/formatter.rb with RBS::Inline
+
+module Lrama
+  module Diagnostics
+    class Formatter
+      GUTTER_WIDTH: ::Integer
+
+      GUTTER_SEPARATOR: ::String
+
+      # @rbs (?color_enabled: bool, ?show_source: bool, ?show_caret: bool) -> void
+      def initialize: (?color_enabled: bool, ?show_source: bool, ?show_caret: bool) -> void
+
+      # @rbs (Message message) -> String
+      def format: (Message message) -> String
+
+      # @rbs (Array[Message] messages) -> String
+      def format_all: (Array[Message] messages) -> String
+
+      private
+
+      # @rbs (Message message) -> String
+      def format_main_line: (Message message) -> String
+
+      # @rbs (Message message) -> String
+      def format_location: (Message message) -> String
+
+      # @rbs (String text) -> String
+      def format_message_text: (String text) -> String
+
+      # @rbs (Message message) -> String
+      def format_source_line: (Message message) -> String
+
+      # @rbs (Message message) -> String
+      def highlight_source: (Message message) -> String
+
+      # @rbs (Message message) -> String
+      def format_caret_line: (Message message) -> String
+
+      # @rbs (Message message) -> String
+      def leading_whitespace: (Message message) -> String
+
+      # @rbs (Message message) -> String
+      def build_caret: (Message message) -> String
+
+      # @rbs (Message message) -> String
+      def format_fixit_line: (Message message) -> String
+
+      # @rbs (Message note) -> String
+      def format_note: (Message note) -> String
+
+      # @rbs (String? text, Symbol style) -> String
+      def colorize: (String? text, Symbol style) -> String
+    end
+  end
+end
