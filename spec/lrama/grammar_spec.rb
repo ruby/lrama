@@ -243,4 +243,32 @@ RSpec.describe Lrama::Grammar do
       end
     end
   end
+
+  describe '#no_inline' do
+    it 'defaults to false' do
+      expect(grammar.no_inline).to be false
+    end
+
+    it 'can be set to true' do
+      grammar.no_inline = true
+      expect(grammar.no_inline).to be true
+    end
+
+    context 'when no_inline is true' do
+      it 'skips inline rule validation and resolution during prepare' do
+        grammar.no_inline = true
+
+        # Mock the parameterized_resolver to have an inline rule with recursion
+        # This would normally raise an error, but with no_inline=true it should be skipped
+        allow(grammar).to receive(:validate_inline_rules)
+        allow(grammar).to receive(:resolve_inline_rules)
+
+        # prepare should not call validate_inline_rules or resolve_inline_rules
+        grammar.no_inline = true
+
+        expect(grammar).not_to receive(:validate_inline_rules)
+        expect(grammar).not_to receive(:resolve_inline_rules)
+      end
+    end
+  end
 end

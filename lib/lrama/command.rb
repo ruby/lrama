@@ -77,6 +77,7 @@ module Lrama
     end
 
     def prepare_grammar(grammar)
+      grammar.no_inline = @options.no_inline
       grammar.prepare
       grammar.validate!
     end
