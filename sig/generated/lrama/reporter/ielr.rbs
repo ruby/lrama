@@ -12,13 +12,13 @@ module Lrama
       private
 
       # @rbs (Lrama::States states) -> Array[Lrama::State]
-      def split_groups: (Lrama::States states) -> Array[Lrama::State]
+      def split_isocores: (Lrama::States states) -> Array[Lrama::State]
 
       # @rbs (Lrama::States states) -> Hash[Lrama::State, Array[Lrama::State::Action::Shift | Lrama::State::Action::Goto]]
       def build_incoming_index: (Lrama::States states) -> Hash[Lrama::State, Array[Lrama::State::Action::Shift | Lrama::State::Action::Goto]]
 
       # @rbs (IO io, Lrama::State core) -> void
-      def report_group: (IO io, Lrama::State core) -> void
+      def report_isocore: (IO io, Lrama::State core) -> void
 
       # @rbs (IO io, Array[Lrama::State] variants) -> void
       def report_incoming_transitions: (IO io, Array[Lrama::State] variants) -> void

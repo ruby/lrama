@@ -45,9 +45,9 @@ RSpec.describe Lrama::Reporter::Ielr do
       described_class.new(ielr: true).report(io, states)
 
       expect(io.string).to eq(<<~STR)
-        IELR State Splits
+        IELR Isocores
 
-            LALR state 5 splits into IELR states 5, 15
+            Isocore of LALR state 5: IELR states 5, 15
 
               Incoming transitions
                 state 1 -- c --> state 5 [LALR core]

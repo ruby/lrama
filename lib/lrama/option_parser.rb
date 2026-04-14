@@ -97,7 +97,7 @@ module Lrama
         o.on_tail '    lookaheads                       explicitly associate lookahead tokens to items'
         o.on_tail '    solved                           describe shift/reduce conflicts solving'
         o.on_tail '    counterexamples, cex             generate conflict counterexamples'
-        o.on_tail '    ielr                             show where IELR splits LALR states, with lookahead diffs and split reasons'
+        o.on_tail '    ielr                             show IELR isocores with lookahead diffs and split reasons'
         o.on_tail '    rules                            list unused rules'
         o.on_tail '    terms                            list unused terminals'
         o.on_tail '    verbose                          report detailed internal state and analysis results'

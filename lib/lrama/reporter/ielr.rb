@@ -13,15 +13,15 @@ module Lrama
       def report(io, states)
         return unless @enabled && states.ielr_defined?
 
-        groups = split_groups(states)
-        return if groups.empty?
+        isocores = split_isocores(states)
+        return if isocores.empty?
 
         @incoming_index = build_incoming_index(states)
 
-        io << "IELR State Splits\n\n"
+        io << "IELR Isocores\n\n"
 
-        groups.each do |core|
-          report_group(io, core)
+        isocores.each do |core|
+          report_isocore(io, core)
         end
       ensure
         @incoming_index = nil
@@ -30,7 +30,7 @@ module Lrama
       private
 
       # @rbs (Lrama::States states) -> Array[Lrama::State]
-      def split_groups(states)
+      def split_isocores(states)
         states.states.select do |state|
           !state.split_state? && state.ielr_isocores.size > 1
         end
@@ -48,10 +48,10 @@ module Lrama
       end
 
       # @rbs (IO io, Lrama::State core) -> void
-      def report_group(io, core)
+      def report_isocore(io, core)
         variants = core.ielr_isocores.sort_by(&:id)
 
-        io << "    LALR state #{core.id} splits into IELR states #{variants.map(&:id).join(', ')}\n\n"
+        io << "    Isocore of LALR state #{core.id}: IELR states #{variants.map(&:id).join(', ')}\n\n"
         report_incoming_transitions(io, variants)
         report_lookahead_differences(io, variants)
         report_split_reasons(io, variants)

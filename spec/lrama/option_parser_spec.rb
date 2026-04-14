@@ -80,7 +80,7 @@ RSpec.describe Lrama::OptionParser do
               lookaheads                       explicitly associate lookahead tokens to items
               solved                           describe shift/reduce conflicts solving
               counterexamples, cex             generate conflict counterexamples
-              ielr                             show where IELR splits LALR states, with lookahead diffs and split reasons
+              ielr                             show IELR isocores with lookahead diffs and split reasons
               rules                            list unused rules
               terms                            list unused terminals
               verbose                          report detailed internal state and analysis results
