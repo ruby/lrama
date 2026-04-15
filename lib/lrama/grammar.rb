@@ -277,6 +277,7 @@ module Lrama
       validate_no_precedence_for_nterm!
       validate_rule_lhs_is_nterm!
       validate_duplicated_precedence!
+      validate_parse_lac!
     end
 
     # @rbs (Grammar::Symbol sym) -> Array[Rule]
@@ -302,6 +303,16 @@ module Lrama
     # @rbs () -> bool
     def ielr_defined?
       @define.key?('lr.type') && @define['lr.type'] == 'ielr'
+    end
+
+    # @rbs () -> String
+    def parse_lac
+      @define['parse.lac'] || 'none'
+    end
+
+    # @rbs () -> bool
+    def lac_enabled?
+      parse_lac == 'full'
     end
 
     private
@@ -598,6 +609,18 @@ module Lrama
     # @rbs () -> void
     def set_locations
       @locations = @locations || @rules.any? {|rule| rule.contains_at_reference? }
+    end
+
+    # @rbs () -> void
+    def validate_parse_lac!
+      return unless @define.key?('parse.lac')
+
+      value = @define['parse.lac']
+      valid_values = ['none', 'full']
+
+      unless valid_values.include?(value)
+        raise "Invalid value for parse.lac: '#{value}'. Expected 'none' or 'full'."
+      end
     end
   end
 end
