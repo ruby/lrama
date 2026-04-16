@@ -1,0 +1,169 @@
+// A parser, made by Lrama <%= Lrama::VERSION %>.
+#![allow(dead_code, non_upper_case_globals, unused_mut, unused_variables)]
+
+<%= output.backend.token_enums %>
+<%= output.backend.symbol_enum %>
+const YYFINAL: i32 = <%= output.yyfinal %>;
+const YYLAST: i32 = <%= output.yylast %>;
+const YYNTOKENS: i32 = <%= output.yyntokens %>;
+const YYMAXUTOK: i32 = <%= output.yymaxutok %>;
+const YYPACT_NINF: i32 = <%= output.yypact_ninf %>;
+const YYTABLE_NINF: i32 = <%= output.yytable_ninf %>;
+const YYUNDEF: i32 = <%= output.undef_symbol.number %>;
+
+const YYTRANSLATE: &[i32] = <%= output.backend.format_int_array(output.context.yytranslate) %>;
+const YYPACT: &[i32] = <%= output.backend.format_int_array(output.context.yypact) %>;
+const YYDEFACT: &[i32] = <%= output.backend.format_int_array(output.context.yydefact) %>;
+const YYPGOTO: &[i32] = <%= output.backend.format_int_array(output.context.yypgoto) %>;
+const YYDEFGOTO: &[i32] = <%= output.backend.format_int_array(output.context.yydefgoto) %>;
+const YYTABLE: &[i32] = <%= output.backend.format_int_array(output.context.yytable) %>;
+const YYCHECK: &[i32] = <%= output.backend.format_int_array(output.context.yycheck) %>;
+const YYR1: &[i32] = <%= output.backend.format_int_array(output.context.yyr1) %>;
+const YYR2: &[i32] = <%= output.backend.format_int_array(output.context.yyr2) %>;
+const YYTNAME: &[&str] = <%= output.backend.format_string_array(output.context.yytname) %>;
+
+pub type YYValue = i64;
+
+#[derive(Clone, Debug, Default)]
+pub struct YYLocation {}
+
+pub trait Lexer {
+    fn next_token(&mut self) -> Option<(i32, YYValue, YYLocation)>;
+}
+
+pub struct Parser<L: Lexer> {
+    lexer: L,
+}
+
+impl<L: Lexer> Parser<L> {
+    pub fn new(lexer: L) -> Self {
+        Self { lexer }
+    }
+
+    pub fn parse(&mut self) -> Result<Option<YYValue>, String> {
+        let mut yychar: Option<i32> = None;
+        let mut yylval = YYValue::default();
+        let mut yylloc = YYLocation::default();
+        let mut state_stack = vec![0_i32];
+        let mut value_stack: Vec<YYValue> = Vec::new();
+        let mut location_stack: Vec<YYLocation> = Vec::new();
+
+        loop {
+            let yystate = *state_stack.last().unwrap();
+            let mut yyn = YYPACT[yystate as usize];
+
+            if !yypact_default(yyn) {
+                if yychar.is_none() {
+                    match self.lexer.next_token() {
+                        Some((token, value, location)) => {
+                            yychar = Some(token);
+                            yylval = value;
+                            yylloc = location;
+                        }
+                        None => {
+                            yychar = Some(0);
+                            yylval = YYValue::default();
+                            yylloc = YYLocation::default();
+                        }
+                    }
+                }
+
+                let yytoken = translate(yychar.unwrap());
+                yyn += yytoken;
+
+                if yyn >= 0 && yyn <= YYLAST && YYCHECK[yyn as usize] == yytoken {
+                    yyn = YYTABLE[yyn as usize];
+                    if yytable_error(yyn) {
+                        return Err("syntax error".to_string());
+                    }
+
+                    if yyn > 0 {
+                        state_stack.push(yyn);
+                        value_stack.push(yylval.clone());
+                        location_stack.push(yylloc.clone());
+                        yychar = None;
+                        yylval = YYValue::default();
+                        yylloc = YYLocation::default();
+                        if yyn == YYFINAL {
+                            return Ok(final_value(&value_stack));
+                        }
+                        continue;
+                    }
+
+                    yyn = -yyn;
+                } else {
+                    yyn = YYDEFACT[yystate as usize];
+                    if yyn == 0 {
+                        return Err("syntax error".to_string());
+                    }
+                }
+            } else {
+                yyn = YYDEFACT[yystate as usize];
+                if yyn == 0 {
+                    return Err("syntax error".to_string());
+                }
+            }
+
+            let yylen = YYR2[yyn as usize] as usize;
+            let (yyval, yyloc) = self.reduce_action(yyn, &value_stack, &location_stack, yylen);
+            for _ in 0..yylen {
+                state_stack.pop();
+                value_stack.pop();
+                location_stack.pop();
+            }
+
+            let yystate = *state_stack.last().unwrap();
+            let yylhs = YYR1[yyn as usize] - YYNTOKENS;
+            let yyi = YYPGOTO[yylhs as usize] + yystate;
+            let next_state = if yyi >= 0 && yyi <= YYLAST && YYCHECK[yyi as usize] == yystate {
+                YYTABLE[yyi as usize]
+            } else {
+                YYDEFGOTO[yylhs as usize]
+            };
+
+            state_stack.push(next_state);
+            value_stack.push(yyval);
+            location_stack.push(yyloc);
+        }
+    }
+
+    fn reduce_action(&mut self, yyn: i32, yyvsp: &[YYValue], yylsp: &[YYLocation], yylen: usize) -> (YYValue, YYLocation) {
+        let mut yyval = if yylen > 0 { yyvsp[yyvsp.len() - yylen].clone() } else { YYValue::default() };
+        let mut yyloc = if yylen > 0 { yylsp[yylsp.len() - yylen].clone() } else { YYLocation::default() };
+        let empty_values: &[YYValue] = &[];
+        let empty_locations: &[YYLocation] = &[];
+        let val = if yylen > 0 { &yyvsp[yyvsp.len() - yylen..] } else { empty_values };
+        let loc = if yylen > 0 { &yylsp[yylsp.len() - yylen..] } else { empty_locations };
+
+        match yyn {
+<%= output.backend.render_user_actions(output.grammar_file_path) -%>
+            _ => {}
+        }
+
+        (yyval, yyloc)
+    }
+}
+
+fn translate(token_id: i32) -> i32 {
+    if token_id >= 0 && token_id <= YYMAXUTOK {
+        YYTRANSLATE[token_id as usize]
+    } else {
+        YYUNDEF
+    }
+}
+
+fn yypact_default(value: i32) -> bool {
+    value == YYPACT_NINF
+}
+
+fn yytable_error(value: i32) -> bool {
+    value == YYTABLE_NINF
+}
+
+fn final_value(value_stack: &[YYValue]) -> Option<YYValue> {
+    if value_stack.len() >= 2 {
+        Some(value_stack[value_stack.len() - 2].clone())
+    } else {
+        value_stack.last().cloned()
+    }
+}

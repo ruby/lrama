@@ -1,0 +1,148 @@
+// A parser, made by Lrama <%= Lrama::VERSION %>.
+
+<%= output.backend.token_enums %>
+<%= output.backend.symbol_enum %>
+const YYFINAL = <%= output.yyfinal %>;
+const YYLAST = <%= output.yylast %>;
+const YYNTOKENS = <%= output.yyntokens %>;
+const YYMAXUTOK = <%= output.yymaxutok %>;
+const YYPACT_NINF = <%= output.yypact_ninf %>;
+const YYTABLE_NINF = <%= output.yytable_ninf %>;
+const YYUNDEF = <%= output.undef_symbol.number %>;
+
+const YYTRANSLATE = <%= output.backend.format_int_array(output.context.yytranslate) %>;
+const YYPACT = <%= output.backend.format_int_array(output.context.yypact) %>;
+const YYDEFACT = <%= output.backend.format_int_array(output.context.yydefact) %>;
+const YYPGOTO = <%= output.backend.format_int_array(output.context.yypgoto) %>;
+const YYDEFGOTO = <%= output.backend.format_int_array(output.context.yydefgoto) %>;
+const YYTABLE = <%= output.backend.format_int_array(output.context.yytable) %>;
+const YYCHECK = <%= output.backend.format_int_array(output.context.yycheck) %>;
+const YYR1 = <%= output.backend.format_int_array(output.context.yyr1) %>;
+const YYR2 = <%= output.backend.format_int_array(output.context.yyr2) %>;
+const YYTNAME = <%= output.backend.format_string_array(output.context.yytname) %>;
+
+export default class Parser {
+  constructor(lexer) {
+    this.lexer = lexer;
+  }
+
+  parse() {
+    let yychar = null;
+    let yylval = null;
+    let yylloc = null;
+    const stateStack = [0];
+    const valueStack = [];
+    const locationStack = [];
+
+    for (;;) {
+      const yystate = stateStack[stateStack.length - 1];
+      let yyn = YYPACT[yystate];
+
+      if (!this.yypactDefault(yyn)) {
+        if (yychar === null) {
+          [yychar, yylval, yylloc] = this.readToken();
+        }
+
+        const yytoken = translate(yychar);
+        yyn += yytoken;
+
+        if (yyn >= 0 && yyn <= YYLAST && YYCHECK[yyn] === yytoken) {
+          yyn = YYTABLE[yyn];
+          if (this.yytableError(yyn)) {
+            throw new SyntaxError("syntax error");
+          }
+
+          if (yyn > 0) {
+            stateStack.push(yyn);
+            valueStack.push(yylval);
+            locationStack.push(yylloc);
+            yychar = null;
+            yylval = null;
+            yylloc = null;
+            if (yyn === YYFINAL) {
+              return finalValue(valueStack);
+            }
+            continue;
+          }
+
+          yyn = -yyn;
+        } else {
+          yyn = YYDEFACT[yystate];
+          if (yyn === 0) {
+            throw new SyntaxError("syntax error");
+          }
+        }
+      } else {
+        yyn = YYDEFACT[yystate];
+        if (yyn === 0) {
+          throw new SyntaxError("syntax error");
+        }
+      }
+
+      const yylen = YYR2[yyn];
+      const [yyval, yyloc] = this.reduceAction(yyn, valueStack, locationStack, yylen);
+      for (let i = 0; i < yylen; i += 1) {
+        stateStack.pop();
+        valueStack.pop();
+        locationStack.pop();
+      }
+
+      const state = stateStack[stateStack.length - 1];
+      const yylhs = YYR1[yyn] - YYNTOKENS;
+      const yyi = YYPGOTO[yylhs] + state;
+      const nextState = yyi >= 0 && yyi <= YYLAST && YYCHECK[yyi] === state ? YYTABLE[yyi] : YYDEFGOTO[yylhs];
+      stateStack.push(nextState);
+      valueStack.push(yyval);
+      locationStack.push(yyloc);
+    }
+  }
+
+  readToken() {
+    const token = this.lexer.nextToken ? this.lexer.nextToken() : this.lexer.next_token();
+    if (token == null) {
+      return [0, null, null];
+    }
+    if (Array.isArray(token)) {
+      return [token[0] ?? 0, token[1], token[2]];
+    }
+    return [token.type ?? 0, token.value, token.loc];
+  }
+
+  yypactDefault(value) {
+    return value === YYPACT_NINF;
+  }
+
+  yytableError(value) {
+    return value === YYTABLE_NINF;
+  }
+
+  reduceAction(yyn, yyvsp, yylsp, yylen) {
+    let yyval = yylen > 0 ? yyvsp[yyvsp.length - yylen] : null;
+    let yyloc = yylen > 0 ? yylsp[yylsp.length - yylen] : null;
+    const val = [null];
+    const loc = [null];
+    if (yylen > 0) {
+      val.push(...yyvsp.slice(yyvsp.length - yylen));
+      loc.push(...yylsp.slice(yylsp.length - yylen));
+    }
+
+    switch (yyn) {
+<%= output.backend.render_user_actions(output.grammar_file_path) -%>
+      default:
+        break;
+    }
+
+    return [yyval, yyloc];
+  }
+}
+
+function translate(tokenId) {
+  if (tokenId >= 0 && tokenId <= YYMAXUTOK) {
+    return YYTRANSLATE[tokenId];
+  }
+  return YYUNDEF;
+}
+
+function finalValue(valueStack) {
+  return valueStack.length >= 2 ? valueStack[valueStack.length - 2] : valueStack[valueStack.length - 1];
+}

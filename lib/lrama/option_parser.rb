@@ -44,6 +44,9 @@ module Lrama
         @options.y = File.open(@options.grammar_file, 'r')
       end
 
+      validate_language
+      @options.outfile = default_outfile unless @options.outfile_given
+
       if !@report.empty? && @options.report_file.nil? && @options.grammar_file
         @options.report_file = File.dirname(@options.grammar_file) + "/" + File.basename(@options.grammar_file, ".*") + ".output"
       end
@@ -62,6 +65,18 @@ module Lrama
 
     private
 
+    def validate_language
+      @backend_class = Backend.for(@options.language)
+    end
+
+    def default_outfile
+      return "y.tab.c" if @options.language == "c"
+
+      dirname = File.dirname(@options.grammar_file)
+      basename = File.basename(@options.grammar_file, ".*")
+      File.join(dirname, "#{basename}.#{@backend_class.new(context: nil, grammar: nil, options: @options).file_extension}")
+    end
+
     # @rbs (Array[String]) -> void
     def parse_by_option_parser(argv)
       ::OptionParser.new do |o|
@@ -76,6 +91,7 @@ module Lrama
         o.separator ''
         o.separator 'Tuning the Parser:'
         o.on('-S', '--skeleton=FILE', 'specify the skeleton to use') {|v| @options.skeleton = v }
+        o.on('-L', '--language=LANG', "target language (#{Backend.available.join(', ')})") {|v| @options.language = v }
         o.on('-t', '--debug', 'display debugging outputs of internal parser') {|v| @options.debug = true }
         o.separator "                                     same as '-Dparse.trace'"
         o.on('--locations', 'enable location support') {|v| @options.locations = true }
@@ -103,7 +119,7 @@ module Lrama
         o.on_tail '    all                              include all the above reports'
         o.on_tail '    none                             disable all reports'
         o.on('--report-file=FILE', 'also produce details on the automaton output to a file named FILE') {|v| @options.report_file = v }
-        o.on('-o', '--output=FILE', 'leave output to FILE') {|v| @options.outfile = v }
+        o.on('-o', '--output=FILE', 'leave output to FILE') {|v| @options.outfile = v; @options.outfile_given = true }
         o.on('--trace=TRACES', Array, 'also output trace logs at runtime') {|v| @trace = v }
         o.on_tail ''
         o.on_tail 'TRACES is a list of comma-separated words that can include:'
