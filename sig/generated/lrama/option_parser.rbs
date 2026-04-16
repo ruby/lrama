@@ -22,6 +22,10 @@ module Lrama
 
     private
 
+    def validate_language: () -> untyped
+
+    def default_outfile: () -> untyped
+
     # @rbs (Array[String]) -> void
     def parse_by_option_parser: (Array[String]) -> void
 

@@ -1,0 +1,151 @@
+# frozen_string_literal: true
+
+# A parser, made by Lrama <%= Lrama::VERSION %>.
+
+class Parser
+<%= output.backend.token_enums %>
+<%= output.backend.symbol_enum %>
+  YYFINAL = <%= output.yyfinal %>
+  YYLAST = <%= output.yylast %>
+  YYNTOKENS = <%= output.yyntokens %>
+  YYMAXUTOK = <%= output.yymaxutok %>
+  YYPACT_NINF = <%= output.yypact_ninf %>
+  YYTABLE_NINF = <%= output.yytable_ninf %>
+  YYUNDEF = <%= output.undef_symbol.number %>
+
+  YYTRANSLATE = <%= output.backend.format_int_array(output.context.yytranslate) %>
+  YYPACT = <%= output.backend.format_int_array(output.context.yypact) %>
+  YYDEFACT = <%= output.backend.format_int_array(output.context.yydefact) %>
+  YYPGOTO = <%= output.backend.format_int_array(output.context.yypgoto) %>
+  YYDEFGOTO = <%= output.backend.format_int_array(output.context.yydefgoto) %>
+  YYTABLE = <%= output.backend.format_int_array(output.context.yytable) %>
+  YYCHECK = <%= output.backend.format_int_array(output.context.yycheck) %>
+  YYR1 = <%= output.backend.format_int_array(output.context.yyr1) %>
+  YYR2 = <%= output.backend.format_int_array(output.context.yyr2) %>
+  YYTNAME = <%= output.backend.format_string_array(output.context.yytname) %>
+
+  def initialize(lexer)
+    @lexer = lexer
+  end
+
+  def parse
+    yychar = nil
+    yylval = nil
+    yylloc = nil
+    state_stack = [0]
+    value_stack = []
+    location_stack = []
+
+    loop do
+      yystate = state_stack[-1]
+      yyn = YYPACT[yystate]
+
+      if !yypact_default?(yyn)
+        if yychar.nil?
+          yychar, yylval, yylloc = read_token
+        end
+
+        yytoken = translate(yychar)
+        yyn += yytoken
+
+        if yyn >= 0 && yyn <= YYLAST && YYCHECK[yyn] == yytoken
+          yyn = YYTABLE[yyn]
+          raise SyntaxError, "syntax error" if yytable_error?(yyn)
+
+          if yyn > 0
+            state_stack << yyn
+            value_stack << yylval
+            location_stack << yylloc
+            yychar = nil
+            yylval = nil
+            yylloc = nil
+            return final_value(value_stack) if yyn == YYFINAL
+            next
+          end
+
+          yyn = -yyn
+        else
+          yyn = YYDEFACT[yystate]
+          raise SyntaxError, "syntax error" if yyn == 0
+        end
+      else
+        yyn = YYDEFACT[yystate]
+        raise SyntaxError, "syntax error" if yyn == 0
+      end
+
+      yylen = YYR2[yyn]
+      yyval, yyloc = reduce_action(yyn, value_stack, location_stack, yylen)
+      yylen.times do
+        state_stack.pop
+        value_stack.pop
+        location_stack.pop
+      end
+
+      yystate = state_stack[-1]
+      yylhs = YYR1[yyn] - YYNTOKENS
+      yyi = YYPGOTO[yylhs] + yystate
+      yystate =
+        if yyi >= 0 && yyi <= YYLAST && YYCHECK[yyi] == yystate
+          YYTABLE[yyi]
+        else
+          YYDEFGOTO[yylhs]
+        end
+
+      state_stack << yystate
+      value_stack << yyval
+      location_stack << yyloc
+    end
+  end
+
+  private
+
+  def read_token
+    token = @lexer.respond_to?(:next_token) ? @lexer.next_token : @lexer.next
+    return [0, nil, nil] unless token
+    return [token[0] || 0, token[1], token[2]] if token.is_a?(Array)
+
+    type = token.respond_to?(:type) ? token.type : token[:type]
+    value = token.respond_to?(:value) ? token.value : token[:value]
+    loc = token.respond_to?(:loc) ? token.loc : token[:loc]
+    [type || 0, value, loc]
+  end
+
+  def translate(token_id)
+    return YYTRANSLATE[token_id] if token_id >= 0 && token_id <= YYMAXUTOK
+
+    YYUNDEF
+  end
+
+  def yypact_default?(value)
+    value == YYPACT_NINF
+  end
+
+  def yytable_error?(value)
+    value == YYTABLE_NINF
+  end
+
+  def final_value(value_stack)
+    value_stack.length >= 2 ? value_stack[-2] : value_stack[-1]
+  end
+
+  def reduce_action(yyn, yyvsp, yylsp, yylen)
+    yyval = yylen > 0 ? yyvsp[-yylen] : nil
+    yyloc = yylen > 0 ? yylsp[-yylen] : nil
+    val = [nil]
+    loc = [nil]
+    if yylen > 0
+      val.concat(yyvsp[-yylen, yylen])
+      loc.concat(yylsp[-yylen, yylen])
+    end
+
+    case yyn
+    when nil
+      nil
+<%= output.backend.render_user_actions(output.grammar_file_path) -%>
+    else
+      nil
+    end
+
+    [yyval, yyloc]
+  end
+end

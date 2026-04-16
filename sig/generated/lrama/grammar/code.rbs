@@ -24,15 +24,18 @@ module Lrama
       # @rbs (Code other) -> bool
       def ==: (Code other) -> bool
 
-      # $$, $n, @$, @n are translated to C code
+      # $$, $n, @$, @n are translated by the given backend translator.
       #
-      # @rbs () -> String
-      def translated_code: () -> String
+      # @rbs (?untyped translator) -> String
+      def translated_code: (?untyped translator) -> String
 
       private
 
       # @rbs (Lrama::Grammar::Reference ref) -> bot
       def reference_to_c: (Lrama::Grammar::Reference ref) -> bot
+
+      # @rbs (Lrama::Grammar::Reference ref, untyped translator) -> String
+      def translated_reference: (Lrama::Grammar::Reference ref, untyped translator) -> String
     end
   end
 end

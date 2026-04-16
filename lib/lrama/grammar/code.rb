@@ -39,17 +39,17 @@ module Lrama
         self.token_code == other.token_code
       end
 
-      # $$, $n, @$, @n are translated to C code
+      # $$, $n, @$, @n are translated by the given backend translator.
       #
-      # @rbs () -> String
-      def translated_code
+      # @rbs (?untyped translator) -> String
+      def translated_code(translator = nil)
         t_code = s_value.dup
 
         references.reverse_each do |ref|
           first_column = ref.first_column
           last_column = ref.last_column
 
-          str = reference_to_c(ref)
+          str = translated_reference(ref, translator)
 
           t_code[first_column...last_column] = str
         end
@@ -62,6 +62,15 @@ module Lrama
       # @rbs (Lrama::Grammar::Reference ref) -> bot
       def reference_to_c(ref)
         raise NotImplementedError.new("#reference_to_c is not implemented")
+      end
+
+      # @rbs (Lrama::Grammar::Reference ref, untyped translator) -> String
+      def translated_reference(ref, translator)
+        if translator
+          translator.translate(ref, self, nil)
+        else
+          reference_to_c(ref)
+        end
       end
     end
   end

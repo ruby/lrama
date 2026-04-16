@@ -21,16 +21,19 @@ module Lrama
     attr_accessor :diagram #: bool
     attr_accessor :diagram_file #: String
     attr_accessor :profile_opts #: Hash[Symbol, bool]?
+    attr_accessor :language #: String
+    attr_accessor :outfile_given #: bool
 
     # @rbs () -> void
     def initialize
-      @skeleton = "bison/yacc.c"
+      @skeleton = nil
       @locations = false
       @define = {}
       @header = false
       @header_file = nil
       @report_file = nil
       @outfile = "y.tab.c"
+      @outfile_given = false
       @error_recovery = false
       @grammar_file = ''
       @trace_opts = nil
@@ -41,6 +44,7 @@ module Lrama
       @diagram = false
       @diagram_file = "diagram.html"
       @profile_opts = nil
+      @language = "c"
     end
   end
 end
