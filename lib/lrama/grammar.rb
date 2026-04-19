@@ -20,6 +20,10 @@ require_relative "grammar/symbol"
 require_relative "grammar/symbols"
 require_relative "grammar/type"
 require_relative "grammar/union"
+require_relative "grammar/token_pattern"
+require_relative "grammar/lex_prec"
+require_relative "grammar/lex_tie"
+require_relative "grammar/lexer_context"
 require_relative "lexer"
 
 module Lrama
@@ -40,6 +44,11 @@ module Lrama
     #     def nterms: () -> Array[Grammar::Symbol]
     #     def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
     #     def ielr_defined?: () -> bool
+    #     def pslr_defined?: () -> bool
+    #     def token_patterns: () -> Array[Grammar::TokenPattern]
+    #     def lex_prec: () -> Grammar::LexPrec
+    #     def pslr_max_states: () -> Integer?
+    #     def pslr_max_state_ratio: () -> Float?
     #   end
     #
     #   include Symbols::Resolver::_DelegatedMethods
@@ -68,6 +77,10 @@ module Lrama
     #   @union: Union
     #   @precedences: Array[Precedence]
     #   @start_nterm: Lrama::Lexer::Token::Base?
+    #   @token_patterns: Array[Grammar::TokenPattern]
+    #   @lex_prec: Grammar::LexPrec
+    #   @symbol_sets: Hash[String, Array[Lexer::Token::Base]]
+    #   @lex_tie: Grammar::LexTie
 
     extend Forwardable
 
@@ -100,6 +113,17 @@ module Lrama
     attr_accessor :locations #: bool
     attr_accessor :define #: Hash[String, String]
     attr_accessor :required #: bool
+    attr_reader :token_patterns #: Array[Grammar::TokenPattern]
+    attr_reader :lex_prec #: Grammar::LexPrec
+    attr_reader :symbol_sets #: Hash[String, Array[Lexer::Token::Base]]
+    attr_reader :lex_tie #: Grammar::LexTie
+    attr_reader :lexer_contexts #: Hash[String, Grammar::LexerContext]
+
+    # Argument symbol names for each parameterized rule expansion.
+    # @rbs () -> Hash[String, Array[String]]
+    def parameterized_expansion_args
+      @parameterized_resolver.expansion_args
+    end
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term, :find_term_by_s_value,
                                         :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
@@ -133,6 +157,13 @@ module Lrama
       @required = false
       @precedences = []
       @start_nterm = nil
+      @token_patterns = []
+      @lex_prec = Grammar::LexPrec.new
+      @symbol_sets = {}
+      @lex_tie = Grammar::LexTie.new
+      @lexer_contexts = {}
+      @lexer_context_counter = 0
+      @token_pattern_counter = 0
 
       append_special_symbols
     end
@@ -277,6 +308,7 @@ module Lrama
       validate_no_precedence_for_nterm!
       validate_rule_lhs_is_nterm!
       validate_duplicated_precedence!
+      validate_pslr_configuration!
     end
 
     # @rbs (Grammar::Symbol sym) -> Array[Rule]
@@ -304,7 +336,185 @@ module Lrama
       @define.key?('lr.type') && @define['lr.type'] == 'ielr'
     end
 
+    # @rbs () -> bool
+    def pslr_defined?
+      @define.key?('lr.type') && @define['lr.type'] == 'pslr'
+    end
+
+    # @rbs () -> String?
+    def pslr_state_member
+      @define['api.pslr.state-member']
+    end
+
+    # @rbs () -> Integer?
+    def pslr_max_states
+      parse_pslr_positive_integer('pslr.max-states')
+    end
+
+    # @rbs () -> Float?
+    def pslr_max_state_ratio
+      parse_pslr_positive_float('pslr.max-state-ratio')
+    end
+
+    # Add a token pattern from %token-pattern directive
+    # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer) -> Grammar::TokenPattern
+    def add_token_pattern(id:, pattern:, alias_name: nil, tag: nil, lineno:)
+      token_pattern = Grammar::TokenPattern.new(
+        id: id,
+        pattern: pattern,
+        alias_name: alias_name,
+        tag: tag,
+        lineno: lineno,
+        definition_order: @token_pattern_counter
+      )
+      @token_pattern_counter += 1
+      @token_patterns << token_pattern
+
+      # Also register as a terminal symbol
+      add_term(id: id, alias_name: alias_name, tag: tag)
+
+      token_pattern
+    end
+
+    # Add a symbol set from %symbol-set directive.
+    # @rbs (name: String, symbols: Array[Lexer::Token::Base]) -> Array[Lexer::Token::Base]
+    def add_symbol_set(name:, symbols:)
+      @symbol_sets[name] = symbols
+      symbols.each {|id| add_term(id: id) }
+    end
+
+    # Add lex-prec rules from %lex-prec directive.
+    # Symbol-set operands are expanded eagerly, so the resolver only sees token pairs.
+    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Array[Grammar::LexPrec::Rule]
+    def add_lex_prec_rule(left_token:, operator:, right_token:, lineno:)
+      expand_pslr_operand(left_token).product(expand_pslr_operand(right_token)).map do |left, right|
+        @lex_prec.add_rule(
+          left_token: left,
+          operator: operator,
+          right_token: right,
+          lineno: lineno
+        )
+      end
+    end
+
+    # Add lexical tie relationships from %lex-tie directive.
+    # @rbs (operands: Array[Lexer::Token::Base]) -> void
+    def add_lex_tie(operands:)
+      expanded = operands.map {|operand| expand_pslr_operand(operand) }
+      i = 0
+      while i < expanded.size
+        j = i + 1
+        while j < expanded.size
+          left_group = expanded.fetch(i)
+          right_group = expanded.fetch(j)
+          left_group.product(right_group).each do |left, right|
+            @lex_tie.add_tie(left.s_value, right.s_value)
+          end
+          j += 1
+        end
+        i += 1
+      end
+    end
+
+    # Add no-tie declarations from %lex-no-tie directive.
+    # @rbs (operands: Array[Lexer::Token::Base]) -> void
+    def add_lex_no_tie(operands:)
+      expanded = operands.map {|operand| expand_pslr_operand(operand) }
+      i = 0
+      while i < expanded.size
+        j = i + 1
+        while j < expanded.size
+          left_group = expanded.fetch(i)
+          right_group = expanded.fetch(j)
+          left_group.product(right_group).each do |left, right|
+            @lex_tie.add_no_tie(left.s_value, right.s_value)
+          end
+          j += 1
+        end
+        i += 1
+      end
+    end
+
+    # Add a lexer context from %lexer-context directive
+    # @rbs (name: String, symbols: Array[Lexer::Token::Ident]) -> Grammar::LexerContext
+    def add_lexer_context(name:, symbols:)
+      unless ctx = @lexer_contexts[name]
+        ctx = Grammar::LexerContext.new(name: name, index: @lexer_context_counter)
+        @lexer_context_counter += 1
+        @lexer_contexts[name] = ctx
+      end
+      ctx.add_symbols(symbols)
+      ctx
+    end
+
+    # Find a token pattern by its name
+    # @rbs (String name) -> Grammar::TokenPattern?
+    def find_token_pattern(name)
+      @token_patterns.find { |tp| tp.name == name }
+    end
+
+    # @rbs (Set[String] tokens) -> Set[String]
+    def expand_lexical_ties(tokens)
+      tokens.each_with_object(Set.new) do |token, expanded|
+        @lex_tie.tied_names(token).each {|name| expanded << name }
+      end
+    end
+
     private
+
+    # @rbs () -> void
+    def validate_pslr_configuration!
+      return unless pslr_defined?
+
+      member = pslr_state_member
+      if member && member !~ /\A[a-zA-Z_][a-zA-Z0-9_]*\z/
+        raise %(%define api.pslr.state-member must be a valid C identifier, got "#{member}".)
+      end
+
+      pslr_max_states
+      pslr_max_state_ratio
+
+      conflicts = @lex_tie.no_ties_conflicting_with_ties
+      return if conflicts.empty?
+
+      left, right = conflicts.first
+      raise "%lex-no-tie #{left} #{right} conflicts with an existing %lex-tie closure."
+    end
+
+    # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
+    def expand_pslr_operand(operand)
+      return @token_patterns.map(&:id) if operand.s_value == "yyall"
+      return @symbol_sets.fetch(operand.s_value) if @symbol_sets.key?(operand.s_value)
+
+      add_term(id: operand)
+      [operand]
+    end
+
+    # @rbs (String key) -> Integer?
+    def parse_pslr_positive_integer(key)
+      value = @define[key]
+      return nil if value.nil? || value.empty?
+
+      parsed = Integer(value, 10)
+      raise %(%define #{key} must be greater than 0, got "#{value}".) unless 0 < parsed
+
+      parsed
+    rescue ArgumentError
+      raise %(%define #{key} must be an integer, got "#{value}".)
+    end
+
+    # @rbs (String key) -> Float?
+    def parse_pslr_positive_float(key)
+      value = @define[key]
+      return nil if value.nil? || value.empty?
+
+      parsed = Float(value)
+      raise %(%define #{key} must be greater than or equal to 1.0, got "#{value}".) unless 1.0 <= parsed
+
+      parsed
+    rescue ArgumentError
+      raise %(%define #{key} must be a number, got "#{value}".)
+    end
 
     # @rbs () -> void
     def sort_precedence

@@ -2,7 +2,7 @@ class Lrama::Parser
   expect 0
   error_on_expect_mismatch
 
-  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
+  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG REGEX
 
 rule
 
@@ -132,6 +132,12 @@ rule
 
   symbol_declaration:
       "%token" token_declarations
+    | "%token-pattern" token_pattern_declarations
+    | "%symbol-set" symbol_set_declaration
+    | "%lexer-context" lexer_context_declaration
+    | "%lex-prec" lex_prec_declarations
+    | "%lex-tie" lex_tie_declaration
+    | "%lex-no-tie" lex_no_tie_declaration
     | "%type" symbol_declarations
         {
           val[1].each {|hash|
@@ -212,6 +218,116 @@ rule
         }
 
   token_declaration: id INTEGER? alias { result = val }
+
+  token_pattern_declarations:
+      TAG? token_pattern_declaration+
+        {
+          val[1].each {|decl|
+            @grammar.add_token_pattern(
+              id: decl[:id],
+              pattern: decl[:pattern],
+              alias_name: decl[:alias],
+              tag: val[0],
+              lineno: decl[:id].first_line
+            )
+          }
+        }
+    | token_pattern_declarations TAG token_pattern_declaration+
+        {
+          val[2].each {|decl|
+            @grammar.add_token_pattern(
+              id: decl[:id],
+              pattern: decl[:pattern],
+              alias_name: decl[:alias],
+              tag: val[1],
+              lineno: decl[:id].first_line
+            )
+          }
+        }
+
+  token_pattern_declaration:
+      IDENTIFIER REGEX alias
+        {
+          result = { id: val[0], pattern: val[1], alias: val[2] }
+        }
+
+  lexer_context_declaration:
+      IDENTIFIER symbol+
+        {
+          @grammar.add_lexer_context(name: val[0].s_value, symbols: val[1])
+        }
+
+  symbol_set_declaration:
+      IDENTIFIER symbol+
+        {
+          @grammar.add_symbol_set(name: val[0].s_value, symbols: val[1])
+        }
+
+  lex_prec_declarations:
+      lex_prec_chain
+        {
+          val[0].each {|rule|
+            @grammar.add_lex_prec_rule(
+              left_token: rule[:left],
+              operator: rule[:op],
+              right_token: rule[:right],
+              lineno: rule[:left].first_line
+            )
+          }
+        }
+
+  lex_prec_chain:
+      symbol lex_prec_op symbol
+        {
+          result = [{ left: val[0], op: val[1], right: val[2] }]
+        }
+    | lex_prec_chain lex_prec_op symbol
+        {
+          last_right = val[0].last[:right]
+          result = val[0] + [{ left: last_right, op: val[1], right: val[2] }]
+        }
+
+  lex_prec_op:
+      "<~"
+        {
+          result = Lrama::Grammar::LexPrec::IDENTITY_RIGHT_LONGEST
+        }
+    | "<-"
+        {
+          result = Lrama::Grammar::LexPrec::IDENTITY_RIGHT
+        }
+    | "-~"
+        {
+          result = Lrama::Grammar::LexPrec::LONGEST
+        }
+    | "<<"
+        {
+          result = Lrama::Grammar::LexPrec::TOKEN_RIGHT
+        }
+    | "-<"
+        {
+          result = Lrama::Grammar::LexPrec::TOKEN_RIGHT_LENGTH
+        }
+    | "<s"
+        {
+          result = Lrama::Grammar::LexPrec::IDENTITY_RIGHT_SHORTEST
+        }
+    | "-s"
+        {
+          result = Lrama::Grammar::LexPrec::SHORTEST
+        }
+
+  lex_tie_declaration:
+      symbol symbol+
+        {
+          @grammar.add_lex_tie(operands: [val[0]] + val[1])
+        }
+
+  lex_no_tie_declaration:
+      symbol symbol+
+        {
+          @grammar.add_lex_no_tie(operands: [val[0]] + val[1])
+        }
 
   rule_declaration:
       "%rule" IDENTIFIER "(" rule_args ")" TAG? ":" rule_rhs_list
