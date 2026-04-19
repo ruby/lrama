@@ -213,6 +213,14 @@ RSpec.describe "integration" do
       test_parser("pslr_fallback_precedence", "__empty__", "EOF 0 0 0 0\n")
     end
 
+    it "synthesizes implicit literal token patterns for parser-state rows" do
+      test_parser("pslr_implicit_literal", "x;", "ok\n")
+    end
+
+    it "uses implicit literal token patterns in the fallback row" do
+      test_parser("pslr_implicit_literal", "__fallback_semi__", "SEMI 1 0\n")
+    end
+
     it "does not use fallback longest rules for normal parser-state rows" do
       grammar_text = <<~GRAMMAR
         %define lr.type pslr

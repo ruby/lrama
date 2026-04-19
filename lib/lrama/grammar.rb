@@ -471,7 +471,91 @@ module Lrama
       )
     end
 
+    REGEX_LITERAL_ESCAPES = ["/", "\\", "*", "+", "?", "(", ")", "[", "]", "{", "}", ".", "|", "^", "$", "-"].freeze #: Array[String]
+    REGEX_CONTROL_ESCAPES = {
+      "\n" => "\\n",
+      "\t" => "\\t",
+      "\r" => "\\r",
+      "\f" => "\\f",
+      "\v" => "\\v"
+    }.freeze #: Hash[String, String]
+
+    # @rbs () -> void
+    def synthesize_implicit_literal_token_patterns!
+      existing_names = @token_patterns.map(&:name).to_set
+
+      terms.each do |term|
+        pattern = implicit_literal_regex_pattern(term.id)
+        next unless pattern
+        next if existing_names.include?(term.id.s_value)
+
+        @token_patterns << Grammar::TokenPattern.new(
+          id: term.id,
+          pattern: Lrama::Lexer::Token::Regex.new(s_value: "/#{pattern}/", location: term.id.location),
+          lineno: token_lineno(term.id),
+          definition_order: @token_pattern_counter
+        )
+        @token_pattern_counter += 1
+        existing_names << term.id.s_value
+      end
+    end
+
     private
+
+    # @rbs (Lexer::Token::Base id) -> String?
+    def implicit_literal_regex_pattern(id)
+      return nil unless id.is_a?(Lrama::Lexer::Token::Char)
+
+      literal = char_literal_value(id.s_value)
+      return nil unless literal&.ascii_only?
+
+      escape_regex_literal(literal)
+    end
+
+    # @rbs (String s_value) -> String?
+    def char_literal_value(s_value)
+      inner = s_value[1..-2]
+      case inner
+      when "\\b"
+        "\b"
+      when "\\f"
+        "\f"
+      when "\\n"
+        "\n"
+      when "\\r"
+        "\r"
+      when "\\t"
+        "\t"
+      when "\\v"
+        "\v"
+      when "\\\\"
+        "\\"
+      when /\A\\(\d+)\z/
+        octal = Regexp.last_match(1)
+        octal ? octal.oct.chr : nil
+      when /\A.\z/m
+        inner
+      end
+    end
+
+    # @rbs (String literal) -> String
+    def escape_regex_literal(literal)
+      escaped = REGEX_CONTROL_ESCAPES[literal]
+      return escaped if escaped
+
+      literal.each_char.map do |char|
+        if REGEX_LITERAL_ESCAPES.include?(char)
+          "\\#{char}"
+        else
+          char
+        end
+      end.join
+    end
+
+    # @rbs (Lexer::Token::Base id) -> Integer
+    def token_lineno(id)
+      id.location ? id.first_line : 0
+    end
 
     # @rbs () -> void
     def validate_pslr_configuration!

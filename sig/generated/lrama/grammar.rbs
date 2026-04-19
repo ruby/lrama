@@ -312,7 +312,26 @@ module Lrama
     # @rbs (ScannerFSA scanner_fsa) -> void
     def finalize_lexical_ties!: (ScannerFSA scanner_fsa) -> void
 
+    REGEX_LITERAL_ESCAPES: Array[String]
+
+    REGEX_CONTROL_ESCAPES: Hash[String, String]
+
+    # @rbs () -> void
+    def synthesize_implicit_literal_token_patterns!: () -> void
+
     private
+
+    # @rbs (Lexer::Token::Base id) -> String?
+    def implicit_literal_regex_pattern: (Lexer::Token::Base id) -> String?
+
+    # @rbs (String s_value) -> String?
+    def char_literal_value: (String s_value) -> String?
+
+    # @rbs (String literal) -> String
+    def escape_regex_literal: (String literal) -> String
+
+    # @rbs (Lexer::Token::Base id) -> Integer
+    def token_lineno: (Lexer::Token::Base id) -> Integer
 
     # @rbs () -> void
     def validate_pslr_configuration!: () -> void

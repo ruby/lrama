@@ -406,4 +406,23 @@ RSpec.describe Lrama::Grammar do
       end.to raise_error(RuntimeError, /%lex-no-tie A C conflicts/)
     end
   end
+
+  describe "#synthesize_implicit_literal_token_patterns!" do
+    it "adds exact-match token patterns for character literal terminals" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "implicit_literal.y").parse
+        %define lr.type pslr
+        %token-pattern ID /[a-z]+/
+        %%
+        start: ID ';' ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      literal_pattern = grammar.token_patterns.find {|pattern| pattern.name == "';'" }
+      expect(literal_pattern).not_to be_nil
+      expect(Lrama::ScannerFSA.new(grammar.token_patterns).scan(";").map {|result| result[:token].name }).to include("';'")
+    end
+  end
 end

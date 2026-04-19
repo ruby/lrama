@@ -5,7 +5,7 @@ module Lrama
     # Represents a token pattern defined by %token-pattern directive
     # Example: %token-pattern RSHIFT />>/ "right shift"
     class TokenPattern
-      attr_reader id: Lexer::Token::Ident
+      attr_reader id: Lexer::Token::Base
 
       attr_reader pattern: Lexer::Token::Regex
 
@@ -17,8 +17,8 @@ module Lrama
 
       attr_reader definition_order: Integer
 
-      # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer, definition_order: Integer) -> void
-      def initialize: (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, lineno: Integer, definition_order: Integer, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> void
+      # @rbs (id: Lexer::Token::Base, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer, definition_order: Integer) -> void
+      def initialize: (id: Lexer::Token::Base, pattern: Lexer::Token::Regex, lineno: Integer, definition_order: Integer, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> void
 
       # @rbs () -> String
       def name: () -> String
