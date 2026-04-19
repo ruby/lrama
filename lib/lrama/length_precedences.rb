@@ -34,6 +34,7 @@ module Lrama
     # @rbs (Grammar::LexPrec lex_prec) -> void
     def initialize(lex_prec)
       @lex_prec = lex_prec
+      @rule_index_table = {} #: Hash[[String, String], Integer]
       @resolution_table = build_resolution_table(lex_prec)
       @table = @resolution_table.transform_values {|value| value == PREFER_NEW }
     end
@@ -59,14 +60,20 @@ module Lrama
       resolution(old_token, new_token) == PREFER_OLD
     end
 
-    # @rbs (String old_token, String new_token, ?fallback: bool) -> Symbol
-    def resolution(old_token, new_token, fallback: false)
-      @resolution_table.fetch([old_token, new_token]) do
+    # @rbs (String old_token, String new_token, ?fallback: bool, ?track: bool) -> Symbol
+    def resolution(old_token, new_token, fallback: false, track: false)
+      result = @resolution_table.fetch([old_token, new_token]) do
         return PREFER_NEW if old_token == new_token
         return PREFER_NEW if fallback
 
-        UNRESOLVED
+        return UNRESOLVED
       end
+
+      if track && (rule_idx = @rule_index_table[[old_token, new_token]])
+        @lex_prec.mark_used(rule_idx)
+      end
+
+      result
     end
 
     # @rbs (String old_token, String new_token) -> Symbol
@@ -81,6 +88,20 @@ module Lrama
       end
     end
 
+    # @rbs (Symbol operator) -> String
+    def self.operator_label(operator)
+      case operator
+      when Grammar::LexPrec::IDENTITY_RIGHT_LONGEST then "<~"
+      when Grammar::LexPrec::IDENTITY_RIGHT then "<-"
+      when Grammar::LexPrec::LONGEST then "-~"
+      when Grammar::LexPrec::TOKEN_RIGHT then "<<"
+      when Grammar::LexPrec::TOKEN_RIGHT_LENGTH then "-<"
+      when Grammar::LexPrec::IDENTITY_RIGHT_SHORTEST then "<s"
+      when Grammar::LexPrec::SHORTEST then "-s"
+      else operator.to_s
+      end
+    end
+
     private
 
     # @rbs (Grammar::LexPrec lex_prec) -> Hash[[String, String], Symbol]
@@ -88,32 +109,33 @@ module Lrama
       table = {}
       sources = {}
 
-      lex_prec.rules.each do |rule|
+      lex_prec.rules.each_with_index do |rule, idx|
         left = rule.left_name
         right = rule.right_name
 
         case rule.operator
         when Grammar::LexPrec::IDENTITY_RIGHT_LONGEST, Grammar::LexPrec::LONGEST
-          set_resolution!(table, sources, [left, right], PREFER_NEW, rule)
-          set_resolution!(table, sources, [right, left], PREFER_NEW, rule)
+          set_resolution!(table, sources, [left, right], PREFER_NEW, rule, idx)
+          set_resolution!(table, sources, [right, left], PREFER_NEW, rule, idx)
         when Grammar::LexPrec::IDENTITY_RIGHT_SHORTEST, Grammar::LexPrec::SHORTEST
-          set_resolution!(table, sources, [left, right], PREFER_OLD, rule)
-          set_resolution!(table, sources, [right, left], PREFER_OLD, rule)
+          set_resolution!(table, sources, [left, right], PREFER_OLD, rule, idx)
+          set_resolution!(table, sources, [right, left], PREFER_OLD, rule, idx)
         when Grammar::LexPrec::TOKEN_RIGHT, Grammar::LexPrec::TOKEN_RIGHT_LENGTH
-          set_resolution!(table, sources, [left, right], PREFER_NEW, rule)
-          set_resolution!(table, sources, [right, left], PREFER_OLD, rule)
+          set_resolution!(table, sources, [left, right], PREFER_NEW, rule, idx)
+          set_resolution!(table, sources, [right, left], PREFER_OLD, rule, idx)
         end
       end
 
       table
     end
 
-    # @rbs (Hash[[String, String], Symbol] table, Hash[[String, String], RuleSource] sources, [String, String] key, Symbol value, Grammar::LexPrec::Rule rule) -> void
-    def set_resolution!(table, sources, key, value, rule)
+    # @rbs (Hash[[String, String], Symbol] table, Hash[[String, String], RuleSource] sources, [String, String] key, Symbol value, Grammar::LexPrec::Rule rule, Integer rule_index) -> void
+    def set_resolution!(table, sources, key, value, rule, rule_index)
       existing = table[key]
       if existing.nil?
         table[key] = value
         sources[key] = RuleSource.new(rule.operator, rule.lineno)
+        @rule_index_table[key] = rule_index
         return
       end
 

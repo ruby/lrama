@@ -250,6 +250,8 @@ module Lrama
       validate_pslr_state_growth!(logger)
       validate_pslr_scanner_conflicts!(logger)
       validate_pslr_inadequacies!(logger)
+      validate_pslr_useless_lex_prec!(logger)
+      validate_pslr_lexical_tie_candidates!(logger)
     end
 
     # Classify each state's lexer context based on kernel items.
@@ -1454,6 +1456,40 @@ module Lrama
       end
 
       exit false
+    end
+
+    # Report %lex-prec rules that were never used in scanner conflict resolution.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_useless_lex_prec!(logger)
+      return unless pslr_defined?
+      return unless @scanner_accepts_table
+
+      useless = lex_prec.useless_rules
+      return if useless.empty?
+
+      useless.each do |rule|
+        operator_label = LengthPrecedences.operator_label(rule.operator)
+        logger.warn(
+          "useless %lex-prec rule at line #{rule.lineno}: " \
+          "#{rule.left_name} #{operator_label} #{rule.right_name} " \
+          "does not resolve any PSLR scanner conflict"
+        )
+      end
+    end
+
+    # Report lexical tie candidates that are not covered by %lex-tie or %lex-no-tie.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_lexical_tie_candidates!(logger)
+      return unless pslr_defined?
+      return if @lexical_tie_candidates.empty?
+
+      @lexical_tie_candidates.each do |left, right|
+        logger.warn(
+          "PSLR lexical tie candidate: #{left} and #{right} have scanner conflicts " \
+          "but are not always accepted together. " \
+          "Add %lex-tie #{left} #{right} or %lex-no-tie #{left} #{right}."
+        )
+      end
     end
   end
 end

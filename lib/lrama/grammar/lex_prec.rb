@@ -97,11 +97,25 @@ module Lrama
 
       attr_reader :rules #: Array[Rule]
       attr_reader :declarations #: Array[Declaration]
+      attr_reader :used_rules #: Set[Integer]
 
       # @rbs () -> void
       def initialize
         @rules = []
         @declarations = []
+        @used_rules = Set.new
+      end
+
+      # Mark a rule as used by conflict resolution.
+      # @rbs (Integer rule_index) -> void
+      def mark_used(rule_index)
+        @used_rules << rule_index
+      end
+
+      # Returns rules that were never used in conflict resolution.
+      # @rbs () -> Array[Rule]
+      def useless_rules
+        @rules.each_with_index.select { |_, i| !@used_rules.include?(i) }.map(&:first)
       end
 
       # Store a raw declaration for delayed expansion.
@@ -131,14 +145,19 @@ module Lrama
 
       # True when winner explicitly wins an identity conflict against loser.
       # The relation is intentionally not transitive.
-      # @rbs (String winner, String loser) -> bool
-      def identity_precedes?(winner, loser)
+      # @rbs (String winner, String loser, ?track: bool) -> bool
+      def identity_precedes?(winner, loser, track: false)
         return true if winner == loser
 
-        @rules.any? do |rule|
-          IDENTITY_OPERATORS.include?(rule.operator) &&
-            rule.left_name == loser &&
-            rule.right_name == winner
+        @rules.each_with_index.any? do |rule, i|
+          if IDENTITY_OPERATORS.include?(rule.operator) &&
+              rule.left_name == loser &&
+              rule.right_name == winner
+            mark_used(i) if track
+            true
+          else
+            false
+          end
         end
       end
 
