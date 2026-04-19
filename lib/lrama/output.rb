@@ -686,17 +686,39 @@ module Lrama
 
       num_tokens = pslr_token_pattern_count
       if num_tokens > 0
-        lines << "static const int yy_pslr_length_precedes[#{num_tokens}][#{num_tokens}] = {"
+        lines << length_precedence_matrix_code(
+          "yy_pslr_length_precedes",
+          num_tokens,
+          :normal_precedes?
+        )
 
-        @context.states.token_patterns.each_with_index do |t1, i|
-          row = @context.states.token_patterns.map do |t2|
-            length_precedences.precedes?(t1.name, t2.name) ? 1 : 0
-          end
-          lines << "  /* #{t1.name} */ {#{row.join(', ')}}#{i < num_tokens - 1 ? ',' : ''}"
-        end
+        lines << ""
+        lines << "/* yy_pslr_fallback_length_precedes keeps explicit PSLR length"
+        lines << "   precedence and otherwise uses traditional longest-match fallback. */"
+        lines << ""
 
-        lines << "};"
+        lines << length_precedence_matrix_code(
+          "yy_pslr_fallback_length_precedes",
+          num_tokens,
+          :fallback_precedes?
+        )
       end
+
+      lines.join("\n")
+    end
+
+    def length_precedence_matrix_code(table_name, num_tokens, query_method)
+      length_precedences = @context.states.length_precedences
+      lines = []
+
+      lines << "static const int #{table_name}[#{num_tokens}][#{num_tokens}] = {"
+      @context.states.token_patterns.each_with_index do |t1, i|
+        row = @context.states.token_patterns.map do |t2|
+          length_precedences.public_send(query_method, t1.name, t2.name) ? 1 : 0
+        end
+        lines << "  /* #{t1.name} */ {#{row.join(', ')}}#{i < num_tokens - 1 ? ',' : ''}"
+      end
+      lines << "};"
 
       lines.join("\n")
     end
@@ -860,8 +882,11 @@ module Lrama
 
               pattern_index = yy_scanner_fallback_accepts[sa];
               if (pattern_index != YY_PSLR_EMPTY_PATTERN) {
-                fallback_pbest = pattern_index;
-                fallback_ibest = i;
+                if (fallback_pbest == YY_PSLR_EMPTY_PATTERN ||
+                    yy_pslr_fallback_length_precedes[fallback_pbest][pattern_index]) {
+                  fallback_pbest = pattern_index;
+                  fallback_ibest = i;
+                }
               }
             }
           }

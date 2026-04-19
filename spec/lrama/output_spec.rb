@@ -305,6 +305,7 @@ RSpec.describe Lrama::Output do
         expect(result).to include("parser_state")
         expect(result).to include("match_length")
         expect(result).to include("yy_token_pattern_to_token_id")
+        expect(result).to include("yy_pslr_fallback_length_precedes")
       end
     end
 
@@ -398,7 +399,29 @@ RSpec.describe Lrama::Output do
       it "generates length precedences table" do
         result = pslr_output.length_precedences_table_code
         expect(result).to include("yy_pslr_length_precedes")
+        expect(result).to include("yy_pslr_fallback_length_precedes")
         expect(result).to include("old_token")
+      end
+
+      it "keeps traditional longest defaults out of the normal row table" do
+        a = Lrama::Grammar::TokenPattern.new(
+          id: Lrama::Lexer::Token::Ident.new(s_value: "A"),
+          pattern: Lrama::Lexer::Token::Regex.new(s_value: "/a/"),
+          lineno: 1,
+          definition_order: 0
+        )
+        b = Lrama::Grammar::TokenPattern.new(
+          id: Lrama::Lexer::Token::Ident.new(s_value: "B"),
+          pattern: Lrama::Lexer::Token::Regex.new(s_value: "/ab/"),
+          lineno: 1,
+          definition_order: 1
+        )
+        allow(mock_states).to receive(:token_patterns).and_return([a, b])
+
+        result = pslr_output.length_precedences_table_code
+
+        expect(result).to include("static const int yy_pslr_length_precedes[2][2] = {\n  /* A */ {1, 0},")
+        expect(result).to include("static const int yy_pslr_fallback_length_precedes[2][2] = {\n  /* A */ {1, 1},")
       end
     end
 

@@ -39,8 +39,18 @@ module Lrama
     end
 
     # @rbs (String old_token, String new_token) -> bool
-    def precedes?(old_token, new_token)
+    def normal_precedes?(old_token, new_token)
       resolution(old_token, new_token) == PREFER_NEW
+    end
+
+    # @rbs (String old_token, String new_token) -> bool
+    def precedes?(old_token, new_token)
+      normal_precedes?(old_token, new_token)
+    end
+
+    # @rbs (String old_token, String new_token) -> bool
+    def fallback_precedes?(old_token, new_token)
+      resolution(old_token, new_token, fallback: true) == PREFER_NEW
     end
 
     # Backward-compatible query used by existing specs.

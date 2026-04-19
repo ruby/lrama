@@ -38,7 +38,13 @@ module Lrama
     def initialize: (Grammar::LexPrec lex_prec) -> void
 
     # @rbs (String old_token, String new_token) -> bool
+    def normal_precedes?: (String old_token, String new_token) -> bool
+
+    # @rbs (String old_token, String new_token) -> bool
     def precedes?: (String old_token, String new_token) -> bool
+
+    # @rbs (String old_token, String new_token) -> bool
+    def fallback_precedes?: (String old_token, String new_token) -> bool
 
     # Backward-compatible query used by existing specs.
     # @rbs (String old_token, String new_token) -> bool

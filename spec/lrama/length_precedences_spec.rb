@@ -71,6 +71,31 @@ RSpec.describe Lrama::LengthPrecedences do
     end
   end
 
+  describe "#fallback_precedes?" do
+    it "uses traditional longest match for unspecified fallback length conflicts" do
+      length_prec = Lrama::LengthPrecedences.new(lex_prec)
+
+      expect(length_prec.normal_precedes?("A", "B")).to be false
+      expect(length_prec.fallback_precedes?("A", "B")).to be true
+    end
+
+    it "respects explicit same-token shortest-match precedence" do
+      add_rule("COM", Lrama::Grammar::LexPrec::SHORTEST, "COM", 1)
+      length_prec = Lrama::LengthPrecedences.new(lex_prec)
+
+      expect(length_prec.normal_precedes?("COM", "COM")).to be false
+      expect(length_prec.fallback_precedes?("COM", "COM")).to be false
+    end
+
+    it "respects explicit right-token length precedence" do
+      add_rule("WORD", Lrama::Grammar::LexPrec::TOKEN_RIGHT_LENGTH, "NON", 1)
+      length_prec = Lrama::LengthPrecedences.new(lex_prec)
+
+      expect(length_prec.fallback_precedes?("WORD", "NON")).to be true
+      expect(length_prec.fallback_precedes?("NON", "WORD")).to be false
+    end
+  end
+
   describe "#initialize" do
     it "rejects contradictory shortest and longest rules for the same scan direction" do
       add_rule("RANGLE", Lrama::Grammar::LexPrec::SHORTEST, "RSHIFT", 10)
