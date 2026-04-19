@@ -173,8 +173,8 @@ already-decided token fragment, so legacy external lexer bridges may still be li
 
 PSLR parsers enable a lightweight LAC check in the generated parser so syntax errors caused by LR state merging,
 default reductions, or `%nonassoc` error actions are detected before user semantic actions are run for the bad
-lookahead. PSLR support is still experimental. Scoped lexical declarations, lexical nonterminals, `%lex`, and
-`%token-action` are not implemented yet. If you find any bugs, please report them.
+lookahead. PSLR support is still experimental. Scoped lexical declarations, lexical nonterminals, and `%lex`
+are not implemented yet. If you find any bugs, please report them.
 
 ## Lrama 0.7.1 (2025-12-24)
 
