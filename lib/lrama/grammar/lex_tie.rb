@@ -242,12 +242,43 @@ module Lrama
         parents[right_root] = left_root
       end
 
+      # Compute closure specificity between two tokens via tie graph BFS.
+      # Path specificity = min(edge specificities on the path).
+      # Result = max over all paths connecting left and right.
       # @rbs (String left, String right, Hash[[String, String], Integer] tie_specificities) -> Integer
       def tie_specificity_between(left, right, tie_specificities)
         direct = tie_specificities[pair_key(left, right)]
         return direct if direct
 
-        tie_specificities.values.max || 0
+        # Build adjacency list from tie edges
+        graph = Hash.new { |h, k| h[k] = [] } #: Hash[String, Array[[String, Integer]]]
+        tie_specificities.each do |(a, b), specificity|
+          graph[a] << [b, specificity]
+          graph[b] << [a, specificity]
+        end
+
+        return 0 unless graph.key?(left)
+
+        # BFS/Dijkstra-like: find path from left to right maximizing min-edge specificity
+        # best[node] = best (max) path-min-specificity to reach node from left
+        best = { left => Float::INFINITY } #: Hash[String, Integer | Float]
+        queue = [[left, Float::INFINITY]] #: Array[[String, Integer | Float]]
+
+        until queue.empty?
+          node, path_min = queue.shift
+          next unless node && path_min
+
+          graph[node].each do |neighbor, edge_spec|
+            new_min = [path_min, edge_spec].min
+            if !best.key?(neighbor) || new_min > best[neighbor]
+              best[neighbor] = new_min
+              queue << [neighbor, new_min]
+            end
+          end
+        end
+
+        result = best[right]
+        result && result != Float::INFINITY ? result.to_i : 0
       end
 
       # @rbs (String left, String right) -> [String, String]
