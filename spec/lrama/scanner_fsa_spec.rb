@@ -236,6 +236,17 @@ RSpec.describe Lrama::ScannerFSA do
       expect(pairs).to include(["RANGLE", "RSHIFT"])
       expect(pairs).to include(["ID", "IF"])
     end
+
+    it "checks pairwise conflicts for sorted token pairs" do
+      rangle = token_pattern("RANGLE", ">", order: 0)
+      rshift = token_pattern("RSHIFT", ">>", order: 1)
+      dot = token_pattern("DOT", "\\.", order: 2)
+      comma = token_pattern("COMMA", ",", order: 3)
+      fsa = Lrama::ScannerFSA.new([rangle, rshift, dot, comma])
+
+      expect(fsa.pairwise_conflict?("RSHIFT", "RANGLE")).to be true
+      expect(fsa.pairwise_conflict?("DOT", "COMMA")).to be false
+    end
   end
 
   describe "#acc_ss" do

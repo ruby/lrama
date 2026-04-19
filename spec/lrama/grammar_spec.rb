@@ -328,6 +328,48 @@ RSpec.describe Lrama::Grammar do
       expect(grammar.lex_tie.tied?("DOT", "COMMA")).to be false
     end
 
+    it "limits set-token ties to scanner-conflicting pairs" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern ID /[a-z]+/
+        %token-pattern KW_IF /if/
+        %token-pattern KW_WHILE /while/
+        %token-pattern PLUS /\\+/
+        %symbol-set keywords KW_IF KW_WHILE
+        %lex-tie ID keywords
+        %lex-tie PLUS keywords
+        %%
+        start: ID | KW_IF | KW_WHILE | PLUS ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("ID", "KW_IF")).to be true
+      expect(grammar.lex_tie.tied?("ID", "KW_WHILE")).to be true
+      expect(grammar.lex_tie.tied?("PLUS", "KW_IF")).to be false
+      expect(grammar.lex_tie.tied?("PLUS", "KW_WHILE")).to be false
+    end
+
+    it "limits yyall ties to scanner-conflicting pairs" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern PLUS /\\+/
+        %token-pattern PLUSPLUS /\\+\\+/
+        %token-pattern DOT /\\./
+        %token-pattern SLASH /\\//
+        %lex-tie yyall yyall
+        %%
+        start: PLUS | PLUSPLUS | DOT | SLASH ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("PLUS", "PLUSPLUS")).to be true
+      expect(grammar.lex_tie.tied?("DOT", "SLASH")).to be false
+      expect(grammar.lex_tie.tied?("PLUS", "DOT")).to be false
+      expect(grammar.lex_tie.tied?("SLASH", "PLUSPLUS")).to be false
+    end
+
     it "lets a specific tie override generic yyall no-tie" do
       grammar = build_pslr_grammar(<<~GRAMMAR)
         %define lr.type pslr

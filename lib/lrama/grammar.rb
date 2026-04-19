@@ -413,22 +413,6 @@ module Lrama
     def add_lex_tie(operands:)
       groups = operands.map {|operand| pslr_operand_group(operand) }
       @lex_tie.add_tie_declaration(groups: groups)
-      expanded = groups.map {|group| group.names.map {|name| Lrama::Lexer::Token::Ident.new(s_value: name) } }
-      i = 0
-      while i < expanded.size
-        j = i + 1
-        while j < expanded.size
-          left_group = expanded.fetch(i)
-          right_group = expanded.fetch(j)
-          left_group.product(right_group).each do |left, right|
-            next if left.s_value == right.s_value
-
-            @lex_tie.add_tie(left.s_value, right.s_value)
-          end
-          j += 1
-        end
-        i += 1
-      end
     end
 
     # Add no-tie declarations from %lex-no-tie directive.

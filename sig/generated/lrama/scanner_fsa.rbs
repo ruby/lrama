@@ -55,6 +55,9 @@ module Lrama
     # @rbs () -> Set[[String, String]]
     def pairwise_conflict_pairs: () -> Set[[ String, String ]]
 
+    # @rbs (String left, String right) -> bool
+    def pairwise_conflict?: (String left, String right) -> bool
+
     private
 
     # @rbs (String left, String right) -> [String, String]

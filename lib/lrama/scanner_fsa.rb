@@ -133,6 +133,11 @@ module Lrama
       pairs
     end
 
+    # @rbs (String left, String right) -> bool
+    def pairwise_conflict?(left, right)
+      pairwise_conflict_pairs.include?(pair_key(left, right))
+    end
+
     private
 
     # @rbs (String left, String right) -> [String, String]

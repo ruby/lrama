@@ -4751,8 +4751,7 @@ RSpec.describe Lrama::Parser do
         grammar.validate!
 
         expect(grammar.symbol_sets.fetch("keywords").map(&:s_value)).to eq(["IF", "WHILE"])
-        expect(grammar.lex_tie.tied?("ID", "IF")).to be true
-        expect(grammar.lex_tie.tied?("ID", "WHILE")).to be true
+        expect(grammar.lex_tie.declarations.map(&:kind)).to eq([:tie, :no_tie])
         expect(grammar.lex_tie.no_tie?("RANGLE", "RSHIFT")).to be true
       end
     end
