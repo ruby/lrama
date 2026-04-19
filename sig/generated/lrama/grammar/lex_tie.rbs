@@ -7,9 +7,42 @@ module Lrama
     # Lexical ties expand acc(sp); they never resolve a scanner conflict by
     # themselves. Conflict selection is still handled by %lex-prec.
     class LexTie
+      class OperandGroup
+        attr_reader names: Array[String]
+
+        attr_reader kind: ::Symbol
+
+        # @rbs (names: Array[String], kind: ::Symbol) -> void
+        def initialize: (names: Array[String], kind: ::Symbol) -> void
+      end
+
+      class Declaration
+        attr_reader kind: ::Symbol
+
+        attr_reader groups: Array[OperandGroup]
+
+        attr_reader lineno: Integer
+
+        # @rbs (kind: ::Symbol, groups: Array[OperandGroup], lineno: Integer) -> void
+        def initialize: (kind: ::Symbol, groups: Array[OperandGroup], lineno: Integer) -> void
+      end
+
+      class Decision
+        attr_reader kind: ::Symbol
+
+        attr_reader specificity: Integer
+
+        attr_reader lineno: Integer
+
+        # @rbs (kind: ::Symbol, specificity: Integer, lineno: Integer) -> void
+        def initialize: (kind: ::Symbol, specificity: Integer, lineno: Integer) -> void
+      end
+
       attr_reader ties: Hash[String, Set[String]]
 
       attr_reader no_ties: Set[[ String, String ]]
+
+      attr_reader declarations: Array[Declaration]
 
       # @rbs () -> void
       def initialize: () -> void
@@ -19,6 +52,15 @@ module Lrama
 
       # @rbs (String left, String right) -> void
       def add_no_tie: (String left, String right) -> void
+
+      # @rbs (groups: Array[OperandGroup], ?lineno: Integer) -> void
+      def add_tie_declaration: (groups: Array[OperandGroup], ?lineno: Integer) -> void
+
+      # @rbs (groups: Array[OperandGroup], ?lineno: Integer) -> void
+      def add_no_tie_declaration: (groups: Array[OperandGroup], ?lineno: Integer) -> void
+
+      # @rbs (Array[String] token_names, Set[[String, String]] conflict_pairs) -> void
+      def finalize!: (Array[String] token_names, Set[[ String, String ]] conflict_pairs) -> void
 
       # @rbs (String name) -> Set[String]
       def tied_names: (String name) -> Set[String]
@@ -33,6 +75,30 @@ module Lrama
       def no_ties_conflicting_with_ties: () -> Array[[ String, String ]]
 
       private
+
+      # @rbs (Hash[[String, String], Decision] decisions, [String, String] pair, Decision decision) -> void
+      def apply_decision: (Hash[[ String, String ], Decision] decisions, [ String, String ] pair, Decision decision) -> void
+
+      # @rbs (Declaration declaration, Array[String] token_names, Set[[String, String]] conflict_pairs) -> Array[[[String, String], Integer]]
+      def declaration_pairs: (Declaration declaration, Array[String] token_names, Set[[ String, String ]] conflict_pairs) -> Array[[ [ String, String ], Integer ]]
+
+      # @rbs (OperandGroup group, Array[String] token_names) -> Array[String]
+      def names_for_group: (OperandGroup group, Array[String] token_names) -> Array[String]
+
+      # @rbs (OperandGroup left, OperandGroup right) -> Integer
+      def group_specificity: (OperandGroup left, OperandGroup right) -> Integer
+
+      # @rbs (Array[String] token_names, Hash[[String, String], Decision] decisions) -> void
+      def rebuild_relations: (Array[String] token_names, Hash[[ String, String ], Decision] decisions) -> void
+
+      # @rbs (Hash[String, String] parents, String name) -> String
+      def root: (Hash[String, String] parents, String name) -> String
+
+      # @rbs (Hash[String, String] parents, String left, String right) -> void
+      def union: (Hash[String, String] parents, String left, String right) -> void
+
+      # @rbs (String left, String right, Hash[[String, String], Integer] tie_specificities) -> Integer
+      def tie_specificity_between: (String left, String right, Hash[[ String, String ], Integer] tie_specificities) -> Integer
 
       # @rbs (String left, String right) -> [String, String]
       def pair_key: (String left, String right) -> [ String, String ]

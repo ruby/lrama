@@ -36,10 +36,13 @@ module Lrama
       resolution(old_token, new_token) == PREFER_OLD
     end
 
-    # @rbs (String old_token, String new_token) -> Symbol
-    def resolution(old_token, new_token)
+    # @rbs (String old_token, String new_token, ?fallback: bool) -> Symbol
+    def resolution(old_token, new_token, fallback: false)
       @resolution_table.fetch([old_token, new_token]) do
-        old_token == new_token ? PREFER_NEW : UNRESOLVED
+        return PREFER_NEW if old_token == new_token
+        return PREFER_NEW if fallback
+
+        UNRESOLVED
       end
     end
 

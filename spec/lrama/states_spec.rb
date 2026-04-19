@@ -3280,6 +3280,9 @@ RSpec.describe Lrama::States do
       allow(states).to receive(:pslr_state_signature).with(next_state, propagated).and_return([[1, "RANGLE"]])
       allow(states).to receive(:pslr_state_signature).with(next_state).and_return([[1, "RSHIFT"]])
       allow(states).to receive(:pslr_state_signature).with(matching_state).and_return([[1, "RANGLE"]])
+      allow(states).to receive(:acceptable_tokens_for_pslr).with(next_state, propagated).and_return(Set["RANGLE"])
+      allow(states).to receive(:acceptable_tokens_for_pslr).with(next_state).and_return(Set["RSHIFT"])
+      allow(states).to receive(:acceptable_tokens_for_pslr).with(matching_state).and_return(Set["RANGLE"])
       states.instance_variable_set(:@states, [from_state])
 
       inadequacies = states.send(:detect_pslr_inadequacies)
@@ -3522,6 +3525,7 @@ RSpec.describe Lrama::States do
     {
       "empty shared wrapper" => {
         path: "states/pslr_mixed_empty.y",
+        grows: false,
         grammar: <<~GRAMMAR,
           %define lr.type pslr
           %token-pattern LT /</
@@ -3576,6 +3580,7 @@ RSpec.describe Lrama::States do
       },
       "chain2 shared wrapper" => {
         path: "states/pslr_mixed_chain2.y",
+        grows: true,
         grammar: <<~GRAMMAR,
           %define lr.type pslr
           %token-pattern LT /</
@@ -3642,7 +3647,11 @@ RSpec.describe Lrama::States do
         pslr_states.compute
         pslr_states.compute_pslr
 
-        expect(pslr_states.states_count).to be > ielr_states.states_count
+        if attrs[:grows]
+          expect(pslr_states.states_count).to be > ielr_states.states_count
+        else
+          expect(pslr_states.states_count).to eq(ielr_states.states_count)
+        end
         expect(pslr_states.pslr_inadequacies).to be_empty
       end
     end

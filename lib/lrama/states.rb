@@ -51,6 +51,7 @@ module Lrama
     attr_reader :pslr_inadequacies #: Array[State::PslrInadequacy]
     attr_reader :pslr_metrics #: Hash[Symbol, Integer | Float | nil]
     attr_reader :lexer_context_classifier #: LexerContextClassifier?
+    attr_reader :lexical_tie_candidates #: Array[[String, String]]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
@@ -115,6 +116,7 @@ module Lrama
       # value is bitmap of term.
       @la = {}
       @pslr_inadequacies = []
+      @lexical_tie_candidates = []
       @pslr_metrics = {
         base_states_count: nil,
         total_states_count: nil,
@@ -296,7 +298,7 @@ module Lrama
 
     def compute_la_sources_for_conflicted_states
       reflexive = {}
-      @states.each do |state|
+      reachable_parser_states.each do |state|
         state.nterm_transitions.each do |goto|
           reflexive[goto] = [goto]
         end
@@ -1075,7 +1077,9 @@ module Lrama
 
       pslr_lookaheads ||= filtered_lookaheads
 
-      pslr_state_signature(state) == pslr_state_signature(state, pslr_lookaheads)
+      existing_acc = acceptable_tokens_for_pslr(state)
+      candidate_acc = acceptable_tokens_for_pslr(state, pslr_lookaheads)
+      pslr_compatible_accept_sets?(existing_acc, candidate_acc)
     end
 
     # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
@@ -1109,8 +1113,20 @@ module Lrama
       signature
     end
 
-    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Set[String]
-    def acceptable_tokens_for_pslr(state, filtered_lookaheads = nil)
+    # @rbs (Set[String] left_acc, Set[String] right_acc) -> bool
+    def pslr_compatible_accept_sets?(left_acc, right_acc)
+      return true unless @scanner_fsa
+
+      @pslr_compatibility_checker ||= State::ScannerAccepts::CompatibilityChecker.new(
+        @scanner_fsa,
+        lex_prec,
+        @length_precedences || LengthPrecedences.new(lex_prec)
+      )
+      @pslr_compatibility_checker.compatible?(left_acc, right_acc)
+    end
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads, ?expand_ties: bool, ?include_layout: bool) -> Set[String]
+    def acceptable_tokens_for_pslr(state, filtered_lookaheads = nil, expand_ties: true, include_layout: true)
       tokens = Set.new
       kernel_reduce_items = state.kernels.select(&:end_of_rule?).to_set
 
@@ -1132,7 +1148,15 @@ module Lrama
         end
       end
 
-      @grammar.expand_lexical_ties(tokens)
+      tokens = @grammar.expand_lexical_ties(tokens) if expand_ties
+      tokens | layout_token_names_for_pslr(include_layout: include_layout)
+    end
+
+    # @rbs (?include_layout: bool) -> Set[String]
+    def layout_token_names_for_pslr(include_layout: true)
+      return Set.new unless include_layout
+
+      @grammar.layout_token_names
     end
 
     # @rbs (Logger logger) -> void
@@ -1185,6 +1209,8 @@ module Lrama
       return if token_patterns.empty?
 
       @scanner_fsa = ScannerFSA.new(token_patterns)
+      @grammar.finalize_lexical_ties!(@scanner_fsa)
+      @pslr_compatibility_checker = nil
     end
 
     # Build length precedences table
@@ -1198,8 +1224,10 @@ module Lrama
     def build_scanner_accepts
       return unless @scanner_fsa
 
+      collect_lexical_tie_candidates
+
       @scanner_accepts_table = State::ScannerAccepts.new(
-        @states,
+        reachable_parser_states,
         @scanner_fsa,
         lex_prec,
         @length_precedences,
@@ -1250,13 +1278,13 @@ module Lrama
           next unless next_state
 
           propagating_lookaheads = state.propagate_lookaheads_without_filter(next_state.lalr_isocore)
-          expected_profile = pslr_state_signature(next_state, propagating_lookaheads)
-          actual_profile = pslr_state_signature(next_state)
+          expected_acc = acceptable_tokens_for_pslr(next_state, propagating_lookaheads)
+          actual_acc = acceptable_tokens_for_pslr(next_state)
 
-          next if expected_profile == actual_profile
+          next if pslr_compatible_accept_sets?(expected_acc, actual_acc)
 
           matching_state = next_state.ielr_isocores.find do |candidate|
-            pslr_state_signature(candidate) == expected_profile
+            pslr_compatible_accept_sets?(acceptable_tokens_for_pslr(candidate), expected_acc)
           end
 
           inadequacies << State::PslrInadequacy.new(
@@ -1267,8 +1295,8 @@ module Lrama
               reason: "Transition reaches a state with an incompatible PSLR scanner profile",
               from_state_id: state.id,
               transition_symbol: transition.next_sym.id.s_value,
-              expected_profile: expected_profile,
-              actual_profile: actual_profile,
+              expected_profile: pslr_state_signature(next_state, propagating_lookaheads),
+              actual_profile: pslr_state_signature(next_state),
               matching_state_id: matching_state&.id
             }
           )
@@ -1276,6 +1304,51 @@ module Lrama
       end
 
       inadequacies
+    end
+
+    # @rbs () -> void
+    def collect_lexical_tie_candidates
+      @lexical_tie_candidates = []
+      return unless @scanner_fsa
+
+      pairs = @scanner_fsa.pairwise_conflict_pairs
+      return if pairs.empty?
+
+      candidates = Set.new
+      reachable_parser_states.each do |state|
+        pre_tie_tokens = acceptable_tokens_for_pslr(state, nil, expand_ties: false, include_layout: false)
+        pairs.each do |left, right|
+          next unless pre_tie_tokens.include?(left) ^ pre_tie_tokens.include?(right)
+          next if lex_tie.tied?(left, right)
+          next if lex_tie.no_tie?(left, right)
+
+          candidates << [left, right]
+        end
+      end
+
+      @lexical_tie_candidates = candidates.to_a.sort
+    end
+
+    # @rbs () -> Array[State]
+    def reachable_parser_states
+      return [] if @states.empty?
+
+      visited = Set.new
+      stack = [@states.first]
+      reachable = []
+
+      until stack.empty?
+        state = stack.pop
+        next if visited.include?(state.id)
+
+        visited << state.id
+        reachable << state
+        state.transitions.each do |transition|
+          stack << transition.to_state if transition.to_state
+        end
+      end
+
+      reachable.sort_by(&:id)
     end
 
     # @rbs (Logger logger) -> void

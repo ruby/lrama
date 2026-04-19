@@ -26,6 +26,9 @@ module Lrama
       # Returns the regex pattern string (without slashes)
       # @rbs () -> String
       def regex_pattern: () -> String
+
+      # @rbs () -> bool
+      def layout?: () -> bool
     end
   end
 end

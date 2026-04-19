@@ -32,8 +32,8 @@ module Lrama
     # @rbs (String old_token, String new_token) -> bool
     def prefer_shorter?: (String old_token, String new_token) -> bool
 
-    # @rbs (String old_token, String new_token) -> Symbol
-    def resolution: (String old_token, String new_token) -> Symbol
+    # @rbs (String old_token, String new_token, ?fallback: bool) -> Symbol
+    def resolution: (String old_token, String new_token, ?fallback: bool) -> Symbol
 
     # @rbs (String old_token, String new_token) -> Symbol
     def precedence: (String old_token, String new_token) -> Symbol

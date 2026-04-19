@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "forwardable"
+require "set"
 require_relative "grammar/auxiliary"
 require_relative "grammar/binding"
 require_relative "grammar/code"
@@ -356,6 +357,16 @@ module Lrama
       parse_pslr_positive_float('pslr.max-state-ratio')
     end
 
+    # @rbs () -> Array[Grammar::TokenPattern]
+    def layout_token_patterns
+      @token_patterns.select(&:layout?)
+    end
+
+    # @rbs () -> Set[String]
+    def layout_token_names
+      layout_token_patterns.map(&:name).to_set
+    end
+
     # Add a token pattern from %token-pattern directive
     # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer) -> Grammar::TokenPattern
     def add_token_pattern(id:, pattern:, alias_name: nil, tag: nil, lineno:)
@@ -400,7 +411,9 @@ module Lrama
     # Add lexical tie relationships from %lex-tie directive.
     # @rbs (operands: Array[Lexer::Token::Base]) -> void
     def add_lex_tie(operands:)
-      expanded = operands.map {|operand| expand_pslr_operand(operand) }
+      groups = operands.map {|operand| pslr_operand_group(operand) }
+      @lex_tie.add_tie_declaration(groups: groups)
+      expanded = groups.map {|group| group.names.map {|name| Lrama::Lexer::Token::Ident.new(s_value: name) } }
       i = 0
       while i < expanded.size
         j = i + 1
@@ -408,6 +421,8 @@ module Lrama
           left_group = expanded.fetch(i)
           right_group = expanded.fetch(j)
           left_group.product(right_group).each do |left, right|
+            next if left.s_value == right.s_value
+
             @lex_tie.add_tie(left.s_value, right.s_value)
           end
           j += 1
@@ -419,7 +434,9 @@ module Lrama
     # Add no-tie declarations from %lex-no-tie directive.
     # @rbs (operands: Array[Lexer::Token::Base]) -> void
     def add_lex_no_tie(operands:)
-      expanded = operands.map {|operand| expand_pslr_operand(operand) }
+      groups = operands.map {|operand| pslr_operand_group(operand) }
+      @lex_tie.add_no_tie_declaration(groups: groups)
+      expanded = groups.map {|group| group.names.map {|name| Lrama::Lexer::Token::Ident.new(s_value: name) } }
       i = 0
       while i < expanded.size
         j = i + 1
@@ -427,6 +444,8 @@ module Lrama
           left_group = expanded.fetch(i)
           right_group = expanded.fetch(j)
           left_group.product(right_group).each do |left, right|
+            next if left.s_value == right.s_value
+
             @lex_tie.add_no_tie(left.s_value, right.s_value)
           end
           j += 1
@@ -460,6 +479,14 @@ module Lrama
       end
     end
 
+    # @rbs (ScannerFSA scanner_fsa) -> void
+    def finalize_lexical_ties!(scanner_fsa)
+      @lex_tie.finalize!(
+        @token_patterns.map(&:name),
+        scanner_fsa.pairwise_conflict_pairs
+      )
+    end
+
     private
 
     # @rbs () -> void
@@ -473,12 +500,6 @@ module Lrama
 
       pslr_max_states
       pslr_max_state_ratio
-
-      conflicts = @lex_tie.no_ties_conflicting_with_ties
-      return if conflicts.empty?
-
-      left, right = conflicts.first
-      raise "%lex-no-tie #{left} #{right} conflicts with an existing %lex-tie closure."
     end
 
     # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
@@ -488,6 +509,18 @@ module Lrama
 
       add_term(id: operand)
       [operand]
+    end
+
+    # @rbs (Lexer::Token::Base operand) -> Grammar::LexTie::OperandGroup
+    def pslr_operand_group(operand)
+      if operand.s_value == "yyall"
+        Grammar::LexTie::OperandGroup.new(names: @token_patterns.map(&:name), kind: :all)
+      elsif @symbol_sets.key?(operand.s_value)
+        Grammar::LexTie::OperandGroup.new(names: @symbol_sets.fetch(operand.s_value).map(&:s_value), kind: :set)
+      else
+        add_term(id: operand)
+        Grammar::LexTie::OperandGroup.new(names: [operand.s_value], kind: :token)
+      end
     end
 
     # @rbs (String key) -> Integer?

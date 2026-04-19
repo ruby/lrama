@@ -175,6 +175,7 @@ RSpec.describe "PSLR family regressions" do
     {
       "empty shared wrapper" => {
         path: "states/pslr_mixed_empty.y",
+        grows: false,
         grammar: <<~GRAMMAR,
           %define lr.type pslr
           %token-pattern LT /</
@@ -229,6 +230,7 @@ RSpec.describe "PSLR family regressions" do
       },
       "chain2 shared wrapper" => {
         path: "states/pslr_mixed_chain2.y",
+        grows: true,
         grammar: <<~GRAMMAR,
           %define lr.type pslr
           %token-pattern LT /</
@@ -286,9 +288,107 @@ RSpec.describe "PSLR family regressions" do
         grammar = build_grammar(attrs[:grammar], attrs[:path])
         ielr_states, pslr_states = compute_ielr_and_pslr(grammar)
 
-        expect(pslr_states.states_count).to be > ielr_states.states_count
+        if attrs[:grows]
+          expect(pslr_states.states_count).to be > ielr_states.states_count
+        else
+          expect(pslr_states.states_count).to eq(ielr_states.states_count)
+        end
         expect(pslr_states.pslr_inadequacies).to be_empty
       end
+    end
+  end
+
+  describe "lexical tie candidates" do
+    it "reports scanner-conflicting tokens that appear one-sided in parser states" do
+      grammar = build_grammar(<<~GRAMMAR, "states/pslr_lexical_tie_candidate.y")
+        %define lr.type pslr
+        %token-pattern P /p/
+        %token-pattern Q /q/
+        %token-pattern MARK /#/
+        %token-pattern IF /if/
+        %token-pattern ID /[a-z]+/
+        %lex-prec ID <~ IF
+
+        %%
+
+        start
+          : P MARK IF
+          | Q MARK ID
+          ;
+      GRAMMAR
+
+      _ielr_states, pslr_states = compute_ielr_and_pslr(grammar)
+
+      expect(pslr_states.lexical_tie_candidates).to include(["ID", "IF"])
+    end
+
+    it "suppresses candidates with yyall no-tie" do
+      grammar = build_grammar(<<~GRAMMAR, "states/pslr_lexical_tie_no_tie.y")
+        %define lr.type pslr
+        %token-pattern P /p/
+        %token-pattern Q /q/
+        %token-pattern MARK /#/
+        %token-pattern IF /if/
+        %token-pattern ID /[a-z]+/
+        %lex-prec ID <~ IF
+        %lex-no-tie yyall yyall
+
+        %%
+
+        start
+          : P MARK IF
+          | Q MARK ID
+          ;
+      GRAMMAR
+
+      _ielr_states, pslr_states = compute_ielr_and_pslr(grammar)
+
+      expect(pslr_states.lexical_tie_candidates).to be_empty
+    end
+  end
+
+  describe "template argument lists" do
+    it "splits RANGLE and RSHIFT contexts without short-token precedence" do
+      grammar = build_grammar(<<~GRAMMAR, "states/pslr_template_argument_lists.y")
+        %define lr.type pslr
+        %token-pattern ID /[a-zA-Z][a-zA-Z0-9_]*/
+        %token-pattern LT /</
+        %token-pattern RANGLE />/
+        %token-pattern RSHIFT />>/
+        %token-pattern SEMI /;/
+        %token-pattern YYLAYOUT /[ \\t\\r\\n]+/
+        %lex-no-tie RANGLE RSHIFT
+
+        %%
+
+        start
+          : decl SEMI
+          | expr SEMI
+          ;
+
+        decl
+          : type id
+          ;
+
+        type
+          : id LT type RANGLE
+          | ID
+          ;
+
+        expr
+          : id RSHIFT id
+          ;
+
+        id
+          : ID
+          ;
+      GRAMMAR
+
+      ielr_states, pslr_states = compute_ielr_and_pslr(grammar)
+
+      expect(pslr_states.states_count).to be >= ielr_states.states_count
+      expect(pslr_states.pslr_inadequacies).to be_empty
+      expect(pslr_states.lexical_tie_candidates).not_to include(["RANGLE", "RSHIFT"])
     end
   end
 end

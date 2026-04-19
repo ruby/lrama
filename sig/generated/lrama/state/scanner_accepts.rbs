@@ -24,13 +24,52 @@ module Lrama
         def initialize: (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String]) -> void
       end
 
-      class Result
-        attr_reader resolved: bool
+      class ProfileOutcome
+        EMPTY: Symbol
+
+        RESOLVED: Symbol
+
+        UNRESOLVED: Symbol
+
+        attr_reader kind: Symbol
 
         attr_reader token_name: String?
 
-        # @rbs (resolved: bool, token_name: String?) -> void
-        def initialize: (resolved: bool, token_name: String?) -> void
+        attr_reader conflict: Conflict?
+
+        # @rbs (kind: Symbol, ?token_name: String?, ?conflict: Conflict?) -> void
+        def initialize: (kind: Symbol, ?token_name: String?, ?conflict: Conflict?) -> void
+
+        # @rbs () -> bool
+        def empty?: () -> bool
+
+        # @rbs () -> bool
+        def resolved?: () -> bool
+
+        # @rbs () -> bool
+        def unresolved?: () -> bool
+      end
+
+      class ProfileResolver
+        # @rbs (Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
+        def initialize: (Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
+
+        # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
+        def resolve: (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
+
+        private
+
+        # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
+        def resolve_normal: (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
+
+        # @rbs (String old_token, String new_token) -> bool
+        def length_prefers_old?: (String old_token, String new_token) -> bool
+
+        # @rbs (String candidate, Set[String] current_tokens) -> bool
+        def identity_winner?: (String candidate, Set[String] current_tokens) -> bool
+
+        # @rbs (Set[String] current_tokens) -> String?
+        def fallback_identity_winner: (Set[String] current_tokens) -> String?
       end
 
       class CompleteProfileComputer
@@ -38,8 +77,8 @@ module Lrama
 
         attr_reader conflicts: Array[Conflict]
 
-        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id) -> void
-        def initialize: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id) -> void
+        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
+        def initialize: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
 
         # @rbs () -> void
         def compute: () -> void
@@ -55,15 +94,6 @@ module Lrama
         # @rbs (ScannerFSA::State fsa_state) -> Set[String]
         def current_acceptable_tokens: (ScannerFSA::State fsa_state) -> Set[String]
 
-        # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> Result
-        def resolve_profile: (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> Result
-
-        # @rbs (String old_token, String new_token) -> bool
-        def length_prefers_old?: (String old_token, String new_token) -> bool
-
-        # @rbs (String candidate, Set[String] current_tokens) -> bool
-        def identity_winner?: (String candidate, Set[String] current_tokens) -> bool
-
         # @rbs (String token_name) -> Grammar::TokenPattern
         def token_pattern_for: (String token_name) -> Grammar::TokenPattern
 
@@ -71,7 +101,33 @@ module Lrama
         def profile_key: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> [ Integer, Array[String], String?, Array[String] ]
       end
 
+      class CompatibilityChecker
+        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec) -> void
+        def initialize: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec) -> void
+
+        # @rbs (Set[String] left_tokens, Set[String] right_tokens) -> bool
+        def compatible?: (Set[String] left_tokens, Set[String] right_tokens) -> bool
+
+        private
+
+        # @rbs (Integer fsa_state_id, Set[String] left_shorter, String? left_selected, Set[String] right_shorter, String? right_selected, Set[String] left_acc, Set[String] right_acc, Set[untyped] visited) -> bool
+        def visit_transitions: (Integer fsa_state_id, Set[String] left_shorter, String? left_selected, Set[String] right_shorter, String? right_selected, Set[String] left_acc, Set[String] right_acc, Set[untyped] visited) -> bool
+
+        # @rbs (Integer fsa_state_id, Set[String] left_shorter, String? left_selected, Set[String] right_shorter, String? right_selected, Set[String] left_acc, Set[String] right_acc, Set[untyped] visited) -> bool
+        def visit_state: (Integer fsa_state_id, Set[String] left_shorter, String? left_selected, Set[String] right_shorter, String? right_selected, Set[String] left_acc, Set[String] right_acc, Set[untyped] visited) -> bool
+
+        # @rbs (ScannerFSA::State fsa_state, Set[String] accepted_names) -> Set[String]
+        def tokens_accepted_by: (ScannerFSA::State fsa_state, Set[String] accepted_names) -> Set[String]
+
+        # @rbs (ProfileOutcome left, ProfileOutcome right) -> bool
+        def outcomes_compatible?: (ProfileOutcome left, ProfileOutcome right) -> bool
+      end
+
+      FALLBACK_ROW_ID: Integer
+
       attr_reader table: Hash[[ Integer, Integer ], Grammar::TokenPattern?]
+
+      attr_reader fallback_table: Hash[Integer, Grammar::TokenPattern]
 
       attr_reader conflicts: Array[Conflict]
 
@@ -95,11 +151,17 @@ module Lrama
       # @rbs (State parser_state) -> void
       def compute_for_parser_state: (State parser_state) -> void
 
+      # @rbs () -> void
+      def compute_fallback_row: () -> void
+
       # @rbs (State parser_state) -> Set[String]
       def compute_acc_sp: (State parser_state) -> Set[String]
 
       # @rbs (Set[String] tokens) -> Set[String]
       def expand_lexical_ties: (Set[String] tokens) -> Set[String]
+
+      # @rbs () -> Hash[String, Integer]
+      def token_order: () -> Hash[String, Integer]
     end
   end
 end

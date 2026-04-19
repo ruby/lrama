@@ -74,7 +74,11 @@ RSpec.describe Lrama::State::ScannerAccepts do
       scanner_accepts.build
 
       expect(scanner_accepts.unresolved_conflicts?).to be true
-      expect(scanner_accepts.table).to be_empty
+      parser_rows = scanner_accepts.table.reject do |(parser_state_id, _scanner_state_id), _token|
+        parser_state_id == Lrama::State::ScannerAccepts::FALLBACK_ROW_ID
+      end
+      expect(parser_rows).to be_empty
+      expect(scanner_accepts.fallback_table.values.map(&:name)).to contain_exactly("A")
     end
 
     it "selects a unique explicitly declared identity winner" do
@@ -116,6 +120,90 @@ RSpec.describe Lrama::State::ScannerAccepts do
       scanner_accepts.build
 
       expect(scanner_accepts.conflicts.size).to be < 10
+    end
+
+    it "keeps an empty outcome distinct from an unresolved conflict" do
+      resolver = Lrama::State::ScannerAccepts::ProfileResolver.new(
+        Lrama::Grammar::LexPrec.new,
+        Lrama::LengthPrecedences.new(Lrama::Grammar::LexPrec.new)
+      )
+
+      outcome = resolver.resolve(Set.new, nil, Set.new)
+
+      expect(outcome).to be_empty
+      expect(outcome).not_to be_unresolved
+    end
+
+    it "uses same-token autolength without fallback mode" do
+      resolver = Lrama::State::ScannerAccepts::ProfileResolver.new(
+        Lrama::Grammar::LexPrec.new,
+        Lrama::LengthPrecedences.new(Lrama::Grammar::LexPrec.new)
+      )
+
+      outcome = resolver.resolve(Set["ID"], "ID", Set["ID"])
+
+      expect(outcome).to be_resolved
+      expect(outcome.token_name).to eq("ID")
+    end
+
+    it "uses declaration order only in fallback mode" do
+      lex_prec = Lrama::Grammar::LexPrec.new
+      length_prec = Lrama::LengthPrecedences.new(lex_prec)
+      normal = Lrama::State::ScannerAccepts::ProfileResolver.new(
+        lex_prec,
+        length_prec,
+        token_order: { "A" => 1, "B" => 0 }
+      )
+      fallback = Lrama::State::ScannerAccepts::ProfileResolver.new(
+        lex_prec,
+        length_prec,
+        fallback: true,
+        token_order: { "A" => 1, "B" => 0 }
+      )
+
+      expect(normal.resolve(Set.new, nil, Set["A", "B"])).to be_unresolved
+      expect(fallback.resolve(Set.new, nil, Set["A", "B"]).token_name).to eq("B")
+    end
+  end
+
+  describe Lrama::State::ScannerAccepts::CompatibilityChecker do
+    let(:rangle) { token_pattern("RANGLE", ">", 0) }
+    let(:rshift) { token_pattern("RSHIFT", ">>", 1) }
+    let(:scanner_fsa) { Lrama::ScannerFSA.new([rangle, rshift]) }
+    let(:lex_prec) { Lrama::Grammar::LexPrec.new }
+    let(:checker) do
+      described_class.new(scanner_fsa, lex_prec, Lrama::LengthPrecedences.new(lex_prec))
+    end
+
+    it "treats a missing match on one side as irrelevant" do
+      a = token_pattern("A", "a", 0)
+      b = token_pattern("B", "b", 1)
+      fsa = Lrama::ScannerFSA.new([a, b])
+      checker = described_class.new(fsa, lex_prec, Lrama::LengthPrecedences.new(lex_prec))
+
+      expect(checker.compatible?(Set["A"], Set["B"])).to be true
+    end
+
+    it "rejects different resolved outcomes when both sides match" do
+      expect(checker.compatible?(Set["RANGLE"], Set["RSHIFT"])).to be false
+    end
+
+    it "rejects resolved versus unresolved outcomes" do
+      a = token_pattern("A", "a", 0)
+      b = token_pattern("B", "a", 1)
+      fsa = Lrama::ScannerFSA.new([a, b])
+      checker = described_class.new(fsa, lex_prec, Lrama::LengthPrecedences.new(lex_prec))
+
+      expect(checker.compatible?(Set["A"], Set["A", "B"])).to be false
+    end
+
+    it "accepts unresolved outcomes on both sides" do
+      a = token_pattern("A", "a", 0)
+      b = token_pattern("B", "a", 1)
+      fsa = Lrama::ScannerFSA.new([a, b])
+      checker = described_class.new(fsa, lex_prec, Lrama::LengthPrecedences.new(lex_prec))
+
+      expect(checker.compatible?(Set["A", "B"], Set["A", "B"])).to be true
     end
   end
 

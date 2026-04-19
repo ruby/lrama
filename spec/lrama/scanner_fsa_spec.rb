@@ -118,6 +118,55 @@ RSpec.describe Lrama::ScannerFSA do
       results = fsa.scan("12345")
       expect(results).not_to be_empty
     end
+
+    it "matches escaped whitespace inside character classes" do
+      id = Lrama::Lexer::Token::Ident.new(s_value: "YYLAYOUT")
+      regex = Lrama::Lexer::Token::Regex.new(s_value: "/[ \\t\\r\\n]+/")
+      token_pattern = Lrama::Grammar::TokenPattern.new(
+        id: id,
+        pattern: regex,
+        lineno: 1,
+        definition_order: 0
+      )
+      fsa = Lrama::ScannerFSA.new([token_pattern])
+
+      expect(fsa.scan("\t").map { |result| result[:token].name }).to include("YYLAYOUT")
+      expect(fsa.scan("\n").map { |result| result[:token].name }).to include("YYLAYOUT")
+    end
+  end
+
+  describe "#pairwise_conflict_pairs" do
+    it "detects identity and length conflicts" do
+      rangle = Lrama::Grammar::TokenPattern.new(
+        id: Lrama::Lexer::Token::Ident.new(s_value: "RANGLE"),
+        pattern: Lrama::Lexer::Token::Regex.new(s_value: "/>/"),
+        lineno: 1,
+        definition_order: 0
+      )
+      rshift = Lrama::Grammar::TokenPattern.new(
+        id: Lrama::Lexer::Token::Ident.new(s_value: "RSHIFT"),
+        pattern: Lrama::Lexer::Token::Regex.new(s_value: "/>>/"),
+        lineno: 1,
+        definition_order: 1
+      )
+      keyword = Lrama::Grammar::TokenPattern.new(
+        id: Lrama::Lexer::Token::Ident.new(s_value: "IF"),
+        pattern: Lrama::Lexer::Token::Regex.new(s_value: "/if/"),
+        lineno: 1,
+        definition_order: 2
+      )
+      identifier = Lrama::Grammar::TokenPattern.new(
+        id: Lrama::Lexer::Token::Ident.new(s_value: "ID"),
+        pattern: Lrama::Lexer::Token::Regex.new(s_value: "/[a-z]+/"),
+        lineno: 1,
+        definition_order: 3
+      )
+
+      pairs = Lrama::ScannerFSA.new([rangle, rshift, keyword, identifier]).pairwise_conflict_pairs
+
+      expect(pairs).to include(["RANGLE", "RSHIFT"])
+      expect(pairs).to include(["ID", "IF"])
+    end
   end
 
   describe "#acc_ss" do

@@ -50,7 +50,15 @@ module Lrama
     # @rbs (String input) -> Array[{state: State, position: Integer, token: Grammar::TokenPattern}]
     def scan: (String input) -> Array[{ state: State, position: Integer, token: Grammar::TokenPattern }]
 
+    # Returns token pairs that can be in an identity or length scanner conflict.
+    # Pair keys are sorted token names.
+    # @rbs () -> Set[[String, String]]
+    def pairwise_conflict_pairs: () -> Set[[ String, String ]]
+
     private
+
+    # @rbs (String left, String right) -> [String, String]
+    def pair_key: (String left, String right) -> [ String, String ]
 
     # Build the FSA from token patterns
     # Uses Thompson's construction for NFAs followed by subset construction for DFA
@@ -105,6 +113,9 @@ module Lrama
     # Expand character class string to array of characters
     # @rbs (String char_class) -> Array[String]
     def expand_char_class: (String char_class) -> Array[String]
+
+    # @rbs (String char) -> String
+    def escaped_char_class_char: (String char) -> String
 
     # Compile . (any character)
     # @rbs (Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]

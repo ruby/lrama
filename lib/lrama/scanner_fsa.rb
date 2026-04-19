@@ -1,6 +1,8 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
+require "set"
+
 module Lrama
   # Scanner Finite State Automaton for PSLR(1)
   # Built from token patterns defined by %token-pattern directives
@@ -92,7 +94,51 @@ module Lrama
       results
     end
 
+    # Returns token pairs that can be in an identity or length scanner conflict.
+    # Pair keys are sorted token names.
+    # @rbs () -> Set[[String, String]]
+    def pairwise_conflict_pairs
+      pairs = Set.new
+
+      @states.each do |state|
+        accepting_names = state.accepting_tokens.map(&:name).uniq
+        accepting_names.combination(2) do |left, right|
+          pairs << pair_key(left, right)
+        end
+      end
+
+      @states.each do |start|
+        shorter_names = start.accepting_tokens.map(&:name).uniq
+        next if shorter_names.empty?
+
+        visited = Set.new
+        stack = start.transitions.values.uniq
+
+        until stack.empty?
+          state_id = stack.pop
+          next if visited.include?(state_id)
+
+          visited << state_id
+          state = @states[state_id]
+          next unless state
+
+          longer_names = state.accepting_tokens.map(&:name).uniq
+          shorter_names.product(longer_names).each do |left, right|
+            pairs << pair_key(left, right) if left != right
+          end
+          state.transitions.each_value {|next_id| stack << next_id }
+        end
+      end
+
+      pairs
+    end
+
     private
+
+    # @rbs (String left, String right) -> [String, String]
+    def pair_key(left, right)
+      left <= right ? [left, right] : [right, left]
+    end
 
     # Build the FSA from token patterns
     # Uses Thompson's construction for NFAs followed by subset construction for DFA
@@ -327,7 +373,10 @@ module Lrama
       end
 
       while i < char_class.length
-        if i + 2 < char_class.length && char_class[i + 1] == '-'
+        if char_class[i] == '\\' && i + 1 < char_class.length
+          chars << escaped_char_class_char(char_class[i + 1])
+          i += 2
+        elsif i + 2 < char_class.length && char_class[i + 1] == '-'
           # Range
           start_char = char_class[i]
           end_char = char_class[i + 2]
@@ -345,6 +394,24 @@ module Lrama
       end
 
       chars
+    end
+
+    # @rbs (String char) -> String
+    def escaped_char_class_char(char)
+      case char
+      when 't'
+        "\t"
+      when 'n'
+        "\n"
+      when 'r'
+        "\r"
+      when 'f'
+        "\f"
+      when 'v'
+        "\v"
+      else
+        char
+      end
     end
 
     # Compile . (any character)

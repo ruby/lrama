@@ -271,6 +271,12 @@ module Lrama
     # @rbs () -> Float?
     def pslr_max_state_ratio: () -> Float?
 
+    # @rbs () -> Array[Grammar::TokenPattern]
+    def layout_token_patterns: () -> Array[Grammar::TokenPattern]
+
+    # @rbs () -> Set[String]
+    def layout_token_names: () -> Set[String]
+
     # Add a token pattern from %token-pattern directive
     # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer) -> Grammar::TokenPattern
     def add_token_pattern: (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, lineno: Integer, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::TokenPattern
@@ -303,6 +309,9 @@ module Lrama
     # @rbs (Set[String] tokens) -> Set[String]
     def expand_lexical_ties: (Set[String] tokens) -> Set[String]
 
+    # @rbs (ScannerFSA scanner_fsa) -> void
+    def finalize_lexical_ties!: (ScannerFSA scanner_fsa) -> void
+
     private
 
     # @rbs () -> void
@@ -310,6 +319,9 @@ module Lrama
 
     # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
     def expand_pslr_operand: (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
+
+    # @rbs (Lexer::Token::Base operand) -> Grammar::LexTie::OperandGroup
+    def pslr_operand_group: (Lexer::Token::Base operand) -> Grammar::LexTie::OperandGroup
 
     # @rbs (String key) -> Integer?
     def parse_pslr_positive_integer: (String key) -> Integer?

@@ -285,4 +285,83 @@ RSpec.describe Lrama::Grammar do
       end
     end
   end
+
+  describe "#finalize_lexical_ties!" do
+    def build_pslr_grammar(source)
+      grammar = Lrama::Parser.new(source, "lex_tie.y").parse
+      grammar.prepare
+      grammar.validate!
+      grammar
+    end
+
+    it "keeps token-token ties even without a scanner conflict" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern A /a/
+        %token-pattern B /b/
+        %lex-tie A B
+        %%
+        start: A | B ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("A", "B")).to be true
+    end
+
+    it "limits set-set ties to scanner-conflicting pairs" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern RANGLE />/
+        %token-pattern RSHIFT />>/
+        %token-pattern DOT /\\./
+        %token-pattern COMMA /,/
+        %symbol-set punct RANGLE RSHIFT DOT COMMA
+        %lex-tie punct punct
+        %%
+        start: RANGLE | RSHIFT | DOT | COMMA ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("RANGLE", "RSHIFT")).to be true
+      expect(grammar.lex_tie.tied?("DOT", "COMMA")).to be false
+    end
+
+    it "lets a specific tie override generic yyall no-tie" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern IF /if/
+        %token-pattern ID /[a-z]+/
+        %symbol-set keywords IF
+        %lex-no-tie yyall yyall
+        %lex-tie ID keywords
+        %%
+        start: IF | ID ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("ID", "IF")).to be true
+      expect(grammar.lex_tie.no_tie?("ID", "IF")).to be false
+    end
+
+    it "rejects a direct no-tie that conflicts with transitive ties" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern A /a/
+        %token-pattern B /a/
+        %token-pattern C /a/
+        %lex-tie A B
+        %lex-tie B C
+        %lex-no-tie A C
+        %%
+        start: A | B | C ;
+      GRAMMAR
+
+      expect do
+        grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+      end.to raise_error(RuntimeError, /%lex-no-tie A C conflicts/)
+    end
+  end
 end

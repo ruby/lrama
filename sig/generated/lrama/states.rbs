@@ -56,6 +56,8 @@ module Lrama
 
     attr_reader lexer_context_classifier: LexerContextClassifier?
 
+    attr_reader lexical_tie_candidates: Array[[ String, String ]]
+
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize: (Grammar grammar, Tracer tracer) -> void
 
@@ -279,8 +281,14 @@ module Lrama
     # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
     def pslr_state_signature: (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[ Integer, String? ]]
 
-    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Set[String]
-    def acceptable_tokens_for_pslr: (State state, ?State::lookahead_set filtered_lookaheads) -> Set[String]
+    # @rbs (Set[String] left_acc, Set[String] right_acc) -> bool
+    def pslr_compatible_accept_sets?: (Set[String] left_acc, Set[String] right_acc) -> bool
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads, ?expand_ties: bool, ?include_layout: bool) -> Set[String]
+    def acceptable_tokens_for_pslr: (State state, ?State::lookahead_set filtered_lookaheads, ?expand_ties: bool, ?include_layout: bool) -> Set[String]
+
+    # @rbs (?include_layout: bool) -> Set[String]
+    def layout_token_names_for_pslr: (?include_layout: bool) -> Set[String]
 
     # @rbs (Logger logger) -> void
     def validate_conflicts_within_threshold!: (Logger logger) -> void
@@ -320,6 +328,12 @@ module Lrama
     # Detect PSLR inadequacies in isocore groups
     # @rbs () -> Array[State::PslrInadequacy]
     def detect_pslr_inadequacies: () -> Array[State::PslrInadequacy]
+
+    # @rbs () -> void
+    def collect_lexical_tie_candidates: () -> void
+
+    # @rbs () -> Array[State]
+    def reachable_parser_states: () -> Array[State]
 
     # @rbs (Logger logger) -> void
     def validate_pslr_inadequacies!: (Logger logger) -> void
