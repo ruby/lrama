@@ -345,16 +345,18 @@ rule
         }
 
   lex_scope_declaration:
-      IDENTIFIER
+      lex_scope_start lex_scope_body "}"
+        {
+          @grammar.end_scoped_lex_declaration
+        }
+
+  lex_scope_start:
+      IDENTIFIER "{"
         {
           @grammar.begin_scoped_lex_declaration(
             name: val[0].s_value,
             lineno: val[0].first_line
           )
-        }
-      "{" lex_scope_body "}"
-        {
-          @grammar.end_scoped_lex_declaration
         }
 
   lex_scope_body:

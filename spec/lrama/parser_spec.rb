@@ -4772,5 +4772,142 @@ RSpec.describe Lrama::Parser do
         expect(grammar.pslr_defined?).to be true
       end
     end
+
+    describe "%token-action" do
+      it "parses a single token action" do
+        y = <<~GRAMMAR
+          %token ID
+          %token-action ID { printf("matched ID"); }
+          %%
+          program: ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_actions.size).to eq(1)
+        action = grammar.token_actions.first
+        expect(action.token_name).to eq("ID")
+        expect(action.code.s_value).to include("printf")
+      end
+
+      it "parses multiple token actions" do
+        y = <<~GRAMMAR
+          %token ID NUM
+          %token-action ID { handle_id(); } NUM { handle_num(); }
+          %%
+          program: ID | NUM
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_actions.size).to eq(2)
+        expect(grammar.token_actions.map(&:token_name)).to eq(["ID", "NUM"])
+      end
+    end
+
+    describe "%lex-scope" do
+      it "parses scoped lex-prec declarations" do
+        y = <<~GRAMMAR
+          %token RANGLE RSHIFT ID
+          %lex-scope template_args {
+            %lex-prec RANGLE -~ RSHIFT
+          }
+          %%
+          program: RANGLE | RSHIFT | ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.scoped_lex_declarations.size).to eq(1)
+        decl = grammar.scoped_lex_declarations.first
+        expect(decl.scope_name).to eq("template_args")
+        expect(decl.lex_prec_rules.size).to eq(1)
+        expect(decl.lex_prec_rules.first.left_name).to eq("RANGLE")
+        expect(decl.lex_prec_rules.first.right_name).to eq("RSHIFT")
+      end
+
+      it "does not add scoped rules to global lex-prec" do
+        y = <<~GRAMMAR
+          %token RANGLE RSHIFT ID
+          %lex-scope template_args {
+            %lex-prec RANGLE -~ RSHIFT
+          }
+          %%
+          program: RANGLE | RSHIFT | ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.lex_prec.rules.size).to eq(0)
+      end
+
+      it "parses scoped lex-prec with global lex-prec" do
+        y = <<~GRAMMAR
+          %token RANGLE RSHIFT ID KW_IF
+          %lex-prec ID <- KW_IF
+          %lex-scope template_args {
+            %lex-prec RANGLE -~ RSHIFT
+          }
+          %%
+          program: RANGLE | RSHIFT | ID | KW_IF
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.lex_prec.rules.size).to eq(1)
+        expect(grammar.scoped_lex_declarations.size).to eq(1)
+      end
+
+      it "merges scoped and global lex-prec via scoped_lex_prec_for" do
+        y = <<~GRAMMAR
+          %token RANGLE RSHIFT ID KW_IF
+          %lex-prec ID <- KW_IF
+          %lex-scope template_args {
+            %lex-prec RANGLE -~ RSHIFT
+          }
+          %%
+          program: RANGLE | RSHIFT | ID | KW_IF
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        merged = grammar.scoped_lex_prec_for(["template_args"])
+        expect(merged.rules.size).to eq(2)
+        expect(merged.identity_precedes?("KW_IF", "ID")).to be true
+        expect(merged.longest_pair?("RANGLE", "RSHIFT")).to be true
+      end
+
+      it "does not include scoped rules when scope is not active" do
+        y = <<~GRAMMAR
+          %token RANGLE RSHIFT ID KW_IF
+          %lex-prec ID <- KW_IF
+          %lex-scope template_args {
+            %lex-prec RANGLE -~ RSHIFT
+          }
+          %%
+          program: RANGLE | RSHIFT | ID | KW_IF
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        merged = grammar.scoped_lex_prec_for(["other_nterm"])
+        expect(merged.rules.size).to eq(1)
+        expect(merged.longest_pair?("RANGLE", "RSHIFT")).to be false
+      end
+    end
   end
 end
