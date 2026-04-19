@@ -1,0 +1,105 @@
+# Generated from lib/lrama/state/scanner_accepts.rb with RBS::Inline
+
+module Lrama
+  class State
+    # scanner_accepts[parser_state, accepting_scanner_state] for PSLR(1).
+    #
+    # Construction follows complete pseudo-scanner conflict profiles. A profile
+    # contains the shorter token set Ts, the selected shorter token ts, and the
+    # current/longest token set Tl. Ambiguities remain unresolved; declaration
+    # order is never used as a fallback.
+    class ScannerAccepts
+      class Conflict
+        attr_reader parser_state_id: Integer?
+
+        attr_reader scanner_state_id: Integer
+
+        attr_reader shorter_tokens: Array[String]
+
+        attr_reader selected_shorter_token: String?
+
+        attr_reader current_tokens: Array[String]
+
+        # @rbs (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String]) -> void
+        def initialize: (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String]) -> void
+      end
+
+      class Result
+        attr_reader resolved: bool
+
+        attr_reader token_name: String?
+
+        # @rbs (resolved: bool, token_name: String?) -> void
+        def initialize: (resolved: bool, token_name: String?) -> void
+      end
+
+      class CompleteProfileComputer
+        attr_reader table: Hash[Integer, Grammar::TokenPattern]
+
+        attr_reader conflicts: Array[Conflict]
+
+        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id) -> void
+        def initialize: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id) -> void
+
+        # @rbs () -> void
+        def compute: () -> void
+
+        private
+
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
+        def visit_transitions: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
+
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
+        def visit_state: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
+
+        # @rbs (ScannerFSA::State fsa_state) -> Set[String]
+        def current_acceptable_tokens: (ScannerFSA::State fsa_state) -> Set[String]
+
+        # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> Result
+        def resolve_profile: (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> Result
+
+        # @rbs (String old_token, String new_token) -> bool
+        def length_prefers_old?: (String old_token, String new_token) -> bool
+
+        # @rbs (String candidate, Set[String] current_tokens) -> bool
+        def identity_winner?: (String candidate, Set[String] current_tokens) -> bool
+
+        # @rbs (String token_name) -> Grammar::TokenPattern
+        def token_pattern_for: (String token_name) -> Grammar::TokenPattern
+
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> [Integer, Array[String], String?, Array[String]]
+        def profile_key: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> [ Integer, Array[String], String?, Array[String] ]
+      end
+
+      attr_reader table: Hash[[ Integer, Integer ], Grammar::TokenPattern?]
+
+      attr_reader conflicts: Array[Conflict]
+
+      # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie) -> void
+      def initialize: (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie) -> void
+
+      # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens) -> [Hash[Integer, Grammar::TokenPattern], Array[Conflict]]
+      def self.compute_for_acceptable_tokens: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens) -> [ Hash[Integer, Grammar::TokenPattern], Array[Conflict] ]
+
+      # @rbs () -> void
+      def build: () -> void
+
+      # @rbs (Integer parser_state_id, Integer accepting_state_id) -> Grammar::TokenPattern?
+      def []: (Integer parser_state_id, Integer accepting_state_id) -> Grammar::TokenPattern?
+
+      # @rbs () -> bool
+      def unresolved_conflicts?: () -> bool
+
+      private
+
+      # @rbs (State parser_state) -> void
+      def compute_for_parser_state: (State parser_state) -> void
+
+      # @rbs (State parser_state) -> Set[String]
+      def compute_acc_sp: (State parser_state) -> Set[String]
+
+      # @rbs (Set[String] tokens) -> Set[String]
+      def expand_lexical_ties: (Set[String] tokens) -> Set[String]
+    end
+  end
+end

@@ -1,0 +1,46 @@
+# Generated from lib/lrama/length_precedences.rb with RBS::Inline
+
+module Lrama
+  # Runtime length precedence matrix for PSLR pseudo-scanning.
+  #
+  # When a longer match for new_token is reached after an earlier match for
+  # old_token, #precedes? answers whether the longer match should replace it.
+  class LengthPrecedences
+    LEFT: Symbol
+
+    RIGHT: Symbol
+
+    UNDEFINED: Symbol
+
+    PREFER_NEW: Symbol
+
+    PREFER_OLD: Symbol
+
+    UNRESOLVED: Symbol
+
+    attr_reader table: Hash[[ String, String ], bool]
+
+    attr_reader resolution_table: Hash[[ String, String ], Symbol]
+
+    # @rbs (Grammar::LexPrec lex_prec) -> void
+    def initialize: (Grammar::LexPrec lex_prec) -> void
+
+    # @rbs (String old_token, String new_token) -> bool
+    def precedes?: (String old_token, String new_token) -> bool
+
+    # Backward-compatible query used by existing specs.
+    # @rbs (String old_token, String new_token) -> bool
+    def prefer_shorter?: (String old_token, String new_token) -> bool
+
+    # @rbs (String old_token, String new_token) -> Symbol
+    def resolution: (String old_token, String new_token) -> Symbol
+
+    # @rbs (String old_token, String new_token) -> Symbol
+    def precedence: (String old_token, String new_token) -> Symbol
+
+    private
+
+    # @rbs (Grammar::LexPrec lex_prec) -> Hash[[String, String], Symbol]
+    def build_resolution_table: (Grammar::LexPrec lex_prec) -> Hash[[ String, String ], Symbol]
+  end
+end

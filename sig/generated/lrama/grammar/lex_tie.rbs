@@ -1,0 +1,41 @@
+# Generated from lib/lrama/grammar/lex_tie.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    # Stores PSLR lexical ties and explicit no-tie declarations.
+    #
+    # Lexical ties expand acc(sp); they never resolve a scanner conflict by
+    # themselves. Conflict selection is still handled by %lex-prec.
+    class LexTie
+      attr_reader ties: Hash[String, Set[String]]
+
+      attr_reader no_ties: Set[[ String, String ]]
+
+      # @rbs () -> void
+      def initialize: () -> void
+
+      # @rbs (String left, String right) -> void
+      def add_tie: (String left, String right) -> void
+
+      # @rbs (String left, String right) -> void
+      def add_no_tie: (String left, String right) -> void
+
+      # @rbs (String name) -> Set[String]
+      def tied_names: (String name) -> Set[String]
+
+      # @rbs (String left, String right) -> bool
+      def tied?: (String left, String right) -> bool
+
+      # @rbs (String left, String right) -> bool
+      def no_tie?: (String left, String right) -> bool
+
+      # @rbs () -> Array[[String, String]]
+      def no_ties_conflicting_with_ties: () -> Array[[ String, String ]]
+
+      private
+
+      # @rbs (String left, String right) -> [String, String]
+      def pair_key: (String left, String right) -> [ String, String ]
+    end
+  end
+end

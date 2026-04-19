@@ -24,6 +24,16 @@ module Lrama
       def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
 
       def ielr_defined?: () -> bool
+
+      def pslr_defined?: () -> bool
+
+      def token_patterns: () -> Array[Grammar::TokenPattern]
+
+      def lex_prec: () -> Grammar::LexPrec
+
+      def pslr_max_states: () -> Integer?
+
+      def pslr_max_state_ratio: () -> Float?
     end
 
     include Symbols::Resolver::_DelegatedMethods
@@ -75,6 +85,14 @@ module Lrama
     @precedences: Array[Precedence]
 
     @start_nterm: Lrama::Lexer::Token::Base?
+
+    @token_patterns: Array[Grammar::TokenPattern]
+
+    @lex_prec: Grammar::LexPrec
+
+    @symbol_sets: Hash[String, Array[Lexer::Token::Base]]
+
+    @lex_tie: Grammar::LexTie
 
     extend Forwardable
 
@@ -135,6 +153,20 @@ module Lrama
     attr_accessor define: Hash[String, String]
 
     attr_accessor required: bool
+
+    attr_reader token_patterns: Array[Grammar::TokenPattern]
+
+    attr_reader lex_prec: Grammar::LexPrec
+
+    attr_reader symbol_sets: Hash[String, Array[Lexer::Token::Base]]
+
+    attr_reader lex_tie: Grammar::LexTie
+
+    attr_reader lexer_contexts: Hash[String, Grammar::LexerContext]
+
+    # Argument symbol names for each parameterized rule expansion.
+    # @rbs () -> Hash[String, Array[String]]
+    def parameterized_expansion_args: () -> Hash[String, Array[String]]
 
     # @rbs (Counter rule_counter, bool locations, Hash[String, String] define) -> void
     def initialize: (Counter rule_counter, bool locations, Hash[String, String] define) -> void
@@ -227,7 +259,63 @@ module Lrama
     # @rbs () -> bool
     def ielr_defined?: () -> bool
 
+    # @rbs () -> bool
+    def pslr_defined?: () -> bool
+
+    # @rbs () -> String?
+    def pslr_state_member: () -> String?
+
+    # @rbs () -> Integer?
+    def pslr_max_states: () -> Integer?
+
+    # @rbs () -> Float?
+    def pslr_max_state_ratio: () -> Float?
+
+    # Add a token pattern from %token-pattern directive
+    # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer) -> Grammar::TokenPattern
+    def add_token_pattern: (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, lineno: Integer, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::TokenPattern
+
+    # Add a symbol set from %symbol-set directive.
+    # @rbs (name: String, symbols: Array[Lexer::Token::Base]) -> Array[Lexer::Token::Base]
+    def add_symbol_set: (name: String, symbols: Array[Lexer::Token::Base]) -> Array[Lexer::Token::Base]
+
+    # Add lex-prec rules from %lex-prec directive.
+    # Symbol-set operands are expanded eagerly, so the resolver only sees token pairs.
+    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Array[Grammar::LexPrec::Rule]
+    def add_lex_prec_rule: (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Array[Grammar::LexPrec::Rule]
+
+    # Add lexical tie relationships from %lex-tie directive.
+    # @rbs (operands: Array[Lexer::Token::Base]) -> void
+    def add_lex_tie: (operands: Array[Lexer::Token::Base]) -> void
+
+    # Add no-tie declarations from %lex-no-tie directive.
+    # @rbs (operands: Array[Lexer::Token::Base]) -> void
+    def add_lex_no_tie: (operands: Array[Lexer::Token::Base]) -> void
+
+    # Add a lexer context from %lexer-context directive
+    # @rbs (name: String, symbols: Array[Lexer::Token::Ident]) -> Grammar::LexerContext
+    def add_lexer_context: (name: String, symbols: Array[Lexer::Token::Ident]) -> Grammar::LexerContext
+
+    # Find a token pattern by its name
+    # @rbs (String name) -> Grammar::TokenPattern?
+    def find_token_pattern: (String name) -> Grammar::TokenPattern?
+
+    # @rbs (Set[String] tokens) -> Set[String]
+    def expand_lexical_ties: (Set[String] tokens) -> Set[String]
+
     private
+
+    # @rbs () -> void
+    def validate_pslr_configuration!: () -> void
+
+    # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
+    def expand_pslr_operand: (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
+
+    # @rbs (String key) -> Integer?
+    def parse_pslr_positive_integer: (String key) -> Integer?
+
+    # @rbs (String key) -> Float?
+    def parse_pslr_positive_float: (String key) -> Float?
 
     # @rbs () -> void
     def sort_precedence: () -> void
