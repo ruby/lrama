@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require "forwardable"
-require "set"
 require_relative "grammar/auxiliary"
 require_relative "grammar/binding"
 require_relative "grammar/code"
@@ -22,9 +21,7 @@ require_relative "grammar/symbols"
 require_relative "grammar/type"
 require_relative "grammar/union"
 require_relative "grammar/token_pattern"
-require_relative "grammar/token_action"
 require_relative "grammar/lex_prec"
-require_relative "grammar/lex_tie"
 require_relative "grammar/lexer_context"
 require_relative "lexer"
 
@@ -81,8 +78,6 @@ module Lrama
     #   @start_nterm: Lrama::Lexer::Token::Base?
     #   @token_patterns: Array[Grammar::TokenPattern]
     #   @lex_prec: Grammar::LexPrec
-    #   @symbol_sets: Hash[String, Array[Lexer::Token::Base]]
-    #   @lex_tie: Grammar::LexTie
 
     extend Forwardable
 
@@ -117,10 +112,7 @@ module Lrama
     attr_accessor :required #: bool
     attr_reader :token_patterns #: Array[Grammar::TokenPattern]
     attr_reader :lex_prec #: Grammar::LexPrec
-    attr_reader :symbol_sets #: Hash[String, Array[Lexer::Token::Base]]
-    attr_reader :lex_tie #: Grammar::LexTie
     attr_reader :lexer_contexts #: Hash[String, Grammar::LexerContext]
-    attr_reader :token_actions #: Array[Grammar::TokenAction]
 
     # Argument symbol names for each parameterized rule expansion.
     # @rbs () -> Hash[String, Array[String]]
@@ -162,12 +154,9 @@ module Lrama
       @start_nterm = nil
       @token_patterns = []
       @lex_prec = Grammar::LexPrec.new
-      @symbol_sets = {}
-      @lex_tie = Grammar::LexTie.new
       @lexer_contexts = {}
       @lexer_context_counter = 0
       @token_pattern_counter = 0
-      @token_actions = []
 
       append_special_symbols
     end
@@ -360,16 +349,6 @@ module Lrama
       parse_pslr_positive_float('pslr.max-state-ratio')
     end
 
-    # @rbs () -> Array[Grammar::TokenPattern]
-    def layout_token_patterns
-      @token_patterns.select(&:layout?)
-    end
-
-    # @rbs () -> Set[String]
-    def layout_token_names
-      layout_token_patterns.map(&:name).to_set
-    end
-
     # Add a token pattern from %token-pattern directive
     # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, ?alias_name: String?, ?tag: Lexer::Token::Tag?, lineno: Integer) -> Grammar::TokenPattern
     def add_token_pattern(id:, pattern:, alias_name: nil, tag: nil, lineno:)
@@ -390,77 +369,15 @@ module Lrama
       token_pattern
     end
 
-    # Add a symbol set from %symbol-set directive.
-    # @rbs (name: String, symbols: Array[Lexer::Token::Base]) -> Array[Lexer::Token::Base]
-    def add_symbol_set(name:, symbols:)
-      @symbol_sets[name] = symbols
-      symbols.each {|id| add_term(id: id) }
-    end
-
-    # Add lex-prec rules from %lex-prec directive.
-    # Stores as raw declaration for delayed expansion after implicit literal synthesis.
-    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
+    # Add a lex-prec rule from %lex-prec directive
+    # @rbs (left_token: Lexer::Token::Ident, operator: Symbol, right_token: Lexer::Token::Ident, lineno: Integer) -> Grammar::LexPrec::Rule
     def add_lex_prec_rule(left_token:, operator:, right_token:, lineno:)
-      # Register terminals so they are known to the symbol resolver
-      add_term(id: left_token) unless left_token.s_value == "yyall" || @symbol_sets.key?(left_token.s_value)
-      add_term(id: right_token) unless right_token.s_value == "yyall" || @symbol_sets.key?(right_token.s_value)
-
-      @lex_prec.add_declaration(
-        left_operand: left_token,
+      @lex_prec.add_rule(
+        left_token: left_token,
         operator: operator,
-        right_operand: right_token,
+        right_token: right_token,
         lineno: lineno
       )
-    end
-
-    # Finalize lexical declarations after implicit literal synthesis.
-    # Expands yyall and symbol-set operands using the post-synthesis token universe.
-    # Validates that identity-component operators are not used as self-pairs.
-    # @rbs () -> void
-    def finalize_lexical_declarations!
-      @lex_prec.declarations.each do |decl|
-        expand_pslr_operand(decl.left_operand).product(expand_pslr_operand(decl.right_operand)).each do |left, right|
-          validate_lex_prec_self_pair!(left, right, decl.operator, decl.lineno)
-          next if left.s_value == right.s_value && Grammar::LexPrec::IDENTITY_OPERATORS.include?(decl.operator)
-
-          @lex_prec.add_rule(
-            left_token: left,
-            operator: decl.operator,
-            right_token: right,
-            lineno: decl.lineno
-          )
-        end
-      end
-    end
-
-    # Add lexical tie relationships from %lex-tie directive.
-    # @rbs (operands: Array[Lexer::Token::Base]) -> void
-    def add_lex_tie(operands:)
-      groups = operands.map {|operand| pslr_operand_group(operand) }
-      @lex_tie.add_tie_declaration(groups: groups)
-    end
-
-    # Add no-tie declarations from %lex-no-tie directive.
-    # @rbs (operands: Array[Lexer::Token::Base]) -> void
-    def add_lex_no_tie(operands:)
-      groups = operands.map {|operand| pslr_operand_group(operand) }
-      @lex_tie.add_no_tie_declaration(groups: groups)
-      expanded = groups.map {|group| group.names.map {|name| Lrama::Lexer::Token::Ident.new(s_value: name) } }
-      i = 0
-      while i < expanded.size
-        j = i + 1
-        while j < expanded.size
-          left_group = expanded.fetch(i)
-          right_group = expanded.fetch(j)
-          left_group.product(right_group).each do |left, right|
-            next if left.s_value == right.s_value
-
-            @lex_tie.add_no_tie(left.s_value, right.s_value)
-          end
-          j += 1
-        end
-        i += 1
-      end
     end
 
     # Add a lexer context from %lexer-context directive
@@ -475,164 +392,13 @@ module Lrama
       ctx
     end
 
-    # Add a token action from %token-action directive
-    # @rbs (id: Lexer::Token::Ident, code: Lexer::Token::UserCode, lineno: Integer) -> Grammar::TokenAction
-    def add_token_action(id:, code:, lineno:)
-      token_action = Grammar::TokenAction.new(
-        token_id: id,
-        code: code,
-        lineno: lineno
-      )
-      @token_actions << token_action
-      token_action
-    end
-
     # Find a token pattern by its name
     # @rbs (String name) -> Grammar::TokenPattern?
     def find_token_pattern(name)
       @token_patterns.find { |tp| tp.name == name }
     end
 
-    # @rbs (Set[String] tokens) -> Set[String]
-    def expand_lexical_ties(tokens)
-      tokens.each_with_object(Set.new) do |token, expanded|
-        @lex_tie.tied_names(token).each {|name| expanded << name }
-      end
-    end
-
-    # @rbs (ScannerFSA scanner_fsa) -> void
-    def finalize_lexical_ties!(scanner_fsa)
-      @lex_tie.finalize!(
-        @token_patterns.map(&:name),
-        scanner_fsa.pairwise_conflict_pairs
-      )
-    end
-
-    REGEX_LITERAL_ESCAPES = ["/", "\\", "*", "+", "?", "(", ")", "[", "]", "{", "}", ".", "|", "^", "$", "-"].freeze #: Array[String]
-    REGEX_CONTROL_ESCAPES = {
-      "\n" => "\\n",
-      "\t" => "\\t",
-      "\r" => "\\r",
-      "\f" => "\\f",
-      "\v" => "\\v"
-    }.freeze #: Hash[String, String]
-
-    # @rbs () -> void
-    def synthesize_implicit_literal_token_patterns!
-      existing_names = @token_patterns.map(&:name).to_set
-
-      terms.each do |term|
-        pattern = implicit_literal_regex_pattern(term.id)
-        next unless pattern
-        next if existing_names.include?(term.id.s_value)
-
-        @token_patterns << Grammar::TokenPattern.new(
-          id: term.id,
-          pattern: Lrama::Lexer::Token::Regex.new(s_value: "/#{pattern}/", location: term.id.location),
-          lineno: token_lineno(term.id),
-          definition_order: @token_pattern_counter
-        )
-        @token_pattern_counter += 1
-        existing_names << term.id.s_value
-      end
-    end
-
     private
-
-    # Validate that identity-component operators are not applied to self-pairs.
-    # Self-pair is allowed only for length-only operators (-~ and -s).
-    # @rbs (Lexer::Token::Base left, Lexer::Token::Base right, Symbol operator, Integer lineno) -> void
-    def validate_lex_prec_self_pair!(left, right, operator, lineno)
-      return unless left.s_value == right.s_value
-
-      # Length-only operators are fine for self-pairs (e.g., %lex-prec COM -s COM)
-      return if operator == Grammar::LexPrec::LONGEST
-      return if operator == Grammar::LexPrec::SHORTEST
-
-      # Identity-component operators on self-pairs are errors
-      if Grammar::LexPrec::IDENTITY_OPERATORS.include?(operator)
-        raise "%lex-prec self-pair identity rule is invalid: #{left.s_value} cannot have an identity conflict with itself (line #{lineno})."
-      end
-
-      # TOKEN_RIGHT_LENGTH (-<) on self-pair is contradictory
-      if operator == Grammar::LexPrec::TOKEN_RIGHT_LENGTH
-        raise "%lex-prec self-pair with -< is contradictory: #{left.s_value} (line #{lineno})."
-      end
-    end
-
-    # @rbs (Lexer::Token::Base id) -> String?
-    def implicit_literal_regex_pattern(id)
-      case id
-      when Lrama::Lexer::Token::Char
-        literal = char_literal_value(id.s_value)
-        return nil unless literal&.ascii_only?
-
-        escape_regex_literal(literal)
-      when Lrama::Lexer::Token::Str
-        literal = str_literal_value(id.s_value)
-        return nil unless literal
-        return nil unless literal.ascii_only?
-
-        escape_regex_literal(literal)
-      end
-    end
-
-    # Extract the string content from a quoted string literal (e.g., "=>" -> =>)
-    # @rbs (String s_value) -> String?
-    def str_literal_value(s_value)
-      # String literals are stored as "..." with quotes
-      return nil if s_value.length < 2
-
-      inner = s_value[1..-2]
-      return nil if inner.nil? || inner.empty?
-
-      inner
-    end
-
-    # @rbs (String s_value) -> String?
-    def char_literal_value(s_value)
-      inner = s_value[1..-2]
-      case inner
-      when "\\b"
-        "\b"
-      when "\\f"
-        "\f"
-      when "\\n"
-        "\n"
-      when "\\r"
-        "\r"
-      when "\\t"
-        "\t"
-      when "\\v"
-        "\v"
-      when "\\\\"
-        "\\"
-      when /\A\\(\d+)\z/
-        octal = Regexp.last_match(1)
-        octal ? octal.oct.chr : nil
-      when /\A.\z/m
-        inner
-      end
-    end
-
-    # @rbs (String literal) -> String
-    def escape_regex_literal(literal)
-      escaped = REGEX_CONTROL_ESCAPES[literal]
-      return escaped if escaped
-
-      literal.each_char.map do |char|
-        if REGEX_LITERAL_ESCAPES.include?(char)
-          "\\#{char}"
-        else
-          char
-        end
-      end.join
-    end
-
-    # @rbs (Lexer::Token::Base id) -> Integer
-    def token_lineno(id)
-      id.location ? id.first_line : 0
-    end
 
     # @rbs () -> void
     def validate_pslr_configuration!
@@ -645,27 +411,6 @@ module Lrama
 
       pslr_max_states
       pslr_max_state_ratio
-    end
-
-    # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
-    def expand_pslr_operand(operand)
-      return @token_patterns.map(&:id) if operand.s_value == "yyall"
-      return @symbol_sets.fetch(operand.s_value) if @symbol_sets.key?(operand.s_value)
-
-      add_term(id: operand)
-      [operand]
-    end
-
-    # @rbs (Lexer::Token::Base operand) -> Grammar::LexTie::OperandGroup
-    def pslr_operand_group(operand)
-      if operand.s_value == "yyall"
-        Grammar::LexTie::OperandGroup.new(names: @token_patterns.map(&:name), kind: :all)
-      elsif @symbol_sets.key?(operand.s_value)
-        Grammar::LexTie::OperandGroup.new(names: @symbol_sets.fetch(operand.s_value).map(&:s_value), kind: :set)
-      else
-        add_term(id: operand)
-        Grammar::LexTie::OperandGroup.new(names: [operand.s_value], kind: :token)
-      end
     end
 
     # @rbs (String key) -> Integer?
