@@ -183,9 +183,13 @@ module Lrama
       @pslr_split_enabled = true
       report_duration(:split_states) { split_states }
       @pslr_split_enabled = false
-      # Phase 3b: Lexer context classification + context-based split
-      report_duration(:classify_lexer_contexts) { classify_lexer_contexts }
-      report_duration(:split_states_by_context) { split_states_by_context }
+      # Phase 3b: Lexer context classification + context-based split.
+      # Lrama/Ruby extension, not part of the PSLR dissertation core.
+      # No-op unless %lexer-context directives are present.
+      if @grammar.lexer_contexts.any?
+        report_duration(:classify_lexer_contexts) { classify_lexer_contexts }
+        report_duration(:split_states_by_context) { split_states_by_context }
+      end
       # Phase 4
       report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
       report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
@@ -194,8 +198,11 @@ module Lrama
       report_duration(:compute_default_reduction) { compute_default_reduction }
       report_duration(:build_scanner_accepts) { build_scanner_accepts }
       report_duration(:handle_pslr_inadequacies) { handle_pslr_inadequacies }
-      # Phase 6: Re-classify after all splits
-      report_duration(:classify_lexer_contexts) { classify_lexer_contexts }
+      # Phase 6: Re-classify after all splits.
+      # Lrama/Ruby extension, not part of the PSLR dissertation core.
+      if @grammar.lexer_contexts.any?
+        report_duration(:classify_lexer_contexts) { classify_lexer_contexts }
+      end
       finalize_pslr_metrics
     end
 
