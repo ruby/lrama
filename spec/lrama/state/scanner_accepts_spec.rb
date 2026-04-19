@@ -183,6 +183,19 @@ RSpec.describe Lrama::State::ScannerAccepts do
       expect(normal.resolve(Set.new, nil, Set["A", "B"])).to be_unresolved
       expect(fallback.resolve(Set.new, nil, Set["A", "B"]).token_name).to eq("B")
     end
+
+    it "uses explicit identity precedence before fallback declaration order" do
+      lex_prec = Lrama::Grammar::LexPrec.new
+      lex_prec.add_rule(left_token: ident("A"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("B"), lineno: 1)
+      fallback = Lrama::State::ScannerAccepts::ProfileResolver.new(
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec),
+        fallback: true,
+        token_order: { "A" => 0, "B" => 1 }
+      )
+
+      expect(fallback.resolve(Set.new, nil, Set["A", "B"]).token_name).to eq("B")
+    end
   end
 
   describe Lrama::State::ScannerAccepts::CompatibilityChecker do

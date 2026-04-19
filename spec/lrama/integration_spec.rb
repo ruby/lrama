@@ -181,6 +181,52 @@ RSpec.describe "integration" do
       expect(logger).to have_received(:error).with(a_string_including("DIV", "YYLAYOUT_COMMENT"))
     end
 
+    it "honors fallback shortest-match length precedence" do
+      test_parser("pslr_fallback_precedence", "/*a*/ b /*c*/", "COM 5\n", expect_success: false)
+    end
+
+    it "uses traditional longest match for unspecified fallback length conflicts" do
+      test_parser("pslr_fallback_precedence", "ab", "B 2\n", expect_success: false)
+    end
+
+    it "honors fallback right-token length precedence" do
+      test_parser("pslr_fallback_precedence", "non-euclidean", "NON 4\n", expect_success: false)
+    end
+
+    it "uses declaration order for unspecified fallback identity conflicts" do
+      test_parser("pslr_fallback_precedence", "z", "ZA 1\n", expect_success: false)
+    end
+
+    it "uses explicit identity precedence before fallback declaration order" do
+      test_parser("pslr_fallback_precedence", "@", "PB 1\n", expect_success: false)
+    end
+
+    it "does not use fallback longest rules for normal parser-state rows" do
+      grammar_text = <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern A /a/
+        %token-pattern B /ab/
+
+        %%
+
+        start
+          : A
+          | B
+          ;
+      GRAMMAR
+      grammar = Lrama::Parser.new(grammar_text, "integration/pslr_normal_conflict.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_pslr
+      logger = Lrama::Logger.new
+      allow(logger).to receive(:error)
+
+      expect { states.validate!(logger) }.to raise_error(SystemExit)
+      expect(logger).to have_received(:error).with(a_string_including("unresolved PSLR scanner conflict", "A", "B"))
+    end
+
     it "consumes an unmatched PSLR character token before reporting an error" do
       test_parser("pslr_template_argument_lists", "$", "", expect_success: false)
     end
