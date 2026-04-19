@@ -456,6 +456,14 @@ module Lrama
           #ifndef YYPSLR_TOKEN_IS_LAYOUT
           # define YYPSLR_TOKEN_IS_LAYOUT(Token) yy_pslr_token_is_layout ((Token))
           #endif
+
+          int yypslr_scan_with_layout (int parser_state, const char **input,
+                                       yypslr_scan_result *result);
+
+          #ifndef YYPSLR_SCAN_WITH_LAYOUT
+          # define YYPSLR_SCAN_WITH_LAYOUT(ParserState, InputPtr, Result) \\
+            yypslr_scan_with_layout ((ParserState), (InputPtr), (Result))
+          #endif
         C_CODE
       end
 
@@ -976,6 +984,152 @@ module Lrama
       lines.join("\n")
     end
 
+    # Check if token actions are defined
+    def pslr_token_actions_enabled?
+      pslr_enabled? && !@grammar.token_actions.empty?
+    end
+
+    # Check if scoped lex declarations are defined
+    def pslr_scoped_lex_enabled?
+      pslr_enabled? && !@grammar.scoped_lex_declarations.empty?
+    end
+
+    # Generate layout accumulation declarations
+    def pslr_layout_declarations
+      return "" unless pslr_scanner_enabled?
+
+      <<~C_CODE
+
+        #ifndef YYPSLR_LAYOUT_DEFINED
+        # define YYPSLR_LAYOUT_DEFINED
+
+        typedef struct yypslr_layout {
+          const char *text;
+          int length;
+        } yypslr_layout;
+
+        # ifndef YYPSLR_LAYOUT_BUFFER_SIZE
+        #  define YYPSLR_LAYOUT_BUFFER_SIZE 4096
+        # endif
+
+        static char yypslr_layout_buffer[YYPSLR_LAYOUT_BUFFER_SIZE];
+        static int yypslr_layout_length = 0;
+
+        static void
+        yypslr_layout_clear (void)
+        {
+          yypslr_layout_length = 0;
+        }
+
+        static void
+        yypslr_layout_append (const char *text, int length)
+        {
+          if (yypslr_layout_length + length < YYPSLR_LAYOUT_BUFFER_SIZE)
+            {
+              memcpy (yypslr_layout_buffer + yypslr_layout_length, text, length);
+              yypslr_layout_length += length;
+              yypslr_layout_buffer[yypslr_layout_length] = '\\0';
+            }
+        }
+
+        # define YYPSLR_LAYOUT_TEXT    yypslr_layout_buffer
+        # define YYPSLR_LAYOUT_LENGTH  yypslr_layout_length
+        # define YYPSLR_LAYOUT_CLEAR() yypslr_layout_clear ()
+        # define YYPSLR_LAYOUT_APPEND(Text, Len) yypslr_layout_append ((Text), (Len))
+
+        #endif /* YYPSLR_LAYOUT_DEFINED */
+      C_CODE
+    end
+
+    # Generate token action dispatch function
+    def pslr_token_action_function
+      return "" unless pslr_token_actions_enabled?
+
+      lines = []
+      lines << ""
+      lines << "/* PSLR token action dispatch */"
+      lines << "/* Generated from %token-action declarations */"
+      lines << ""
+      lines << "static void"
+      lines << "yypslr_token_action (int token, const char *yytext, int yyleng)"
+      lines << "{"
+
+      @grammar.token_actions.each_with_index do |action, idx|
+        token_id = @context.states.find_symbol_by_s_value!(action.token_name).token_id
+        keyword = idx == 0 ? "if" : "else if"
+        lines << "  #{keyword} (token == #{token_id})"
+        lines << "    {"
+        lines << "#line #{action.lineno} \"#{@grammar_file_path}\""
+        lines << "      {#{action.code.s_value}}"
+        lines << "#line [@oline@] [@ofile@]"
+        lines << "    }"
+      end
+
+      lines << "}"
+      lines << ""
+      lines << "#define YYPSLR_TOKEN_ACTION(Token, Text, Len) \\"
+      lines << "  yypslr_token_action ((Token), (Text), (Len))"
+      lines.join("\n")
+    end
+
+    # Generate enhanced pseudo_scan_result with layout accumulation
+    def pslr_layout_scan_function
+      return "" unless pslr_scanner_enabled?
+
+      <<~C_CODE
+
+        /*
+         * yypslr_scan_with_layout: scan with layout accumulation.
+         *
+         * Repeatedly invokes yy_pseudo_scan_result to consume input.
+         * Layout tokens are accumulated in the layout buffer;
+         * non-layout tokens are returned to the caller with the
+         * accumulated layout available via YYPSLR_LAYOUT_TEXT.
+         */
+        int
+        yypslr_scan_with_layout (int parser_state, const char **input,
+                                 yypslr_scan_result *result)
+        {
+          YYPSLR_LAYOUT_CLEAR ();
+
+          for (;;)
+            {
+              int token = yy_pseudo_scan_result (parser_state, *input, result);
+
+              if (token == YYEMPTY || token == YYEOF)
+                return token;
+
+              if (result->is_layout)
+                {
+                  YYPSLR_LAYOUT_APPEND (*input, result->length);
+        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, result->length);" : ""}
+                  *input += result->length;
+                  continue;
+                }
+
+        #{pslr_token_actions_enabled? ? "      YYPSLR_TOKEN_ACTION (token, *input, result->length);" : ""}
+              return token;
+            }
+        }
+      C_CODE
+    end
+
+    # Generate scoped lex-prec table info as C comments
+    def pslr_scoped_declarations_info
+      return "" unless pslr_scoped_lex_enabled?
+
+      lines = []
+      lines << ""
+      lines << "/* Scoped lexical declarations */"
+      @grammar.scoped_lex_declarations.each do |decl|
+        lines << "/* Scope: #{decl.scope_name} (#{decl.lex_prec_rules.size} lex-prec rules) */"
+        decl.lex_prec_rules.each do |rule|
+          lines << "/*   #{rule.left_name} #{rule.operator} #{rule.right_name} */"
+        end
+      end
+      lines.join("\n")
+    end
+
     # Generate all PSLR C code
     def pslr_tables_and_functions
       return "" unless pslr_scanner_enabled?
@@ -990,7 +1144,11 @@ module Lrama
         accepting_tokens_table,
         scanner_accepts_table_code,
         length_precedences_table_code,
+        pslr_layout_declarations,
         pseudo_scan_function,
+        pslr_layout_scan_function,
+        pslr_token_action_function,
+        pslr_scoped_declarations_info,
       ]
 
       parts.join("\n")

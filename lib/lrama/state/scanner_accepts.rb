@@ -9,8 +9,21 @@ module Lrama
     #
     # Construction follows complete pseudo-scanner conflict profiles. A profile
     # contains the shorter token set Ts, the selected shorter token ts, and the
-    # current/longest token set Tl. Ambiguities remain unresolved; declaration
-    # order is never used as a fallback.
+    # current/longest token set Tl.
+    #
+    # Normal parser-state rows are strict: unresolved pseudo-scanner
+    # conflicts are reported and are not resolved by token declaration order.
+    #
+    # The fallback row is used only for syntax-error handling. It first
+    # applies explicit PSLR lexical precedence declarations. For scanner
+    # conflicts that remain unresolved only in the fallback universe, it
+    # completes the decision with traditional scanner behavior: fallback
+    # length defaults are handled by LengthPrecedences#fallback_precedes?,
+    # and otherwise-unresolved identity conflicts are resolved by token
+    # declaration order.
+    #
+    # When %lex-scope declarations are present, each parser state may use
+    # a merged set of global + scope-active lexical precedence rules.
     class ScannerAccepts
       class Conflict
         attr_reader :parser_state_id #: Integer?
@@ -360,14 +373,15 @@ module Lrama
       attr_reader :fallback_table #: Hash[Integer, Grammar::TokenPattern]
       attr_reader :conflicts #: Array[Conflict]
 
-      # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie, ?layout_token_names: Set[String]) -> void
-      def initialize(parser_states, scanner_fsa, lex_prec, length_prec, lex_tie = nil, layout_token_names: Set.new)
+      # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie, ?layout_token_names: Set[String], ?scoped_lex_precs: Hash[Integer, Grammar::LexPrec]) -> void
+      def initialize(parser_states, scanner_fsa, lex_prec, length_prec, lex_tie = nil, layout_token_names: Set.new, scoped_lex_precs: {})
         @parser_states = parser_states
         @scanner_fsa = scanner_fsa
         @lex_prec = lex_prec
         @length_prec = length_prec
         @lex_tie = lex_tie
         @layout_token_names = layout_token_names.to_set
+        @scoped_lex_precs = scoped_lex_precs
         @table = {}
         @fallback_table = {}
         @conflicts = []
@@ -402,10 +416,13 @@ module Lrama
 
       # @rbs (State parser_state) -> void
       def compute_for_parser_state(parser_state)
+        effective_lex_prec = @scoped_lex_precs[parser_state.id] || @lex_prec
+        effective_length_prec = LengthPrecedences.new(effective_lex_prec)
+
         computer = CompleteProfileComputer.new(
           @scanner_fsa,
-          @lex_prec,
-          @length_prec,
+          effective_lex_prec,
+          effective_length_prec,
           compute_acc_sp(parser_state),
           parser_state.id
         )

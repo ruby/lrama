@@ -1227,15 +1227,53 @@ module Lrama
 
       collect_lexical_tie_candidates
 
+      effective_lex_prec = lex_prec
+      scoped_lex_precs = build_scoped_lex_precs
+
       @scanner_accepts_table = State::ScannerAccepts.new(
         reachable_parser_states,
         @scanner_fsa,
-        lex_prec,
+        effective_lex_prec,
         @length_precedences,
         lex_tie,
-        layout_token_names: @grammar.layout_token_names
+        layout_token_names: @grammar.layout_token_names,
+        scoped_lex_precs: scoped_lex_precs
       )
       @scanner_accepts_table.build
+    end
+
+    # Build per-state scoped lex-prec lookup.
+    # Returns a hash of parser_state_id -> LexPrec that includes
+    # both global and scope-active rules.
+    # @rbs () -> Hash[Integer, Grammar::LexPrec]
+    def build_scoped_lex_precs
+      return {} if @grammar.scoped_lex_declarations.empty?
+
+      result = {}
+      reachable_parser_states.each do |state|
+        active_nterms = active_nterm_names_for(state)
+        next if active_nterms.empty?
+
+        has_active_scope = @grammar.scoped_lex_declarations.any? do |decl|
+          active_nterms.include?(decl.scope_name)
+        end
+        next unless has_active_scope
+
+        result[state.id] = @grammar.scoped_lex_prec_for(active_nterms)
+      end
+
+      result
+    end
+
+    # Collect the nonterminal names that are "active" in a parser state.
+    # A nonterminal is active if it appears as the LHS of any item in the state's closure.
+    # @rbs (State state) -> Array[String]
+    def active_nterm_names_for(state)
+      names = Set.new
+      (state.kernels + state.closure).each do |item|
+        names << item.rule.lhs.id.s_value if item.rule.lhs.nterm?
+      end
+      names.to_a
     end
 
     # Handle PSLR inadequacies

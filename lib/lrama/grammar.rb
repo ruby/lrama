@@ -22,9 +22,11 @@ require_relative "grammar/symbols"
 require_relative "grammar/type"
 require_relative "grammar/union"
 require_relative "grammar/token_pattern"
+require_relative "grammar/token_action"
 require_relative "grammar/lex_prec"
 require_relative "grammar/lex_tie"
 require_relative "grammar/lexer_context"
+require_relative "grammar/scoped_lex_decl"
 require_relative "lexer"
 
 module Lrama
@@ -119,6 +121,8 @@ module Lrama
     attr_reader :symbol_sets #: Hash[String, Array[Lexer::Token::Base]]
     attr_reader :lex_tie #: Grammar::LexTie
     attr_reader :lexer_contexts #: Hash[String, Grammar::LexerContext]
+    attr_reader :token_actions #: Array[Grammar::TokenAction]
+    attr_reader :scoped_lex_declarations #: Array[Grammar::ScopedLexDecl]
 
     # Argument symbol names for each parameterized rule expansion.
     # @rbs () -> Hash[String, Array[String]]
@@ -165,6 +169,9 @@ module Lrama
       @lexer_contexts = {}
       @lexer_context_counter = 0
       @token_pattern_counter = 0
+      @token_actions = []
+      @scoped_lex_declarations = []
+      @current_scoped_lex_decl = nil
 
       append_special_symbols
     end
@@ -448,6 +455,82 @@ module Lrama
       end
       ctx.add_symbols(symbols)
       ctx
+    end
+
+    # Add a token action from %token-action directive
+    # @rbs (id: Lexer::Token::Ident, code: Lexer::Token::UserCode, lineno: Integer) -> Grammar::TokenAction
+    def add_token_action(id:, code:, lineno:)
+      token_action = Grammar::TokenAction.new(
+        token_id: id,
+        code: code,
+        lineno: lineno
+      )
+      @token_actions << token_action
+      token_action
+    end
+
+    # Begin a scoped lexical declaration block from %lex-scope directive
+    # @rbs (name: String, lineno: Integer) -> Grammar::ScopedLexDecl
+    def begin_scoped_lex_declaration(name:, lineno:)
+      decl = Grammar::ScopedLexDecl.new(scope_name: name, lineno: lineno)
+      @scoped_lex_declarations << decl
+      @current_scoped_lex_decl = decl
+      decl
+    end
+
+    # End the current scoped lexical declaration block
+    # @rbs () -> void
+    def end_scoped_lex_declaration
+      @current_scoped_lex_decl = nil
+    end
+
+    # Add a lex-prec rule, respecting current scope
+    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> void
+    def add_scoped_or_global_lex_prec_rule(left_token:, operator:, right_token:, lineno:)
+      if @current_scoped_lex_decl
+        expand_pslr_operand(left_token).product(expand_pslr_operand(right_token)).each do |left, right|
+          rule = Grammar::LexPrec::Rule.new(
+            left_token: left,
+            operator: operator,
+            right_token: right,
+            lineno: lineno
+          )
+          @current_scoped_lex_decl.add_lex_prec_rule(rule)
+        end
+      else
+        add_lex_prec_rule(left_token: left_token, operator: operator, right_token: right_token, lineno: lineno)
+      end
+    end
+
+    # Find the scoped lex-prec rules that apply to a given parser state.
+    # A scope is active in a state if any item in the state derives from the scope nonterminal.
+    # @rbs (Array[String] active_nterm_names) -> Grammar::LexPrec
+    def scoped_lex_prec_for(active_nterm_names)
+      merged = Grammar::LexPrec.new
+      @lex_prec.rules.each do |rule|
+        merged.add_rule(
+          left_token: rule.left_token,
+          operator: rule.operator,
+          right_token: rule.right_token,
+          lineno: rule.lineno
+        )
+      end
+
+      active_set = active_nterm_names.to_set
+      @scoped_lex_declarations.each do |decl|
+        next unless active_set.include?(decl.scope_name)
+
+        decl.lex_prec_rules.each do |rule|
+          merged.add_rule(
+            left_token: rule.left_token,
+            operator: rule.operator,
+            right_token: rule.right_token,
+            lineno: rule.lineno
+          )
+        end
+      end
+
+      merged
     end
 
     # Find a token pattern by its name

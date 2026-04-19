@@ -246,7 +246,9 @@ RSpec.describe Lrama::Output do
         parse_param: "struct parse_params *p",
         lex_param: "struct parse_params *p",
         pslr_defined?: true,
-        pslr_state_member: "current_state"
+        pslr_state_member: "current_state",
+        token_actions: [],
+        scoped_lex_declarations: []
       )
     end
 
