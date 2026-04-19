@@ -97,6 +97,11 @@ module Lrama
 
         tokens = Set.new
 
+        # Layout tokens must be accepted in every parser state
+        @scanner_fsa.token_patterns.each do |tp|
+          tokens << tp.name if tp.layout?
+        end
+
         # Add tokens from shift actions (term_transitions)
         parser_state.term_transitions.each do |shift|
           next_sym = shift.next_sym
