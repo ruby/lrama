@@ -7,6 +7,15 @@ RSpec.describe Lrama::LengthPrecedences do
     Lrama::Lexer::Token::Ident.new(s_value: name)
   end
 
+  def add_rule(left, operator, right, lineno)
+    lex_prec.add_rule(
+      left_token: ident(left),
+      operator: operator,
+      right_token: ident(right),
+      lineno: lineno
+    )
+  end
+
   describe "#resolution" do
     it "defaults same-token autolength conflicts to longest match" do
       length_prec = Lrama::LengthPrecedences.new(lex_prec)
@@ -59,6 +68,37 @@ RSpec.describe Lrama::LengthPrecedences do
 
       expect(length_prec.resolution("WORD", "NON")).to eq(Lrama::LengthPrecedences::PREFER_NEW)
       expect(length_prec.resolution("NON", "WORD")).to eq(Lrama::LengthPrecedences::PREFER_OLD)
+    end
+  end
+
+  describe "#initialize" do
+    it "rejects contradictory shortest and longest rules for the same scan direction" do
+      add_rule("RANGLE", Lrama::Grammar::LexPrec::SHORTEST, "RSHIFT", 10)
+      add_rule("RANGLE", Lrama::Grammar::LexPrec::LONGEST, "RSHIFT", 12)
+
+      expect { Lrama::LengthPrecedences.new(lex_prec) }
+        .to raise_error(
+          Lrama::LengthPrecedences::LexicalPrecedenceConflictError,
+          /RANGLE -> RSHIFT.*-s at line 10.*-~ at line 12/m
+        )
+    end
+
+    it "rejects contradictory right-token length winners in reverse declarations" do
+      add_rule("RANGLE", Lrama::Grammar::LexPrec::TOKEN_RIGHT_LENGTH, "RSHIFT", 20)
+      add_rule("RSHIFT", Lrama::Grammar::LexPrec::TOKEN_RIGHT_LENGTH, "RANGLE", 21)
+
+      expect { Lrama::LengthPrecedences.new(lex_prec) }
+        .to raise_error(
+          Lrama::LengthPrecedences::LexicalPrecedenceConflictError,
+          /RSHIFT -> RANGLE.*-< at line 20.*-< at line 21/m
+        )
+    end
+
+    it "allows repeated declarations with the same length resolution" do
+      add_rule("RANGLE", Lrama::Grammar::LexPrec::LONGEST, "RSHIFT", 30)
+      add_rule("RSHIFT", Lrama::Grammar::LexPrec::LONGEST, "RANGLE", 31)
+
+      expect { Lrama::LengthPrecedences.new(lex_prec) }.not_to raise_error
     end
   end
 end

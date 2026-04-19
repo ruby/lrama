@@ -15,6 +15,19 @@ module Lrama
     PREFER_OLD = :prefer_old #: Symbol
     UNRESOLVED = :unresolved #: Symbol
 
+    class LexicalPrecedenceConflictError < StandardError; end
+
+    class RuleSource
+      attr_reader :operator #: Symbol
+      attr_reader :lineno #: Integer
+
+      # @rbs (Symbol operator, Integer lineno) -> void
+      def initialize(operator, lineno)
+        @operator = operator
+        @lineno = lineno
+      end
+    end
+
     attr_reader :table #: Hash[[String, String], bool]
     attr_reader :resolution_table #: Hash[[String, String], Symbol]
 
@@ -63,6 +76,7 @@ module Lrama
     # @rbs (Grammar::LexPrec lex_prec) -> Hash[[String, String], Symbol]
     def build_resolution_table(lex_prec)
       table = {}
+      sources = {}
 
       lex_prec.rules.each do |rule|
         left = rule.left_name
@@ -70,18 +84,71 @@ module Lrama
 
         case rule.operator
         when Grammar::LexPrec::IDENTITY_RIGHT_LONGEST, Grammar::LexPrec::LONGEST
-          table[[left, right]] = PREFER_NEW
-          table[[right, left]] = PREFER_NEW
+          set_resolution!(table, sources, [left, right], PREFER_NEW, rule)
+          set_resolution!(table, sources, [right, left], PREFER_NEW, rule)
         when Grammar::LexPrec::IDENTITY_RIGHT_SHORTEST, Grammar::LexPrec::SHORTEST
-          table[[left, right]] = PREFER_OLD
-          table[[right, left]] = PREFER_OLD
+          set_resolution!(table, sources, [left, right], PREFER_OLD, rule)
+          set_resolution!(table, sources, [right, left], PREFER_OLD, rule)
         when Grammar::LexPrec::TOKEN_RIGHT, Grammar::LexPrec::TOKEN_RIGHT_LENGTH
-          table[[left, right]] = PREFER_NEW
-          table[[right, left]] = PREFER_OLD
+          set_resolution!(table, sources, [left, right], PREFER_NEW, rule)
+          set_resolution!(table, sources, [right, left], PREFER_OLD, rule)
         end
       end
 
       table
+    end
+
+    # @rbs (Hash[[String, String], Symbol] table, Hash[[String, String], RuleSource] sources, [String, String] key, Symbol value, Grammar::LexPrec::Rule rule) -> void
+    def set_resolution!(table, sources, key, value, rule)
+      existing = table[key]
+      if existing.nil?
+        table[key] = value
+        sources[key] = RuleSource.new(rule.operator, rule.lineno)
+        return
+      end
+
+      return if existing == value
+
+      source = sources.fetch(key)
+      old_token, new_token = key
+      raise LexicalPrecedenceConflictError,
+        "conflicting %lex-prec length rules for #{old_token} -> #{new_token}: " \
+        "#{operator_label(source.operator)} at line #{source.lineno} resolves #{resolution_label(existing)}, " \
+        "but #{operator_label(rule.operator)} at line #{rule.lineno} resolves #{resolution_label(value)}"
+    end
+
+    # @rbs (Symbol operator) -> String
+    def operator_label(operator)
+      case operator
+      when Grammar::LexPrec::IDENTITY_RIGHT_LONGEST
+        "<~"
+      when Grammar::LexPrec::IDENTITY_RIGHT
+        "<-"
+      when Grammar::LexPrec::LONGEST
+        "-~"
+      when Grammar::LexPrec::TOKEN_RIGHT
+        "<<"
+      when Grammar::LexPrec::TOKEN_RIGHT_LENGTH
+        "-<"
+      when Grammar::LexPrec::IDENTITY_RIGHT_SHORTEST
+        "<s"
+      when Grammar::LexPrec::SHORTEST
+        "-s"
+      else
+        operator.to_s
+      end
+    end
+
+    # @rbs (Symbol value) -> String
+    def resolution_label(value)
+      case value
+      when PREFER_NEW
+        "prefer-new"
+      when PREFER_OLD
+        "prefer-old"
+      else
+        value.to_s
+      end
     end
   end
 end

@@ -18,6 +18,18 @@ module Lrama
 
     UNRESOLVED: Symbol
 
+    class LexicalPrecedenceConflictError < StandardError
+    end
+
+    class RuleSource
+      attr_reader operator: Symbol
+
+      attr_reader lineno: Integer
+
+      # @rbs (Symbol operator, Integer lineno) -> void
+      def initialize: (Symbol operator, Integer lineno) -> void
+    end
+
     attr_reader table: Hash[[ String, String ], bool]
 
     attr_reader resolution_table: Hash[[ String, String ], Symbol]
@@ -42,5 +54,14 @@ module Lrama
 
     # @rbs (Grammar::LexPrec lex_prec) -> Hash[[String, String], Symbol]
     def build_resolution_table: (Grammar::LexPrec lex_prec) -> Hash[[ String, String ], Symbol]
+
+    # @rbs (Hash[[String, String], Symbol] table, Hash[[String, String], RuleSource] sources, [String, String] key, Symbol value, Grammar::LexPrec::Rule rule) -> void
+    def set_resolution!: (Hash[[ String, String ], Symbol] table, Hash[[ String, String ], RuleSource] sources, [ String, String ] key, Symbol value, Grammar::LexPrec::Rule rule) -> void
+
+    # @rbs (Symbol operator) -> String
+    def operator_label: (Symbol operator) -> String
+
+    # @rbs (Symbol value) -> String
+    def resolution_label: (Symbol value) -> String
   end
 end
