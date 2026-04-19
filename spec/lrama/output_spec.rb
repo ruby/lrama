@@ -319,6 +319,15 @@ RSpec.describe Lrama::Output do
       end
     end
 
+    describe "#pslr_lac_function" do
+      it "generates a LAC checker for PSLR parsers" do
+        result = pslr_output.pslr_lac_function
+
+        expect(result).to include("yy_lac_check_")
+        expect(result).to include("yydefact")
+      end
+    end
+
     describe "#state_to_accepting_table" do
       it "generates state to accepting mapping" do
         result = pslr_output.state_to_accepting_table
@@ -463,8 +472,12 @@ RSpec.describe Lrama::Output do
       expect(rendered).to include("yy_scanner_transition")
       expect(rendered).to include("yy_pseudo_scan")
       expect(rendered).to include("yy_token_pattern_to_token_id")
+      expect(rendered).to include("yy_scanner_fallback_accepts")
+      expect(rendered).to include("yy_token_pattern_is_layout")
+      expect(rendered).to include("yy_lac_check_")
       expect(rendered_header).to include("int yy_state_accepts_token")
       expect(rendered_header).to include("int yy_pseudo_scan")
+      expect(rendered_header).to include("yypslr_scan_result")
       expect(rendered_header).to include("YYSETSTATE_CONTEXT(CurrentState)")
       expect(rendered_header).to include("YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength)")
     end

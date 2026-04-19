@@ -155,6 +155,15 @@ RSpec.describe "integration" do
       test_parser("pslr_mixed_context", "< # >", "template\n")
       test_parser("pslr_mixed_context", "@ # >> foo", "shift\n")
     end
+
+    it "handles template argument lists without a short-token lex-prec override" do
+      test_parser("pslr_template_argument_lists", "vector<list<string>> v;", "decl\n")
+      test_parser("pslr_template_argument_lists", "a >> b;", "expr\n")
+    end
+
+    it "consumes an unmatched PSLR character token before reporting an error" do
+      test_parser("pslr_template_argument_lists", "$", "", expect_success: false)
+    end
   end
 
   describe "user defined parameterized rules" do

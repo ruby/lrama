@@ -1062,10 +1062,14 @@ int yydebug;
 # define YYMAXDEPTH 10000
 #endif
 
+<%- if output.pslr_enabled? -%>
+<%= output.pslr_lac_function %>
+<%- end -%>
 
 /* Context of a parse error.  */
 typedef struct
 {
+  yy_state_t *yyss;
   yy_state_t *yyssp;
   yysymbol_kind_t yytoken;
   YYLTYPE *yylloc;
@@ -1083,6 +1087,23 @@ yypcontext_expected_tokens (const yypcontext_t *yyctx,
 {
   /* Actual size of YYARG. */
   int yycount = 0;
+<%- if output.pslr_enabled? -%>
+  int yyx;
+  for (yyx = 0; yyx < YYNTOKENS; ++yyx)
+    if (yyx != YYSYMBOL_YYerror
+        && yy_lac_check_ (yyctx->yyss, yyctx->yyssp, YY_CAST (yysymbol_kind_t, yyx)))
+      {
+        if (!yyarg)
+          ++yycount;
+        else if (yycount == yyargn)
+          return 0;
+        else
+          yyarg[yycount++] = YY_CAST (yysymbol_kind_t, yyx);
+      }
+  if (yyarg && yycount == 0 && 0 < yyargn)
+    yyarg[0] = YYSYMBOL_YYEMPTY;
+  return yycount;
+<%- else -%>
   int yyn = yypact[+*yyctx->yyssp];
   if (!yypact_value_is_default (yyn))
     {
@@ -1109,6 +1130,7 @@ yypcontext_expected_tokens (const yypcontext_t *yyctx,
   if (yyarg && yycount == 0 && 0 < yyargn)
     yyarg[0] = YYSYMBOL_YYEMPTY;
   return yycount;
+<%- end -%>
 }
 
 
@@ -1875,6 +1897,40 @@ yybackup:
 
   /* First try to decide what to do without reference to lookahead token.  */
   yyn = yypact[yystate];
+<%- if output.pslr_enabled? -%>
+  if (yypact_value_is_default (yyn) && yydefact[yystate] != 0)
+    {
+      if (yychar == YYEMPTY)
+        {
+          YYDPRINTF ((stderr, "Reading a token\n"));
+          yychar = yylex <%= output.yylex_formals %>;
+        }
+
+      if (yychar <= <%= output.eof_symbol.id.s_value %>)
+        {
+          yychar = <%= output.eof_symbol.id.s_value %>;
+          yytoken = <%= output.eof_symbol.enum_name %>;
+          YYDPRINTF ((stderr, "Now at end of input.\n"));
+        }
+      else if (yychar == <%= output.error_symbol.id.s_value %>)
+        {
+          yychar = <%= output.undef_symbol.id.s_value %>;
+          yytoken = <%= output.error_symbol.enum_name %>;
+          yyerror_range[1] = yylloc;
+          goto yyerrlab1;
+        }
+      else
+        {
+          yytoken = YYTRANSLATE (yychar);
+          YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
+        }
+
+      if (!yy_lac_check_ (yyss, yyssp, yytoken))
+        goto yyerrlab;
+
+      goto yydefault;
+    }
+<%- end -%>
   if (yypact_value_is_default (yyn))
     goto yydefault;
 
@@ -1942,6 +1998,11 @@ yybackup:
       yytoken = YYTRANSLATE (yychar);
       YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
     }
+
+<%- if output.pslr_enabled? -%>
+  if (!yy_lac_check_ (yyss, yyssp, yytoken))
+    goto yyerrlab;
+<%- end -%>
 
   /* If the proper action on seeing token YYTOKEN is to reduce or to
      detect an error, take that action.  */
@@ -2061,7 +2122,7 @@ yyerrlab:
       ++yynerrs;
       {
         yypcontext_t yyctx
-          = {yyssp, yytoken, &yylloc};
+          = {yyss, yyssp, yytoken, &yylloc};
         char const *yymsgp = YY_("syntax error");
         int yysyntax_error_status;
         yysyntax_error_status = yysyntax_error (&yymsg_alloc, &yymsg, &yyctx<%= output.user_args %>);
