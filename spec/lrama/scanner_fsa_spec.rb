@@ -1,6 +1,15 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::ScannerFSA do
+  def token_pattern(name, regex, lineno: 1, order: 0)
+    Lrama::Grammar::TokenPattern.new(
+      id: Lrama::Lexer::Token::Ident.new(s_value: name),
+      pattern: Lrama::Lexer::Token::Regex.new(s_value: "/#{regex}/"),
+      lineno: lineno,
+      definition_order: order
+    )
+  end
+
   describe "initialization" do
     it "creates an empty FSA for no patterns" do
       fsa = Lrama::ScannerFSA.new([])
@@ -132,6 +141,66 @@ RSpec.describe Lrama::ScannerFSA do
 
       expect(fsa.scan("\t").map { |result| result[:token].name }).to include("YYLAYOUT")
       expect(fsa.scan("\n").map { |result| result[:token].name }).to include("YYLAYOUT")
+    end
+
+    it "matches escaped literals in and outside character classes" do
+      slash = token_pattern("SLASH", "\\/", order: 0)
+      rbrack = token_pattern("RBRACK", "[\\]]", order: 1)
+      backslash = token_pattern("BACKSLASH", "[\\\\]", order: 2)
+
+      expect(Lrama::ScannerFSA.new([slash]).scan("/").map { |result| result[:token].name }).to include("SLASH")
+      expect(Lrama::ScannerFSA.new([rbrack]).scan("]").map { |result| result[:token].name }).to include("RBRACK")
+      expect(Lrama::ScannerFSA.new([backslash]).scan("\\").map { |result| result[:token].name }).to include("BACKSLASH")
+    end
+
+    it "matches ranges and negated character classes over ASCII" do
+      not_star = token_pattern("NOT_STAR", "[^*]+")
+      fsa = Lrama::ScannerFSA.new([not_star])
+
+      expect(fsa.scan("abc/]").map { |result| result[:token].name }).to include("NOT_STAR")
+      expect(fsa.scan("a\nb").map { |result| result[:token].name }).to include("NOT_STAR")
+      expect(fsa.scan("*")).to be_empty
+    end
+  end
+
+  describe "pattern validation" do
+    it "rejects empty token patterns" do
+      expect { Lrama::ScannerFSA.new([token_pattern("EMPTY", "", lineno: 42)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /EMPTY at line 42.*empty patterns/m)
+    end
+
+    it "rejects dangling escapes" do
+      expect { Lrama::ScannerFSA.new([token_pattern("BAD_ESCAPE", "abc\\", lineno: 7)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /BAD_ESCAPE at line 7.*dangling escape/m)
+    end
+
+    it "rejects unclosed character classes" do
+      expect { Lrama::ScannerFSA.new([token_pattern("BAD_CLASS", "[abc", lineno: 6)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /BAD_CLASS at line 6.*unclosed character class/m)
+    end
+
+    it "rejects unsupported alphabetic escapes" do
+      expect { Lrama::ScannerFSA.new([token_pattern("BAD_ESCAPE", "\\q", lineno: 8)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /BAD_ESCAPE at line 8.*unsupported escape \\q/m)
+    end
+
+    it "rejects malformed character class ranges" do
+      expect { Lrama::ScannerFSA.new([token_pattern("BAD_RANGE", "[z-a]", lineno: 9)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /BAD_RANGE at line 9.*invalid character class range z-a/m)
+    end
+
+    it "rejects nullable token patterns" do
+      expect { Lrama::ScannerFSA.new([token_pattern("NULLABLE", "a*", lineno: 10)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /NULLABLE at line 10.*nullable patterns/m)
+      expect { Lrama::ScannerFSA.new([token_pattern("NULLABLE", "a?", lineno: 10)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /NULLABLE at line 10.*nullable patterns/m)
+      expect { Lrama::ScannerFSA.new([token_pattern("NULLABLE", "()", lineno: 10)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /NULLABLE at line 10.*empty groups/m)
+    end
+
+    it "rejects empty alternatives" do
+      expect { Lrama::ScannerFSA.new([token_pattern("EMPTY_ALT", "a|", lineno: 11)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /EMPTY_ALT at line 11.*empty alternatives/m)
     end
   end
 

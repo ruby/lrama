@@ -78,6 +78,8 @@ module Lrama
       @head_line = @line = 1
       @status = :initial
       @end_symbol = nil
+      @token_pattern_context = false
+      @expect_token_pattern_regex = false
     end
 
     # @rbs () -> token?
@@ -114,7 +116,7 @@ module Lrama
           @scanner.matched.count("\n").times { newline }
         when @scanner.scan(/\/\*/)
           lex_comment
-        when @scanner.scan(/\/\/.*(?<newline>\n)?/)
+        when !@expect_token_pattern_regex && @scanner.scan(/\/\/.*(?<newline>\n)?/)
           newline if @scanner[:newline]
         else
           break
@@ -127,8 +129,12 @@ module Lrama
       when @scanner.eos?
         return
       when @scanner.scan(/#{SYMBOLS.join('|')}/)
+        @token_pattern_context = false if @scanner.matched == "%%"
+        @expect_token_pattern_regex = false if @scanner.matched == "%%"
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/#{PERCENT_TOKENS.sort_by { |s| -s.length }.join('|')}/)
+        @token_pattern_context = @scanner.matched == "%token-pattern"
+        @expect_token_pattern_regex = false
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
@@ -140,8 +146,9 @@ module Lrama
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/".*?"/)
         return [:STRING, Lrama::Lexer::Token::Str.new(s_value: %Q(#{@scanner.matched}), location: location)]
-      when @scanner.scan(%r{/[^/]+/})
-        return [:REGEX, Lrama::Lexer::Token::Regex.new(s_value: @scanner.matched, location: location)]
+      when (regex = scan_regex_token)
+        @expect_token_pattern_regex = false
+        return [:REGEX, regex]
       when @scanner.scan(/<~|<-|-~|<<|-<|<s|-s/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/-s(?=\s)/)
@@ -152,6 +159,7 @@ module Lrama
         return [:INTEGER, Lrama::Lexer::Token::Int.new(s_value: Integer(@scanner.matched), location: location)]
       when @scanner.scan(/([a-zA-Z_.][-a-zA-Z0-9_.]*)/)
         token = Lrama::Lexer::Token::Ident.new(s_value: @scanner.matched, location: location)
+        @expect_token_pattern_regex = true if @token_pattern_context
         type =
           if @scanner.check(/\s*(\[\s*[a-zA-Z_.][-a-zA-Z0-9_.]*\s*\])?\s*:/)
             :IDENT_COLON
@@ -217,6 +225,39 @@ module Lrama
           newline
         end
       end
+    end
+
+    # @rbs () -> Token::Regex?
+    def scan_regex_token
+      return nil unless @scanner.peek(1) == "/"
+
+      start_pos = @scanner.pos
+      @scanner.getch
+      escaped = false
+      in_char_class = false
+
+      until @scanner.eos?
+        char = @scanner.getch
+
+        if escaped
+          escaped = false
+        elsif char == "\\"
+          escaped = true
+        elsif char == "["
+          in_char_class = true
+        elsif char == "]"
+          in_char_class = false
+        elsif char == "/" && !in_char_class
+          return Lrama::Lexer::Token::Regex.new(
+            s_value: @scanner.string[start_pos...@scanner.pos],
+            location: location
+          )
+        elsif char == "\n"
+          newline
+        end
+      end
+
+      raise ParseError, location.generate_error_message("Unclosed regex pattern") # steep:ignore UnknownConstant
     end
 
     # @rbs () -> void

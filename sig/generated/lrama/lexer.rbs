@@ -45,6 +45,9 @@ module Lrama
     # @rbs () -> void
     def lex_comment: () -> void
 
+    # @rbs () -> Token::Regex?
+    def scan_regex_token: () -> Token::Regex?
+
     # @rbs () -> void
     def reset_first_position: () -> void
 

@@ -163,6 +163,8 @@ module Lrama
     end
 
     # Simple NFA state for regex compilation
+    class PatternError < StandardError; end
+
     class NFAState
       attr_reader :id #: Integer
       attr_accessor :transitions #: Hash[String?, Array[NFAState]]
@@ -186,6 +188,24 @@ module Lrama
       end
     end
 
+    class Fragment
+      attr_reader :start_state #: NFAState
+      attr_reader :end_state #: NFAState
+      attr_reader :nullable #: bool
+
+      # @rbs (NFAState start_state, NFAState end_state, bool nullable) -> void
+      def initialize(start_state, end_state, nullable)
+        @start_state = start_state
+        @end_state = end_state
+        @nullable = nullable
+      end
+
+      # @rbs () -> [NFAState, NFAState]
+      def to_ary
+        [@start_state, @end_state]
+      end
+    end
+
     # Build NFA from all token patterns
     # @rbs () -> Array[NFAState]
     def build_nfa
@@ -197,7 +217,13 @@ module Lrama
 
       @token_patterns.each do |token_pattern|
         # Build NFA fragment for this pattern
-        start_state, end_state = compile_regex(token_pattern.regex_pattern, nfa_counter, nfa_states)
+        begin
+          start_state, end_state = compile_regex(token_pattern.regex_pattern, nfa_counter, nfa_states)
+        rescue PatternError => e
+          raise PatternError,
+            "%token-pattern #{token_pattern.name} at line #{token_pattern.lineno} " \
+            "has unsupported pattern /#{token_pattern.regex_pattern}/: #{e.message}"
+        end
 
         # Connect NFA start to this pattern's start with epsilon
         nfa_start.add_transition(nil, start_state)
@@ -217,55 +243,70 @@ module Lrama
       state
     end
 
-    # Compile a regex pattern to NFA fragment
-    # Returns [start_state, end_state]
+    ASCII_CHARS = (0..127).map(&:chr).freeze #: Array[String]
+    ANY_CHARS = (ASCII_CHARS - ["\n"]).freeze #: Array[String]
+    DIGIT_CHARS = ("0".."9").to_a.freeze #: Array[String]
+    WORD_CHARS = (("a".."z").to_a + ("A".."Z").to_a + DIGIT_CHARS + ["_"]).freeze #: Array[String]
+    WHITESPACE_CHARS = [" ", "\t", "\n", "\r", "\f", "\v"].freeze #: Array[String]
+    QUANTIFIERS = ["*", "+", "?"].freeze #: Array[String]
+    ESCAPED_LITERAL_CHARS = ["/", "\\", "*", "+", "?", "(", ")", "[", "]", "{", "}", ".", "|", "^", "$", "-"].freeze #: Array[String]
+
+    # Compile a regex pattern to NFA fragment. The supported dialect is a small
+    # ASCII regular-expression subset for PSLR pseudo scanning.
     # @rbs (String pattern, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
     def compile_regex(pattern, counter, states)
-      # Simple regex compiler supporting:
-      # - Literal characters
-      # - Character classes [...]
-      # - Quantifiers *, +, ?
-      # - Alternation |
-      # - Grouping ()
+      raise PatternError, "empty patterns are not allowed" if pattern.empty?
 
-      compile_sequence(pattern, 0, counter, states)
+      fragment, pos = compile_expression(pattern, 0, counter, states)
+      raise PatternError, "unexpected trailing input at offset #{pos}" if pos < pattern.length
+      raise PatternError, "nullable patterns are not allowed" if fragment.nullable
+
+      [fragment.start_state, fragment.end_state]
     end
 
-    # Compile a sequence of regex elements
-    # @rbs (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
-    def compile_sequence(pattern, pos, counter, states)
+    # @rbs (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states, ?String? stop_char) -> [Fragment, Integer]
+    def compile_expression(pattern, pos, counter, states, stop_char = nil)
+      fragment, pos = compile_sequence(pattern, pos, counter, states, stop_char)
+      raise PatternError, empty_sequence_message(stop_char) unless fragment
+
+      alternatives = [fragment]
+
+      while pos < pattern.length && pattern[pos] == "|"
+        pos += 1
+        fragment, pos = compile_sequence(pattern, pos, counter, states, stop_char)
+        raise PatternError, "empty alternatives are not allowed" unless fragment
+
+        alternatives << fragment
+      end
+
+      if stop_char
+        raise PatternError, "unclosed group" unless pos < pattern.length && pattern[pos] == stop_char
+
+        pos += 1
+      elsif pos < pattern.length && pattern[pos] == ")"
+        raise PatternError, "unmatched close group at offset #{pos}"
+      end
+
+      [alternate_fragments(alternatives, counter, states), pos]
+    end
+
+    # @rbs (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states, String? stop_char) -> [Fragment?, Integer]
+    def compile_sequence(pattern, pos, counter, states, stop_char)
       fragments = []
       i = pos
 
       while i < pattern.length
         char = pattern[i]
+        break if char == "|" || (stop_char && char == stop_char)
 
         case char
         when '\\'
-          # Escape sequence
-          if i + 1 < pattern.length
-            i += 1
-            next_char = pattern[i]
-            case next_char
-            when 'd'
-              # \d matches digit
-              frag = compile_char_class('0-9', counter, states)
-            when 'w'
-              # \w matches word character
-              frag = compile_char_class('a-zA-Z0-9_', counter, states)
-            when 's'
-              # \s matches whitespace
-              frag = compile_char_class(' \t\n\r\f\v', counter, states)
-            else
-              # Literal escaped character
-              frag = compile_literal(next_char, counter, states)
-            end
-            fragments << frag
-          end
+          frag, i = compile_escape(pattern, i, counter, states)
+          fragments << frag
+          next
         when '['
-          # Character class
-          class_end = pattern.index(']', i)
-          raise "Unclosed character class in pattern: #{pattern}" unless class_end
+          class_end = find_character_class_end(pattern, i)
+          raise PatternError, "unclosed character class at offset #{i}" unless class_end
 
           char_class = pattern[i + 1...class_end]
           frag = compile_char_class(char_class, counter, states)
@@ -274,53 +315,23 @@ module Lrama
         when '*', '+', '?'
           # Quantifier - modify the last fragment
           if fragments.empty?
-            raise "Quantifier #{char} without preceding element in pattern: #{pattern}"
+            raise PatternError, "quantifier #{char} without preceding element at offset #{i}"
           end
-          last_frag = fragments.pop
-          quantified = apply_quantifier(last_frag, char, counter, states)
-          fragments << quantified
+          fragments << apply_quantifier(fragments.pop, char, counter, states)
         when '|'
-          # Alternation - compile remaining and merge
-          left_start, left_end = concatenate_fragments(fragments, counter, states)
-          right_start, right_end = compile_sequence(pattern, i + 1, counter, states)
-
-          # Create alternation
-          alt_start = create_nfa_state(counter, states)
-          alt_end = create_nfa_state(counter, states)
-
-          alt_start.add_transition(nil, left_start)
-          alt_start.add_transition(nil, right_start)
-          left_end.add_transition(nil, alt_end)
-          right_end.add_transition(nil, alt_end)
-
-          return [alt_start, alt_end]
-        when '('
-          # Find matching closing paren
-          depth = 1
-          j = i + 1
-          while j < pattern.length && depth > 0
-            if pattern[j] == '('
-              depth += 1
-            elsif pattern[j] == ')'
-              depth -= 1
-            end
-            j += 1
-          end
-          raise "Unclosed group in pattern: #{pattern}" if depth > 0
-
-          group_content = pattern[i + 1...j - 1]
-          frag = compile_sequence(group_content, 0, counter, states)
-          fragments << frag
-          i = j - 1
-        when ')'
-          # End of group - return
           break
+        when '('
+          frag, i = compile_expression(pattern, i + 1, counter, states, ")")
+          fragments << frag
+          next
+        when ')'
+          raise PatternError, "unmatched close group at offset #{i}"
         when '.'
-          # Match any character (simplified: printable ASCII)
           frag = compile_any_char(counter, states)
           fragments << frag
+        when ']'
+          raise PatternError, "unmatched character class close at offset #{i}"
         else
-          # Literal character
           frag = compile_literal(char, counter, states)
           fragments << frag
         end
@@ -328,41 +339,80 @@ module Lrama
         i += 1
       end
 
-      if fragments.empty?
-        # Empty pattern
-        state = create_nfa_state(counter, states)
-        return [state, state]
-      end
+      return [nil, i] if fragments.empty?
 
-      concatenate_fragments(fragments, counter, states)
+      [concatenate_fragments(fragments, counter, states), i]
+    end
+
+    # @rbs (String? stop_char) -> String
+    def empty_sequence_message(stop_char)
+      stop_char ? "empty groups are not allowed" : "empty patterns are not allowed"
+    end
+
+    # @rbs (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [Fragment, Integer]
+    def compile_escape(pattern, offset, counter, states)
+      raise PatternError, "dangling escape at offset #{offset}" if offset + 1 >= pattern.length
+
+      escaped = pattern[offset + 1]
+      fragment =
+        case escaped
+        when "d"
+          compile_chars(DIGIT_CHARS, counter, states)
+        when "w"
+          compile_chars(WORD_CHARS, counter, states)
+        when "s"
+          compile_chars(WHITESPACE_CHARS, counter, states)
+        when "n"
+          compile_literal("\n", counter, states)
+        when "t"
+          compile_literal("\t", counter, states)
+        when "r"
+          compile_literal("\r", counter, states)
+        when "f"
+          compile_literal("\f", counter, states)
+        when "v"
+          compile_literal("\v", counter, states)
+        else
+          raise PatternError, "unsupported escape \\#{escaped} at offset #{offset}" if escaped.match?(/[[:alnum:]]/)
+
+          unless ESCAPED_LITERAL_CHARS.include?(escaped)
+            raise PatternError, "unsupported escape \\#{escaped} at offset #{offset}"
+          end
+          compile_literal(escaped, counter, states)
+        end
+
+      [fragment, offset + 2]
     end
 
     # Compile a single literal character
-    # @rbs (String char, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    # @rbs (String char, Array[Integer] counter, Array[NFAState] states) -> Fragment
     def compile_literal(char, counter, states)
+      compile_chars([char], counter, states)
+    end
+
+    # @rbs (Array[String] chars, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def compile_chars(chars, counter, states)
+      raise PatternError, "empty character classes are not allowed" if chars.empty?
+
       start_state = create_nfa_state(counter, states)
       end_state = create_nfa_state(counter, states)
-      start_state.add_transition(char, end_state)
-      [start_state, end_state]
+      chars.uniq.each do |char|
+        start_state.add_transition(char, end_state)
+      end
+      Fragment.new(start_state, end_state, false)
     end
 
     # Compile a character class [...]
-    # @rbs (String char_class, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    # @rbs (String char_class, Array[Integer] counter, Array[NFAState] states) -> Fragment
     def compile_char_class(char_class, counter, states)
-      start_state = create_nfa_state(counter, states)
-      end_state = create_nfa_state(counter, states)
-
-      chars = expand_char_class(char_class)
-      chars.each do |c|
-        start_state.add_transition(c, end_state)
-      end
-
-      [start_state, end_state]
+      compile_chars(expand_char_class(char_class), counter, states)
     end
 
     # Expand character class string to array of characters
     # @rbs (String char_class) -> Array[String]
     def expand_char_class(char_class)
+      raise PatternError, "empty character classes are not allowed" if char_class.empty?
+
       chars = []
       i = 0
       negated = false
@@ -370,68 +420,114 @@ module Lrama
       if char_class[0] == '^'
         negated = true
         i = 1
+        raise PatternError, "negated character classes must include at least one character" if i >= char_class.length
       end
 
       while i < char_class.length
-        if char_class[i] == '\\' && i + 1 < char_class.length
-          chars << escaped_char_class_char(char_class[i + 1])
-          i += 2
-        elsif i + 2 < char_class.length && char_class[i + 1] == '-'
-          # Range
-          start_char = char_class[i]
-          end_char = char_class[i + 2]
-          (start_char..end_char).each { |c| chars << c }
-          i += 3
-        else
-          chars << char_class[i]
+        element_chars, i = read_char_class_element(char_class, i)
+
+        if i < char_class.length && char_class[i] == "-" && i + 1 < char_class.length
           i += 1
+          range_end_chars, i = read_char_class_element(char_class, i)
+          chars.concat(expand_char_range(element_chars, range_end_chars))
+        else
+          chars.concat(element_chars)
         end
       end
 
       if negated
-        all_printable = (32..126).map(&:chr)
-        chars = all_printable - chars
+        chars = ASCII_CHARS - chars
       end
 
-      chars
+      chars.uniq
     end
 
-    # @rbs (String char) -> String
-    def escaped_char_class_char(char)
-      case char
-      when 't'
-        "\t"
-      when 'n'
-        "\n"
-      when 'r'
-        "\r"
-      when 'f'
-        "\f"
-      when 'v'
-        "\v"
-      else
-        char
+    # @rbs (String pattern, Integer offset) -> Integer?
+    def find_character_class_end(pattern, offset)
+      i = offset + 1
+      while i < pattern.length
+        if pattern[i] == "\\"
+          raise PatternError, "dangling escape in character class at offset #{i}" if i + 1 >= pattern.length
+
+          i += 2
+          next
+        end
+
+        return i if pattern[i] == "]"
+
+        i += 1
       end
+
+      nil
+    end
+
+    # @rbs (String char_class, Integer offset) -> [Array[String], Integer]
+    def read_char_class_element(char_class, offset)
+      raise PatternError, "dangling range operator in character class" if offset >= char_class.length
+
+      char = char_class[offset]
+      if char == "\\"
+        raise PatternError, "dangling escape in character class" if offset + 1 >= char_class.length
+
+        escaped = char_class[offset + 1]
+        return [escaped_char_class_chars(escaped, offset), offset + 2]
+      end
+
+      [[char], offset + 1]
+    end
+
+    # @rbs (String char, Integer offset) -> Array[String]
+    def escaped_char_class_chars(char, offset)
+      case char
+      when "d"
+        DIGIT_CHARS
+      when "w"
+        WORD_CHARS
+      when "s"
+        WHITESPACE_CHARS
+      when "t"
+        ["\t"]
+      when "n"
+        ["\n"]
+      when "r"
+        ["\r"]
+      when "f"
+        ["\f"]
+      when "v"
+        ["\v"]
+      else
+        raise PatternError, "unsupported escape \\#{char} in character class at offset #{offset}" if char.match?(/[[:alnum:]]/)
+
+        [char]
+      end
+    end
+
+    # @rbs (Array[String] start_chars, Array[String] end_chars) -> Array[String]
+    def expand_char_range(start_chars, end_chars)
+      if start_chars.size != 1 || end_chars.size != 1
+        raise PatternError, "character class ranges must use single-character endpoints"
+      end
+
+      start_char = start_chars.first
+      end_char = end_chars.first
+      if start_char.ord > end_char.ord
+        raise PatternError, "invalid character class range #{start_char}-#{end_char}"
+      end
+
+      (start_char.ord..end_char.ord).map(&:chr)
     end
 
     # Compile . (any character)
-    # @rbs (Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    # @rbs (Array[Integer] counter, Array[NFAState] states) -> Fragment
     def compile_any_char(counter, states)
-      start_state = create_nfa_state(counter, states)
-      end_state = create_nfa_state(counter, states)
-
-      # Match printable ASCII
-      (32..126).each do |code|
-        start_state.add_transition(code.chr, end_state)
-      end
-
-      [start_state, end_state]
+      compile_chars(ANY_CHARS, counter, states)
     end
 
     # Apply a quantifier to a fragment
-    # @rbs ([NFAState, NFAState] fragment, String quantifier, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
+    # @rbs (Fragment fragment, String quantifier, Array[Integer] counter, Array[NFAState] states) -> Fragment
     def apply_quantifier(fragment, quantifier, counter, states)
-      frag_start, frag_end = fragment
+      frag_start = fragment.start_state
+      frag_end = fragment.end_state
 
       case quantifier
       when '*'
@@ -444,7 +540,7 @@ module Lrama
         frag_end.add_transition(nil, frag_start)
         frag_end.add_transition(nil, new_end)
 
-        [new_start, new_end]
+        Fragment.new(new_start, new_end, true)
       when '+'
         # One or more
         new_end = create_nfa_state(counter, states)
@@ -452,7 +548,7 @@ module Lrama
         frag_end.add_transition(nil, frag_start)
         frag_end.add_transition(nil, new_end)
 
-        [frag_start, new_end]
+        Fragment.new(frag_start, new_end, fragment.nullable)
       when '?'
         # Zero or one
         new_start = create_nfa_state(counter, states)
@@ -462,27 +558,43 @@ module Lrama
         new_start.add_transition(nil, new_end)
         frag_end.add_transition(nil, new_end)
 
-        [new_start, new_end]
+        Fragment.new(new_start, new_end, true)
       else
         fragment
       end
     end
 
-    # Concatenate multiple NFA fragments into one
-    # @rbs (Array[[NFAState, NFAState]] fragments, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
-    def concatenate_fragments(fragments, counter, states)
-      return create_nfa_state(counter, states).then { |s| [s, s] } if fragments.empty?
-      return fragments[0] if fragments.size == 1
+    # @rbs (Array[Fragment] fragments, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def alternate_fragments(fragments, counter, states)
+      return fragments.first if fragments.size == 1
 
-      result_start = fragments[0][0]
-      current_end = fragments[0][1]
+      alt_start = create_nfa_state(counter, states)
+      alt_end = create_nfa_state(counter, states)
 
-      fragments[1..-1].each do |frag_start, frag_end|
-        current_end.add_transition(nil, frag_start)
-        current_end = frag_end
+      fragments.each do |fragment|
+        alt_start.add_transition(nil, fragment.start_state)
+        fragment.end_state.add_transition(nil, alt_end)
       end
 
-      [result_start, current_end]
+      Fragment.new(alt_start, alt_end, fragments.any?(&:nullable))
+    end
+
+    # Concatenate multiple NFA fragments into one
+    # @rbs (Array[Fragment] fragments, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def concatenate_fragments(fragments, counter, states)
+      raise PatternError, "empty sequences are not allowed" if fragments.empty?
+      return fragments.first if fragments.size == 1
+
+      result_start = fragments.first.start_state
+      current_end = fragments.first.end_state
+      nullable = fragments.all?(&:nullable)
+
+      fragments[1..-1].each do |fragment|
+        current_end.add_transition(nil, fragment.start_state)
+        current_end = fragment.end_state
+      end
+
+      Fragment.new(result_start, current_end, nullable)
     end
 
     # Convert NFA to DFA using subset construction

@@ -69,6 +69,9 @@ module Lrama
     def create_state: () -> State
 
     # Simple NFA state for regex compilation
+    class PatternError < StandardError
+    end
+
     class NFAState
       attr_reader id: Integer
 
@@ -86,6 +89,20 @@ module Lrama
       def accepting?: () -> bool
     end
 
+    class Fragment
+      attr_reader start_state: NFAState
+
+      attr_reader end_state: NFAState
+
+      attr_reader nullable: bool
+
+      # @rbs (NFAState start_state, NFAState end_state, bool nullable) -> void
+      def initialize: (NFAState start_state, NFAState end_state, bool nullable) -> void
+
+      # @rbs () -> [NFAState, NFAState]
+      def to_ary: () -> [ NFAState, NFAState ]
+    end
+
     # Build NFA from all token patterns
     # @rbs () -> Array[NFAState]
     def build_nfa: () -> Array[NFAState]
@@ -93,41 +110,78 @@ module Lrama
     # @rbs (Array[Integer] counter, Array[NFAState] states) -> NFAState
     def create_nfa_state: (Array[Integer] counter, Array[NFAState] states) -> NFAState
 
-    # Compile a regex pattern to NFA fragment
-    # Returns [start_state, end_state]
+    ASCII_CHARS: Array[String]
+
+    ANY_CHARS: Array[String]
+
+    DIGIT_CHARS: Array[String]
+
+    WORD_CHARS: Array[String]
+
+    WHITESPACE_CHARS: Array[String]
+
+    QUANTIFIERS: Array[String]
+
+    ESCAPED_LITERAL_CHARS: Array[String]
+
+    # Compile a regex pattern to NFA fragment. The supported dialect is a small
+    # ASCII regular-expression subset for PSLR pseudo scanning.
     # @rbs (String pattern, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
     def compile_regex: (String pattern, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
 
-    # Compile a sequence of regex elements
-    # @rbs (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
-    def compile_sequence: (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+    # @rbs (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states, ?String? stop_char) -> [Fragment, Integer]
+    def compile_expression: (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states, ?String? stop_char) -> [ Fragment, Integer ]
+
+    # @rbs (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states, String? stop_char) -> [Fragment?, Integer]
+    def compile_sequence: (String pattern, Integer pos, Array[Integer] counter, Array[NFAState] states, String? stop_char) -> [ Fragment?, Integer ]
+
+    # @rbs (String? stop_char) -> String
+    def empty_sequence_message: (String? stop_char) -> String
+
+    # @rbs (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [Fragment, Integer]
+    def compile_escape: (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [ Fragment, Integer ]
 
     # Compile a single literal character
-    # @rbs (String char, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
-    def compile_literal: (String char, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+    # @rbs (String char, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def compile_literal: (String char, Array[Integer] counter, Array[NFAState] states) -> Fragment
+
+    # @rbs (Array[String] chars, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def compile_chars: (Array[String] chars, Array[Integer] counter, Array[NFAState] states) -> Fragment
 
     # Compile a character class [...]
-    # @rbs (String char_class, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
-    def compile_char_class: (String char_class, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+    # @rbs (String char_class, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def compile_char_class: (String char_class, Array[Integer] counter, Array[NFAState] states) -> Fragment
 
     # Expand character class string to array of characters
     # @rbs (String char_class) -> Array[String]
     def expand_char_class: (String char_class) -> Array[String]
 
-    # @rbs (String char) -> String
-    def escaped_char_class_char: (String char) -> String
+    # @rbs (String pattern, Integer offset) -> Integer?
+    def find_character_class_end: (String pattern, Integer offset) -> Integer?
+
+    # @rbs (String char_class, Integer offset) -> [Array[String], Integer]
+    def read_char_class_element: (String char_class, Integer offset) -> [ Array[String], Integer ]
+
+    # @rbs (String char, Integer offset) -> Array[String]
+    def escaped_char_class_chars: (String char, Integer offset) -> Array[String]
+
+    # @rbs (Array[String] start_chars, Array[String] end_chars) -> Array[String]
+    def expand_char_range: (Array[String] start_chars, Array[String] end_chars) -> Array[String]
 
     # Compile . (any character)
-    # @rbs (Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
-    def compile_any_char: (Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+    # @rbs (Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def compile_any_char: (Array[Integer] counter, Array[NFAState] states) -> Fragment
 
     # Apply a quantifier to a fragment
-    # @rbs ([NFAState, NFAState] fragment, String quantifier, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
-    def apply_quantifier: ([ NFAState, NFAState ] fragment, String quantifier, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+    # @rbs (Fragment fragment, String quantifier, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def apply_quantifier: (Fragment fragment, String quantifier, Array[Integer] counter, Array[NFAState] states) -> Fragment
+
+    # @rbs (Array[Fragment] fragments, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def alternate_fragments: (Array[Fragment] fragments, Array[Integer] counter, Array[NFAState] states) -> Fragment
 
     # Concatenate multiple NFA fragments into one
-    # @rbs (Array[[NFAState, NFAState]] fragments, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
-    def concatenate_fragments: (Array[[ NFAState, NFAState ]] fragments, Array[Integer] counter, Array[NFAState] states) -> [ NFAState, NFAState ]
+    # @rbs (Array[Fragment] fragments, Array[Integer] counter, Array[NFAState] states) -> Fragment
+    def concatenate_fragments: (Array[Fragment] fragments, Array[Integer] counter, Array[NFAState] states) -> Fragment
 
     # Convert NFA to DFA using subset construction
     # @rbs (Array[NFAState] nfa_states) -> void

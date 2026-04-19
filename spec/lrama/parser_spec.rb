@@ -4653,6 +4653,34 @@ RSpec.describe Lrama::Parser do
         token_pattern = grammar.token_patterns.first
         expect(token_pattern.tag.s_value).to eq("<str>")
       end
+
+      it "parses escaped slashes inside token patterns" do
+        y = <<~GRAMMAR
+          %token-pattern SLASH /\\//
+          %%
+          program: SLASH
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.first.regex_pattern).to eq("\\/")
+      end
+
+      it "keeps empty token patterns available for scanner diagnostics" do
+        y = <<~GRAMMAR
+          %token-pattern EMPTY //
+          %%
+          program: EMPTY
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.first.regex_pattern).to eq("")
+      end
     end
 
     describe "%lex-prec" do
