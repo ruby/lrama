@@ -10,7 +10,7 @@ RSpec.describe "PSLR family regressions" do
         %token-pattern RSHIFT />>/
         %token-pattern RANGLE />/
         %token-pattern ID /[a-z]+/
-        %lex-prec RANGLE -s RSHIFT
+        %lex-prec RANGLE -~ RSHIFT
 
         %%
 
@@ -118,7 +118,7 @@ RSpec.describe "PSLR family regressions" do
         %token-pattern RSHIFT />>/
         %token-pattern RANGLE />/
         %token-pattern ID /[a-z]+/
-        %lex-prec RANGLE -s RSHIFT
+        %lex-no-tie RANGLE RSHIFT
 
         %%
 
@@ -175,7 +175,7 @@ RSpec.describe "PSLR family regressions" do
     {
       "empty shared wrapper" => {
         path: "states/pslr_mixed_empty.y",
-        grows: false,
+        grows: true,
         grammar: <<~GRAMMAR,
           %define lr.type pslr
           %token-pattern LT /</
@@ -188,7 +188,7 @@ RSpec.describe "PSLR family regressions" do
           %token-pattern RSHIFT />>/
           %token-pattern RANGLE />/
           %lex-prec ID <~ IF
-          %lex-prec RANGLE -s RSHIFT
+          %lex-no-tie RANGLE RSHIFT
 
           %%
 
@@ -243,7 +243,7 @@ RSpec.describe "PSLR family regressions" do
           %token-pattern RSHIFT />>/
           %token-pattern RANGLE />/
           %lex-prec ID <~ IF
-          %lex-prec RANGLE -s RSHIFT
+          %lex-no-tie RANGLE RSHIFT
 
           %%
 

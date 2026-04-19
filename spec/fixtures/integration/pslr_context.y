@@ -28,7 +28,7 @@ static int yyerror(YYLTYPE *loc, struct parse_params *p, const char *str);
 %token-pattern LANGLE /</
 %token-pattern ID /[a-zA-Z_][a-zA-Z0-9_]*/
 
-%lex-prec RANGLE -s RSHIFT
+%lex-no-tie RANGLE RSHIFT
 
 %%
 

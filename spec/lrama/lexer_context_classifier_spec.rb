@@ -412,7 +412,7 @@ RSpec.describe Lrama::LexerContextClassifier do
           %token-pattern RSHIFT />>/
           %token-pattern RANGLE />/
           %token-pattern ID /[a-z]+/
-          %lex-prec RANGLE -s RSHIFT
+          %lex-prec RANGLE -~ RSHIFT
 
           %%
 

@@ -446,7 +446,7 @@ RSpec.describe "integration" do
           %token-pattern LANGLE /</ "left angle"
           %token-pattern ID /[a-zA-Z_][a-zA-Z0-9_]*/
 
-          %lex-prec RANGLE -s RSHIFT
+          %lex-no-tie RANGLE RSHIFT
 
           %%
 
@@ -485,9 +485,10 @@ RSpec.describe "integration" do
         expect(states.scanner_fsa.states).not_to be_empty
       end
 
-      it "builds length precedences from lex-prec rules" do
+      it "keeps template angle tokens untied without using global shortest-match precedence" do
         expect(states.length_precedences).not_to be_nil
-        expect(states.length_precedences.prefer_shorter?("RANGLE", "RSHIFT")).to be true
+        expect(grammar.lex_tie.no_tie?("RANGLE", "RSHIFT")).to be true
+        expect(states.length_precedences.resolution("RANGLE", "RSHIFT")).to eq(Lrama::LengthPrecedences::UNRESOLVED)
       end
 
       it "parses all 4 token patterns" do
