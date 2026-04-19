@@ -161,6 +161,26 @@ RSpec.describe "integration" do
       test_parser("pslr_template_argument_lists", "a >> b;", "expr\n")
     end
 
+    it "discards layout comments that share a prefix with normal tokens" do
+      test_parser("pslr_layout_comment", "a/* comment */ / b;", "ok\n")
+    end
+
+    it "reports unresolved layout scanner conflicts without an explicit length rule" do
+      grammar_text = File.read(fixture_path("integration/pslr_layout_comment.y"))
+        .sub("%lex-prec DIV -~ YYLAYOUT_COMMENT\n", "")
+      grammar = Lrama::Parser.new(grammar_text, "integration/pslr_layout_comment_no_prec.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_pslr
+      logger = Lrama::Logger.new
+      allow(logger).to receive(:error)
+
+      expect { states.validate!(logger) }.to raise_error(SystemExit)
+      expect(logger).to have_received(:error).with(a_string_including("DIV", "YYLAYOUT_COMMENT"))
+    end
+
     it "consumes an unmatched PSLR character token before reporting an error" do
       test_parser("pslr_template_argument_lists", "$", "", expect_success: false)
     end
