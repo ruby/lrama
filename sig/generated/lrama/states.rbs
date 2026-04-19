@@ -357,5 +357,13 @@ module Lrama
 
     # @rbs (Logger logger) -> void
     def validate_pslr_state_growth!: (Logger logger) -> void
+
+    # Report %lex-prec rules that were never used in scanner conflict resolution.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_useless_lex_prec!: (Logger logger) -> void
+
+    # Report lexical tie candidates that are not covered by %lex-tie or %lex-no-tie.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_lexical_tie_candidates!: (Logger logger) -> void
   end
 end

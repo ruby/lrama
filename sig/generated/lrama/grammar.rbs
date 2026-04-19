@@ -290,9 +290,15 @@ module Lrama
     def add_symbol_set: (name: String, symbols: Array[Lexer::Token::Base]) -> Array[Lexer::Token::Base]
 
     # Add lex-prec rules from %lex-prec directive.
-    # Symbol-set operands are expanded eagerly, so the resolver only sees token pairs.
-    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Array[Grammar::LexPrec::Rule]
-    def add_lex_prec_rule: (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Array[Grammar::LexPrec::Rule]
+    # Stores as raw declaration for delayed expansion after implicit literal synthesis.
+    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
+    def add_lex_prec_rule: (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
+
+    # Finalize lexical declarations after implicit literal synthesis.
+    # Expands yyall and symbol-set operands using the post-synthesis token universe.
+    # Validates that identity-component operators are not used as self-pairs.
+    # @rbs () -> void
+    def finalize_lexical_declarations!: () -> void
 
     # Add lexical tie relationships from %lex-tie directive.
     # @rbs (operands: Array[Lexer::Token::Base]) -> void
@@ -346,8 +352,17 @@ module Lrama
 
     private
 
+    # Validate that identity-component operators are not applied to self-pairs.
+    # Self-pair is allowed only for length-only operators (-~ and -s).
+    # @rbs (Lexer::Token::Base left, Lexer::Token::Base right, Symbol operator, Integer lineno) -> void
+    def validate_lex_prec_self_pair!: (Lexer::Token::Base left, Lexer::Token::Base right, Symbol operator, Integer lineno) -> void
+
     # @rbs (Lexer::Token::Base id) -> String?
     def implicit_literal_regex_pattern: (Lexer::Token::Base id) -> String?
+
+    # Extract the string content from a quoted string literal (e.g., "=>" -> =>)
+    # @rbs (String s_value) -> String?
+    def str_literal_value: (String s_value) -> String?
 
     # @rbs (String s_value) -> String?
     def char_literal_value: (String s_value) -> String?

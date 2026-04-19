@@ -97,6 +97,9 @@ module Lrama
       # @rbs (Hash[String, String] parents, String left, String right) -> void
       def union: (Hash[String, String] parents, String left, String right) -> void
 
+      # Compute closure specificity between two tokens via tie graph BFS.
+      # Path specificity = min(edge specificities on the path).
+      # Result = max over all paths connecting left and right.
       # @rbs (String left, String right, Hash[[String, String], Integer] tie_specificities) -> Integer
       def tie_specificity_between: (String left, String right, Hash[[ String, String ], Integer] tie_specificities) -> Integer
 
