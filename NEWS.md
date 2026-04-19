@@ -83,10 +83,12 @@ in every parser context.
 
 For normal parser-state scanner rows, unresolved pseudo-scanner conflicts are not resolved by token declaration
 order. They are reported as errors so the grammar can add an explicit `%lex-prec`, `%lex-tie`, or `%lex-no-tie`
-declaration. Lrama also emits a fallback scanner row for syntax error handling; only that fallback row uses
-traditional lexical fallback behavior, choosing the longest match and then token declaration order. If no token
-pattern matches at all, the PSLR helper consumes one byte and returns `YYUNDEF` as a character-token fallback, so
-error paths do not loop forever.
+declaration. For syntax-error handling, Lrama also emits a fallback scanner row. The fallback row first applies
+explicit PSLR lexical precedence declarations. If a scanner conflict remains unresolved only because it is not a
+pseudo-scanner conflict for any parser state, the fallback row uses traditional scanner behavior: longest match
+for length conflicts and token declaration order for identity conflicts. If no token pattern matches at all, the
+PSLR helper consumes one byte and returns `YYUNDEF` as a character-token fallback, so error paths do not loop
+forever.
 
 `%lex-prec` uses ASCII spellings for the PSLR lexical precedence operators:
 
@@ -125,15 +127,19 @@ can still tie the relevant token pair.
 Token patterns named `YYLAYOUT` or starting with `YYLAYOUT` are layout tokens. They are included in every
 parser-state scanner row and should be consumed and skipped by the PSLR-aware lexer instead of being returned to
 the parser. The generated helpers include `YYPSLR_TOKEN_IS_LAYOUT(Token)` and the structured
-`YYPSLR_PSEUDO_SCAN_RESULT(...)` API for this purpose.
+`YYPSLR_PSEUDO_SCAN_RESULT(...)` API for this purpose. `yy_pseudo_scan_result` is a low-level scanner helper and
+may report a layout token with `result->is_layout = 1`; a PSLR-aware `yylex` must consume that text, keep the same
+parser state, and scan the remaining input instead of passing the layout token to the parser.
 
 `%token-pattern` currently uses an ASCII byte-oriented regular-expression subset for PSLR pseudo scanning.
 Supported constructs are literals, escaped literals such as `\/`, `\*`, `\+`, `\?`, `\(`, `\)`, `\[`, `\]`,
-and `\\`, character classes with escapes such as `[\]]`, `[\\]`, and `[\n\t\r]`, ranges such as `[a-z]`,
-negated classes such as `[^*]`, grouping, alternation, `*`, `+`, `?`, and `.`. The `.` operator matches ASCII
-bytes except newline; negated character classes range over ASCII bytes. Unicode properties and other regexp engine
-extensions are not supported. Unsupported escapes, unclosed groups or classes, invalid ranges, dangling escapes,
-and nullable token patterns such as `//`, `/()/`, `/a*/`, `/a?/`, and `/a|/` are generation errors.
+and `\\`, grouping with `(...)`, alternation with `|`, repetition operators `*`, `+`, `?`, character classes with
+escapes such as `[\]]`, `[\\]`, and `[\n\t\r]`, ranges such as `[a-z]`, negated classes such as `[^*]`, common
+escapes such as `\n`, `\t`, and `\r`, and `.`. The `.` operator matches ASCII bytes except newline; negated
+character classes range over ASCII bytes. Unicode properties and full Ruby/Onigmo regexp syntax are not supported.
+Unsupported or malformed constructs are rejected during generation rather than silently reinterpreted. Nullable
+token patterns such as `//`, `/()/`, `/a*/`, `/a?/`, and `/a|/` are generation errors because PSLR token lexemes
+must be non-empty.
 
 When the parser and lexer share a context through `%parse-param` / `%lex-param`, the generated header also
 provides helpers such as `YYPSLR_PSEUDO_SCAN(...)`, so the lexer can choose a token based on the current parser

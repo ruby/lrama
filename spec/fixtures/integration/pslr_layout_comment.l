@@ -21,6 +21,8 @@
     if (result.length < yyleng) {
         yyless(result.length);
     }
+    /* Layout tokens are scanner-only. Consume them and keep the same parser
+       state while scanning the remaining input. */
     if (result.is_layout) {
         return yylex(yylval, p);
     }
