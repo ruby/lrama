@@ -164,6 +164,10 @@ module Lrama
 
     attr_reader lexer_contexts: Hash[String, Grammar::LexerContext]
 
+    attr_reader token_actions: Array[Grammar::TokenAction]
+
+    attr_reader scoped_lex_declarations: Array[Grammar::ScopedLexDecl]
+
     # Argument symbol names for each parameterized rule expansion.
     # @rbs () -> Hash[String, Array[String]]
     def parameterized_expansion_args: () -> Hash[String, Array[String]]
@@ -301,6 +305,27 @@ module Lrama
     # Add a lexer context from %lexer-context directive
     # @rbs (name: String, symbols: Array[Lexer::Token::Ident]) -> Grammar::LexerContext
     def add_lexer_context: (name: String, symbols: Array[Lexer::Token::Ident]) -> Grammar::LexerContext
+
+    # Add a token action from %token-action directive
+    # @rbs (id: Lexer::Token::Ident, code: Lexer::Token::UserCode, lineno: Integer) -> Grammar::TokenAction
+    def add_token_action: (id: Lexer::Token::Ident, code: Lexer::Token::UserCode, lineno: Integer) -> Grammar::TokenAction
+
+    # Begin a scoped lexical declaration block from %lex-scope directive
+    # @rbs (name: String, lineno: Integer) -> Grammar::ScopedLexDecl
+    def begin_scoped_lex_declaration: (name: String, lineno: Integer) -> Grammar::ScopedLexDecl
+
+    # End the current scoped lexical declaration block
+    # @rbs () -> void
+    def end_scoped_lex_declaration: () -> void
+
+    # Add a lex-prec rule, respecting current scope
+    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> void
+    def add_scoped_or_global_lex_prec_rule: (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> void
+
+    # Find the scoped lex-prec rules that apply to a given parser state.
+    # A scope is active in a state if any item in the state derives from the scope nonterminal.
+    # @rbs (Array[String] active_nterm_names) -> Grammar::LexPrec
+    def scoped_lex_prec_for: (Array[String] active_nterm_names) -> Grammar::LexPrec
 
     # Find a token pattern by its name
     # @rbs (String name) -> Grammar::TokenPattern?

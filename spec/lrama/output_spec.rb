@@ -321,6 +321,14 @@ RSpec.describe Lrama::Output do
         expect(result).to include("yy_pseudo_scan")
         expect(result).to include("yy_token_pattern_to_token_id")
       end
+
+      it "generates layout accumulation code" do
+        result = pslr_output.pslr_tables_and_functions
+        expect(result).to include("yypslr_layout_buffer")
+        expect(result).to include("YYPSLR_LAYOUT_TEXT")
+        expect(result).to include("YYPSLR_LAYOUT_LENGTH")
+        expect(result).to include("yypslr_scan_with_layout")
+      end
     end
 
     describe "#pslr_lac_function" do
