@@ -139,7 +139,6 @@ rule
     | "%lex-prec" lex_prec_declarations
     | "%lex-tie" lex_tie_declaration
     | "%lex-no-tie" lex_no_tie_declaration
-    | "%lex-scope" lex_scope_declaration
     | "%type" symbol_declarations
         {
           val[1].each {|hash|
@@ -344,54 +343,6 @@ rule
           )
         }
 
-  lex_scope_declaration:
-      lex_scope_start lex_scope_body "}"
-        {
-          @grammar.end_scoped_lex_declaration
-        }
-
-  lex_scope_start:
-      IDENTIFIER "{"
-        {
-          @grammar.begin_scoped_lex_declaration(
-            name: val[0].s_value,
-            lineno: val[0].first_line
-          )
-        }
-
-  lex_scope_body:
-      /* empty */
-    | lex_scope_body lex_scope_item ";"*
-
-  lex_scope_item:
-      "%lex-prec" scoped_lex_prec_declarations
-    | "%lex-tie" scoped_lex_tie_declaration
-    | "%lex-no-tie" scoped_lex_no_tie_declaration
-
-  scoped_lex_prec_declarations:
-      lex_prec_chain
-        {
-          val[0].each {|rule|
-            @grammar.add_scoped_or_global_lex_prec_rule(
-              left_token: rule[:left],
-              operator: rule[:op],
-              right_token: rule[:right],
-              lineno: rule[:left].first_line
-            )
-          }
-        }
-
-  scoped_lex_tie_declaration:
-      symbol symbol+
-        {
-          @grammar.add_lex_tie(operands: [val[0]] + val[1])
-        }
-
-  scoped_lex_no_tie_declaration:
-      symbol symbol+
-        {
-          @grammar.add_lex_no_tie(operands: [val[0]] + val[1])
-        }
 
   rule_declaration:
       "%rule" IDENTIFIER "(" rule_args ")" TAG? ":" rule_rhs_list

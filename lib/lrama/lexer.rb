@@ -50,7 +50,6 @@ module Lrama
       %lex-prec
       %lex-tie
       %lex-no-tie
-      %lex-scope
       %token-action
       %parse-param
       %initial-action

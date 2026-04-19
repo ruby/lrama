@@ -989,11 +989,6 @@ module Lrama
       pslr_enabled? && !@grammar.token_actions.empty?
     end
 
-    # Check if scoped lex declarations are defined
-    def pslr_scoped_lex_enabled?
-      pslr_enabled? && !@grammar.scoped_lex_declarations.empty?
-    end
-
     # Generate layout accumulation declarations
     def pslr_layout_declarations
       return "" unless pslr_scanner_enabled?
@@ -1114,22 +1109,6 @@ module Lrama
       C_CODE
     end
 
-    # Generate scoped lex-prec table info as C comments
-    def pslr_scoped_declarations_info
-      return "" unless pslr_scoped_lex_enabled?
-
-      lines = []
-      lines << ""
-      lines << "/* Scoped lexical declarations */"
-      @grammar.scoped_lex_declarations.each do |decl|
-        lines << "/* Scope: #{decl.scope_name} (#{decl.lex_prec_rules.size} lex-prec rules) */"
-        decl.lex_prec_rules.each do |rule|
-          lines << "/*   #{rule.left_name} #{rule.operator} #{rule.right_name} */"
-        end
-      end
-      lines.join("\n")
-    end
-
     # Generate all PSLR C code
     def pslr_tables_and_functions
       return "" unless pslr_scanner_enabled?
@@ -1148,7 +1127,6 @@ module Lrama
         pseudo_scan_function,
         pslr_layout_scan_function,
         pslr_token_action_function,
-        pslr_scoped_declarations_info,
       ]
 
       parts.join("\n")
