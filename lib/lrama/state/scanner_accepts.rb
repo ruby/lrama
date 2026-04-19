@@ -115,12 +115,19 @@ module Lrama
             return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: selected_shorter_token)
           end
 
-          winners = current_tokens.select do |candidate|
+          explicit_winners = current_tokens.select do |candidate|
             fallback_identity_winner?(candidate, current_tokens) &&
               shorter_tokens.all? {|shorter| @length_prec.fallback_precedes?(shorter, candidate) }
           end
 
-          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: winners.first) if winners.size == 1
+          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: explicit_winners.first) if explicit_winners.size == 1
+
+          declaration_order_winner = current_tokens.sort_by {|token| token_order_key(token) }.find do |candidate|
+            shorter_tokens.all? {|shorter| @length_prec.fallback_precedes?(shorter, candidate) }
+          end
+          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: declaration_order_winner) if declaration_order_winner
+
+          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: selected_shorter_token) if selected_shorter_token
 
           ProfileOutcome.new(kind: ProfileOutcome::UNRESOLVED)
         end

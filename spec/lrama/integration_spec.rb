@@ -205,6 +205,10 @@ RSpec.describe "integration" do
       test_parser("pslr_fallback_precedence", "cd", "IB 2\n", expect_success: false)
     end
 
+    it "uses declaration order for fallback-only explicit identity cycles" do
+      test_parser("pslr_fallback_precedence", "~", "CYC_A 1\n", expect_success: false)
+    end
+
     it "returns YYEOF for empty input in PSLR pseudo-scan helpers" do
       test_parser("pslr_fallback_precedence", "__empty__", "EOF 0 0 0 0\n")
     end
@@ -233,6 +237,38 @@ RSpec.describe "integration" do
 
       expect { states.validate!(logger) }.to raise_error(SystemExit)
       expect(logger).to have_received(:error).with(a_string_including("unresolved PSLR scanner conflict", "A", "B"))
+    end
+
+    it "does not use fallback declaration order for normal parser-state identity cycles" do
+      grammar_text = <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern A /a/
+        %token-pattern B /a/
+        %token-pattern C /a/
+
+        %lex-prec A <- B
+        %lex-prec B <- C
+        %lex-prec C <- A
+
+        %%
+
+        start
+          : A
+          | B
+          | C
+          ;
+      GRAMMAR
+      grammar = Lrama::Parser.new(grammar_text, "integration/pslr_normal_identity_cycle.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_pslr
+      logger = Lrama::Logger.new
+      allow(logger).to receive(:error)
+
+      expect { states.validate!(logger) }.to raise_error(SystemExit)
+      expect(logger).to have_received(:error).with(a_string_including("unresolved PSLR scanner conflict", "A", "B", "C"))
     end
 
     it "consumes an unmatched PSLR character token before reporting an error" do

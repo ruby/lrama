@@ -31,6 +31,9 @@ static int yyerror(YYLTYPE *loc, struct parse_params *p, const char *str);
 %token-pattern SHORT /c/
 %token-pattern IA /cd/
 %token-pattern IB /cd/
+%token-pattern CYC_A /~/
+%token-pattern CYC_B /~/
+%token-pattern CYC_C /~/
 %token-pattern ZA /z/
 %token-pattern ZB /z/
 %token-pattern PA /@/
@@ -42,6 +45,9 @@ static int yyerror(YYLTYPE *loc, struct parse_params *p, const char *str);
 %lex-prec WORD -< NON
 %lex-prec PA <- PB
 %lex-prec IA <- IB
+%lex-prec CYC_A <- CYC_B
+%lex-prec CYC_B <- CYC_C
+%lex-prec CYC_C <- CYC_A
 
 %%
 

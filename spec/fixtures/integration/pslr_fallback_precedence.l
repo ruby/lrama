@@ -24,6 +24,12 @@ token_name(int token)
         return "IA";
     case IB:
         return "IB";
+    case CYC_A:
+        return "CYC_A";
+    case CYC_B:
+        return "CYC_B";
+    case CYC_C:
+        return "CYC_C";
     case ZA:
         return "ZA";
     case ZB:
