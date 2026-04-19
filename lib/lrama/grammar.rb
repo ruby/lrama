@@ -419,10 +419,14 @@ module Lrama
 
     # Finalize lexical declarations after implicit literal synthesis.
     # Expands yyall and symbol-set operands using the post-synthesis token universe.
+    # Validates that identity-component operators are not used as self-pairs.
     # @rbs () -> void
     def finalize_lexical_declarations!
       @lex_prec.declarations.each do |decl|
         expand_pslr_operand(decl.left_operand).product(expand_pslr_operand(decl.right_operand)).each do |left, right|
+          validate_lex_prec_self_pair!(left, right, decl.operator, decl.lineno)
+          next if left.s_value == right.s_value && Grammar::LexPrec::IDENTITY_OPERATORS.include?(decl.operator)
+
           @lex_prec.add_rule(
             left_token: left,
             operator: decl.operator,
@@ -602,6 +606,27 @@ module Lrama
     end
 
     private
+
+    # Validate that identity-component operators are not applied to self-pairs.
+    # Self-pair is allowed only for length-only operators (-~ and -s).
+    # @rbs (Lexer::Token::Base left, Lexer::Token::Base right, Symbol operator, Integer lineno) -> void
+    def validate_lex_prec_self_pair!(left, right, operator, lineno)
+      return unless left.s_value == right.s_value
+
+      # Length-only operators are fine for self-pairs (e.g., %lex-prec COM -s COM)
+      return if operator == Grammar::LexPrec::LONGEST
+      return if operator == Grammar::LexPrec::SHORTEST
+
+      # Identity-component operators on self-pairs are errors
+      if Grammar::LexPrec::IDENTITY_OPERATORS.include?(operator)
+        raise "%lex-prec self-pair identity rule is invalid: #{left.s_value} cannot have an identity conflict with itself (line #{lineno})."
+      end
+
+      # TOKEN_RIGHT_LENGTH (-<) on self-pair is contradictory
+      if operator == Grammar::LexPrec::TOKEN_RIGHT_LENGTH
+        raise "%lex-prec self-pair with -< is contradictory: #{left.s_value} (line #{lineno})."
+      end
+    end
 
     # @rbs (Lexer::Token::Base id) -> String?
     def implicit_literal_regex_pattern(id)
