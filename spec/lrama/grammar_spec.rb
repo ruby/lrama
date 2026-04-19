@@ -424,5 +424,65 @@ RSpec.describe Lrama::Grammar do
       expect(literal_pattern).not_to be_nil
       expect(Lrama::ScannerFSA.new(grammar.token_patterns).scan(";").map {|result| result[:token].name }).to include("';'")
     end
+
+    it "escapes regex metacharacters in character literal patterns" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "implicit_escape.y").parse
+        %define lr.type pslr
+        %token-pattern ID /[a-z]+/
+        %%
+        start
+          : ID '/'
+          | ID '['
+          | ID ']'
+          | ID '+'
+          ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      slash = grammar.token_patterns.find {|p| p.name == "'/'" }
+      lbracket = grammar.token_patterns.find {|p| p.name == "'['" }
+      rbracket = grammar.token_patterns.find {|p| p.name == "']'" }
+      plus = grammar.token_patterns.find {|p| p.name == "'+'" }
+
+      expect(slash).not_to be_nil
+      expect(slash.regex_pattern).to eq("\\/")
+      expect(lbracket).not_to be_nil
+      expect(lbracket.regex_pattern).to eq("\\[")
+      expect(rbracket).not_to be_nil
+      expect(rbracket.regex_pattern).to eq("\\]")
+      expect(plus).not_to be_nil
+      expect(plus.regex_pattern).to eq("\\+")
+    end
+
+    it "handles backslash and control character literals" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "implicit_ctrl.y").parse
+        %define lr.type pslr
+        %token-pattern ID /[a-z]+/
+        %%
+        start
+          : ID '\\\\'
+          | ID '\\n'
+          | ID '\\t'
+          ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      backslash = grammar.token_patterns.find {|p| p.name == "'\\\\'" }
+      newline = grammar.token_patterns.find {|p| p.name == "'\\n'" }
+      tab = grammar.token_patterns.find {|p| p.name == "'\\t'" }
+
+      expect(backslash).not_to be_nil
+      expect(backslash.regex_pattern).to eq("\\\\")
+      expect(newline).not_to be_nil
+      expect(newline.regex_pattern).to eq("\\n")
+      expect(tab).not_to be_nil
+      expect(tab.regex_pattern).to eq("\\t")
+    end
   end
 end
