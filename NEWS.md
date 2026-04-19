@@ -71,12 +71,15 @@ Typical usage looks like this:
 %token-pattern RANGLE />/ "right angle"
 %token-pattern ID /[a-z]+/
 
-%lex-prec RANGLE -s RSHIFT
+%lex-no-tie RANGLE RSHIFT
 ```
 
 In this setup, `%token-pattern` lists the tokens that the generated pseudo-scanner FSA should consider, and
-`%lex-prec` resolves conflicts between overlapping matches. For example, `%lex-prec RANGLE -s RSHIFT` tells
-Lrama to prefer `RANGLE` over `RSHIFT` when the shorter token should win.
+`%lex-no-tie` records that `RANGLE` and `RSHIFT` should not be treated as tied tokens. In a template-closing
+parser state only `RANGLE` is syntactically acceptable, while a shift-expression state accepts `RSHIFT`; PSLR
+state splitting and scanner profiles choose between the two without a global shortest-match rule. Use `%lex-prec`
+for real lexical precedence relations, such as comment patterns that need a shortest-match or longest-match rule
+in every parser context.
 
 For normal parser-state scanner rows, unresolved pseudo-scanner conflicts are not resolved by token declaration
 order. They are reported as errors so the grammar can add an explicit `%lex-prec`, `%lex-tie`, or `%lex-no-tie`
@@ -96,6 +99,10 @@ error paths do not loop forever.
 | `-<` | length conflict: right token wins |
 | `<s` | identity conflict: right token wins; length conflict: shortest match wins |
 | `-s` | length conflict: shortest match wins |
+
+Contradictory length precedence declarations are rejected instead of being silently overwritten. For example,
+declaring both `%lex-prec A -~ B` and `%lex-prec A -s B` reports the token pair, the two operators and lines, and
+the scan direction where the contradiction occurs.
 
 Lexical ties are separate from precedence. For example:
 
@@ -119,6 +126,14 @@ Token patterns named `YYLAYOUT` or starting with `YYLAYOUT` are layout tokens. T
 parser-state scanner row and should be consumed and skipped by the PSLR-aware lexer instead of being returned to
 the parser. The generated helpers include `YYPSLR_TOKEN_IS_LAYOUT(Token)` and the structured
 `YYPSLR_PSEUDO_SCAN_RESULT(...)` API for this purpose.
+
+`%token-pattern` currently uses an ASCII byte-oriented regular-expression subset for PSLR pseudo scanning.
+Supported constructs are literals, escaped literals such as `\/`, `\*`, `\+`, `\?`, `\(`, `\)`, `\[`, `\]`,
+and `\\`, character classes with escapes such as `[\]]`, `[\\]`, and `[\n\t\r]`, ranges such as `[a-z]`,
+negated classes such as `[^*]`, grouping, alternation, `*`, `+`, `?`, and `.`. The `.` operator matches ASCII
+bytes except newline; negated character classes range over ASCII bytes. Unicode properties and other regexp engine
+extensions are not supported. Unsupported escapes, unclosed groups or classes, invalid ranges, dangling escapes,
+and nullable token patterns such as `//`, `/()/`, `/a*/`, `/a?/`, and `/a|/` are generation errors.
 
 When the parser and lexer share a context through `%parse-param` / `%lex-param`, the generated header also
 provides helpers such as `YYPSLR_PSEUDO_SCAN(...)`, so the lexer can choose a token based on the current parser
