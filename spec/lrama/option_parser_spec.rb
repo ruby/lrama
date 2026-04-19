@@ -80,6 +80,7 @@ RSpec.describe Lrama::OptionParser do
               lookaheads                       explicitly associate lookahead tokens to items
               solved                           describe shift/reduce conflicts solving
               counterexamples, cex             generate conflict counterexamples
+              pslr                             report PSLR split and scanner metrics
               rules                            list unused rules
               terms                            list unused terminals
               verbose                          report detailed internal state and analysis results
@@ -128,12 +129,19 @@ RSpec.describe Lrama::OptionParser do
         end
       end
 
+      context "when pslr is passed" do
+        it "returns option hash pslr flag enabled" do
+          opts = option_parser.send(:validate_report, ["pslr"])
+          expect(opts).to eq({grammar: true, pslr: true})
+        end
+      end
+
       context "when all is passed" do
         it "returns option hash all flags enabled" do
           opts = option_parser.send(:validate_report, ["all"])
           expect(opts).to eq({
             grammar: true, states: true, itemsets: true,
-            lookaheads: true, solved: true, counterexamples: true,
+            lookaheads: true, solved: true, counterexamples: true, pslr: true,
             rules: true, terms: true, verbose: true
           })
         end
