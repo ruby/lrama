@@ -18,6 +18,12 @@ token_name(int token)
         return "A";
     case B:
         return "B";
+    case SHORT:
+        return "SHORT";
+    case IA:
+        return "IA";
+    case IB:
+        return "IB";
     case ZA:
         return "ZA";
     case ZB:

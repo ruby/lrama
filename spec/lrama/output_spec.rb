@@ -306,6 +306,7 @@ RSpec.describe Lrama::Output do
         expect(result).to include("match_length")
         expect(result).to include("yy_token_pattern_to_token_id")
         expect(result).to include("yy_pslr_fallback_length_precedes")
+        expect(result).to include("result->token = YYEOF")
       end
     end
 

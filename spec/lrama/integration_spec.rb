@@ -201,6 +201,14 @@ RSpec.describe "integration" do
       test_parser("pslr_fallback_precedence", "@", "PB 1\n", expect_success: false)
     end
 
+    it "preserves explicit identity precedence when fallback length precedence is needed" do
+      test_parser("pslr_fallback_precedence", "cd", "IB 2\n", expect_success: false)
+    end
+
+    it "returns YYEOF for empty input in PSLR pseudo-scan helpers" do
+      test_parser("pslr_fallback_precedence", "__empty__", "EOF 0 0 0 0\n")
+    end
+
     it "does not use fallback longest rules for normal parser-state rows" do
       grammar_text = <<~GRAMMAR
         %define lr.type pslr

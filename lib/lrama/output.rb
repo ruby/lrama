@@ -854,7 +854,8 @@ module Lrama
           }
 
           if (input[0] == '\\0') {
-            return YYEMPTY;
+            result->token = YYEOF;
+            return result->token;
           }
 
           while (input[i] != '\\0') {
