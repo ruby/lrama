@@ -40,6 +40,78 @@ program: args_list(f_opt(number), opt_tail(string), number)
 
 https://github.com/ruby/lrama/pull/779
 
+### [EXPERIMENTAL] Support core PSLR(1) parser generation
+
+Added experimental support for generating a PSLR(1)-style parser based on this dissertation.
+https://open.clemson.edu/all_dissertations/519/
+
+This adds the following PSLR-related grammar directives and integration points:
+
+- `%define lr.type pslr` enables PSLR parser generation
+- `%token-pattern` declares token candidates and their regular expressions for PSLR-aware lexical disambiguation
+- `%lex-prec` declares explicit lexical precedence for overlapping token patterns
+- `%symbol-set` declares reusable sets of terminal tokens for PSLR lexical declarations
+- `%lex-tie` expands parser-state acceptable-token sets for tied terminals
+- `%lex-no-tie` records an explicit no-tie decision for terminals with overlapping token patterns
+- `%define pslr.max-states` and `%define pslr.max-state-ratio` are Lrama-specific safety guards for state growth
+- `%define api.pslr.state-member` names the parser-state field to be shared with the lexer when using the generated helper macros
+
+Typical usage looks like this:
+
+```yacc
+%define api.pure
+%define lr.type pslr
+%define api.pslr.state-member current_state
+
+%parse-param {struct parse_params *p}
+%lex-param {struct parse_params *p}
+
+%token-pattern RSHIFT />>/ "right shift"
+%token-pattern RANGLE />/ "right angle"
+%token-pattern ID /[a-z]+/
+
+%lex-prec RANGLE -s RSHIFT
+```
+
+In this setup, `%token-pattern` lists the tokens that the PSLR scanner should consider, and `%lex-prec`
+resolves conflicts between overlapping matches. For example, `%lex-prec RANGLE -s RSHIFT` tells Lrama to
+prefer `RANGLE` over `RSHIFT` when the shorter token should win.
+
+`%lex-prec` uses ASCII spellings for the PSLR lexical precedence operators:
+
+| Lrama | Meaning |
+|---|---|
+| `<~` | identity conflict: right token wins; length conflict: longest match wins |
+| `<-` | identity conflict: right token wins |
+| `-~` | length conflict: longest match wins |
+| `<<` | identity and length conflicts: right token wins |
+| `-<` | length conflict: right token wins |
+| `<s` | identity conflict: right token wins; length conflict: shortest match wins |
+| `-s` | length conflict: shortest match wins |
+
+Lexical ties are separate from precedence. For example:
+
+```yacc
+%token-pattern IF /if/
+%token-pattern ID /[a-z]+/
+%symbol-set keywords IF
+%lex-tie ID keywords
+%lex-prec ID <~ keywords
+```
+
+Here, `IF` can be considered when the parser state accepts `ID`, but `%lex-tie` does not choose a winner.
+The `%lex-prec ID <~ keywords` declaration resolves the `if` identity conflict in favor of `IF` while keeping
+longer identifiers such as `ifx` as `ID`.
+
+When the parser and lexer share a context through `%parse-param` / `%lex-param`, the generated header also
+provides helpers such as `YYPSLR_PSEUDO_SCAN(...)`, so the lexer can choose a token based on the current parser
+state.
+
+The implementation reports unresolved pseudo-scanner conflicts instead of silently resolving them by declaration
+order. PSLR support is still experimental. Scoped lexical declarations, lexical nonterminals, `%lex`,
+`%token-action`, LAC, fallback rows, character-token fallback, and full layout-token semantics are not implemented
+yet. If you find any bugs, please report them.
+
 ## Lrama 0.7.1 (2025-12-24)
 
 ### Optimize IELR
