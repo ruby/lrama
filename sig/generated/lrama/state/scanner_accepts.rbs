@@ -62,14 +62,26 @@ module Lrama
         # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
         def resolve_normal: (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
 
+        # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
+        def resolve_fallback: (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
+
         # @rbs (String old_token, String new_token) -> bool
         def length_prefers_old?: (String old_token, String new_token) -> bool
+
+        # @rbs (String old_token, String new_token) -> bool
+        def fallback_length_prefers_old?: (String old_token, String new_token) -> bool
 
         # @rbs (String candidate, Set[String] current_tokens) -> bool
         def identity_winner?: (String candidate, Set[String] current_tokens) -> bool
 
-        # @rbs (Set[String] current_tokens) -> String?
-        def fallback_identity_winner: (Set[String] current_tokens) -> String?
+        # @rbs (String candidate, Set[String] current_tokens) -> bool
+        def fallback_identity_winner?: (String candidate, Set[String] current_tokens) -> bool
+
+        # @rbs (String candidate, String other) -> bool
+        def token_order_precedes?: (String candidate, String other) -> bool
+
+        # @rbs (String token) -> [Integer, String]
+        def token_order_key: (String token) -> [ Integer, String ]
       end
 
       class CompleteProfileComputer

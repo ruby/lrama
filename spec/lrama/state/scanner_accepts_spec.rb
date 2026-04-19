@@ -196,6 +196,56 @@ RSpec.describe Lrama::State::ScannerAccepts do
 
       expect(fallback.resolve(Set.new, nil, Set["A", "B"]).token_name).to eq("B")
     end
+
+    it "preserves explicit identity precedence when fallback length precedence is needed" do
+      tokens = [
+        token_pattern("X", "x", 0),
+        token_pattern("SHORT", "a", 1),
+        token_pattern("A", "ab", 2),
+        token_pattern("B", "ab", 3)
+      ]
+      scanner_fsa = Lrama::ScannerFSA.new(tokens)
+      lex_prec = Lrama::Grammar::LexPrec.new
+      lex_prec.add_rule(left_token: ident("A"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("B"), lineno: 1)
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [parser_state(0, ["X"])],
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec)
+      )
+
+      scanner_accepts.build
+
+      accepting_ab = scanner_fsa.states.find do |state|
+        state.accepting_tokens.map(&:name).sort == ["A", "B"]
+      end
+      expect(scanner_accepts.fallback_table.fetch(accepting_ab.id).name).to eq("B")
+    end
+
+    it "does not hide explicit identity cycles with fallback declaration order" do
+      tokens = [
+        token_pattern("X", "x", 0),
+        token_pattern("A", "a", 1),
+        token_pattern("B", "a", 2),
+        token_pattern("C", "a", 3)
+      ]
+      scanner_fsa = Lrama::ScannerFSA.new(tokens)
+      lex_prec = Lrama::Grammar::LexPrec.new
+      lex_prec.add_rule(left_token: ident("A"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("B"), lineno: 1)
+      lex_prec.add_rule(left_token: ident("B"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("C"), lineno: 2)
+      lex_prec.add_rule(left_token: ident("C"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("A"), lineno: 3)
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [parser_state(0, ["X"])],
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec)
+      )
+
+      scanner_accepts.build
+
+      accepting = scanner_fsa.states.find {|state| state.accepting_tokens.map(&:name).sort == ["A", "B", "C"] }
+      expect(scanner_accepts.fallback_table).not_to have_key(accepting.id)
+    end
   end
 
   describe Lrama::State::ScannerAccepts::CompatibilityChecker do

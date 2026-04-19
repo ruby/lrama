@@ -72,14 +72,11 @@ module Lrama
 
         # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
         def resolve(shorter_tokens, selected_shorter_token, current_tokens)
-          normal = resolve_normal(shorter_tokens, selected_shorter_token, current_tokens)
-          return normal if normal.resolved? || normal.empty?
-          return normal unless @fallback
-
-          fallback_token = fallback_identity_winner(current_tokens)
-          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: fallback_token) if fallback_token
-
-          normal
+          if @fallback
+            resolve_fallback(shorter_tokens, selected_shorter_token, current_tokens)
+          else
+            resolve_normal(shorter_tokens, selected_shorter_token, current_tokens)
+          end
         end
 
         private
@@ -106,9 +103,36 @@ module Lrama
           ProfileOutcome.new(kind: ProfileOutcome::UNRESOLVED)
         end
 
+        # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
+        def resolve_fallback(shorter_tokens, selected_shorter_token, current_tokens)
+          if current_tokens.empty?
+            return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: selected_shorter_token) if selected_shorter_token
+
+            return ProfileOutcome.new(kind: ProfileOutcome::EMPTY)
+          end
+
+          if selected_shorter_token && current_tokens.all? {|token| fallback_length_prefers_old?(selected_shorter_token, token) }
+            return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: selected_shorter_token)
+          end
+
+          winners = current_tokens.select do |candidate|
+            fallback_identity_winner?(candidate, current_tokens) &&
+              shorter_tokens.all? {|shorter| @length_prec.fallback_precedes?(shorter, candidate) }
+          end
+
+          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: winners.first) if winners.size == 1
+
+          ProfileOutcome.new(kind: ProfileOutcome::UNRESOLVED)
+        end
+
         # @rbs (String old_token, String new_token) -> bool
         def length_prefers_old?(old_token, new_token)
           @length_prec.resolution(old_token, new_token) == LengthPrecedences::PREFER_OLD
+        end
+
+        # @rbs (String old_token, String new_token) -> bool
+        def fallback_length_prefers_old?(old_token, new_token)
+          !@length_prec.fallback_precedes?(old_token, new_token)
         end
 
         # @rbs (String candidate, Set[String] current_tokens) -> bool
@@ -118,11 +142,31 @@ module Lrama
           end
         end
 
-        # @rbs (Set[String] current_tokens) -> String?
-        def fallback_identity_winner(current_tokens)
-          return nil if current_tokens.empty?
+        # @rbs (String candidate, Set[String] current_tokens) -> bool
+        def fallback_identity_winner?(candidate, current_tokens)
+          current_tokens.all? do |other|
+            next true if candidate == other
 
-          current_tokens.min_by {|token| [@token_order.fetch(token, @token_order.size), token] }
+            candidate_wins = @lex_prec.identity_precedes?(candidate, other)
+            other_wins = @lex_prec.identity_precedes?(other, candidate)
+            if candidate_wins && !other_wins
+              true
+            elsif other_wins
+              false
+            else
+              token_order_precedes?(candidate, other)
+            end
+          end
+        end
+
+        # @rbs (String candidate, String other) -> bool
+        def token_order_precedes?(candidate, other)
+          (token_order_key(candidate) <=> token_order_key(other)) == -1
+        end
+
+        # @rbs (String token) -> [Integer, String]
+        def token_order_key(token)
+          [@token_order.fetch(token, @token_order.size), token]
         end
       end
 
