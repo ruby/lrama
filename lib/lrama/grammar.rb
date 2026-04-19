@@ -402,16 +402,34 @@ module Lrama
     end
 
     # Add lex-prec rules from %lex-prec directive.
-    # Symbol-set operands are expanded eagerly, so the resolver only sees token pairs.
-    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Array[Grammar::LexPrec::Rule]
+    # Stores as raw declaration for delayed expansion after implicit literal synthesis.
+    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
     def add_lex_prec_rule(left_token:, operator:, right_token:, lineno:)
-      expand_pslr_operand(left_token).product(expand_pslr_operand(right_token)).map do |left, right|
-        @lex_prec.add_rule(
-          left_token: left,
-          operator: operator,
-          right_token: right,
-          lineno: lineno
-        )
+      # Register terminals so they are known to the symbol resolver
+      add_term(id: left_token) unless left_token.s_value == "yyall" || @symbol_sets.key?(left_token.s_value)
+      add_term(id: right_token) unless right_token.s_value == "yyall" || @symbol_sets.key?(right_token.s_value)
+
+      @lex_prec.add_declaration(
+        left_operand: left_token,
+        operator: operator,
+        right_operand: right_token,
+        lineno: lineno
+      )
+    end
+
+    # Finalize lexical declarations after implicit literal synthesis.
+    # Expands yyall and symbol-set operands using the post-synthesis token universe.
+    # @rbs () -> void
+    def finalize_lexical_declarations!
+      @lex_prec.declarations.each do |decl|
+        expand_pslr_operand(decl.left_operand).product(expand_pslr_operand(decl.right_operand)).each do |left, right|
+          @lex_prec.add_rule(
+            left_token: left,
+            operator: decl.operator,
+            right_token: right,
+            lineno: decl.lineno
+          )
+        end
       end
     end
 

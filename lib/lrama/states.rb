@@ -1207,6 +1207,7 @@ module Lrama
     # @rbs () -> void
     def build_scanner_fsa
       @grammar.synthesize_implicit_literal_token_patterns!
+      @grammar.finalize_lexical_declarations!
       return if token_patterns.empty?
 
       @scanner_fsa = ScannerFSA.new(token_patterns)

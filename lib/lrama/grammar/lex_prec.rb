@@ -53,6 +53,23 @@ module Lrama
         TOKEN_RIGHT_LENGTH
       ].freeze #: Array[Symbol]
 
+      # Raw declaration stored before operand expansion.
+      # Operands may be :token, :symbol_set, or :yyall.
+      class Declaration
+        attr_reader :left_operand #: Lexer::Token::Base
+        attr_reader :operator #: Symbol
+        attr_reader :right_operand #: Lexer::Token::Base
+        attr_reader :lineno #: Integer
+
+        # @rbs (left_operand: Lexer::Token::Base, operator: Symbol, right_operand: Lexer::Token::Base, lineno: Integer) -> void
+        def initialize(left_operand:, operator:, right_operand:, lineno:)
+          @left_operand = left_operand
+          @operator = operator
+          @right_operand = right_operand
+          @lineno = lineno
+        end
+      end
+
       class Rule
         attr_reader :left_token #: Lexer::Token::Base
         attr_reader :operator #: Symbol
@@ -79,10 +96,25 @@ module Lrama
       end
 
       attr_reader :rules #: Array[Rule]
+      attr_reader :declarations #: Array[Declaration]
 
       # @rbs () -> void
       def initialize
         @rules = []
+        @declarations = []
+      end
+
+      # Store a raw declaration for delayed expansion.
+      # @rbs (left_operand: Lexer::Token::Base, operator: Symbol, right_operand: Lexer::Token::Base, lineno: Integer) -> Declaration
+      def add_declaration(left_operand:, operator:, right_operand:, lineno:)
+        decl = Declaration.new(
+          left_operand: left_operand,
+          operator: operator,
+          right_operand: right_operand,
+          lineno: lineno
+        )
+        @declarations << decl
+        decl
       end
 
       # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Rule

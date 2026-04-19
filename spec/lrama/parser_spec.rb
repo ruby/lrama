@@ -4696,7 +4696,8 @@ RSpec.describe Lrama::Parser do
         grammar.prepare
         grammar.validate!
 
-        expect(grammar.lex_prec.rules.size).to eq(1)
+        expect(grammar.lex_prec.declarations.size).to eq(1)
+        grammar.finalize_lexical_declarations!
         expect(grammar.lex_prec.shortest_pair?("RANGLE", "RSHIFT")).to be true
       end
 
@@ -4712,7 +4713,8 @@ RSpec.describe Lrama::Parser do
         grammar.prepare
         grammar.validate!
 
-        expect(grammar.lex_prec.rules.size).to eq(1)
+        expect(grammar.lex_prec.declarations.size).to eq(1)
+        grammar.finalize_lexical_declarations!
         expect(grammar.lex_prec.identity_precedes?("IF", "ID")).to be true
         expect(grammar.lex_prec.longest_pair?("ID", "IF")).to be true
       end
@@ -4729,7 +4731,8 @@ RSpec.describe Lrama::Parser do
         grammar.prepare
         grammar.validate!
 
-        expect(grammar.lex_prec.rules.size).to eq(3)
+        expect(grammar.lex_prec.declarations.size).to eq(3)
+        grammar.finalize_lexical_declarations!
         expect(grammar.lex_prec.identity_precedes?("WHILE", "ID")).to be true
         expect(grammar.lex_prec.identity_precedes?("ELSE", "WHILE")).to be true
         expect(grammar.lex_prec.identity_precedes?("IF", "ELSE")).to be true
@@ -4846,7 +4849,7 @@ RSpec.describe Lrama::Parser do
         grammar.prepare
         grammar.validate!
 
-        expect(grammar.lex_prec.rules.size).to eq(0)
+        expect(grammar.lex_prec.declarations.size).to eq(0)
       end
 
       it "parses scoped lex-prec with global lex-prec" do
@@ -4864,7 +4867,7 @@ RSpec.describe Lrama::Parser do
         grammar.prepare
         grammar.validate!
 
-        expect(grammar.lex_prec.rules.size).to eq(1)
+        expect(grammar.lex_prec.declarations.size).to eq(1)
         expect(grammar.scoped_lex_declarations.size).to eq(1)
       end
 
@@ -4882,6 +4885,7 @@ RSpec.describe Lrama::Parser do
         grammar = Lrama::Parser.new(y, "pslr_test.y").parse
         grammar.prepare
         grammar.validate!
+        grammar.finalize_lexical_declarations!
 
         merged = grammar.scoped_lex_prec_for(["template_args"])
         expect(merged.rules.size).to eq(2)
@@ -4903,6 +4907,7 @@ RSpec.describe Lrama::Parser do
         grammar = Lrama::Parser.new(y, "pslr_test.y").parse
         grammar.prepare
         grammar.validate!
+        grammar.finalize_lexical_declarations!
 
         merged = grammar.scoped_lex_prec_for(["other_nterm"])
         expect(merged.rules.size).to eq(1)
