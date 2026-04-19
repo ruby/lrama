@@ -47,6 +47,10 @@ module Lrama
       %lex-param
       %lexer-context
       %lex-prec
+      %lex-tie
+      %lex-no-tie
+      %symbol-set
+      %token-action
       %parse-param
       %initial-action
       %precedence
@@ -137,8 +141,20 @@ module Lrama
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/".*?"/)
         return [:STRING, Lrama::Lexer::Token::Str.new(s_value: %Q(#{@scanner.matched}), location: location)]
-      when @scanner.scan(%r{/[^/]+/})
+      when @scanner.scan(%r{/(?:[^/\\]|\\.)+/})
         return [:REGEX, Lrama::Lexer::Token::Regex.new(s_value: @scanner.matched, location: location)]
+      when @scanner.scan(/<~(?=\s)/)
+        return ['<~', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
+      when @scanner.scan(/<-(?=\s)/)
+        return ['<-', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
+      when @scanner.scan(/-~(?=\s)/)
+        return ['-~', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
+      when @scanner.scan(/<<(?=\s)/)
+        return ['<<', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
+      when @scanner.scan(/-<(?=\s)/)
+        return ['-<', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
+      when @scanner.scan(/<s(?=\s)/)
+        return ['<s', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/-s(?=\s)/)
         return ['-s', Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/-(?=\s)/)

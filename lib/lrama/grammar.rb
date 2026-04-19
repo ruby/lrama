@@ -20,8 +20,10 @@ require_relative "grammar/symbol"
 require_relative "grammar/symbols"
 require_relative "grammar/type"
 require_relative "grammar/union"
+require_relative "grammar/token_action"
 require_relative "grammar/token_pattern"
 require_relative "grammar/lex_prec"
+require_relative "grammar/lex_tie"
 require_relative "grammar/lexer_context"
 require_relative "lexer"
 
@@ -112,7 +114,10 @@ module Lrama
     attr_accessor :required #: bool
     attr_reader :token_patterns #: Array[Grammar::TokenPattern]
     attr_reader :lex_prec #: Grammar::LexPrec
+    attr_reader :symbol_sets #: Hash[String, Array[Lexer::Token::Base]]
+    attr_reader :lex_tie #: Grammar::LexTie
     attr_reader :lexer_contexts #: Hash[String, Grammar::LexerContext]
+    attr_reader :token_actions #: Array[Grammar::TokenAction]
 
     # Argument symbol names for each parameterized rule expansion.
     # @rbs () -> Hash[String, Array[String]]
@@ -154,9 +159,12 @@ module Lrama
       @start_nterm = nil
       @token_patterns = []
       @lex_prec = Grammar::LexPrec.new
+      @symbol_sets = {}
+      @lex_tie = Grammar::LexTie.new
       @lexer_contexts = {}
       @lexer_context_counter = 0
       @token_pattern_counter = 0
+      @token_actions = []
 
       append_special_symbols
     end
@@ -380,6 +388,72 @@ module Lrama
       )
     end
 
+    # Add a symbol set from %symbol-set directive.
+    # @rbs (name: String, symbols: Array[Lexer::Token::Base]) -> Array[Lexer::Token::Base]
+    def add_symbol_set(name:, symbols:)
+      @symbol_sets[name] = symbols
+    end
+
+    # Add lexical tie relationships from %lex-tie directive.
+    # @rbs (operands: Array[Lexer::Token::Base]) -> void
+    def add_lex_tie(operands:)
+      groups = operands.map { |op| build_operand_group(op) }
+      @lex_tie.add_tie_declaration(groups: groups)
+    end
+
+    # Add no-tie declarations from %lex-no-tie directive.
+    # @rbs (operands: Array[Lexer::Token::Base]) -> void
+    def add_lex_no_tie(operands:)
+      groups = operands.map { |op| build_operand_group(op) }
+      @lex_tie.add_no_tie_declaration(groups: groups)
+    end
+
+    # Add a token action from %token-action directive
+    # @rbs (id: Lexer::Token::Ident, code: Lexer::Token::UserCode, lineno: Integer) -> Grammar::TokenAction
+    def add_token_action(id:, code:, lineno:)
+      action = Grammar::TokenAction.new(token_id: id, code: code, lineno: lineno)
+      @token_actions << action
+      action
+    end
+
+    # @rbs () -> Set[String]
+    def layout_token_names
+      @token_patterns.select(&:layout?).map(&:name).to_set
+    end
+
+    # @rbs (ScannerFSA scanner_fsa) -> void
+    def finalize_lexical_ties!(scanner_fsa)
+      token_names = @token_patterns.map(&:name)
+      conflict_pairs = compute_scanner_conflict_pairs(scanner_fsa)
+      @lex_tie.finalize!(token_names, conflict_pairs)
+    end
+
+    REGEX_LITERAL_ESCAPES = %w[. [ ] ( ) { } + * ? ^ $ | \\  /].freeze #: Array[String]
+    REGEX_CONTROL_ESCAPES = { "\\\\" => "\\\\", "\\n" => "\\n", "\\t" => "\\t", "\\r" => "\\r", "\\f" => "\\f", "\\v" => "\\v", "\\b" => "\\b" }.freeze #: Hash[String, String]
+
+    # @rbs () -> void
+    def synthesize_implicit_literal_token_patterns!
+      char_literals = terms.select do |sym|
+        sym.id.is_a?(Lrama::Lexer::Token::Char)
+      end
+
+      char_literals.each do |sym|
+        name = sym.id.s_value
+        next if @token_patterns.any? { |tp| tp.name == name }
+
+        inner = name[1..-2].to_s
+        regex = if REGEX_CONTROL_ESCAPES.key?(inner)
+                  REGEX_CONTROL_ESCAPES[inner]
+                else
+                  escaped = Regexp.escape(inner)
+                  escaped.gsub("/", "\\/")
+                end
+
+        pattern = Lrama::Lexer::Token::Regex.new(s_value: "/#{regex}/")
+        add_token_pattern(id: sym.id, pattern: pattern, lineno: 0)
+      end
+    end
+
     # Add a lexer context from %lexer-context directive
     # @rbs (name: String, symbols: Array[Lexer::Token::Ident]) -> Grammar::LexerContext
     def add_lexer_context(name:, symbols:)
@@ -399,6 +473,71 @@ module Lrama
     end
 
     private
+
+    # @rbs (Lexer::Token::Base operand) -> Grammar::LexTie::OperandGroup
+    def build_operand_group(operand)
+      name = operand.s_value
+      if name == "*" || name == "yyall"
+        Grammar::LexTie::OperandGroup.new(names: [], kind: :all)
+      elsif @symbol_sets.key?(name)
+        Grammar::LexTie::OperandGroup.new(names: @symbol_sets[name].map(&:s_value), kind: :symbol_set)
+      else
+        Grammar::LexTie::OperandGroup.new(names: [name], kind: :token)
+      end
+    end
+
+    # Compute pairs of tokens that have scanner conflicts.
+    # Two tokens conflict if they share an accepting state or
+    # if one's accepting state is reachable from the other's via transitions.
+    # @rbs (ScannerFSA scanner_fsa) -> Set[[String, String]]
+    def compute_scanner_conflict_pairs(scanner_fsa)
+      pairs = Set.new
+
+      scanner_fsa.states.each do |state|
+        next unless state.accepting?
+
+        # Same accepting state
+        tokens = state.accepting_tokens.map(&:name)
+        tokens.combination(2) do |a, b|
+          next unless a && b
+          pairs << (a <= b ? [a, b] : [b, a])
+        end
+
+        # Reachable accepting states (prefix/length conflict)
+        reachable = find_reachable_accepting(scanner_fsa, state)
+        reachable.each do |other|
+          state.accepting_tokens.each do |t1|
+            other.accepting_tokens.each do |t2|
+              a, b = t1.name, t2.name
+              pairs << (a <= b ? [a, b] : [b, a])
+            end
+          end
+        end
+      end
+
+      pairs
+    end
+
+    # @rbs (ScannerFSA scanner_fsa, ScannerFSA::State start) -> Array[ScannerFSA::State]
+    def find_reachable_accepting(scanner_fsa, start)
+      visited = Set.new([start.id])
+      queue = start.transitions.values.dup
+      result = []
+
+      while !queue.empty?
+        next_id = queue.shift
+        next if visited.include?(next_id)
+        visited << next_id
+
+        next_state = scanner_fsa.states[next_id]
+        next unless next_state
+
+        result << next_state if next_state.accepting?
+        next_state.transitions.each_value { |id| queue << id }
+      end
+
+      result
+    end
 
     # @rbs () -> void
     def validate_pslr_configuration!

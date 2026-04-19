@@ -141,6 +141,39 @@ module Lrama
         # Fallback to definition order
         [-higher_count, token.definition_order]
       end
+
+      # Compatibility checker for PSLR state merging
+      # Compares two sets of acceptable token names to determine
+      # if they would produce the same scanner behavior
+      class CompatibilityChecker
+        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec) -> void
+        def initialize(scanner_fsa, lex_prec, length_prec)
+          @scanner_fsa = scanner_fsa
+          @lex_prec = lex_prec
+          @length_prec = length_prec
+        end
+
+        # @rbs (Set[String] set1, Set[String] set2) -> bool
+        def compatible?(set1, set2)
+          @scanner_fsa.states.each do |fsa_state|
+            next unless fsa_state.accepting?
+
+            acc = fsa_state.accepting_tokens
+            names1 = acc.select { |t| set1.include?(t.name) }.map(&:name).to_set
+            names2 = acc.select { |t| set2.include?(t.name) }.map(&:name).to_set
+
+            if names1.empty? && names2.empty?
+              next
+            elsif names1.empty? || names2.empty?
+              return false unless fsa_state.transitions.empty?
+            else
+              return false unless names1 == names2
+            end
+          end
+
+          true
+        end
+      end
     end
   end
 end

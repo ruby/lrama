@@ -33,6 +33,11 @@ module Lrama
       def regex_pattern
         @pattern.pattern
       end
+
+      # @rbs () -> bool
+      def layout?
+        name.start_with?("YYLAYOUT")
+      end
     end
   end
 end

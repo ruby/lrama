@@ -425,6 +425,16 @@ module Lrama
       if pslr_scanner_enabled?
         declarations << <<~C_CODE
           int yy_pseudo_scan (int parser_state, const char *input, int *match_length);
+
+          #ifndef YYPSLR_SCAN_RESULT_DEFINED
+          #define YYPSLR_SCAN_RESULT_DEFINED
+          typedef struct {
+            int length;
+            int is_layout;
+          } yypslr_scan_result;
+          #endif
+
+          int yy_pseudo_scan_full (int parser_state, const char *input, yypslr_scan_result *result);
         C_CODE
 
         declarations << <<~C_CODE
@@ -452,6 +462,13 @@ module Lrama
               ((Context) != 0 \\
                ? YYPSLR_PSEUDO_SCAN_STATE (YYGETSTATE_CONTEXT (Context), (Input), (MatchLength)) \\
                : YYEMPTY)
+            #endif
+
+            #ifndef YYPSLR_PSEUDO_SCAN_RESULT
+            # define YYPSLR_PSEUDO_SCAN_RESULT(Context, Input, ResultPtr) \\
+              ((Context) != 0 \\
+               ? yy_pseudo_scan_full (YYGETSTATE_CONTEXT (Context), (Input), (ResultPtr)) \\
+               : (((ResultPtr)->length = 0), ((ResultPtr)->is_layout = 0), YYEMPTY))
             #endif
           C_CODE
         end
@@ -730,6 +747,78 @@ module Lrama
       C_CODE
     end
 
+    def token_pattern_is_layout_function
+      layout_flags = @context.states.token_patterns.map { |tp| tp.layout? ? 1 : 0 }
+
+      <<~C_CODE
+        static const int yy_token_pattern_layout[YY_NUM_TOKEN_PATTERNS] = {
+          #{layout_flags.join(', ')}
+        };
+
+        static int
+        yy_token_pattern_is_layout (int pattern_id)
+        {
+          if (pattern_id < 0 || pattern_id >= YY_NUM_TOKEN_PATTERNS)
+            return 0;
+          return yy_token_pattern_layout[pattern_id];
+        }
+      C_CODE
+    end
+
+    def pseudo_scan_full_function
+      <<~C_CODE
+        int
+        yy_pseudo_scan_full (int parser_state, const char *input, yypslr_scan_result *result)
+        {
+          int local_match_length = 0;
+          int ss = 0;
+          int ibest = 0;
+          int pbest = YY_PSLR_EMPTY_PATTERN;
+          int i = 0;
+
+          if (result == NULL)
+            return YYEMPTY;
+
+          result->length = 0;
+          result->is_layout = 0;
+
+          if (parser_state < 0 || parser_state >= YY_NUM_PARSER_STATES || input == NULL)
+            return YYEMPTY;
+
+          while (input[i] != '\\0') {
+            int c = (unsigned char)input[i];
+            int next_ss = yy_scanner_transition[ss][c];
+
+            if (next_ss == YY_SCANNER_INVALID_STATE)
+              break;
+
+            ss = next_ss;
+            i++;
+
+            int sa = yy_state_to_accepting[ss];
+            if (sa != YY_ACCEPTING_NONE) {
+              int pattern_index = yy_scanner_accepts[parser_state][sa];
+              if (pattern_index != YY_PSLR_EMPTY_PATTERN) {
+                if (pbest == YY_PSLR_EMPTY_PATTERN ||
+                    (i > ibest && yy_length_precedences[pbest][pattern_index] != YY_LENGTH_PREC_LEFT) ||
+                    (i == ibest && yy_length_precedences[pattern_index][pbest] == YY_LENGTH_PREC_LEFT)) {
+                  pbest = pattern_index;
+                  ibest = i;
+                }
+              }
+            }
+          }
+
+          result->length = ibest;
+          if (pbest == YY_PSLR_EMPTY_PATTERN)
+            return YYEMPTY;
+
+          result->is_layout = yy_token_pattern_is_layout(pbest);
+          return yy_token_pattern_to_token_id[pbest];
+        }
+      C_CODE
+    end
+
     # Check if lexer context table is available.
     def lexer_context_enabled?
       @context.states.lexer_context_enabled?
@@ -793,7 +882,9 @@ module Lrama
         accepting_tokens_table,
         scanner_accepts_table_code,
         length_precedences_table_code,
+        token_pattern_is_layout_function,
         pseudo_scan_function,
+        pseudo_scan_full_function,
       ]
 
       parts.join("\n")
