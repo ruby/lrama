@@ -85,10 +85,12 @@ For normal parser-state scanner rows, unresolved pseudo-scanner conflicts are no
 order. They are reported as errors so the grammar can add an explicit `%lex-prec`, `%lex-tie`, or `%lex-no-tie`
 declaration. For syntax-error handling, Lrama also emits a fallback scanner row. The fallback row first applies
 explicit PSLR lexical precedence declarations. If a scanner conflict remains unresolved only because it is not a
-pseudo-scanner conflict for any parser state, the fallback row uses traditional scanner behavior: longest match
-for length conflicts and token declaration order for identity conflicts. If no token pattern matches at all, the
-PSLR helper consumes one byte and returns `YYUNDEF` as a character-token fallback, so error paths do not loop
-forever.
+pseudo-scanner conflict for any parser state, the fallback row completes the decision with scanner-default rules:
+length conflicts use longest match and identity conflicts use token declaration order only for token pairs without
+an explicit identity precedence relation. These defaults are composed with the explicit graph, so explicit identity
+precedence is still honored when fallback length precedence is needed. Explicit identity cycles remain unresolved;
+declaration order is not used to hide them. If no token pattern matches at all, the PSLR helper consumes one byte
+and returns `YYUNDEF` as a character-token fallback, so error paths do not loop forever.
 
 `%lex-prec` uses ASCII spellings for the PSLR lexical precedence operators:
 
@@ -101,6 +103,11 @@ forever.
 | `-<` | length conflict: right token wins |
 | `<s` | identity conflict: right token wins; length conflict: shortest match wins |
 | `-s` | length conflict: shortest match wins |
+
+The `<s` and `-s` operators make the right token's match length win when it is shorter. They are useful for cases
+such as comment tokens, especially autolength conflicts like `%lex-prec COM -s COM`. They should not be used to
+paper over context-sensitive token choices such as `>` versus `>>`; those cases should be handled by PSLR state
+splitting plus `%lex-no-tie` when the tokens are intentionally not tied.
 
 Contradictory length precedence declarations are rejected instead of being silently overwritten. For example,
 declaring both `%lex-prec A -~ B` and `%lex-prec A -s B` reports the token pair, the two operators and lines, and
@@ -127,9 +134,20 @@ can still tie the relevant token pair.
 Token patterns named `YYLAYOUT` or starting with `YYLAYOUT` are layout tokens. They are included in every
 parser-state scanner row and should be consumed and skipped by the PSLR-aware lexer instead of being returned to
 the parser. The generated helpers include `YYPSLR_TOKEN_IS_LAYOUT(Token)` and the structured
-`YYPSLR_PSEUDO_SCAN_RESULT(...)` API for this purpose. `yy_pseudo_scan_result` is a low-level scanner helper and
-may report a layout token with `result->is_layout = 1`; a PSLR-aware `yylex` must consume that text, keep the same
-parser state, and scan the remaining input instead of passing the layout token to the parser.
+`YYPSLR_PSEUDO_SCAN_RESULT(...)` API for this purpose.
+
+`yy_pseudo_scan_result` is a low-level scanner helper and may report a layout token with `result->is_layout = 1`.
+A PSLR-aware `yylex` must consume that text, keep the same parser state, and scan the remaining input instead of
+passing the layout token to the parser.
+
+In this experimental implementation, the generated PSLR scanner FSA considers only terminals declared with
+`%token-pattern`, including layout tokens. Grammar terminals without `%token-pattern` are outside the generated
+pseudo-scanner helper and its fallback row. They must be handled by user lexer code, or by future implicit
+literal-token support. Thus, the paper's `T0` fallback token set corresponds here to the set of token-pattern
+terminals known to the generated scanner FSA, not necessarily every terminal in the grammar. Parser-state rows use
+the subset accepted by the current state plus tied tokens and layout tokens. The fallback row uses the whole
+`%token-pattern` universe so error handling can still identify and consume a token when the current parser state
+has no normal scanner decision.
 
 `%token-pattern` currently uses an ASCII byte-oriented regular-expression subset for PSLR pseudo scanning.
 Supported constructs are literals, escaped literals such as `\/`, `\*`, `\+`, `\?`, `\(`, `\)`, `\[`, `\]`,
