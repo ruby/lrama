@@ -630,12 +630,31 @@ module Lrama
 
     # @rbs (Lexer::Token::Base id) -> String?
     def implicit_literal_regex_pattern(id)
-      return nil unless id.is_a?(Lrama::Lexer::Token::Char)
+      case id
+      when Lrama::Lexer::Token::Char
+        literal = char_literal_value(id.s_value)
+        return nil unless literal&.ascii_only?
 
-      literal = char_literal_value(id.s_value)
-      return nil unless literal&.ascii_only?
+        escape_regex_literal(literal)
+      when Lrama::Lexer::Token::Str
+        literal = str_literal_value(id.s_value)
+        return nil unless literal
+        return nil unless literal.ascii_only?
 
-      escape_regex_literal(literal)
+        escape_regex_literal(literal)
+      end
+    end
+
+    # Extract the string content from a quoted string literal (e.g., "=>" -> =>)
+    # @rbs (String s_value) -> String?
+    def str_literal_value(s_value)
+      # String literals are stored as "..." with quotes
+      return nil if s_value.length < 2
+
+      inner = s_value[1..-2]
+      return nil if inner.nil? || inner.empty?
+
+      inner
     end
 
     # @rbs (String s_value) -> String?
