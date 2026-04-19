@@ -53,6 +53,7 @@ This adds the following PSLR-related grammar directives and integration points:
 - `%symbol-set` declares reusable sets of terminal tokens for PSLR lexical declarations
 - `%lex-tie` expands parser-state acceptable-token sets for tied terminals
 - `%lex-no-tie` records an explicit no-tie decision for terminals with overlapping token patterns
+- `YYLAYOUT*` token patterns are recognized in every parser state and discarded by PSLR-aware lexers
 - `%define pslr.max-states` and `%define pslr.max-state-ratio` are Lrama-specific safety guards for state growth
 - `%define api.pslr.state-member` names the parser-state field to be shared with the lexer when using the generated helper macros
 
@@ -73,9 +74,16 @@ Typical usage looks like this:
 %lex-prec RANGLE -s RSHIFT
 ```
 
-In this setup, `%token-pattern` lists the tokens that the PSLR scanner should consider, and `%lex-prec`
-resolves conflicts between overlapping matches. For example, `%lex-prec RANGLE -s RSHIFT` tells Lrama to
-prefer `RANGLE` over `RSHIFT` when the shorter token should win.
+In this setup, `%token-pattern` lists the tokens that the generated pseudo-scanner FSA should consider, and
+`%lex-prec` resolves conflicts between overlapping matches. For example, `%lex-prec RANGLE -s RSHIFT` tells
+Lrama to prefer `RANGLE` over `RSHIFT` when the shorter token should win.
+
+For normal parser-state scanner rows, unresolved pseudo-scanner conflicts are not resolved by token declaration
+order. They are reported as errors so the grammar can add an explicit `%lex-prec`, `%lex-tie`, or `%lex-no-tie`
+declaration. Lrama also emits a fallback scanner row for syntax error handling; only that fallback row uses
+traditional lexical fallback behavior, choosing the longest match and then token declaration order. If no token
+pattern matches at all, the PSLR helper consumes one byte and returns `YYUNDEF` as a character-token fallback, so
+error paths do not loop forever.
 
 `%lex-prec` uses ASCII spellings for the PSLR lexical precedence operators:
 
@@ -103,14 +111,24 @@ Here, `IF` can be considered when the parser state accepts `ID`, but `%lex-tie` 
 The `%lex-prec ID <~ keywords` declaration resolves the `if` identity conflict in favor of `IF` while keeping
 longer identifiers such as `ifx` as `ID`.
 
+`%lex-no-tie` suppresses lexical tie candidate warnings; it does not break a final transitive tie closure. Generic
+declarations such as `%lex-no-tie yyall yyall` can suppress broad candidate reports, and a more specific `%lex-tie`
+can still tie the relevant token pair.
+
+Token patterns named `YYLAYOUT` or starting with `YYLAYOUT` are layout tokens. They are included in every
+parser-state scanner row and should be consumed and skipped by the PSLR-aware lexer instead of being returned to
+the parser. The generated helpers include `YYPSLR_TOKEN_IS_LAYOUT(Token)` and the structured
+`YYPSLR_PSEUDO_SCAN_RESULT(...)` API for this purpose.
+
 When the parser and lexer share a context through `%parse-param` / `%lex-param`, the generated header also
 provides helpers such as `YYPSLR_PSEUDO_SCAN(...)`, so the lexer can choose a token based on the current parser
-state.
+state. The paper-compatible scanning path needs the lexer to pass the unconsumed input prefix, not only an
+already-decided token fragment, so legacy external lexer bridges may still be limited by the text they provide.
 
-The implementation reports unresolved pseudo-scanner conflicts instead of silently resolving them by declaration
-order. PSLR support is still experimental. Scoped lexical declarations, lexical nonterminals, `%lex`,
-`%token-action`, LAC, fallback rows, character-token fallback, and full layout-token semantics are not implemented
-yet. If you find any bugs, please report them.
+PSLR parsers enable a lightweight LAC check in the generated parser so syntax errors caused by LR state merging,
+default reductions, or `%nonassoc` error actions are detected before user semantic actions are run for the bad
+lookahead. PSLR support is still experimental. Scoped lexical declarations, lexical nonterminals, `%lex`, and
+`%token-action` are not implemented yet. If you find any bugs, please report them.
 
 ## Lrama 0.7.1 (2025-12-24)
 
