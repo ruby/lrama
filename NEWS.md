@@ -88,9 +88,12 @@ explicit PSLR lexical precedence declarations. If a scanner conflict remains unr
 pseudo-scanner conflict for any parser state, the fallback row completes the decision with scanner-default rules:
 length conflicts use longest match and identity conflicts use token declaration order only for token pairs without
 an explicit identity precedence relation. These defaults are composed with the explicit graph, so explicit identity
-precedence is still honored when fallback length precedence is needed. Explicit identity cycles remain unresolved;
-declaration order is not used to hide them. If no token pattern matches at all, the PSLR helper consumes one byte
-and returns `YYUNDEF` as a character-token fallback, so error paths do not loop forever.
+precedence is still honored when fallback length precedence is needed. For normal parser-state rows, explicit
+precedence cycles remain unresolved and are reported as PSLR scanner conflicts. For the syntax-error fallback row
+only, if explicit PSLR precedence plus fallback length defaults still do not determine a unique identity winner,
+Lrama completes the fallback decision with traditional token declaration order so that a token-pattern match is
+returned whenever `M(input, T0)` is non-empty. If no token pattern matches at all, the PSLR helper consumes one
+byte and returns `YYUNDEF` as a character-token fallback, so error paths do not loop forever.
 
 `%lex-prec` uses ASCII spellings for the PSLR lexical precedence operators:
 
@@ -127,6 +130,11 @@ Here, `IF` can be considered when the parser state accepts `ID`, but `%lex-tie` 
 The `%lex-prec ID <~ keywords` declaration resolves the `if` identity conflict in favor of `IF` while keeping
 longer identifiers such as `ifx` as `ID`.
 
+When both operands of `%lex-tie` are explicit tokens, Lrama ties them even if their token patterns do not conflict.
+When either operand is a `%symbol-set` or `yyall`, Lrama follows the PSLR paper and ties only token pairs that have
+a pairwise scanner conflict. This avoids unnecessary transitive lexical ties and the pseudo-scanner conflicts they
+would create.
+
 `%lex-no-tie` suppresses lexical tie candidate warnings; it does not break a final transitive tie closure. Generic
 declarations such as `%lex-no-tie yyall yyall` can suppress broad candidate reports, and a more specific `%lex-tie`
 can still tie the relevant token pair.
@@ -140,13 +148,12 @@ the parser. The generated helpers include `YYPSLR_TOKEN_IS_LAYOUT(Token)` and th
 A PSLR-aware `yylex` must consume that text, keep the same parser state, and scan the remaining input instead of
 passing the layout token to the parser.
 
-In this experimental implementation, the generated PSLR scanner FSA considers only terminals declared with
-`%token-pattern`, including layout tokens. Grammar terminals without `%token-pattern` are outside the generated
-pseudo-scanner helper and its fallback row. They must be handled by user lexer code, or by future implicit
-literal-token support. Thus, the paper's `T0` fallback token set corresponds here to the set of token-pattern
-terminals known to the generated scanner FSA, not necessarily every terminal in the grammar. Parser-state rows use
-the subset accepted by the current state plus tied tokens and layout tokens. The fallback row uses the whole
-`%token-pattern` universe so error handling can still identify and consume a token when the current parser state
+The generated PSLR scanner FSA considers terminals declared with `%token-pattern` and character literal terminals
+for which Lrama can synthesize an exact-match implicit token pattern. Grammar terminals without either a token
+pattern or a supported literal spelling remain outside the generated pseudo-scanner helper. Thus, the paper's `T0`
+fallback token set corresponds here to the set of terminals known to the generated scanner FSA. Parser-state rows
+use the subset accepted by the current state plus tied tokens and layout tokens. The fallback row uses the whole
+generated scanner universe so error handling can still identify and consume a token when the current parser state
 has no normal scanner decision.
 
 `%token-pattern` currently uses an ASCII byte-oriented regular-expression subset for PSLR pseudo scanning.
