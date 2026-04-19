@@ -1231,7 +1231,8 @@ module Lrama
         @scanner_fsa,
         lex_prec,
         @length_precedences,
-        lex_tie
+        lex_tie,
+        layout_token_names: @grammar.layout_token_names
       )
       @scanner_accepts_table.build
     end

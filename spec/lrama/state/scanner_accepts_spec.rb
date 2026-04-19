@@ -53,6 +53,25 @@ RSpec.describe Lrama::State::ScannerAccepts do
       accepting = scanner_fsa.states.find {|s| s.accepting_tokens.map(&:name).include?("RANGLE") }
       expect(scanner_accepts[0, accepting.id].name).to eq("RANGLE")
     end
+
+    it "includes layout tokens in every parser-state accept set" do
+      div = token_pattern("DIV", "/", 0)
+      layout = token_pattern("YYLAYOUT_WS", "[ \\t]+", 1)
+      scanner_fsa = Lrama::ScannerFSA.new([div, layout])
+      state = parser_state(0, ["DIV"])
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [state],
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec),
+        layout_token_names: Set["YYLAYOUT_WS"]
+      )
+
+      scanner_accepts.build
+
+      accepting = scanner_fsa.states.find {|s| s.accepting_tokens.map(&:name).include?("YYLAYOUT_WS") }
+      expect(scanner_accepts[0, accepting.id].name).to eq("YYLAYOUT_WS")
+    end
   end
 
   describe "complete conflict resolution" do
@@ -228,6 +247,28 @@ RSpec.describe Lrama::State::ScannerAccepts do
 
       accepting = scanner_fsa.states.find {|state| state.accepting_tokens.map(&:name).include?("IF") }
       expect(scanner_accepts[0, accepting.id].name).to eq("IF")
+    end
+
+    it "does not expand tokens tied only through layout injection" do
+      div = token_pattern("DIV", "/", 0)
+      layout = token_pattern("YYLAYOUT_WS", "[ \\t]+", 1)
+      layout_alias = token_pattern("LAYOUT_ALIAS", "[ \\t]+", 2)
+      scanner_fsa = Lrama::ScannerFSA.new([div, layout, layout_alias])
+      lex_prec = Lrama::Grammar::LexPrec.new
+      lex_tie = Lrama::Grammar::LexTie.new
+      lex_tie.add_tie("YYLAYOUT_WS", "LAYOUT_ALIAS")
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [parser_state(0, ["DIV"])],
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec),
+        lex_tie,
+        layout_token_names: Set["YYLAYOUT_WS"]
+      )
+
+      acc_sp = scanner_accepts.send(:compute_acc_sp, parser_state(0, ["DIV"]))
+
+      expect(acc_sp).to contain_exactly("DIV", "YYLAYOUT_WS")
     end
   end
 

@@ -309,13 +309,14 @@ module Lrama
       attr_reader :fallback_table #: Hash[Integer, Grammar::TokenPattern]
       attr_reader :conflicts #: Array[Conflict]
 
-      # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie) -> void
-      def initialize(parser_states, scanner_fsa, lex_prec, length_prec, lex_tie = nil)
+      # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie, ?layout_token_names: Set[String]) -> void
+      def initialize(parser_states, scanner_fsa, lex_prec, length_prec, lex_tie = nil, layout_token_names: Set.new)
         @parser_states = parser_states
         @scanner_fsa = scanner_fsa
         @lex_prec = lex_prec
         @length_prec = length_prec
         @lex_tie = lex_tie
+        @layout_token_names = layout_token_names.to_set
         @table = {}
         @fallback_table = {}
         @conflicts = []
@@ -400,7 +401,7 @@ module Lrama
           end
         end
 
-        expand_lexical_ties(tokens)
+        expand_lexical_ties(tokens) | @layout_token_names
       end
 
       # @rbs (Set[String] tokens) -> Set[String]

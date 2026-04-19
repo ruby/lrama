@@ -131,8 +131,8 @@ module Lrama
 
       attr_reader conflicts: Array[Conflict]
 
-      # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie) -> void
-      def initialize: (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie) -> void
+      # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie, ?layout_token_names: Set[String]) -> void
+      def initialize: (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie, ?layout_token_names: Set[String]) -> void
 
       # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens) -> [Hash[Integer, Grammar::TokenPattern], Array[Conflict]]
       def self.compute_for_acceptable_tokens: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens) -> [ Hash[Integer, Grammar::TokenPattern], Array[Conflict] ]
