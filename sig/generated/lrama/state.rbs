@@ -76,6 +76,10 @@ module Lrama
 
     attr_accessor goto_follows: Hash[Action::Goto, Array[Grammar::Symbol]]
 
+    attr_accessor pslr_item_lookahead_set: lookahead_set?
+
+    attr_accessor lexer_context: Integer?
+
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
     def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
 
@@ -99,6 +103,12 @@ module Lrama
 
     # @rbs (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
     def set_look_ahead: (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
+
+    # @rbs (Action::Reduce reduce) -> Array[Grammar::Symbol]
+    def acceptable_reduce_lookahead: (Action::Reduce reduce) -> Array[Grammar::Symbol]
+
+    # @rbs (Action::Reduce reduce) -> Array[Grammar::Symbol]
+    def acceptable_pslr_reduce_lookahead: (Action::Reduce reduce) -> Array[Grammar::Symbol]
 
     # @rbs (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
     def set_look_ahead_sources: (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
@@ -157,6 +167,12 @@ module Lrama
     #
     # @rbs (State next_state) -> lookahead_set
     def propagate_lookaheads: (State next_state) -> lookahead_set
+
+    # @rbs (State next_state) -> lookahead_set
+    def propagate_lookaheads_without_filter: (State next_state) -> lookahead_set
+
+    # @rbs (State next_state, bool apply_filter) -> lookahead_set
+    def propagate_lookaheads_with_filter: (State next_state, bool apply_filter) -> lookahead_set
 
     # Definition 3.43 (is_compatible)
     #

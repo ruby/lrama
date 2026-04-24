@@ -1,0 +1,36 @@
+%option noinput nounput noyywrap never-interactive
+
+%{
+#include <stdio.h>
+#include "pslr_template_argument_lists.h"
+
+#define YY_DECL int yylex(YYSTYPE *yylval, struct parse_params *p)
+%}
+
+%%
+
+(.|\n)+ {
+    yypslr_scan_result result;
+    int token;
+
+    (void)yylval;
+    token = YYPSLR_PSEUDO_SCAN_RESULT(p, yytext, &result);
+    if (result.length <= 0) {
+        result.length = 1;
+    }
+    if (result.length < yyleng) {
+        yyless(result.length);
+    }
+    /* Layout tokens are scanner-only. Consume them and keep the same parser
+       state while scanning the remaining input. */
+    if (result.is_layout) {
+        return yylex(yylval, p);
+    }
+    return token;
+}
+
+<<EOF>> {
+    return YYEOF;
+}
+
+%%

@@ -4,8 +4,10 @@
 require_relative "state/action"
 require_relative "state/inadequacy_annotation"
 require_relative "state/item"
+require_relative "state/pslr_inadequacy"
 require_relative "state/reduce_reduce_conflict"
 require_relative "state/resolved_conflict"
+require_relative "state/scanner_accepts"
 require_relative "state/shift_reduce_conflict"
 
 module Lrama
@@ -55,6 +57,8 @@ module Lrama
     attr_accessor :follow_kernel_items #: Hash[Action::Goto, Hash[Item, bool]]
     attr_accessor :always_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
     attr_accessor :goto_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
+    attr_accessor :pslr_item_lookahead_set #: lookahead_set?
+    attr_accessor :lexer_context #: Integer?
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
@@ -78,6 +82,8 @@ module Lrama
       @follow_kernel_items = {}
       @always_follows = {}
       @goto_follows = {}
+      @pslr_item_lookahead_set = nil
+      @lexer_context = nil
       @lhs_contributions = {}
       @lane_items = {}
     end
@@ -145,6 +151,18 @@ module Lrama
       end
 
       reduce.look_ahead = look_ahead
+    end
+
+    # @rbs (Action::Reduce reduce) -> Array[Grammar::Symbol]
+    def acceptable_reduce_lookahead(reduce)
+      reduce.look_ahead || item_lookahead_set[reduce.item] || []
+    end
+
+    # @rbs (Action::Reduce reduce) -> Array[Grammar::Symbol]
+    def acceptable_pslr_reduce_lookahead(reduce)
+      return acceptable_reduce_lookahead(reduce) unless @pslr_item_lookahead_set
+
+      @pslr_item_lookahead_set[reduce.item] || acceptable_reduce_lookahead(reduce)
     end
 
     # @rbs (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
@@ -288,6 +306,16 @@ module Lrama
     #
     # @rbs (State next_state) -> lookahead_set
     def propagate_lookaheads(next_state)
+      propagate_lookaheads_with_filter(next_state, true)
+    end
+
+    # @rbs (State next_state) -> lookahead_set
+    def propagate_lookaheads_without_filter(next_state)
+      propagate_lookaheads_with_filter(next_state, false)
+    end
+
+    # @rbs (State next_state, bool apply_filter) -> lookahead_set
+    def propagate_lookaheads_with_filter(next_state, apply_filter)
       next_state.kernels.map {|next_kernel|
         lookahead_sets =
           if next_kernel.position > 1
@@ -297,7 +325,14 @@ module Lrama
             goto_follow_set(next_kernel.lhs)
           end
 
-        [next_kernel, lookahead_sets & next_state.lookahead_set_filters[next_kernel]]
+        lookahead_sets =
+          if apply_filter
+            lookahead_sets & next_state.lookahead_set_filters[next_kernel]
+          else
+            lookahead_sets
+          end
+
+        [next_kernel, lookahead_sets]
       }.to_h
     end
 
@@ -441,11 +476,14 @@ module Lrama
             []
           elsif kernel.position > 1
             prev_items = predecessors_with_item(kernel)
-            prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce([]) {|acc, syms| acc |= syms }
+            prev_items
+              .map {|st, i| st.item_lookahead_set[i] }
+              .compact
+              .reduce([]) {|acc, syms| acc | syms }
           elsif kernel.position == 1
             prev_state = @predecessors.find {|p| p.transitions.any? {|transition| transition.next_sym == kernel.lhs } }
-            goto = prev_state.nterm_transitions.find {|goto| goto.next_sym == kernel.lhs }
-            prev_state.goto_follows[goto]
+            goto = prev_state&.nterm_transitions&.find {|goto| goto.next_sym == kernel.lhs }
+            prev_state&.goto_follows&.fetch(goto, []) || []
           end
         [kernel, value]
       }.to_h
@@ -479,11 +517,15 @@ module Lrama
     def goto_follow_set(nterm_token)
       return [] if nterm_token.accept_symbol?
       goto = @lalr_isocore.nterm_transitions.find {|g| g.next_sym == nterm_token }
+      return [] unless goto
+
+      base_terms = Array(@lalr_isocore.always_follows[goto])
 
       @kernels
         .select {|kernel| @lalr_isocore.follow_kernel_items[goto][kernel] }
         .map {|kernel| item_lookahead_set[kernel] }
-        .reduce(@lalr_isocore.always_follows[goto]) {|result, terms| result |= terms }
+        .compact
+        .reduce(base_terms) {|result, terms| result | terms }
     end
 
     # Definition 3.8 (Goto Follows Internal Relation)

@@ -2,6 +2,8 @@
 # frozen_string_literal: true
 
 require "forwardable"
+require "set"
+require_relative "lexer_context_classifier"
 require_relative "tracer/duration"
 require_relative "state/item"
 
@@ -36,12 +38,19 @@ module Lrama
     include Lrama::Tracer::Duration
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules, :precedences,
-      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?
+      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?, :pslr_defined?,
+      :token_patterns, :lex_prec, :pslr_max_states, :pslr_max_state_ratio
 
     attr_reader :states #: Array[State]
     attr_reader :reads_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
     attr_reader :includes_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
     attr_reader :lookback_relation #: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
+    attr_reader :scanner_fsa #: ScannerFSA?
+    attr_reader :length_precedences #: LengthPrecedences?
+    attr_reader :scanner_accepts_table #: State::ScannerAccepts?
+    attr_reader :pslr_inadequacies #: Array[State::PslrInadequacy]
+    attr_reader :pslr_metrics #: Hash[Symbol, Integer | Float | nil]
+    attr_reader :lexer_context_classifier #: LexerContextClassifier?
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
@@ -105,6 +114,17 @@ module Lrama
       # second key is rule_id,
       # value is bitmap of term.
       @la = {}
+      @pslr_inadequacies = []
+      @pslr_metrics = {
+        base_states_count: nil,
+        total_states_count: nil,
+        split_state_count: 0,
+        growth_count: 0,
+        growth_ratio: nil,
+        token_pattern_count: 0,
+        scanner_fsa_state_count: 0,
+        inadequacies_count: 0
+      }
     end
 
     # @rbs () -> void
@@ -139,6 +159,42 @@ module Lrama
       # Phase 5
       report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
       report_duration(:compute_default_reduction) { compute_default_reduction }
+    end
+
+    # Compute PSLR(1) states
+    # Based on Section 3.4 of the PSLR dissertation
+    # @rbs () -> void
+    def compute_pslr
+      capture_pslr_metrics_before_split
+      # Preparation
+      report_duration(:clear_conflicts) { clear_conflicts }
+      # Phase 1
+      report_duration(:compute_predecessors) { compute_predecessors }
+      report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
+      report_duration(:compute_always_follows) { compute_always_follows }
+      report_duration(:compute_goto_follows) { compute_goto_follows }
+      # Phase 2
+      report_duration(:build_scanner_fsa) { build_scanner_fsa }
+      report_duration(:build_length_precedences) { build_length_precedences }
+      report_duration(:compute_inadequacy_annotations) { compute_inadequacy_annotations }
+      # Phase 3a: PSLR split (Scanner FSA-based)
+      @pslr_split_enabled = true
+      report_duration(:split_states) { split_states }
+      @pslr_split_enabled = false
+      # Phase 3b: Lexer context classification + context-based split
+      report_duration(:classify_lexer_contexts) { classify_lexer_contexts }
+      report_duration(:split_states_by_context) { split_states_by_context }
+      # Phase 4
+      report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
+      report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
+      # Phase 5
+      report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
+      report_duration(:compute_default_reduction) { compute_default_reduction }
+      report_duration(:build_scanner_accepts) { build_scanner_accepts }
+      report_duration(:handle_pslr_inadequacies) { handle_pslr_inadequacies }
+      # Phase 6: Re-classify after all splits
+      report_duration(:classify_lexer_contexts) { classify_lexer_contexts }
+      finalize_pslr_metrics
     end
 
     # @rbs () -> Integer
@@ -189,6 +245,52 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate!(logger)
       validate_conflicts_within_threshold!(logger)
+      validate_pslr_state_growth!(logger)
+      validate_pslr_inadequacies!(logger)
+    end
+
+    # Classify each state's lexer context based on kernel items.
+    #
+    # For each state, analyzes the kernel items to determine what lexer
+    # context (BEG, CMDARG, ARG, END, ENDFN, MID, DOT) the state belongs to.
+    # When a state has kernel items from multiple contexts, the context is
+    # set to the bitwise OR of all contexts (mixed context).
+    #
+    # @rbs () -> void
+    def classify_lexer_contexts
+      return if @grammar.lexer_contexts.empty?
+
+      @lexer_context_classifier = LexerContextClassifier.new(
+        @grammar.lexer_contexts,
+        @grammar.parameterized_expansion_args
+      )
+
+      @states.each do |state|
+        groups = @lexer_context_classifier.classify(state)
+
+        # Combine all contexts into a single bitmask
+        combined = 0
+        groups.each_key do |ctx|
+          combined |= ctx if ctx > 0
+        end
+
+        state.lexer_context = combined
+      end
+    end
+
+    # Return the lexer context table as an array of context values,
+    # one per parser state (indexed by state id).
+    #
+    # @rbs () -> Array[Integer]
+    def lexer_context_table
+      @states.map { |state| state.lexer_context || 0 }
+    end
+
+    # Check if lexer context classification has been performed.
+    #
+    # @rbs () -> bool
+    def lexer_context_enabled?
+      pslr_defined? && @lexer_context_classifier != nil
     end
 
     def compute_la_sources_for_conflicted_states
@@ -755,10 +857,137 @@ module Lrama
     # @rbs () -> void
     def split_states
       @states.each do |state|
-        state.transitions.each do |transition|
+        state.transitions.dup.each do |transition|
           compute_state(state, transition, transition.to_state)
         end
       end
+    end
+
+    # Split states where different predecessor paths lead to different
+    # lexer contexts. This resolves LALR state merging that makes
+    # BEG vs CMDARG (and other context pairs) indistinguishable.
+    #
+    # Algorithm:
+    # 1. For each state, group incoming transitions by the lexer context
+    #    that the predecessor would imply
+    # 2. If a state has predecessors from multiple different contexts,
+    #    split the state so each split has a unique context
+    #
+    # @rbs () -> void
+    def split_states_by_context
+      return unless @lexer_context_classifier
+
+      # Iterate over a snapshot of states (new states may be added)
+      states_snapshot = @states.dup
+
+      states_snapshot.each do |state|
+        # Skip start state and states with no context
+        next if state.kernels.any?(&:start_item?)
+
+        # Group predecessor transitions by the context they imply
+        context_groups = compute_predecessor_context_groups(state)
+
+        # Only split if there are multiple distinct non-zero contexts
+        meaningful_groups = context_groups.reject { |ctx, _| ctx == 0 }
+        next if meaningful_groups.size <= 1
+
+        # The largest group keeps the original state
+        primary_ctx, = meaningful_groups.max_by { |_, transitions| transitions.size }
+
+        meaningful_groups.each do |ctx, transitions|
+          next if ctx == primary_ctx
+
+          # Create a new split state for this context group
+          split = create_context_split_state(state)
+          split.lexer_context = ctx
+
+          # Update predecessor transitions to point to the new split state
+          transitions.each do |pred_state, transition|
+            pred_state.update_transition(transition, split)
+          end
+        end
+
+        # Update the original state's context to the primary
+        state.lexer_context = primary_ctx
+      end
+    end
+
+    # For a given state, group its incoming transitions by the lexer context
+    # that the predecessor state implies for this state.
+    #
+    # The implied context is determined by what symbol was used to reach
+    # this state (the accessing symbol's context).
+    #
+    # @rbs (State state) -> Hash[Integer, Array[[State, State::Action::Shift | State::Action::Goto]]]
+    def compute_predecessor_context_groups(state)
+      groups = Hash.new { |h, k| h[k] = [] }
+
+      state.predecessors.each do |pred|
+        pred.transitions.each do |transition|
+          next unless transition.to_state == state
+
+          # The context is determined by the predecessor's context
+          # combined with what we're transitioning on
+          ctx = infer_transition_context(pred, transition)
+          groups[ctx] << [pred, transition]
+        end
+      end
+
+      groups
+    end
+
+    # Infer the lexer context that a transition implies for the target state.
+    #
+    # @rbs (State pred, State::Action::Shift | State::Action::Goto transition) -> Integer
+    def infer_transition_context(pred, transition)
+      sym = transition.next_sym
+      if sym.term?
+        @lexer_context_classifier.classify_terminal_context(sym)
+      else
+        @lexer_context_classifier.classify_nonterminal_context(sym)
+      end
+    end
+
+    # Create a new split state that is an isocore copy of the given state.
+    #
+    # @rbs (State original) -> State
+    def create_context_split_state(original)
+      base = original.lalr_isocore || original
+      new_state = State.new(@states.count, base.accessing_symbol, base.kernels)
+      new_state.closure = base.closure
+      new_state.compute_transitions_and_reduces
+
+      # Copy transition targets from original
+      original.transitions.each do |transition|
+        new_state.set_items_to_state(transition.to_items, transition.to_state)
+      end
+
+      @states << new_state
+      new_state.lalr_isocore = base
+      base.ielr_isocores << new_state
+      base.ielr_isocores.each do |st|
+        st.ielr_isocores = base.ielr_isocores
+      end
+
+      new_state.lookaheads_recomputed = true
+      new_state.item_lookahead_set = original.item_lookahead_set
+      new_state.pslr_item_lookahead_set = original.pslr_item_lookahead_set
+
+      new_state
+    end
+
+    # @rbs () -> void
+    def capture_pslr_metrics_before_split
+      @pslr_metrics = {
+        base_states_count: @states.count,
+        total_states_count: @states.count,
+        split_state_count: 0,
+        growth_count: 0,
+        growth_ratio: 1.0,
+        token_pattern_count: token_patterns.size,
+        scanner_fsa_state_count: 0,
+        inadequacies_count: 0
+      }
     end
 
     # @rbs () -> void
@@ -782,17 +1011,32 @@ module Lrama
     def merge_lookaheads(state, filtered_lookaheads)
       return if state.kernels.all? {|item| (filtered_lookaheads[item] - state.item_lookahead_set[item]).empty? }
 
-      state.item_lookahead_set = state.item_lookahead_set.merge {|_, v1, v2| v1 | v2 }
+      state.item_lookahead_set = state.item_lookahead_set.merge(filtered_lookaheads) {|_, v1, v2| v1 | v2 }
       state.transitions.each do |transition|
         next if transition.to_state.lookaheads_recomputed
         compute_state(state, transition, transition.to_state)
       end
     end
 
+    # @rbs (State state, State::lookahead_set pslr_lookaheads) -> void
+    def merge_pslr_lookaheads(state, pslr_lookaheads)
+      state.pslr_item_lookahead_set ||= state.kernels.map {|kernel| [kernel, []] }.to_h
+      return if state.kernels.all? {|item| (pslr_lookaheads[item] - state.pslr_item_lookahead_set[item]).empty? }
+
+      state.pslr_item_lookahead_set = state.pslr_item_lookahead_set.merge(pslr_lookaheads) {|_, v1, v2| v1 | v2 }
+    end
+
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state(state, transition, next_state)
       propagating_lookaheads = state.propagate_lookaheads(next_state)
-      s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
+      pslr_lookaheads =
+        if @pslr_split_enabled
+          state.propagate_lookaheads_without_filter(next_state)
+        else
+          propagating_lookaheads
+        end
+
+      s = next_state.ielr_isocores.find {|st| compatible_split_state?(st, propagating_lookaheads, pslr_lookaheads) }
 
       if s.nil?
         s = next_state.lalr_isocore
@@ -809,14 +1053,94 @@ module Lrama
           st.ielr_isocores = s.ielr_isocores
         end
         new_state.lookaheads_recomputed = true
-        new_state.item_lookahead_set = propagating_lookaheads
+        new_state.item_lookahead_set = pslr_lookaheads
+        new_state.pslr_item_lookahead_set = pslr_lookaheads
         state.update_transition(transition, new_state)
       elsif(!s.lookaheads_recomputed)
         s.lookaheads_recomputed = true
-        s.item_lookahead_set = propagating_lookaheads
+        s.item_lookahead_set = pslr_lookaheads
+        s.pslr_item_lookahead_set = pslr_lookaheads
       else
+        merge_pslr_lookaheads(s, pslr_lookaheads) if @pslr_split_enabled
         merge_lookaheads(s, propagating_lookaheads)
         state.update_transition(transition, s) if state.items_to_state[transition.to_items].id != s.id
+      end
+    end
+
+    # @rbs (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
+    def compatible_split_state?(state, filtered_lookaheads, pslr_lookaheads = nil)
+      return false unless state.is_compatible?(filtered_lookaheads)
+      return true unless @pslr_split_enabled && @scanner_fsa
+
+      pslr_lookaheads ||= filtered_lookaheads
+
+      pslr_state_signature(state) == pslr_state_signature(state, pslr_lookaheads)
+    end
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
+    def pslr_state_signature(state, filtered_lookaheads = nil)
+      return [] unless @scanner_fsa
+
+      acc_sp = acceptable_tokens_for_pslr(state, filtered_lookaheads)
+
+      # Cache: use frozen acc_sp as key to avoid recomputing signature
+      # for states with identical acceptable token sets
+      cache_key = acc_sp.to_a.sort.freeze
+      @_pslr_sig_cache ||= {}
+      return @_pslr_sig_cache[cache_key] if @_pslr_sig_cache.key?(cache_key)
+
+      # Pre-filter: only iterate over FSA accepting states (cached list)
+      @_fsa_accepting_states ||= @scanner_fsa.states.select(&:accepting?).freeze
+
+      sig = @_fsa_accepting_states.each_with_object([]) do |fsa_state, signature|
+        candidates = fsa_state.accepting_tokens.select do |token_pattern|
+          acc_sp.include?(token_pattern.name)
+        end
+        signature << [fsa_state.id, select_best_pslr_token(candidates)&.name]
+      end
+
+      @_pslr_sig_cache[cache_key] = sig
+      sig
+    end
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Set[String]
+    def acceptable_tokens_for_pslr(state, filtered_lookaheads = nil)
+      tokens = Set.new
+      kernel_reduce_items = state.kernels.select(&:end_of_rule?).to_set
+
+      state.term_transitions.each do |shift|
+        next_sym = shift.next_sym
+        tokens << next_sym.id.s_value if next_sym.term?
+      end
+
+      state.reduces.each do |reduce|
+        look_ahead =
+          if filtered_lookaheads && kernel_reduce_items.include?(reduce.item)
+            filtered_lookaheads[reduce.item] || []
+          else
+            state.acceptable_pslr_reduce_lookahead(reduce)
+          end
+
+        look_ahead.each do |la|
+          tokens << la.id.s_value
+        end
+      end
+
+      tokens
+    end
+
+    # @rbs (Array[Grammar::TokenPattern] candidates) -> Grammar::TokenPattern?
+    def select_best_pslr_token(candidates)
+      return nil if candidates.empty?
+      return candidates.first if candidates.size == 1
+
+      candidates.min_by do |token|
+        higher_count = candidates.count do |other|
+          next false if other == token
+          lex_prec.higher_priority?(token.name, other.name)
+        end
+
+        [-higher_count, token.definition_order]
       end
     end
 
@@ -862,6 +1186,144 @@ module Lrama
       @_read_sets = nil
       @_follow_sets = nil
       @_la = nil
+    end
+
+    # Build Scanner FSA from token patterns
+    # @rbs () -> void
+    def build_scanner_fsa
+      return if token_patterns.empty?
+
+      @scanner_fsa = ScannerFSA.new(token_patterns)
+    end
+
+    # Build length precedences table
+    # @rbs () -> void
+    def build_length_precedences
+      @length_precedences = LengthPrecedences.new(lex_prec)
+    end
+
+    # Build scanner_accepts table
+    # @rbs () -> void
+    def build_scanner_accepts
+      return unless @scanner_fsa
+
+      @scanner_accepts_table = State::ScannerAccepts.new(
+        @states,
+        @scanner_fsa,
+        lex_prec,
+        @length_precedences
+      )
+      @scanner_accepts_table.build
+    end
+
+    # Handle PSLR inadequacies
+    # Detects and splits states where pseudo-scanner behavior differs
+    # @rbs () -> void
+    def handle_pslr_inadequacies
+      return unless @scanner_fsa && @scanner_accepts_table
+
+      @pslr_inadequacies = detect_pslr_inadequacies
+      return if @pslr_inadequacies.empty?
+
+      @tracer.warn("Detected #{@pslr_inadequacies.size} unresolved PSLR inadequacies") if @tracer.respond_to?(:warn)
+    end
+
+    # @rbs () -> void
+    def finalize_pslr_metrics
+      return unless pslr_defined?
+
+      base_states_count = @pslr_metrics[:base_states_count] || @states.count
+      total_states_count = @states.count
+
+      @pslr_metrics = {
+        base_states_count: base_states_count,
+        total_states_count: total_states_count,
+        split_state_count: @states.count(&:split_state?),
+        growth_count: total_states_count - base_states_count,
+        growth_ratio: base_states_count.zero? ? nil : total_states_count.to_f / base_states_count,
+        token_pattern_count: token_patterns.size,
+        scanner_fsa_state_count: @scanner_fsa ? @scanner_fsa.states.size : 0,
+        inadequacies_count: @pslr_inadequacies.size
+      }
+    end
+
+    # Detect PSLR inadequacies in isocore groups
+    # @rbs () -> Array[State::PslrInadequacy]
+    def detect_pslr_inadequacies
+      inadequacies = []
+
+      @states.each do |state|
+        state.transitions.each do |transition|
+          next_state = transition.to_state
+          next unless next_state
+
+          propagating_lookaheads = state.propagate_lookaheads_without_filter(next_state.lalr_isocore)
+          expected_profile = pslr_state_signature(next_state, propagating_lookaheads)
+          actual_profile = pslr_state_signature(next_state)
+
+          next if expected_profile == actual_profile
+
+          matching_state = next_state.ielr_isocores.find do |candidate|
+            pslr_state_signature(candidate) == expected_profile
+          end
+
+          inadequacies << State::PslrInadequacy.new(
+            type: State::PslrInadequacy::PSLR_RELATIVE,
+            state: next_state,
+            conflicting_states: [matching_state, next_state].compact.uniq,
+            details: {
+              reason: "Transition reaches a state with an incompatible PSLR scanner profile",
+              from_state_id: state.id,
+              transition_symbol: transition.next_sym.id.s_value,
+              expected_profile: expected_profile,
+              actual_profile: actual_profile,
+              matching_state_id: matching_state&.id
+            }
+          )
+        end
+      end
+
+      inadequacies
+    end
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_inadequacies!(logger)
+      return unless pslr_defined?
+      return if @pslr_inadequacies.empty?
+
+      @pslr_inadequacies.each do |inadequacy|
+        logger.warn(inadequacy.to_s)
+      end
+
+      # Do not exit on PSLR inadequacies — treat as warnings.
+      # The handwritten lexer handles remaining ambiguities.
+    end
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_state_growth!(logger)
+      return unless pslr_defined?
+
+      errors = []
+      base_states_count = @pslr_metrics[:base_states_count] || @states.count
+      total_states_count = @pslr_metrics[:total_states_count] || @states.count
+      split_state_count = @pslr_metrics[:split_state_count] || @states.count(&:split_state?)
+      growth_ratio = @pslr_metrics[:growth_ratio] || 1.0
+
+      if (limit = pslr_max_states) && limit < total_states_count
+        errors << "PSLR state growth exceeded pslr.max-states=#{limit} (total=#{total_states_count}, base=#{base_states_count}, split=#{split_state_count})"
+      end
+
+      if (limit = pslr_max_state_ratio) && limit < growth_ratio
+        errors << "PSLR state growth exceeded pslr.max-state-ratio=#{limit} (ratio=#{format('%.2f', growth_ratio)}x, total=#{total_states_count}, base=#{base_states_count})"
+      end
+
+      return if errors.empty?
+
+      errors.each do |message|
+        logger.error(message)
+      end
+
+      exit false
     end
   end
 end

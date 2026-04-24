@@ -4622,4 +4622,219 @@ RSpec.describe Lrama::Parser do
       end
     end
   end
+
+  describe "PSLR directives" do
+    describe "%token-pattern" do
+      it "parses a single token pattern" do
+        y = <<~GRAMMAR
+          %token-pattern RSHIFT />>/ "right shift"
+          %%
+          program: RSHIFT
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.size).to eq(1)
+        token_pattern = grammar.token_patterns.first
+        expect(token_pattern.name).to eq("RSHIFT")
+        expect(token_pattern.regex_pattern).to eq(">>")
+        expect(token_pattern.alias_name).to eq("\"right shift\"")
+      end
+
+      it "parses multiple token patterns" do
+        y = <<~GRAMMAR
+          %token-pattern RSHIFT />>/ "right shift"
+          %token-pattern RANGLE />/ "right angle"
+          %token-pattern LANGLE /</ "left angle"
+          %token-pattern ID /[a-zA-Z_][a-zA-Z0-9_]*/
+          %%
+          program: RSHIFT | RANGLE | LANGLE | ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.size).to eq(4)
+        names = grammar.token_patterns.map(&:name)
+        expect(names).to eq(["RSHIFT", "RANGLE", "LANGLE", "ID"])
+      end
+
+      it "parses token patterns with tags" do
+        y = <<~GRAMMAR
+          %token-pattern <str> RSHIFT />>/ "right shift"
+          %%
+          program: RSHIFT
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.size).to eq(1)
+        token_pattern = grammar.token_patterns.first
+        expect(token_pattern.tag.s_value).to eq("<str>")
+      end
+
+      it "parses escaped slashes inside token patterns" do
+        y = <<~GRAMMAR
+          %token-pattern SLASH /\\//
+          %%
+          program: SLASH
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.first.regex_pattern).to eq("\\/")
+      end
+
+      it "keeps empty token patterns available for scanner diagnostics" do
+        y = <<~GRAMMAR
+          %token-pattern EMPTY //
+          %%
+          program: EMPTY
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_patterns.first.regex_pattern).to eq("")
+      end
+    end
+
+    describe "%lex-prec" do
+      it "parses shorter priority rule" do
+        y = <<~GRAMMAR
+          %token RANGLE RSHIFT
+          %lex-prec RANGLE -s RSHIFT
+          %%
+          program: RANGLE | RSHIFT
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.lex_prec.declarations.size).to eq(1)
+        grammar.finalize_lexical_declarations!
+        expect(grammar.lex_prec.shortest_pair?("RANGLE", "RSHIFT")).to be true
+      end
+
+      it "parses identity-right longest rule" do
+        y = <<~GRAMMAR
+          %token IF ID
+          %lex-prec ID <~ IF
+          %%
+          program: IF | ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.lex_prec.declarations.size).to eq(1)
+        grammar.finalize_lexical_declarations!
+        expect(grammar.lex_prec.identity_precedes?("IF", "ID")).to be true
+        expect(grammar.lex_prec.longest_pair?("ID", "IF")).to be true
+      end
+
+      it "parses chained lex-prec rules" do
+        y = <<~GRAMMAR
+          %token IF ELSE WHILE ID
+          %lex-prec ID <- WHILE <- ELSE <- IF
+          %%
+          program: IF | ELSE | WHILE | ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.lex_prec.declarations.size).to eq(3)
+        grammar.finalize_lexical_declarations!
+        expect(grammar.lex_prec.identity_precedes?("WHILE", "ID")).to be true
+        expect(grammar.lex_prec.identity_precedes?("ELSE", "WHILE")).to be true
+        expect(grammar.lex_prec.identity_precedes?("IF", "ELSE")).to be true
+        expect(grammar.lex_prec.identity_precedes?("IF", "ID")).to be false
+      end
+
+      it "parses symbol sets and lexical ties" do
+        y = <<~GRAMMAR
+          %token IF WHILE ID RANGLE RSHIFT
+          %symbol-set keywords IF WHILE
+          %lex-tie ID keywords
+          %lex-no-tie RANGLE RSHIFT
+          %%
+          program: IF | WHILE | ID | RANGLE | RSHIFT
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.symbol_sets.fetch("keywords").map(&:s_value)).to eq(["IF", "WHILE"])
+        expect(grammar.lex_tie.declarations.map(&:kind)).to eq([:tie, :no_tie])
+        expect(grammar.lex_tie.no_tie?("RANGLE", "RSHIFT")).to be true
+      end
+    end
+
+    describe "%define lr.type pslr" do
+      it "recognizes pslr lr.type" do
+        y = <<~GRAMMAR
+          %define lr.type pslr
+          %token ID
+          %%
+          program: ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.pslr_defined?).to be true
+      end
+    end
+
+    describe "%token-action" do
+      it "parses a single token action" do
+        y = <<~GRAMMAR
+          %token ID
+          %token-action ID { printf("matched ID"); }
+          %%
+          program: ID
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_actions.size).to eq(1)
+        action = grammar.token_actions.first
+        expect(action.token_name).to eq("ID")
+        expect(action.code.s_value).to include("printf")
+      end
+
+      it "parses multiple token actions" do
+        y = <<~GRAMMAR
+          %token ID NUM
+          %token-action ID { handle_id(); } NUM { handle_num(); }
+          %%
+          program: ID | NUM
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "pslr_test.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.token_actions.size).to eq(2)
+        expect(grammar.token_actions.map(&:token_name)).to eq(["ID", "NUM"])
+      end
+    end
+
+  end
 end

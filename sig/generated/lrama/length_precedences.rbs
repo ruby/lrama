@@ -1,0 +1,76 @@
+# Generated from lib/lrama/length_precedences.rb with RBS::Inline
+
+module Lrama
+  # Runtime length precedence matrix for PSLR pseudo-scanning.
+  #
+  # When a longer match for new_token is reached after an earlier match for
+  # old_token, #precedes? answers whether the longer match should replace it.
+  class LengthPrecedences
+    LEFT: Symbol
+
+    RIGHT: Symbol
+
+    UNDEFINED: Symbol
+
+    PREFER_NEW: Symbol
+
+    PREFER_OLD: Symbol
+
+    UNRESOLVED: Symbol
+
+    class LexicalPrecedenceConflictError < StandardError
+    end
+
+    class RuleSource
+      attr_reader operator: Symbol
+
+      attr_reader lineno: Integer
+
+      # @rbs (Symbol operator, Integer lineno) -> void
+      def initialize: (Symbol operator, Integer lineno) -> void
+    end
+
+    attr_reader table: Hash[[ String, String ], bool]
+
+    attr_reader resolution_table: Hash[[ String, String ], Symbol]
+
+    # @rbs (Grammar::LexPrec lex_prec) -> void
+    def initialize: (Grammar::LexPrec lex_prec) -> void
+
+    # @rbs (String old_token, String new_token) -> bool
+    def normal_precedes?: (String old_token, String new_token) -> bool
+
+    # @rbs (String old_token, String new_token) -> bool
+    def precedes?: (String old_token, String new_token) -> bool
+
+    # @rbs (String old_token, String new_token) -> bool
+    def fallback_precedes?: (String old_token, String new_token) -> bool
+
+    # Backward-compatible query used by existing specs.
+    # @rbs (String old_token, String new_token) -> bool
+    def prefer_shorter?: (String old_token, String new_token) -> bool
+
+    # @rbs (String old_token, String new_token, ?fallback: bool, ?track: bool) -> Symbol
+    def resolution: (String old_token, String new_token, ?fallback: bool, ?track: bool) -> Symbol
+
+    # @rbs (String old_token, String new_token) -> Symbol
+    def precedence: (String old_token, String new_token) -> Symbol
+
+    # @rbs (Symbol operator) -> String
+    def self.operator_label: (Symbol operator) -> String
+
+    private
+
+    # @rbs (Grammar::LexPrec lex_prec) -> Hash[[String, String], Symbol]
+    def build_resolution_table: (Grammar::LexPrec lex_prec) -> Hash[[ String, String ], Symbol]
+
+    # @rbs (Hash[[String, String], Symbol] table, Hash[[String, String], RuleSource] sources, [String, String] key, Symbol value, Grammar::LexPrec::Rule rule, Integer rule_index) -> void
+    def set_resolution!: (Hash[[ String, String ], Symbol] table, Hash[[ String, String ], RuleSource] sources, [ String, String ] key, Symbol value, Grammar::LexPrec::Rule rule, Integer rule_index) -> void
+
+    # @rbs (Symbol operator) -> String
+    def operator_label: (Symbol operator) -> String
+
+    # @rbs (Symbol value) -> String
+    def resolution_label: (Symbol value) -> String
+  end
+end

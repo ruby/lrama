@@ -1,0 +1,78 @@
+# Generated from lib/lrama/lexer_context_classifier.rb with RBS::Inline
+
+module Lrama
+  # Classifies parser states into lexer context categories.
+  #
+  # When LALR states are merged, states from different grammatical contexts
+  # (e.g., BEG vs CMDARG) share the same state number, making them
+  # indistinguishable to the lexer. This classifier analyzes kernel items
+  # to determine the lexer context of each state, enabling context-aware
+  # state splitting.
+  #
+  # Context definitions come from %lexer-context directives in the grammar file.
+  # Each directive maps a context name to a set of symbols:
+  #
+  #   %lexer-context BEG keyword_if keyword_unless '(' '[' '{'
+  #   %lexer-context CMDARG tIDENTIFIER tFID tCONSTANT
+  class LexerContextClassifier
+    # @rbs (Hash[String, Grammar::LexerContext] lexer_contexts, ?Hash[String, Array[String]] expansion_args) -> void
+    def initialize: (Hash[String, Grammar::LexerContext] lexer_contexts, ?Hash[String, Array[String]] expansion_args) -> void
+
+    # Classify a state's kernel items into context groups.
+    #
+    # @rbs (State state) -> Hash[Integer, Array[State::Item]]
+    def classify: (State state) -> Hash[Integer, Array[State::Item]]
+
+    # Infer the lexer context for a single kernel item.
+    #
+    # @rbs (State::Item item) -> Integer
+    def infer_item_context: (State::Item item) -> Integer
+
+    # Classify context based on the symbol before the dot.
+    #
+    # @rbs (Grammar::Symbol sym) -> Integer
+    def classify_symbol_context: (Grammar::Symbol sym) -> Integer
+
+    # For backward compatibility with states.rb split logic
+    # @rbs (Grammar::Symbol sym) -> Integer
+    def classify_terminal_context: (Grammar::Symbol sym) -> Integer
+
+    # For backward compatibility with states.rb split logic
+    # @rbs (Grammar::Symbol sym) -> Integer
+    def classify_nonterminal_context: (Grammar::Symbol sym) -> Integer
+
+    # Return a human-readable name for a context value.
+    #
+    # @rbs (Integer ctx) -> String
+    def context_name: (Integer ctx) -> String
+
+    # Class-level context_name for use without an instance (e.g., output.rb).
+    # Requires lexer_contexts to build the name map.
+    #
+    # @rbs (Integer ctx, Hash[String, Grammar::LexerContext] lexer_contexts) -> String
+    def self.context_name: (Integer ctx, Hash[String, Grammar::LexerContext] lexer_contexts) -> String
+
+    # All context bitmasks OR'd together (for "is context known?" checks).
+    # @rbs () -> Integer
+    def all_contexts_mask: () -> Integer
+
+    # Return the ordered list of context definitions.
+    # @rbs () -> Array[Grammar::LexerContext]
+    def contexts: () -> Array[Grammar::LexerContext]
+
+    private
+
+    # Build a map from symbol name → context bitmask.
+    # @rbs () -> Hash[String, Integer]
+    def build_symbol_to_context_map: () -> Hash[String, Integer]
+
+    # Build a map from bitmask value → context name.
+    # @rbs () -> Hash[Integer, String]
+    def build_context_names: () -> Hash[Integer, String]
+
+    # Return the bitmask for the first defined context (used as default for position-0 items).
+    # Returns 0 if no contexts are defined.
+    # @rbs () -> Integer
+    def default_beg_context: () -> Integer
+  end
+end

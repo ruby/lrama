@@ -224,6 +224,7 @@ module Lrama
         if state.reduces.map(&:selected_look_ahead).any? {|la| !la.empty? }
           # Iterate reduces with reverse order so that first rule is used.
           state.reduces.reverse_each do |reduce|
+            next unless reduce.look_ahead
             reduce.look_ahead.each do |term|
               actions[term.number] = rule_id_to_action_number(reduce.rule.id)
             end
