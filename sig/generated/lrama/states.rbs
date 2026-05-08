@@ -77,6 +77,9 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate!: (Logger logger) -> void
 
+    # @rbs () -> Array[Lrama::Diagnostic]
+    def conflict_validation_diagnostics: () -> Array[Lrama::Diagnostic]
+
     def compute_la_sources_for_conflicted_states: () -> untyped
 
     private
@@ -208,6 +211,12 @@ module Lrama
 
     # @rbs (Logger logger) -> bool
     def rr_conflicts_within_threshold?: (Logger logger) -> bool
+
+    # @rbs () -> Lrama::Diagnostic?
+    def sr_conflict_count_diagnostic: () -> Lrama::Diagnostic?
+
+    # @rbs (?expected: Integer) -> Lrama::Diagnostic?
+    def rr_conflict_count_diagnostic: (?expected: Integer) -> Lrama::Diagnostic?
 
     # @rbs () -> void
     def clear_look_ahead_sets: () -> void

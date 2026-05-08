@@ -3104,6 +3104,7 @@ RSpec.describe Lrama::States do
           logger = Lrama::Logger.new
           allow(logger).to receive(:error)
 
+          expect(states.conflict_validation_diagnostics.map(&:id)).to eq(["conflict.reduce_reduce.count_mismatch"])
           expect{ states.validate!(logger) }.to raise_error(SystemExit)
           expect(logger).to have_received(:error).with("reduce/reduce conflicts: 1 found, 0 expected")
         end
@@ -3129,6 +3130,10 @@ RSpec.describe Lrama::States do
           logger = Lrama::Logger.new
           allow(logger).to receive(:error)
 
+          expect(states.conflict_validation_diagnostics.map { |diagnostic| [diagnostic.id, diagnostic.details] }).to eq([
+            ["conflict.shift_reduce.count_mismatch", { "found" => 2, "expected" => 0 }],
+            ["conflict.reduce_reduce.count_mismatch", { "found" => 1, "expected" => 0 }]
+          ])
           expect{ states.validate!(logger) }.to raise_error(SystemExit)
           expect(logger).to have_received(:error).with("shift/reduce conflicts: 2 found, 0 expected")
           expect(logger).to have_received(:error).with("reduce/reduce conflicts: 1 found, 0 expected")

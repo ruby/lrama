@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "forwardable"
+require_relative "diagnostic"
 require_relative "tracer/duration"
 require_relative "state/item"
 
@@ -189,6 +190,20 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate!(logger)
       validate_conflicts_within_threshold!(logger)
+    end
+
+    # @rbs () -> Array[Lrama::Diagnostic]
+    def conflict_validation_diagnostics
+      return [] unless @grammar.expect
+
+      diagnostics = [] #: Array[Lrama::Diagnostic]
+      if (diagnostic = sr_conflict_count_diagnostic)
+        diagnostics << diagnostic
+      end
+      if (diagnostic = rr_conflict_count_diagnostic)
+        diagnostics << diagnostic
+      end
+      diagnostics
     end
 
     def compute_la_sources_for_conflicted_states
@@ -827,25 +842,61 @@ module Lrama
 
     # @rbs (Logger logger) -> bool
     def conflicts_within_threshold?(logger)
-      return true unless @grammar.expect
-
-      [sr_conflicts_within_threshold?(logger), rr_conflicts_within_threshold?(logger)].all?
+      diagnostics = conflict_validation_diagnostics
+      emitter = Lrama::Diagnostic::Emitter.new(logger)
+      diagnostics.each do |diagnostic|
+        emitter.error(diagnostic)
+      end
+      diagnostics.empty?
     end
 
     # @rbs (Logger logger) -> bool
     def sr_conflicts_within_threshold?(logger)
-      return true if @grammar.expect == sr_conflicts_count
+      diagnostic = sr_conflict_count_diagnostic
+      return true if diagnostic.nil?
 
-      logger.error("shift/reduce conflicts: #{sr_conflicts_count} found, #{@grammar.expect} expected")
+      Lrama::Diagnostic::Emitter.new(logger).error(diagnostic)
       false
     end
 
     # @rbs (Logger logger) -> bool
     def rr_conflicts_within_threshold?(logger, expected: 0)
-      return true if expected == rr_conflicts_count
+      diagnostic = rr_conflict_count_diagnostic(expected: expected)
+      return true if diagnostic.nil?
 
-      logger.error("reduce/reduce conflicts: #{rr_conflicts_count} found, #{expected} expected")
+      Lrama::Diagnostic::Emitter.new(logger).error(diagnostic)
       false
+    end
+
+    # @rbs () -> Lrama::Diagnostic?
+    def sr_conflict_count_diagnostic
+      return nil unless @grammar.expect
+      return nil if @grammar.expect == sr_conflicts_count
+
+      Lrama::Diagnostic.new(
+        id: "conflict.shift_reduce.count_mismatch",
+        severity: :error,
+        message: "shift/reduce conflicts: #{sr_conflicts_count} found, #{@grammar.expect} expected",
+        details: {
+          "found" => sr_conflicts_count,
+          "expected" => @grammar.expect
+        }
+      )
+    end
+
+    # @rbs (?expected: Integer) -> Lrama::Diagnostic?
+    def rr_conflict_count_diagnostic(expected: 0)
+      return nil if expected == rr_conflicts_count
+
+      Lrama::Diagnostic.new(
+        id: "conflict.reduce_reduce.count_mismatch",
+        severity: :error,
+        message: "reduce/reduce conflicts: #{rr_conflicts_count} found, #{expected} expected",
+        details: {
+          "found" => rr_conflicts_count,
+          "expected" => expected
+        }
+      )
     end
 
     # @rbs () -> void
