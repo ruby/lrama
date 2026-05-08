@@ -1,0 +1,10 @@
+# Generated from lib/lrama/reporter/json.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    class JSON
+      # @rbs (Array[Lrama::Diagnostic] diagnostics) -> String
+      def report: (Array[Lrama::Diagnostic] diagnostics) -> String
+    end
+  end
+end

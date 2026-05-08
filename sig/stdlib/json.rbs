@@ -1,0 +1,3 @@
+module JSON
+  def self.pretty_generate: (untyped obj) -> String
+end

@@ -1,0 +1,26 @@
+# Generated from lib/lrama/diagnostic/location.rb with RBS::Inline
+
+module Lrama
+  class Diagnostic
+    class Location
+      attr_reader filename: String?
+
+      attr_reader line: Integer?
+
+      attr_reader column: Integer?
+
+      attr_reader end_line: Integer?
+
+      attr_reader end_column: Integer?
+
+      # @rbs (?filename: String?, ?line: Integer?, ?column: Integer?, ?end_line: Integer?, ?end_column: Integer?) -> void
+      def initialize: (?filename: String?, ?line: Integer?, ?column: Integer?, ?end_line: Integer?, ?end_column: Integer?) -> void
+
+      # @rbs () -> Hash[String, untyped]
+      def to_h: () -> Hash[String, untyped]
+
+      # @rbs () -> String
+      def to_s: () -> String
+    end
+  end
+end

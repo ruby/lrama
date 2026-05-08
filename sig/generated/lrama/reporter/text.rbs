@@ -1,0 +1,18 @@
+# Generated from lib/lrama/reporter/text.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    class Text
+      # @rbs (Array[Lrama::Diagnostic] diagnostics) -> String
+      def report: (Array[Lrama::Diagnostic] diagnostics) -> String
+
+      private
+
+      # @rbs (Lrama::Diagnostic diagnostic) -> String
+      def format_diagnostic: (Lrama::Diagnostic diagnostic) -> String
+
+      # @rbs (Lrama::Diagnostic::Location? location) -> String
+      def location_prefix: (Lrama::Diagnostic::Location? location) -> String
+    end
+  end
+end

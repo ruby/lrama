@@ -3,11 +3,13 @@
 
 require_relative 'reporter/conflicts'
 require_relative 'reporter/grammar'
+require_relative 'reporter/json'
 require_relative 'reporter/precedences'
 require_relative 'reporter/profile'
 require_relative 'reporter/rules'
 require_relative 'reporter/states'
 require_relative 'reporter/terms'
+require_relative 'reporter/text'
 
 module Lrama
   class Reporter
