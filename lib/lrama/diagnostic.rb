@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require_relative "diagnostic/location"
+require_relative "diagnostic/emitter"
 
 module Lrama
   class Diagnostic

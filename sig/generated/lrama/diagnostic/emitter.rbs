@@ -1,0 +1,23 @@
+# Generated from lib/lrama/diagnostic/emitter.rb with RBS::Inline
+
+module Lrama
+  class Diagnostic
+    class Emitter
+      attr_reader diagnostics: Array[Lrama::Diagnostic]
+
+      # @rbs (Lrama::Logger logger) -> void
+      def initialize: (Lrama::Logger logger) -> void
+
+      # @rbs (Lrama::Diagnostic diagnostic, ?message: String) -> void
+      def warn: (Lrama::Diagnostic diagnostic, ?message: String) -> void
+
+      # @rbs (Lrama::Diagnostic diagnostic, ?message: String) -> void
+      def error: (Lrama::Diagnostic diagnostic, ?message: String) -> void
+
+      private
+
+      # @rbs (Symbol level, Lrama::Diagnostic diagnostic, String message) -> void
+      def emit: (Symbol level, Lrama::Diagnostic diagnostic, String message) -> void
+    end
+  end
+end
