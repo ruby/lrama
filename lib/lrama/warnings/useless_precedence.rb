@@ -15,6 +15,7 @@ module Lrama
         diagnostics(grammar, states).each do |diagnostic|
           @emitter.warn(diagnostic, message: legacy_message(diagnostic))
         end
+        nil
       end
 
       # @rbs (Lrama::Grammar grammar, Lrama::States states) -> Array[Lrama::Diagnostic]

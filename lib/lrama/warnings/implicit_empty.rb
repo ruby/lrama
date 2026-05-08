@@ -19,6 +19,7 @@ module Lrama
         diagnostics(grammar).each do |diagnostic|
           @emitter.warn(diagnostic, message: "warning: #{diagnostic.message}")
         end
+        nil
       end
 
       # @rbs (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]

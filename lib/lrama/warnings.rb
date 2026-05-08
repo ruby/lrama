@@ -29,6 +29,7 @@ module Lrama
       @redefined_rules.warn(grammar)
       @required.warn(grammar)
       @useless_precedence.warn(grammar, states)
+      nil
     end
 
     # @rbs (Lrama::Grammar grammar, Lrama::States states) -> Array[Lrama::Diagnostic]

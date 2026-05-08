@@ -15,6 +15,7 @@ module Lrama
         diagnostics(states).each do |diagnostic|
           @emitter.warn(diagnostic)
         end
+        nil
       end
 
       # @rbs (Lrama::States states) -> Array[Lrama::Diagnostic]
