@@ -10,19 +10,42 @@ module Lrama
     class ImplicitEmpty
       # @rbs (Lrama::Logger logger, bool warnings) -> void
       def initialize(logger, warnings)
-        @logger = logger
+        @emitter = Lrama::Diagnostic::Emitter.new(logger)
         @warnings = warnings
       end
 
       # @rbs (Lrama::Grammar grammar) -> void
       def warn(grammar)
-        return unless @warnings
+        diagnostics(grammar).each do |diagnostic|
+          @emitter.warn(diagnostic, message: "warning: #{diagnostic.message}")
+        end
+      end
 
-        grammar.rule_builders.each do |builder|
+      # @rbs (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]
+      def diagnostics(grammar)
+        return [] unless @warnings
+
+        grammar.rule_builders.each_with_object([]) do |builder, diagnostics|
           if builder.rhs.empty?
-            @logger.warn("warning: empty rule without %empty")
+            diagnostics << Lrama::Diagnostic.new(
+              id: "implicit_empty_rule",
+              severity: :warning,
+              message: "empty rule without %empty",
+              location: location_for_line(builder.line),
+              details: { "line" => builder.line },
+              suggestion: "Use %empty to mark the empty rule explicitly."
+            )
           end
         end
+      end
+
+      private
+
+      # @rbs (Integer? line) -> Lrama::Diagnostic::Location?
+      def location_for_line(line)
+        return nil unless line
+
+        Lrama::Diagnostic::Location.new(line: line)
       end
     end
   end

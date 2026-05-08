@@ -77,9 +77,15 @@ RSpec.describe Lrama::Warnings::Conflicts do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Warnings.new(logger, true).warn(grammar, states)
+        warnings = Lrama::Warnings.new(logger, true)
+        warnings.warn(grammar, states)
         expect(logger).to have_received(:warn).with("shift/reduce conflicts: 2 found")
         expect(logger).to have_received(:warn).with("reduce/reduce conflicts: 1 found")
+        conflict_diagnostics = warnings.diagnostics(grammar, states).select { |diagnostic| diagnostic.id.start_with?("conflict.") }
+        expect(conflict_diagnostics.map { |diagnostic| [diagnostic.id, diagnostic.details["count"]] }).to eq([
+          ["conflict.shift_reduce", 2],
+          ["conflict.reduce_reduce", 1]
+        ])
       end
     end
 

@@ -6,17 +6,30 @@ module Lrama
     class Required
       # @rbs (Lrama::Logger logger, bool warnings) -> void
       def initialize(logger, warnings = false, **_)
-        @logger = logger
+        @emitter = Lrama::Diagnostic::Emitter.new(logger)
         @warnings = warnings
       end
 
       # @rbs (Lrama::Grammar grammar) -> void
       def warn(grammar)
-        return unless @warnings
-
-        if grammar.required
-          @logger.warn("currently, %require is simply valid as a grammar but does nothing")
+        diagnostics(grammar).each do |diagnostic|
+          @emitter.warn(diagnostic)
         end
+      end
+
+      # @rbs (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]
+      def diagnostics(grammar)
+        return [] unless @warnings
+        return [] unless grammar.required
+
+        [
+          Lrama::Diagnostic.new(
+            id: "require.noop",
+            severity: :warning,
+            message: "currently, %require is simply valid as a grammar but does nothing",
+            suggestion: "Remove %require if it is not needed for Bison compatibility."
+          )
+        ]
       end
     end
   end

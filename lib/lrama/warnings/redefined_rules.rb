@@ -6,16 +6,28 @@ module Lrama
     class RedefinedRules
       # @rbs (Lrama::Logger logger, bool warnings) -> void
       def initialize(logger, warnings)
-        @logger = logger
+        @emitter = Lrama::Diagnostic::Emitter.new(logger)
         @warnings = warnings
       end
 
       # @rbs (Lrama::Grammar grammar) -> void
       def warn(grammar)
-        return unless @warnings
+        diagnostics(grammar).each do |diagnostic|
+          @emitter.warn(diagnostic)
+        end
+      end
 
-        grammar.parameterized_resolver.redefined_rules.each do |rule|
-          @logger.warn("parameterized rule redefined: #{rule}")
+      # @rbs (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]
+      def diagnostics(grammar)
+        return [] unless @warnings
+
+        grammar.parameterized_resolver.redefined_rules.map do |rule|
+          Lrama::Diagnostic.new(
+            id: "parameterized_rule.redefined",
+            severity: :warning,
+            message: "parameterized rule redefined: #{rule}",
+            details: { "rule" => rule.to_s }
+          )
         end
       end
     end

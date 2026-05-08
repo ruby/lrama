@@ -8,6 +8,9 @@ module Lrama
 
       # @rbs (Lrama::States states) -> void
       def warn: (Lrama::States states) -> void
+
+      # @rbs (Lrama::States states) -> Array[Lrama::Diagnostic]
+      def diagnostics: (Lrama::States states) -> Array[Lrama::Diagnostic]
     end
   end
 end

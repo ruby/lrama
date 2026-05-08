@@ -13,6 +13,9 @@ module Lrama
       # @rbs (Lrama::Grammar grammar) -> void
       def warn: (Lrama::Grammar grammar) -> void
 
+      # @rbs (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]
+      def diagnostics: (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]
+
       private
 
       # @rbs (Lrama::Grammar grammar) -> Set[String]
@@ -24,8 +27,8 @@ module Lrama
       # @rbs (Array[untyped] nterms, Set[String] symbol_names) -> void
       def collect_nterm_names: (Array[untyped] nterms, Set[String] symbol_names) -> void
 
-      # @rbs (Array[untyped] parameterized_rules, Set[String] symbol_names) -> void
-      def check_conflicts: (Array[untyped] parameterized_rules, Set[String] symbol_names) -> void
+      # @rbs (Array[untyped] parameterized_rules, Set[String] symbol_names) -> Array[Lrama::Diagnostic]
+      def conflict_diagnostics: (Array[untyped] parameterized_rules, Set[String] symbol_names) -> Array[Lrama::Diagnostic]
     end
   end
 end

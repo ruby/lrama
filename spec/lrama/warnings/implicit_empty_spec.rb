@@ -27,8 +27,12 @@ RSpec.describe Lrama::Warnings::ImplicitEmpty do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Warnings.new(logger, true).warn(grammar, states)
+        warnings = Lrama::Warnings.new(logger, true)
+        warnings.warn(grammar, states)
         expect(logger).to have_received(:warn).with("warning: empty rule without %empty")
+        diagnostic = warnings.diagnostics(grammar, states).find { |d| d.id == "implicit_empty_rule" }
+        expect(diagnostic.message).to eq("empty rule without %empty")
+        expect(diagnostic.suggestion).to eq("Use %empty to mark the empty rule explicitly.")
       end
     end
 

@@ -30,8 +30,11 @@ RSpec.describe Lrama::Warnings::NameConflicts do
           states.compute
           logger = Lrama::Logger.new
           allow(logger).to receive(:warn)
-          Lrama::Warnings.new(logger, true).warn(grammar, states)
+          warnings = Lrama::Warnings.new(logger, true)
+          warnings.warn(grammar, states)
           expect(logger).to have_received(:warn).with('warning: parameterized rule name "option" conflicts with symbol name')
+          diagnostic = warnings.diagnostics(grammar, states).find { |d| d.id == "parameterized_rule.name_conflict" }
+          expect(diagnostic.details["name"]).to eq("option")
         end
       end
 

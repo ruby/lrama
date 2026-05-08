@@ -6,21 +6,42 @@ module Lrama
     class Conflicts
       # @rbs (Lrama::Logger logger, bool warnings) -> void
       def initialize(logger, warnings)
-        @logger = logger
+        @emitter = Lrama::Diagnostic::Emitter.new(logger)
         @warnings = warnings
       end
 
       # @rbs (Lrama::States states) -> void
       def warn(states)
-        return unless @warnings
+        diagnostics(states).each do |diagnostic|
+          @emitter.warn(diagnostic)
+        end
+      end
+
+      # @rbs (Lrama::States states) -> Array[Lrama::Diagnostic]
+      def diagnostics(states)
+        return [] unless @warnings
+
+        diagnostics = [] #: Array[Lrama::Diagnostic]
 
         if states.sr_conflicts_count != 0
-          @logger.warn("shift/reduce conflicts: #{states.sr_conflicts_count} found")
+          diagnostics << Lrama::Diagnostic.new(
+            id: "conflict.shift_reduce",
+            severity: :warning,
+            message: "shift/reduce conflicts: #{states.sr_conflicts_count} found",
+            details: { "count" => states.sr_conflicts_count }
+          )
         end
 
         if states.rr_conflicts_count != 0
-          @logger.warn("reduce/reduce conflicts: #{states.rr_conflicts_count} found")
+          diagnostics << Lrama::Diagnostic.new(
+            id: "conflict.reduce_reduce",
+            severity: :warning,
+            message: "reduce/reduce conflicts: #{states.rr_conflicts_count} found",
+            details: { "count" => states.rr_conflicts_count }
+          )
         end
+
+        diagnostics
       end
     end
   end

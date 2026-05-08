@@ -27,8 +27,10 @@ RSpec.describe Lrama::Warnings::Required do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Warnings.new(logger, true).warn(grammar, states)
+        warnings = Lrama::Warnings.new(logger, true)
+        warnings.warn(grammar, states)
         expect(logger).to have_received(:warn).with("currently, %require is simply valid as a grammar but does nothing")
+        expect(warnings.diagnostics(grammar, states).map(&:id)).to include("require.noop")
       end
     end
 

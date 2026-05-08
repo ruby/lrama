@@ -12,6 +12,14 @@ module Lrama
 
       # @rbs (Lrama::Grammar grammar) -> void
       def warn: (Lrama::Grammar grammar) -> void
+
+      # @rbs (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]
+      def diagnostics: (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]
+
+      private
+
+      # @rbs (Integer? line) -> Lrama::Diagnostic::Location?
+      def location_for_line: (Integer? line) -> Lrama::Diagnostic::Location?
     end
   end
 end

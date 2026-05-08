@@ -30,9 +30,11 @@ RSpec.describe Lrama::Warnings::RedefinedRules do
         states.compute
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
-        Lrama::Warnings.new(logger, true).warn(grammar, states)
+        warnings = Lrama::Warnings.new(logger, true)
+        warnings.warn(grammar, states)
         expect(logger).to have_received(:warn).with("parameterized rule redefined: foo(X)")
         expect(logger).to have_received(:warn).with("parameterized rule redefined: foo(Y)")
+        expect(warnings.diagnostics(grammar, states).map { |diagnostic| diagnostic.details["rule"] }).to eq(["foo(X)", "foo(Y)"])
       end
     end
 

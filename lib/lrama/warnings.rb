@@ -1,6 +1,7 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
+require_relative 'diagnostic'
 require_relative 'warnings/conflicts'
 require_relative 'warnings/implicit_empty'
 require_relative 'warnings/name_conflicts'
@@ -28,6 +29,16 @@ module Lrama
       @redefined_rules.warn(grammar)
       @required.warn(grammar)
       @useless_precedence.warn(grammar, states)
+    end
+
+    # @rbs (Lrama::Grammar grammar, Lrama::States states) -> Array[Lrama::Diagnostic]
+    def diagnostics(grammar, states)
+      @conflicts.diagnostics(states) +
+        @implicit_empty.diagnostics(grammar) +
+        @name_conflicts.diagnostics(grammar) +
+        @redefined_rules.diagnostics(grammar) +
+        @required.diagnostics(grammar) +
+        @useless_precedence.diagnostics(grammar, states)
     end
   end
 end

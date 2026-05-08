@@ -30,8 +30,12 @@ RSpec.describe Lrama::Warnings::UselessPrecedence do
           states.compute
           logger = Lrama::Logger.new
           allow(logger).to receive(:warn)
-          Lrama::Warnings.new(logger, true).warn(grammar, states)
+          warnings = Lrama::Warnings.new(logger, true)
+          warnings.warn(grammar, states)
           expect(logger).to have_received(:warn).with("Precedence PRECEDENCE (line: 14) is defined but not used in any rule.").once
+          diagnostic = warnings.diagnostics(grammar, states).find { |d| d.id == "useless_precedence" }
+          expect(diagnostic.location.line).to eq(14)
+          expect(diagnostic.details["precedence"]).to eq("PRECEDENCE")
         end
       end
 

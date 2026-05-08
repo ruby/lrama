@@ -10,17 +10,24 @@ module Lrama
     class NameConflicts
       # @rbs (Lrama::Logger logger, bool warnings) -> void
       def initialize(logger, warnings)
-        @logger = logger
+        @emitter = Lrama::Diagnostic::Emitter.new(logger)
         @warnings = warnings
       end
 
       # @rbs (Lrama::Grammar grammar) -> void
       def warn(grammar)
-        return unless @warnings
-        return if grammar.parameterized_rules.empty?
+        diagnostics(grammar).each do |diagnostic|
+          @emitter.warn(diagnostic, message: "warning: #{diagnostic.message}")
+        end
+      end
+
+      # @rbs (Lrama::Grammar grammar) -> Array[Lrama::Diagnostic]
+      def diagnostics(grammar)
+        return [] unless @warnings
+        return [] if grammar.parameterized_rules.empty?
 
         symbol_names = collect_symbol_names(grammar)
-        check_conflicts(grammar.parameterized_rules, symbol_names)
+        conflict_diagnostics(grammar.parameterized_rules, symbol_names)
       end
 
       private
@@ -50,12 +57,18 @@ module Lrama
         end
       end
 
-      # @rbs (Array[untyped] parameterized_rules, Set[String] symbol_names) -> void
-      def check_conflicts(parameterized_rules, symbol_names)
-        parameterized_rules.each do |param_rule|
+      # @rbs (Array[untyped] parameterized_rules, Set[String] symbol_names) -> Array[Lrama::Diagnostic]
+      def conflict_diagnostics(parameterized_rules, symbol_names)
+        parameterized_rules.each_with_object([]) do |param_rule, diagnostics|
           next unless symbol_names.include?(param_rule.name)
 
-          @logger.warn("warning: parameterized rule name \"#{param_rule.name}\" conflicts with symbol name")
+          diagnostics << Lrama::Diagnostic.new(
+            id: "parameterized_rule.name_conflict",
+            severity: :warning,
+            message: "parameterized rule name \"#{param_rule.name}\" conflicts with symbol name",
+            details: { "name" => param_rule.name },
+            suggestion: "Rename the parameterized rule or the conflicting grammar symbol."
+          )
         end
       end
     end

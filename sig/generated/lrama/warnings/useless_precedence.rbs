@@ -8,6 +8,14 @@ module Lrama
 
       # @rbs (Lrama::Grammar grammar, Lrama::States states) -> void
       def warn: (Lrama::Grammar grammar, Lrama::States states) -> void
+
+      # @rbs (Lrama::Grammar grammar, Lrama::States states) -> Array[Lrama::Diagnostic]
+      def diagnostics: (Lrama::Grammar grammar, Lrama::States states) -> Array[Lrama::Diagnostic]
+
+      private
+
+      # @rbs (Lrama::Diagnostic diagnostic) -> String
+      def legacy_message: (Lrama::Diagnostic diagnostic) -> String
     end
   end
 end
