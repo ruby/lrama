@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require_relative 'diagnostic'
 
 module Lrama
   # Handle option parsing for the command line interface.
@@ -35,11 +36,11 @@ module Lrama
       @options.grammar_file = argv.shift
 
       unless @options.grammar_file
-        abort "File should be specified\n"
+        abort_with_diagnostic("command.missing_grammar_file", "File should be specified")
       end
 
       if @options.grammar_file == '-'
-        @options.grammar_file = argv.shift or abort "File name for STDIN should be specified\n"
+        @options.grammar_file = argv.shift or abort_with_diagnostic("command.missing_stdin_filename", "File name for STDIN should be specified")
       else
         @options.y = File.open(@options.grammar_file, 'r')
       end
@@ -61,6 +62,17 @@ module Lrama
     end
 
     private
+
+    # @rbs (String id, String message) -> bot
+    def abort_with_diagnostic(id, message)
+      diagnostic = Lrama::Diagnostic.new(
+        id: id,
+        severity: :error,
+        message: message
+      )
+
+      abort diagnostic.message
+    end
 
     # @rbs (Array[String]) -> void
     def parse_by_option_parser(argv)

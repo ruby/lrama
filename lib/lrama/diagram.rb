@@ -1,6 +1,8 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
+require_relative "diagnostic"
+
 module Lrama
   class Diagram
     class << self
@@ -15,7 +17,14 @@ module Lrama
         require "railroad_diagrams"
         true
       rescue LoadError
-        warn "railroad_diagrams is not installed. Please run `bundle install`."
+        diagnostic = Lrama::Diagnostic.new(
+          id: "dependency.railroad_diagrams.missing",
+          severity: :warning,
+          message: "railroad_diagrams is not installed. Please run `bundle install`.",
+          details: { "gem" => "railroad_diagrams" },
+          suggestion: "Run `bundle install`."
+        )
+        $stderr.puts(diagnostic.message)
         false
       end
     end

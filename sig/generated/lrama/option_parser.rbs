@@ -22,6 +22,9 @@ module Lrama
 
     private
 
+    # @rbs (String id, String message) -> bot
+    def abort_with_diagnostic: (String id, String message) -> bot
+
     # @rbs (Array[String]) -> void
     def parse_by_option_parser: (Array[String]) -> void
 

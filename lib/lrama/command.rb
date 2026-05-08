@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "diagnostic"
+
 module Lrama
   class Command
     LRAMA_LIB = File.realpath(File.join(File.dirname(__FILE__)))
@@ -12,7 +14,7 @@ module Lrama
       @reporter = Reporter.new(**@options.report_opts)
       @warnings = Warnings.new(@logger, @options.warnings)
     rescue => e
-      abort format_error_message(e.message)
+      abort_with_diagnostic("command.option_error", e)
     end
 
     def run
@@ -52,13 +54,24 @@ module Lrama
       grammar
     rescue => e
       raise e if @options.debug
-      abort format_error_message(e.message)
+      abort_with_diagnostic("command.grammar_error", e)
     end
 
     def format_error_message(message)
       return message unless Exception.to_tty?
 
       message.gsub(/.+/, "\e[1m\\&\e[m")
+    end
+
+    def abort_with_diagnostic(id, exception)
+      diagnostic = Lrama::Diagnostic.new(
+        id: id,
+        severity: :error,
+        message: exception.message,
+        details: { "exception_class" => exception.class.name }
+      )
+
+      abort format_error_message(diagnostic.message)
     end
 
     def merge_stdlib(grammar)

@@ -1,6 +1,8 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
+require_relative "../../diagnostic"
+
 module Lrama
   class Reporter
     module Profile
@@ -35,7 +37,14 @@ module Lrama
           require "memory_profiler"
           true
         rescue LoadError
-          warn "memory_profiler is not installed. Please run `bundle install`."
+          diagnostic = Lrama::Diagnostic.new(
+            id: "dependency.memory_profiler.missing",
+            severity: :warning,
+            message: "memory_profiler is not installed. Please run `bundle install`.",
+            details: { "gem" => "memory_profiler" },
+            suggestion: "Run `bundle install`."
+          )
+          $stderr.puts(diagnostic.message)
           false
         end
       end

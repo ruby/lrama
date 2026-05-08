@@ -1,6 +1,8 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
+require_relative "../../diagnostic"
+
 module Lrama
   class Reporter
     module Profile
@@ -36,7 +38,14 @@ module Lrama
           require "stackprof"
           true
         rescue LoadError
-          warn "stackprof is not installed. Please run `bundle install`."
+          diagnostic = Lrama::Diagnostic.new(
+            id: "dependency.stackprof.missing",
+            severity: :warning,
+            message: "stackprof is not installed. Please run `bundle install`.",
+            details: { "gem" => "stackprof" },
+            suggestion: "Run `bundle install`."
+          )
+          $stderr.puts(diagnostic.message)
           false
         end
       end
