@@ -14,20 +14,21 @@ module Lrama
 
       # @rbs (Lrama::Diagnostic diagnostic, ?message: String) -> void
       def warn(diagnostic, message: diagnostic.message)
-        emit(:warn, diagnostic, message)
+        record(diagnostic)
+        @logger.warn(message)
       end
 
       # @rbs (Lrama::Diagnostic diagnostic, ?message: String) -> void
       def error(diagnostic, message: diagnostic.message)
-        emit(:error, diagnostic, message)
+        record(diagnostic)
+        @logger.error(message)
       end
 
       private
 
-      # @rbs (Symbol level, Lrama::Diagnostic diagnostic, String message) -> void
-      def emit(level, diagnostic, message)
+      # @rbs (Lrama::Diagnostic diagnostic) -> void
+      def record(diagnostic)
         @diagnostics << diagnostic
-        @logger.public_send(level, message)
       end
     end
   end

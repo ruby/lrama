@@ -16,8 +16,8 @@ module Lrama
 
       private
 
-      # @rbs (Symbol level, Lrama::Diagnostic diagnostic, String message) -> void
-      def emit: (Symbol level, Lrama::Diagnostic diagnostic, String message) -> void
+      # @rbs (Lrama::Diagnostic diagnostic) -> void
+      def record: (Lrama::Diagnostic diagnostic) -> void
     end
   end
 end
