@@ -180,8 +180,12 @@ module Lrama
 
     # @rbs () -> Hash[Integer, transition]
     def transitions_by_symbol_number
-      @transitions_by_symbol_number ||= transitions.to_h do |transition|
-        [transition.next_sym.number, transition]
+      @transitions_by_symbol_number ||= begin
+        h = {}
+        transitions.each do |transition|
+          h[transition.next_sym.number] = transition
+        end
+        h
       end
     end
 
