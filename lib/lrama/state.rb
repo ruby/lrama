@@ -31,6 +31,7 @@ module Lrama
     #   @nterm_transitions: Array[Action::Goto]
     #   @term_transitions: Array[Action::Shift]
     #   @transitions: Array[transition]
+    #   @transitions_by_symbol_number: Hash[Integer, transition]
     #   @internal_dependencies: Hash[Action::Goto, Array[Action::Goto]]
     #   @successor_dependencies: Hash[Action::Goto, Array[Action::Goto]]
 
@@ -177,6 +178,13 @@ module Lrama
       end
     end
 
+    # @rbs () -> Hash[Integer, transition]
+    def transitions_by_symbol_number
+      @transitions_by_symbol_number ||= transitions.to_h do |transition|
+        [transition.next_sym.number, transition]
+      end
+    end
+
     # @rbs (transition transition, State next_state) -> void
     def update_transition(transition, next_state)
       set_items_to_state(transition.to_items, next_state)
@@ -197,6 +205,7 @@ module Lrama
       @transitions << new_transition
       @nterm_transitions = nil
       @term_transitions = nil
+      @transitions_by_symbol_number = nil
 
       @follow_kernel_items[new_transition] = @follow_kernel_items.delete(transition)
       @always_follows[new_transition] = @always_follows.delete(transition)
@@ -213,13 +222,7 @@ module Lrama
     #
     # @rbs (Grammar::Symbol sym) -> State
     def transition(sym)
-      result = nil
-
-      if sym.term?
-        result = term_transitions.find {|shift| shift.next_sym == sym }.to_state
-      else
-        result = nterm_transitions.find {|goto| goto.next_sym == sym }.to_state
-      end
+      result = transitions_by_symbol_number[sym.number]&.to_state
 
       raise "Can not transit by #{sym} #{self}" if result.nil?
 
