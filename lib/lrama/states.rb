@@ -467,7 +467,10 @@ module Lrama
 
     # @rbs () -> void
     def compute_la
-      rules_by_id = rules.to_h { |rule| [rule.id, rule] }
+      rules_by_id = {}
+      rules.each do |rule|
+        rules_by_id[rule.id] = rule
+      end
 
       @states.each do |state|
         lookback_relation_on_state = @lookback_relation[state.id]

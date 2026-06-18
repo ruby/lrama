@@ -156,6 +156,8 @@ module Lrama
       nested = 0
       code = +''
       end_symbol = @end_symbol
+      raise "end_symbol is not set" unless end_symbol
+
       end_symbol_pattern = Regexp.new(end_symbol)
       escaped_end_symbol_pattern = Regexp.new(Regexp.escape(end_symbol))
       reset_first_position
