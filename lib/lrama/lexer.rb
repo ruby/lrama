@@ -62,6 +62,8 @@ module Lrama
       %categories
       %start
     ).freeze #: Array[String]
+    SYMBOL_PATTERN = Regexp.new(SYMBOLS.join('|')) #: Regexp
+    PERCENT_TOKEN_PATTERN = Regexp.new(PERCENT_TOKENS.join('|')) #: Regexp
 
     # @rbs (GrammarFile grammar_file) -> void
     def initialize(grammar_file)
@@ -119,9 +121,9 @@ module Lrama
       case
       when @scanner.eos?
         return
-      when @scanner.scan(/#{SYMBOLS.join('|')}/)
+      when @scanner.scan(SYMBOL_PATTERN)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
+      when @scanner.scan(PERCENT_TOKEN_PATTERN)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
