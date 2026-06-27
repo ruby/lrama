@@ -22,6 +22,10 @@ module Lrama
 
     PERCENT_TOKENS: Array[String]
 
+    SYMBOL_PATTERN: Regexp
+
+    PERCENT_TOKEN_PATTERN: Regexp
+
     # @rbs (GrammarFile grammar_file) -> void
     def initialize: (GrammarFile grammar_file) -> void
 

@@ -62,6 +62,8 @@ module Lrama
       %categories
       %start
     ).freeze #: Array[String]
+    SYMBOL_PATTERN = Regexp.new(SYMBOLS.join('|')) #: Regexp
+    PERCENT_TOKEN_PATTERN = Regexp.new(PERCENT_TOKENS.join('|')) #: Regexp
 
     # @rbs (GrammarFile grammar_file) -> void
     def initialize(grammar_file)
@@ -119,9 +121,9 @@ module Lrama
       case
       when @scanner.eos?
         return
-      when @scanner.scan(/#{SYMBOLS.join('|')}/)
+      when @scanner.scan(SYMBOL_PATTERN)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
+      when @scanner.scan(PERCENT_TOKEN_PATTERN)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
@@ -153,6 +155,11 @@ module Lrama
     def lex_c_code
       nested = 0
       code = +''
+      end_symbol = @end_symbol
+      raise "end_symbol is not set" unless end_symbol
+
+      end_symbol_pattern = Regexp.new(end_symbol)
+      escaped_end_symbol_pattern = Regexp.new(Regexp.escape(end_symbol))
       reset_first_position
 
       until @scanner.eos? do
@@ -161,14 +168,14 @@ module Lrama
           code << @scanner.matched
           nested += 1
         when @scanner.scan(/}/)
-          if nested == 0 && @end_symbol == '}'
+          if nested == 0 && end_symbol == '}'
             @scanner.unscan
             return [:C_DECLARATION, Lrama::Lexer::Token::UserCode.new(s_value: code, location: location)]
           else
             code << @scanner.matched
             nested -= 1
           end
-        when @scanner.check(/#{@end_symbol}/)
+        when @scanner.check(end_symbol_pattern)
           return [:C_DECLARATION, Lrama::Lexer::Token::UserCode.new(s_value: code, location: location)]
         when @scanner.scan(/\n/)
           code << @scanner.matched
@@ -180,14 +187,14 @@ module Lrama
           code << %Q(#{@scanner.matched})
         when @scanner.scan(/[^\"'\{\}\n]+/)
           code << @scanner.matched
-        when @scanner.scan(/#{Regexp.escape(@end_symbol)}/) # steep:ignore
+        when @scanner.scan(escaped_end_symbol_pattern)
           code << @scanner.matched
         else
           code << @scanner.getch
         end
       end
 
-      if @end_symbol == '\Z'
+      if end_symbol == '\Z'
         return [:C_DECLARATION, Lrama::Lexer::Token::UserCode.new(s_value: code, location: location)]
       end
 
