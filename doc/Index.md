@@ -1,58 +1,77 @@
 # Lrama
 
-[![Gem Version](https://badge.fury.io/rb/lrama.svg)](https://badge.fury.io/rb/lrama)
-[![build](https://github.com/ruby/lrama/actions/workflows/test.yaml/badge.svg)](https://github.com/ruby/lrama/actions/workflows/test.yaml)
+Lrama is a Ruby implementation of a LALR(1) parser generator. It reads a Bison-style grammar file, builds parser tables, and emits a C parser. Its primary goal is to support CRuby parser development, including Bison-compatible grammar files, error-tolerant parsing work, parameterized grammar rules, inlining, syntax diagrams, and a toolchain that can run as part of Ruby's build.
 
+## Quick Start
 
-## Overview
-
-Lrama is LALR (1) parser generator written by Ruby. The first goal of this project is providing error tolerant parser for CRuby with minimal changes on CRuby parse.y file.
-
-## Installation
-
-Lrama's installation is simple. You can install it via RubyGems.
+Install the released gem:
 
 ```shell
 $ gem install lrama
+$ lrama --version
 ```
 
-From source codes, you can install it as follows:
+From a checkout of this repository:
 
 ```shell
-$ cd "$(lrama root)"
 $ bundle install
-$ bundle exec rake install
-$ bundle exec lrama --version
-lrama 0.7.0
+$ bundle exec ruby exe/lrama --version
 ```
-## Usage
 
-Lrama is a command line tool. You can generate a parser from a grammar file by running `lrama` command.
+Generate and run the calculator sample:
 
 ```shell
-# "y.tab.c" and "y.tab.h" are generated
-$ lrama -d sample/parse.y
+$ bundle exec ruby exe/lrama -d sample/calc.y -o /tmp/calc.c
+$ gcc -Wall /tmp/calc.c -o /tmp/calc
+$ /tmp/calc
 ```
-Specify the output file with `-o` option. The following example generates "calc.c" and "calc.h".
+
+Generate a state report and a syntax diagram while developing a grammar:
 
 ```shell
-# "calc", "calc.c", and "calc.h" are generated
-$ lrama -d sample/calc.y -o calc.c && gcc -Wall calc.c -o calc && ./calc
-Enter the formula:
-1
-=> 1
-1+2*3
-=> 7
-(1+2)*3
-=> 9
+$ bundle exec ruby exe/lrama -v --report-file=/tmp/calc.output sample/calc.y
+$ bundle exec ruby exe/lrama --diagram=/tmp/calc.html sample/calc.y
 ```
 
-## Supported Ruby version
+## Manual
 
-Lrama is executed with BASERUBY when building ruby from source code. Therefore Lrama needs to support BASERUBY, currently 3.1, or later version.
+Start with the introduction and examples if you are new to Lrama. Use the grammar, invocation, directive, and option references when you are maintaining an existing grammar.
 
-This also requires Lrama to be able to run with only default gems because BASERUBY runs with `--disable=gems` option.
+1. [Introduction](chapters/00-introduction.md)
+2. [Installation and Conditions](chapters/00-installation-and-conditions.md)
+3. [Concepts](chapters/01-concepts.md)
+4. [Examples](chapters/02-examples.md)
+5. [Grammar Files](chapters/03-grammar-files.md)
+6. [Parser C Interface](chapters/04-parser-interface.md)
+7. [Parser Algorithm](chapters/05-parser-algorithm.md)
+8. [Error Recovery and Error Tolerance](chapters/06-error-recovery.md)
+9. [Context Dependencies](chapters/07-context-dependencies.md)
+10. [Debugging Your Parser](chapters/08-debugging.md)
+11. [Invoking Lrama](chapters/09-invoking-lrama.md)
+12. [Generated Parser and Integration](chapters/10-generated-parser-and-integration.md)
+13. [History](chapters/11-history.md)
+14. [Version Compatibility](chapters/12-version-compatibility.md)
+15. [FAQ](chapters/13-faq.md)
+
+## Appendices
+
+- [Directive Reference](appendices/a-directive-reference.md)
+- [Command Line Option Reference](appendices/b-command-line-option-reference.md)
+- [Bison Compatibility](appendices/c-bison-compatibility.md)
+- [Standard Library](appendices/d-standard-library.md)
+- [Glossary](appendices/e-glossary.md)
+- [Troubleshooting](appendices/f-troubleshooting.md)
+- [License and Legal Notes](appendices/g-license-and-legal-notes.md)
+
+## Development Documents
+
+- [Profiling](development/profiling.md)
+- [Compressed state table](development/compressed_state_table/main.md)
+
+## Supported Ruby Version
+
+Lrama is executed with BASERUBY when building Ruby from source. For that reason, Lrama must run on the BASERUBY version used by Ruby and must work with default gems only, because BASERUBY is executed with `--disable=gems`.
 
 ## License
 
-See [LEGAL.md](https://github.com/ruby/lrama/blob/master/LEGAL.md) file.
+See [LEGAL.md](../LEGAL.md) for the authoritative legal notice for this repository.
