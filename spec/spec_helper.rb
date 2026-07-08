@@ -26,6 +26,9 @@ SimpleCov.start do
 end
 
 require "lrama"
+Dir[File.expand_path("support/**/*.rb", __dir__)].sort.each do |file|
+  require file
+end
 
 module RSpecHelper
   def fixture_path(file_name)

@@ -3158,5 +3158,502 @@ RSpec.describe Lrama::States do
         expect(logger).not_to have_received(:error)
       end
     end
+
+    context "when unresolved PSLR inadequacies remain" do
+      let(:header) do
+        <<~STR
+          %define lr.type pslr
+          %token-pattern RSHIFT />>/
+          %token-pattern RANGLE />/
+          %lex-no-tie RANGLE RSHIFT
+
+          %%
+
+          program: RSHIFT | RANGLE
+        STR
+      end
+
+      it "fails fast instead of silently generating a parser" do
+        grammar = Lrama::Parser.new(header, "states/pslr_inadequacy.y").parse
+        grammar.prepare
+        grammar.validate!
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        states.instance_variable_set(
+          :@pslr_inadequacies,
+          [
+            Lrama::State::PslrInadequacy.new(
+              type: Lrama::State::PslrInadequacy::PSLR_RELATIVE,
+              state: instance_double(Lrama::State, id: 3),
+              conflicting_states: [instance_double(Lrama::State, id: 3), instance_double(Lrama::State, id: 4)],
+              details: { reason: "Scanner behavior differs between isocore states" }
+            )
+          ]
+        )
+        logger = Lrama::Logger.new
+        allow(logger).to receive(:error)
+
+        expect { states.validate!(logger) }.to raise_error(SystemExit)
+        expect(logger).to have_received(:error).with(include("PSLR Inadequacy"))
+      end
+    end
+  end
+
+  describe "PSLR split helpers" do
+    let(:y) do
+      <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %lex-no-tie RANGLE RSHIFT
+
+        %%
+
+        program: RSHIFT | RANGLE
+      GRAMMAR
+    end
+
+    let(:grammar) do
+      g = Lrama::Parser.new(y, "states/pslr_split.y").parse
+      g.prepare
+      g.validate!
+      g
+    end
+
+    let(:states) { Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new)) }
+    let(:kernel_item) { instance_double(Lrama::State::Item, end_of_rule?: true) }
+    let(:reduce) { instance_double(Lrama::State::Action::Reduce, item: kernel_item, look_ahead: [grammar.find_symbol_by_s_value!("RSHIFT")]) }
+    let(:mock_state) do
+      instance_double(
+        Lrama::State,
+        is_compatible?: true,
+        kernels: [kernel_item],
+        term_transitions: [],
+        reduces: [reduce],
+        acceptable_reduce_lookahead: [grammar.find_symbol_by_s_value!("RSHIFT")],
+        acceptable_pslr_reduce_lookahead: [grammar.find_symbol_by_s_value!("RSHIFT")],
+      )
+    end
+
+    before do
+      states.instance_variable_set(:@scanner_fsa, Lrama::ScannerFSA.new(grammar.token_patterns))
+      states.instance_variable_set(:@pslr_split_enabled, true)
+    end
+
+    it "derives different PSLR signatures from different propagated lookaheads" do
+      current = states.send(:pslr_state_signature, mock_state)
+      filtered = states.send(
+        :pslr_state_signature,
+        mock_state,
+        { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] },
+      )
+
+      expect(current.map(&:last)).to include("RSHIFT")
+      expect(current.map(&:last)).not_to include("RANGLE")
+      expect(filtered.map(&:last)).to include("RANGLE")
+      expect(filtered.map(&:last)).not_to include("RSHIFT")
+    end
+
+    it "treats states with different PSLR signatures as incompatible during splitting" do
+      filtered_lookaheads = { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] }
+      expect(states.send(:compatible_split_state?, mock_state, filtered_lookaheads)).to be false
+    end
+
+    it "detects unresolved PSLR inadequacies per transition" do
+      propagated = { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] }
+      matching_state = instance_double(Lrama::State, id: 8)
+      next_state = instance_double(Lrama::State, id: 4)
+      transition_symbol = instance_double(
+        Lrama::Grammar::Symbol,
+        id: instance_double(Lrama::Lexer::Token::Ident, s_value: "RSHIFT"),
+      )
+      transition = instance_double(Lrama::State::Action::Shift, to_state: next_state, next_sym: transition_symbol)
+      from_state = instance_double(
+        Lrama::State,
+        id: 1,
+        transitions: [transition],
+        propagate_lookaheads_without_filter: propagated,
+      )
+
+      allow(next_state).to receive(:lalr_isocore).and_return(next_state)
+      allow(next_state).to receive(:ielr_isocores).and_return([next_state, matching_state])
+      allow(states).to receive(:pslr_state_signature).with(next_state, propagated).and_return([[1, "RANGLE"]])
+      allow(states).to receive(:pslr_state_signature).with(next_state).and_return([[1, "RSHIFT"]])
+      allow(states).to receive(:pslr_state_signature).with(matching_state).and_return([[1, "RANGLE"]])
+      allow(states).to receive(:acceptable_tokens_for_pslr).with(next_state, propagated).and_return(Set["RANGLE"])
+      allow(states).to receive(:acceptable_tokens_for_pslr).with(next_state).and_return(Set["RSHIFT"])
+      allow(states).to receive(:acceptable_tokens_for_pslr).with(matching_state).and_return(Set["RANGLE"])
+      states.instance_variable_set(:@states, [from_state])
+
+      inadequacies = states.send(:detect_pslr_inadequacies)
+
+      expect(inadequacies.size).to eq(1)
+      expect(inadequacies.first.details[:matching_state_id]).to eq(8)
+      expect(inadequacies.first.details[:transition_symbol]).to eq("RSHIFT")
+    end
+
+    it "merges propagated lookaheads into an existing split state" do
+      current_lookaheads = { kernel_item => [grammar.find_symbol_by_s_value!("RSHIFT")] }
+      incoming_lookaheads = { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] }
+      target_state = instance_double(Lrama::State, lookaheads_recomputed: true)
+      transition = instance_double(Lrama::State::Action::Shift, to_state: target_state)
+      split_state = instance_double(
+        Lrama::State,
+        kernels: [kernel_item],
+        item_lookahead_set: current_lookaheads,
+        transitions: [transition],
+      )
+
+      allow(split_state).to receive(:item_lookahead_set=)
+
+      states.send(:merge_lookaheads, split_state, incoming_lookaheads)
+
+      expect(split_state).to have_received(:item_lookahead_set=).with(
+        kernel_item => [grammar.find_symbol_by_s_value!("RSHIFT"), grammar.find_symbol_by_s_value!("RANGLE")],
+      )
+    end
+  end
+
+  describe "PSLR pure-reduce profile regression" do
+    let(:y) do
+      <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %token-pattern ID /[a-z]+/
+        %lex-prec RANGLE -~ RSHIFT
+
+        %%
+
+        program
+          : templ
+          | rshift_expr
+          ;
+
+        templ
+          : a RANGLE
+          ;
+
+        rshift_expr
+          : a RSHIFT ID
+          ;
+
+        a
+          : ID
+          ;
+      GRAMMAR
+    end
+
+    let(:grammar) do
+      g = Lrama::Parser.new(y, "states/pslr_pure_reduce.y").parse
+      g.prepare
+      g.validate!
+      g
+    end
+
+    it "keeps pure reduce states scanner-compatible without forcing a split" do
+      ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      ielr_states.compute
+      ielr_states.compute_ielr
+
+      pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      pslr_states.compute
+      pslr_states.compute_pslr
+
+      reduce_state = pslr_states.states.find do |state|
+        state.reduces.any? { |reduce| reduce.rule.display_name == "a -> ID" }
+      end
+
+      expect(pslr_states.states_count).to eq(ielr_states.states_count)
+      expect(pslr_states.pslr_inadequacies).to be_empty
+      expect(pslr_states.send(:acceptable_tokens_for_pslr, reduce_state).to_a).to contain_exactly("RANGLE", "RSHIFT")
+    end
+  end
+
+  describe "PSLR chained keyword split regression" do
+    let(:y) do
+      <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern P /p/
+        %token-pattern Q /q/
+        %token-pattern X /x/
+        %token-pattern IF /if/
+        %token-pattern ID /[a-z]+/
+        %lex-prec ID <~ IF
+
+        %%
+
+        program
+          : kw_context
+          | id_context
+          ;
+
+        kw_context
+          : P shared IF
+          ;
+
+        id_context
+          : Q shared ID
+          ;
+
+        shared
+          : n1
+          ;
+
+        n1
+          : n2
+          ;
+
+        n2
+          : X
+          ;
+      GRAMMAR
+    end
+
+    let(:grammar) do
+      g = Lrama::Parser.new(y, "states/pslr_keyword_context.y").parse
+      g.prepare
+      g.validate!
+      g
+    end
+
+    it "splits every chained reduce state by scanner profile" do
+      ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      ielr_states.compute
+      ielr_states.compute_ielr
+
+      pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      pslr_states.compute
+      pslr_states.compute_pslr
+
+      reduce_states = pslr_states.states
+        .select { |state| state.reduces.any? }
+        .group_by { |state| state.reduces.first.rule.display_name }
+
+      expect(pslr_states.states_count).to be > ielr_states.states_count
+      expect(pslr_states.pslr_inadequacies).to be_empty
+
+      ["shared -> n1", "n1 -> n2", "n2 -> X"].each do |rule_name|
+        states_for_rule = reduce_states.fetch(rule_name)
+        token_sets = states_for_rule.map { |state| pslr_states.send(:acceptable_tokens_for_pslr, state) }
+
+        expect(states_for_rule.size).to eq(2)
+        expect(states_for_rule.count(&:split_state?)).to eq(1)
+        expect(token_sets.any? { |set| set.include?("IF") && !set.include?("ID") }).to be(true)
+        expect(token_sets.any? { |set| set.include?("ID") && !set.include?("IF") }).to be(true)
+      end
+    end
+  end
+
+  describe "PSLR chained shift/angle split regression" do
+    let(:y) do
+      <<~GRAMMAR
+        %define lr.type pslr
+        %token-pattern LT /</
+        %token-pattern START /@/
+        %token-pattern MARK /#/
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %token-pattern ID /[a-z]+/
+        %lex-no-tie RANGLE RSHIFT
+
+        %%
+
+        program
+          : template_expr
+          | shift_expr
+          ;
+
+        template_expr
+          : LT shared RANGLE
+          ;
+
+        shift_expr
+          : START shared RSHIFT ID
+          ;
+
+        shared
+          : n1
+          ;
+
+        n1
+          : n2
+          ;
+
+        n2
+          : MARK
+          ;
+      GRAMMAR
+    end
+
+    let(:grammar) do
+      g = Lrama::Parser.new(y, "states/pslr_shift_chain.y").parse
+      g.prepare
+      g.validate!
+      g
+    end
+
+    it "splits every chained reduce state by shift/angle scanner profile" do
+      ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      ielr_states.compute
+      ielr_states.compute_ielr
+
+      pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      pslr_states.compute
+      pslr_states.compute_pslr
+
+      reduce_states = pslr_states.states
+        .select { |state| state.reduces.any? }
+        .group_by { |state| state.reduces.first.rule.display_name }
+
+      expect(pslr_states.states_count).to be > ielr_states.states_count
+      expect(pslr_states.pslr_inadequacies).to be_empty
+
+      ["shared -> n1", "n1 -> n2", "n2 -> MARK"].each do |rule_name|
+        states_for_rule = reduce_states.fetch(rule_name)
+        token_sets = states_for_rule.map { |state| pslr_states.send(:acceptable_tokens_for_pslr, state) }
+
+        expect(states_for_rule.size).to eq(2)
+        expect(states_for_rule.count(&:split_state?)).to eq(1)
+        expect(token_sets.any? { |set| set.include?("RANGLE") && !set.include?("RSHIFT") }).to be(true)
+        expect(token_sets.any? { |set| set.include?("RSHIFT") && !set.include?("RANGLE") }).to be(true)
+      end
+    end
+  end
+
+  describe "PSLR mixed family regressions" do
+    {
+      "empty shared wrapper" => {
+        path: "states/pslr_mixed_empty.y",
+        grows: true,
+        grammar: <<~GRAMMAR,
+          %define lr.type pslr
+          %token-pattern LT /</
+          %token-pattern START /@/
+          %token-pattern P /p/
+          %token-pattern Q /q/
+          %token-pattern MARK /#/
+          %token-pattern IF /if/
+          %token-pattern ID /[a-z]+/
+          %token-pattern RSHIFT />>/
+          %token-pattern RANGLE />/
+          %lex-prec ID <~ IF
+          %lex-no-tie RANGLE RSHIFT
+
+          %%
+
+          program
+            : kw
+            | ident
+            | templ
+            | shift_expr
+            ;
+
+          kw
+            : P shared IF
+            ;
+
+          ident
+            : Q shared ID
+            ;
+
+          templ
+            : LT shared RANGLE
+            ;
+
+          shift_expr
+            : START shared RSHIFT ID
+            ;
+
+          shared
+            : opt n1
+            ;
+
+          opt
+            :
+            ;
+
+          n1
+            : MARK
+            ;
+        GRAMMAR
+      },
+      "chain2 shared wrapper" => {
+        path: "states/pslr_mixed_chain2.y",
+        grows: true,
+        grammar: <<~GRAMMAR,
+          %define lr.type pslr
+          %token-pattern LT /</
+          %token-pattern START /@/
+          %token-pattern P /p/
+          %token-pattern Q /q/
+          %token-pattern MARK /#/
+          %token-pattern IF /if/
+          %token-pattern ID /[a-z]+/
+          %token-pattern RSHIFT />>/
+          %token-pattern RANGLE />/
+          %lex-prec ID <~ IF
+          %lex-no-tie RANGLE RSHIFT
+
+          %%
+
+          program
+            : kw
+            | ident
+            | templ
+            | shift_expr
+            ;
+
+          kw
+            : P shared IF
+            ;
+
+          ident
+            : Q shared ID
+            ;
+
+          templ
+            : LT shared RANGLE
+            ;
+
+          shift_expr
+            : START shared RSHIFT ID
+            ;
+
+          shared
+            : n1
+            ;
+
+          n1
+            : n2
+            ;
+
+          n2
+            : MARK
+            ;
+        GRAMMAR
+      }
+    }.each do |label, attrs|
+      it "keeps #{label} scanner-compatible" do
+        grammar = Lrama::Parser.new(attrs[:grammar], attrs[:path]).parse
+        grammar.prepare
+        grammar.validate!
+
+        ielr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        ielr_states.compute
+        ielr_states.compute_ielr
+
+        pslr_states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        pslr_states.compute
+        pslr_states.compute_pslr
+
+        if attrs[:grows]
+          expect(pslr_states.states_count).to be > ielr_states.states_count
+        else
+          expect(pslr_states.states_count).to eq(ielr_states.states_count)
+        end
+        expect(pslr_states.pslr_inadequacies).to be_empty
+      end
+    end
   end
 end
