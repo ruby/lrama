@@ -258,6 +258,7 @@ module Lrama
       validate_pslr_state_growth!(logger)
       validate_pslr_scanner_conflicts!(logger)
       validate_pslr_inadequacies!(logger)
+      validate_pslr_pure_coverage!(logger)
       validate_pslr_useless_lex_prec!(logger)
       validate_pslr_lexical_tie_candidates!(logger)
     end
@@ -1384,6 +1385,23 @@ module Lrama
         logger.error(pslr_scanner_conflict_message(conflict))
       end
 
+      exit false
+    end
+
+    # Pure mode owns lexical analysis completely, so every terminal must
+    # be producible by the pseudo-scanner.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_pure_coverage!(logger)
+      return unless pslr_defined?
+      return unless @grammar.pslr_lexer_generated?
+
+      uncovered = @grammar.uncovered_pslr_terminals
+      return if uncovered.empty?
+
+      logger.error(
+        "api.pslr.lexer generated requires a %token-pattern for every terminal; " \
+        "missing: #{uncovered.join(', ')}"
+      )
       exit false
     end
 

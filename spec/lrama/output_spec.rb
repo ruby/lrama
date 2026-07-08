@@ -248,6 +248,7 @@ RSpec.describe Lrama::Output do
         pslr_defined?: true,
         pslr_state_member: "current_state",
         parse_lac_full?: true,
+        pslr_lexer_generated?: false,
         token_actions: []
       )
     end
