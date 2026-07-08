@@ -46,7 +46,8 @@ module Lrama
     def acc_ss: (Integer state_id) -> Array[Grammar::TokenPattern]
 
     # Simulate the FSA on input string starting from initial state
-    # Returns all accepting states reached during the scan
+    # Returns all accepting states reached during the scan.
+    # The walk is byte-oriented to match the generated C runtime.
     # @rbs (String input) -> Array[{state: State, position: Integer, token: Grammar::TokenPattern}]
     def scan: (String input) -> Array[{ state: State, position: Integer, token: Grammar::TokenPattern }]
 
@@ -113,7 +114,10 @@ module Lrama
     # @rbs (Array[Integer] counter, Array[NFAState] states) -> NFAState
     def create_nfa_state: (Array[Integer] counter, Array[NFAState] states) -> NFAState
 
-    ASCII_CHARS: Array[String]
+    # The input alphabet is bytes (0-255): keywords and operators are
+    # ASCII, and byte-oriented classes let multi-byte UTF-8 sequences
+    # pass through negated classes and dot unmodified.
+    BYTE_CHARS: Array[String]
 
     ANY_CHARS: Array[String]
 
@@ -140,6 +144,13 @@ module Lrama
 
     # @rbs (String? stop_char) -> String
     def empty_sequence_message: (String? stop_char) -> String
+
+    # Compile a {NAME} reference by inlining the body of an already
+    # defined %token-pattern (paper Fig 3.2c/3.2d idiom). Self and
+    # forward references are rejected because @pattern_references only
+    # contains patterns compiled before the current one.
+    # @rbs (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [Fragment, Integer]
+    def compile_pattern_reference: (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [ Fragment, Integer ]
 
     # @rbs (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [Fragment, Integer]
     def compile_escape: (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [ Fragment, Integer ]

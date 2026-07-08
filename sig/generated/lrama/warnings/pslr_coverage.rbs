@@ -1,0 +1,17 @@
+# Generated from lib/lrama/warnings/pslr_coverage.rb with RBS::Inline
+
+module Lrama
+  class Warnings
+    class PslrCoverage
+      # @rbs (Logger logger, bool warnings) -> void
+      def initialize: (Logger logger, bool warnings) -> void
+
+      # Bridge mode allows partial coverage: terminals without a
+      # %token-pattern must keep coming from the user lexer. List them so
+      # the boundary between generated and hand-written scanning is
+      # explicit.
+      # @rbs (Lrama::Grammar grammar) -> void
+      def warn: (Lrama::Grammar grammar) -> void
+    end
+  end
+end
