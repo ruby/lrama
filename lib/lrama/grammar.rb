@@ -677,6 +677,8 @@ module Lrama
 
     # @rbs () -> void
     def validate_pslr_configuration!
+      validate_parse_lac!
+
       return unless pslr_defined?
 
       member = pslr_state_member

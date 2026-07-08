@@ -10,6 +10,7 @@ require_relative 'warnings/required'
 require_relative 'warnings/token_redeclarations'
 require_relative 'warnings/useless_precedence'
 require_relative 'warnings/lexical_tie_candidates'
+require_relative 'warnings/parse_lac'
 
 module Lrama
   class Warnings
@@ -24,6 +25,7 @@ module Lrama
       @token_redeclarations = TokenRedeclarations.new(logger)
       @useless_precedence = UselessPrecedence.new(logger, warnings)
       @lexical_tie_candidates = LexicalTieCandidates.new(logger, warnings)
+      @parse_lac = ParseLac.new(logger, warnings)
     end
 
     # @rbs (Lrama::Grammar grammar, Lrama::States states) -> void
@@ -37,6 +39,7 @@ module Lrama
       @required.warn(grammar)
       @useless_precedence.warn(grammar, states)
       @lexical_tie_candidates.warn(states)
+      @parse_lac.warn(grammar)
     end
   end
 end
