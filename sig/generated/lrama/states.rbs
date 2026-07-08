@@ -44,6 +44,20 @@ module Lrama
 
     attr_reader lookback_relation: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
 
+    attr_reader scanner_fsa: ScannerFSA?
+
+    attr_reader length_precedences: LengthPrecedences?
+
+    attr_reader scanner_accepts_table: State::ScannerAccepts?
+
+    attr_reader pslr_inadequacies: Array[State::PslrInadequacy]
+
+    attr_reader pslr_metrics: Hash[Symbol, Integer | Float | nil]
+
+    attr_reader lexer_context_classifier: LexerContextClassifier?
+
+    attr_reader lexical_tie_candidates: Array[[ String, String ]]
+
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize: (Grammar grammar, Tracer tracer) -> void
 
@@ -52,6 +66,11 @@ module Lrama
 
     # @rbs () -> void
     def compute_ielr: () -> void
+
+    # Compute PSLR(1) states
+    # Based on Section 3.4 of the PSLR dissertation
+    # @rbs () -> void
+    def compute_pslr: () -> void
 
     # @rbs () -> Integer
     def states_count: () -> Integer
@@ -76,6 +95,27 @@ module Lrama
 
     # @rbs (Logger logger) -> void
     def validate!: (Logger logger) -> void
+
+    # Classify each state's lexer context based on kernel items.
+    #
+    # For each state, analyzes the kernel items to determine what lexer
+    # context (BEG, CMDARG, ARG, END, ENDFN, MID, DOT) the state belongs to.
+    # When a state has kernel items from multiple contexts, the context is
+    # set to the bitwise OR of all contexts (mixed context).
+    #
+    # @rbs () -> void
+    def classify_lexer_contexts: () -> void
+
+    # Return the lexer context table as an array of context values,
+    # one per parser state (indexed by state id).
+    #
+    # @rbs () -> Array[Integer]
+    def lexer_context_table: () -> Array[Integer]
+
+    # Check if lexer context classification has been performed.
+    #
+    # @rbs () -> bool
+    def lexer_context_enabled?: () -> bool
 
     def compute_la_sources_for_conflicted_states: () -> untyped
 
@@ -188,14 +228,67 @@ module Lrama
     # @rbs () -> void
     def split_states: () -> void
 
+    # Split states where different predecessor paths lead to different
+    # lexer contexts. This resolves LALR state merging that makes
+    # BEG vs CMDARG (and other context pairs) indistinguishable.
+    #
+    # Algorithm:
+    # 1. For each state, group incoming transitions by the lexer context
+    #    that the predecessor would imply
+    # 2. If a state has predecessors from multiple different contexts,
+    #    split the state so each split has a unique context
+    #
+    # @rbs () -> void
+    def split_states_by_context: () -> void
+
+    # For a given state, group its incoming transitions by the lexer context
+    # that the predecessor state implies for this state.
+    #
+    # The implied context is determined by what symbol was used to reach
+    # this state (the accessing symbol's context).
+    #
+    # @rbs (State state) -> Hash[Integer, Array[[State, State::Action::Shift | State::Action::Goto]]]
+    def compute_predecessor_context_groups: (State state) -> Hash[Integer, Array[[ State, State::Action::Shift | State::Action::Goto ]]]
+
+    # Infer the lexer context that a transition implies for the target state.
+    #
+    # @rbs (State pred, State::Action::Shift | State::Action::Goto transition) -> Integer
+    def infer_transition_context: (State pred, State::Action::Shift | State::Action::Goto transition) -> Integer
+
+    # Create a new split state that is an isocore copy of the given state.
+    #
+    # @rbs (State original) -> State
+    def create_context_split_state: (State original) -> State
+
+    # @rbs () -> void
+    def capture_pslr_metrics_before_split: () -> void
+
     # @rbs () -> void
     def compute_inadequacy_annotations: () -> void
 
     # @rbs (State state, State::lookahead_set filtered_lookaheads) -> void
     def merge_lookaheads: (State state, State::lookahead_set filtered_lookaheads) -> void
 
+    # @rbs (State state, State::lookahead_set pslr_lookaheads) -> void
+    def merge_pslr_lookaheads: (State state, State::lookahead_set pslr_lookaheads) -> void
+
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state: (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
+
+    # @rbs (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
+    def compatible_split_state?: (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
+    def pslr_state_signature: (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[ Integer, String? ]]
+
+    # @rbs (Set[String] left_acc, Set[String] right_acc) -> bool
+    def pslr_compatible_accept_sets?: (Set[String] left_acc, Set[String] right_acc) -> bool
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads, ?expand_ties: bool, ?include_layout: bool) -> Set[String]
+    def acceptable_tokens_for_pslr: (State state, ?State::lookahead_set filtered_lookaheads, ?expand_ties: bool, ?include_layout: bool) -> Set[String]
+
+    # @rbs (?include_layout: bool) -> Set[String]
+    def layout_token_names_for_pslr: (?include_layout: bool) -> Set[String]
 
     # @rbs (Logger logger) -> void
     def validate_conflicts_within_threshold!: (Logger logger) -> void
@@ -211,5 +304,55 @@ module Lrama
 
     # @rbs () -> void
     def clear_look_ahead_sets: () -> void
+
+    # Build Scanner FSA from token patterns
+    # @rbs () -> void
+    def build_scanner_fsa: () -> void
+
+    # Build length precedences table
+    # @rbs () -> void
+    def build_length_precedences: () -> void
+
+    # Build scanner_accepts table
+    # @rbs () -> void
+    def build_scanner_accepts: () -> void
+
+    # Handle PSLR inadequacies
+    # Detects and splits states where pseudo-scanner behavior differs
+    # @rbs () -> void
+    def handle_pslr_inadequacies: () -> void
+
+    # @rbs () -> void
+    def finalize_pslr_metrics: () -> void
+
+    # Detect PSLR inadequacies in isocore groups
+    # @rbs () -> Array[State::PslrInadequacy]
+    def detect_pslr_inadequacies: () -> Array[State::PslrInadequacy]
+
+    # @rbs () -> void
+    def collect_lexical_tie_candidates: () -> void
+
+    # @rbs () -> Array[State]
+    def reachable_parser_states: () -> Array[State]
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_inadequacies!: (Logger logger) -> void
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_scanner_conflicts!: (Logger logger) -> void
+
+    # @rbs (State::ScannerAccepts::Conflict conflict) -> String
+    def pslr_scanner_conflict_message: (State::ScannerAccepts::Conflict conflict) -> String
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_state_growth!: (Logger logger) -> void
+
+    # Report %lex-prec rules that were never used in scanner conflict resolution.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_useless_lex_prec!: (Logger logger) -> void
+
+    # Report lexical tie candidates that are not covered by %lex-tie or %lex-no-tie.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_lexical_tie_candidates!: (Logger logger) -> void
   end
 end
