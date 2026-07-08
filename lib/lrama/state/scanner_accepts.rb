@@ -31,14 +31,16 @@ module Lrama
         attr_reader :shorter_tokens #: Array[String]
         attr_reader :selected_shorter_token #: String?
         attr_reader :current_tokens #: Array[String]
+        attr_reader :witness #: String?
 
-        # @rbs (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String]) -> void
-        def initialize(parser_state_id:, scanner_state_id:, shorter_tokens:, selected_shorter_token:, current_tokens:)
+        # @rbs (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String], ?witness: String?) -> void
+        def initialize(parser_state_id:, scanner_state_id:, shorter_tokens:, selected_shorter_token:, current_tokens:, witness: nil)
           @parser_state_id = parser_state_id
           @scanner_state_id = scanner_state_id
           @shorter_tokens = shorter_tokens
           @selected_shorter_token = selected_shorter_token
           @current_tokens = current_tokens
+          @witness = witness
         end
       end
 
@@ -75,12 +77,13 @@ module Lrama
       end
 
       class ProfileResolver
-        # @rbs (Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
-        def initialize(lex_prec, length_prec, fallback: false, token_order: {})
+        # @rbs (Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
+        def initialize(lex_prec, length_prec, fallback: false, token_order: {}, track_rule_usage: false)
           @lex_prec = lex_prec
           @length_prec = length_prec
           @fallback = fallback
           @token_order = token_order
+          @track_rule_usage = track_rule_usage
         end
 
         # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
@@ -103,6 +106,7 @@ module Lrama
           end
 
           if selected_shorter_token && current_tokens.all? {|token| length_prefers_old?(selected_shorter_token, token) }
+            mark_shorter_win_rules_used(selected_shorter_token, current_tokens)
             return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: selected_shorter_token)
           end
 
@@ -111,7 +115,11 @@ module Lrama
               shorter_tokens.all? {|shorter| @length_prec.resolution(shorter, candidate) == LengthPrecedences::PREFER_NEW }
           end
 
-          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: winners.first) if winners.size == 1
+          if winners.size == 1
+            winner = winners.first #: String
+            mark_longer_win_rules_used(winner, shorter_tokens, current_tokens)
+            return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: winner)
+          end
 
           ProfileOutcome.new(kind: ProfileOutcome::UNRESOLVED)
         end
@@ -179,6 +187,33 @@ module Lrama
           end
         end
 
+        # Mark the %lex-prec rules that made the profile decision as used.
+        # Only normal-row scanner_accepts construction tracks usage:
+        # the fallback row spans the whole token universe and exploratory
+        # resolutions (state compatibility probes) must not mark rules.
+        # @rbs (String selected_shorter_token, Set[String] current_tokens) -> void
+        def mark_shorter_win_rules_used(selected_shorter_token, current_tokens)
+          return unless @track_rule_usage
+
+          current_tokens.each do |token|
+            @length_prec.resolution(selected_shorter_token, token, track: true)
+          end
+        end
+
+        # @rbs (String winner, Set[String] shorter_tokens, Set[String] current_tokens) -> void
+        def mark_longer_win_rules_used(winner, shorter_tokens, current_tokens)
+          return unless @track_rule_usage
+
+          current_tokens.each do |other|
+            next if other == winner
+
+            @lex_prec.identity_precedes?(winner, other, track: true)
+          end
+          shorter_tokens.each do |shorter|
+            @length_prec.resolution(shorter, winner, track: true)
+          end
+        end
+
         # @rbs (String candidate, String other) -> bool
         def token_order_precedes?(candidate, other)
           (token_order_key(candidate) <=> token_order_key(other)) == -1
@@ -195,9 +230,9 @@ module Lrama
         attr_reader :conflicts #: Array[Conflict]
 
         # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
-        def initialize(scanner_fsa, lex_prec, length_prec, acceptable_tokens, parser_state_id = nil, fallback: false, token_order: {})
+        def initialize(scanner_fsa, lex_prec, length_prec, acceptable_tokens, parser_state_id = nil, fallback: false, token_order: {}, track_rule_usage: false)
           @scanner_fsa = scanner_fsa
-          @resolver = ProfileResolver.new(lex_prec, length_prec, fallback: fallback, token_order: token_order)
+          @resolver = ProfileResolver.new(lex_prec, length_prec, fallback: fallback, token_order: token_order, track_rule_usage: track_rule_usage)
           @acceptable_tokens = acceptable_tokens
           @parser_state_id = parser_state_id
           @table = {}
@@ -211,23 +246,23 @@ module Lrama
         # @rbs () -> void
         def compute
           visited = Set.new
-          visit_transitions(0, Set.new, nil, visited)
+          visit_transitions(0, Set.new, nil, visited, "")
         end
 
         private
 
-        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
-        def visit_transitions(fsa_state_id, shorter_tokens, selected_shorter_token, visited)
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited, String path) -> void
+        def visit_transitions(fsa_state_id, shorter_tokens, selected_shorter_token, visited, path)
           fsa_state = @scanner_fsa.states[fsa_state_id]
           return unless fsa_state
 
-          fsa_state.transitions.each_value do |next_state_id|
-            visit_state(next_state_id, shorter_tokens, selected_shorter_token, visited)
+          fsa_state.transitions.each do |char, next_state_id|
+            visit_state(next_state_id, shorter_tokens, selected_shorter_token, visited, path + char)
           end
         end
 
-        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
-        def visit_state(fsa_state_id, shorter_tokens, selected_shorter_token, visited)
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited, String path) -> void
+        def visit_state(fsa_state_id, shorter_tokens, selected_shorter_token, visited, path)
           fsa_state = @scanner_fsa.states[fsa_state_id]
           return unless fsa_state
 
@@ -248,7 +283,8 @@ module Lrama
                   scanner_state_id: fsa_state_id,
                   shorter_tokens: shorter_tokens.to_a.sort,
                   selected_shorter_token: existing.name,
-                  current_tokens: current_tokens.to_a.sort
+                  current_tokens: current_tokens.to_a.sort,
+                  witness: path
                 )
               else
                 @table[fsa_state_id] = token_pattern
@@ -260,13 +296,14 @@ module Lrama
               scanner_state_id: fsa_state_id,
               shorter_tokens: shorter_tokens.to_a.sort,
               selected_shorter_token: selected_shorter_token,
-              current_tokens: current_tokens.to_a.sort
+              current_tokens: current_tokens.to_a.sort,
+              witness: path
             )
           end
 
           next_shorter_tokens = shorter_tokens | current_tokens
           next_selected = result.resolved? ? result.token_name : nil
-          visit_transitions(fsa_state_id, next_shorter_tokens, next_selected, visited)
+          visit_transitions(fsa_state_id, next_shorter_tokens, next_selected, visited, path)
         end
 
         # @rbs (ScannerFSA::State fsa_state) -> Set[String]
@@ -420,7 +457,8 @@ module Lrama
           @lex_prec,
           @length_prec,
           compute_acc_sp(parser_state),
-          parser_state.id
+          parser_state.id,
+          track_rule_usage: true
         )
         computer.compute
 

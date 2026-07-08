@@ -1394,8 +1394,9 @@ module Lrama
       shorter = conflict.shorter_tokens.empty? ? "(none)" : conflict.shorter_tokens.join(", ")
       selected = conflict.selected_shorter_token || "(none)"
       current = conflict.current_tokens.empty? ? "(none)" : conflict.current_tokens.join(", ")
+      witness = conflict.witness ? " witness input: #{conflict.witness.inspect};" : ""
 
-      "unresolved PSLR scanner conflict in state #{state}, scanner state #{conflict.scanner_state_id}: " \
+      "unresolved PSLR scanner conflict in state #{state}, scanner state #{conflict.scanner_state_id}:#{witness} " \
         "shorter matches: #{shorter}; selected shorter token: #{selected}; " \
         "current matches: #{current}; add an explicit %lex-prec rule or adjust lexical ties"
     end

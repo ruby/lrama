@@ -273,6 +273,54 @@ RSpec.describe Lrama::State::ScannerAccepts do
     end
   end
 
+  describe "conflict witnesses" do
+    it "attaches an example input to unresolved conflicts" do
+      tokens = [
+        token_pattern("A", "ab", 0),
+        token_pattern("B", "ab", 1)
+      ]
+      scanner_fsa = Lrama::ScannerFSA.new(tokens)
+      lex_prec = Lrama::Grammar::LexPrec.new
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [parser_state(0, ["A", "B"])],
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec)
+      )
+
+      scanner_accepts.build
+
+      witnesses = scanner_accepts.conflicts.map(&:witness)
+      expect(witnesses).to include("ab")
+    end
+  end
+
+  describe "%lex-prec usage tracking" do
+    it "marks rules referenced by normal-row resolution and keeps unreferenced ones useless" do
+      tokens = [
+        token_pattern("A", "a", 0),
+        token_pattern("B", "a", 1),
+        token_pattern("X", "x", 2),
+        token_pattern("Y", "y", 3)
+      ]
+      scanner_fsa = Lrama::ScannerFSA.new(tokens)
+      lex_prec = Lrama::Grammar::LexPrec.new
+      lex_prec.add_rule(left_token: ident("A"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("B"), lineno: 1)
+      lex_prec.add_rule(left_token: ident("X"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("Y"), lineno: 2)
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [parser_state(0, ["A", "B", "X", "Y"])],
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec)
+      )
+
+      scanner_accepts.build
+
+      useless = lex_prec.useless_rules
+      expect(useless.map {|rule| [rule.left_name, rule.right_name] }).to eq([["X", "Y"]])
+    end
+  end
+
   describe Lrama::State::ScannerAccepts::CompatibilityChecker do
     let(:rangle) { token_pattern("RANGLE", ">", 0) }
     let(:rshift) { token_pattern("RSHIFT", ">>", 1) }
