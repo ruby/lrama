@@ -55,7 +55,7 @@ token_name(int token)
     int token;
 
     (void)yylval;
-    token = YYPSLR_PSEUDO_SCAN_RESULT(p, yytext, &result);
+    token = YYPSLR_PSEUDO_SCAN_RESULT(p, yytext, strlen(yytext), &result);
     if (result.length <= 0) {
         result.length = 1;
     }

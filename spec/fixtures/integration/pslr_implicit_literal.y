@@ -50,7 +50,7 @@ main(int argc, char *argv[])
 
   if (argc == 2 && strcmp(argv[1], "__fallback_semi__") == 0) {
     yypslr_scan_result result;
-    int token = YYPSLR_PSEUDO_SCAN_RESULT(&params, ";", &result);
+    int token = YYPSLR_PSEUDO_SCAN_RESULT(&params, ";", 1, &result);
     int ok = token == ';' && result.token == ';' && result.length == 1 &&
       result.is_character_token == 0;
 

@@ -74,8 +74,8 @@ main(int argc, char *argv[])
   if (argc == 2 && strcmp(argv[1], "__empty__") == 0) {
     yypslr_scan_result result;
     int match_length = -1;
-    int token = YYPSLR_PSEUDO_SCAN_RESULT(&params, "", &result);
-    int wrapper_token = YYPSLR_PSEUDO_SCAN(&params, "", &match_length);
+    int token = YYPSLR_PSEUDO_SCAN_RESULT(&params, "", 0, &result);
+    int wrapper_token = YYPSLR_PSEUDO_SCAN(&params, "", 0, &match_length);
     int ok = token == YYEOF && result.token == YYEOF && wrapper_token == YYEOF &&
       result.length == 0 && result.is_layout == 0 && result.is_character_token == 0 &&
       match_length == 0;

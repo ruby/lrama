@@ -309,6 +309,18 @@ RSpec.describe Lrama::Output do
         expect(result).to include("yy_pslr_fallback_length_precedes")
         expect(result).to include("result->token = YYEOF")
       end
+
+      it "takes a length-delimited input instead of a NUL-terminated string" do
+        result = pslr_output.pseudo_scan_function
+        expect(result).to include("size_t input_len")
+        expect(result).to include("while (i < input_len)")
+        expect(result).not_to include("input[i] != '\\0'")
+      end
+
+      it "marks fallback-row and character-token matches with from_fallback" do
+        result = pslr_output.pseudo_scan_function
+        expect(result.scan("result->from_fallback = 1;").size).to eq(2)
+      end
     end
 
     describe "#pslr_tables_and_functions" do
@@ -512,7 +524,7 @@ RSpec.describe Lrama::Output do
       expect(rendered_header).to include("int yy_pseudo_scan")
       expect(rendered_header).to include("yypslr_scan_result")
       expect(rendered_header).to include("YYSETSTATE_CONTEXT(CurrentState)")
-      expect(rendered_header).to include("YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength)")
+      expect(rendered_header).to include("YYPSLR_PSEUDO_SCAN(Context, Input, InputLen, MatchLength)")
     end
   end
 end
