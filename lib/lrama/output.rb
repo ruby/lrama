@@ -424,6 +424,8 @@ module Lrama
 
       if pslr_scanner_enabled?
         declarations << <<~C_CODE
+          #include <stddef.h>
+
           #ifndef YYPSLR_SCAN_RESULT_DEFINED
           # define YYPSLR_SCAN_RESULT_DEFINED
           typedef struct yypslr_scan_result {
@@ -431,11 +433,12 @@ module Lrama
             int length;
             int is_layout;
             int is_character_token;
+            int from_fallback;
           } yypslr_scan_result;
           #endif
 
-          int yy_pseudo_scan_result (int parser_state, const char *input, yypslr_scan_result *result);
-          int yy_pseudo_scan (int parser_state, const char *input, int *match_length);
+          int yy_pseudo_scan_result (int parser_state, const char *input, size_t input_len, yypslr_scan_result *result);
+          int yy_pseudo_scan (int parser_state, const char *input, size_t input_len, int *match_length);
           int yy_pslr_token_is_layout (int token);
         C_CODE
 
@@ -444,13 +447,13 @@ module Lrama
           #define YYPSLR_NO_MATCH YYEMPTY
 
           #ifndef YYPSLR_PSEUDO_SCAN_STATE
-          # define YYPSLR_PSEUDO_SCAN_STATE(ParserState, Input, MatchLength) \\
-            yy_pseudo_scan ((ParserState), (Input), (MatchLength))
+          # define YYPSLR_PSEUDO_SCAN_STATE(ParserState, Input, InputLen, MatchLength) \\
+            yy_pseudo_scan ((ParserState), (Input), (InputLen), (MatchLength))
           #endif
 
           #ifndef YYPSLR_PSEUDO_SCAN_RESULT_STATE
-          # define YYPSLR_PSEUDO_SCAN_RESULT_STATE(ParserState, Input, Result) \\
-            yy_pseudo_scan_result ((ParserState), (Input), (Result))
+          # define YYPSLR_PSEUDO_SCAN_RESULT_STATE(ParserState, Input, InputLen, Result) \\
+            yy_pseudo_scan_result ((ParserState), (Input), (InputLen), (Result))
           #endif
 
           #ifndef YYPSLR_TOKEN_IS_LAYOUT
@@ -458,11 +461,11 @@ module Lrama
           #endif
 
           int yypslr_scan_with_layout (int parser_state, const char **input,
-                                       yypslr_scan_result *result);
+                                       size_t *input_len, yypslr_scan_result *result);
 
           #ifndef YYPSLR_SCAN_WITH_LAYOUT
-          # define YYPSLR_SCAN_WITH_LAYOUT(ParserState, InputPtr, Result) \\
-            yypslr_scan_with_layout ((ParserState), (InputPtr), (Result))
+          # define YYPSLR_SCAN_WITH_LAYOUT(ParserState, InputPtr, InputLenPtr, Result) \\
+            yypslr_scan_with_layout ((ParserState), (InputPtr), (InputLenPtr), (Result))
           #endif
         C_CODE
       end
@@ -477,16 +480,16 @@ module Lrama
         if pslr_scanner_enabled?
           declarations << <<~C_CODE
             #ifndef YYPSLR_PSEUDO_SCAN
-            # define YYPSLR_PSEUDO_SCAN(Context, Input, MatchLength) \\
+            # define YYPSLR_PSEUDO_SCAN(Context, Input, InputLen, MatchLength) \\
               ((Context) != 0 \\
-               ? YYPSLR_PSEUDO_SCAN_STATE (YYGETSTATE_CONTEXT (Context), (Input), (MatchLength)) \\
+               ? YYPSLR_PSEUDO_SCAN_STATE (YYGETSTATE_CONTEXT (Context), (Input), (InputLen), (MatchLength)) \\
                : YYEMPTY)
             #endif
 
             #ifndef YYPSLR_PSEUDO_SCAN_RESULT
-            # define YYPSLR_PSEUDO_SCAN_RESULT(Context, Input, Result) \\
+            # define YYPSLR_PSEUDO_SCAN_RESULT(Context, Input, InputLen, Result) \\
               ((Context) != 0 \\
-               ? YYPSLR_PSEUDO_SCAN_RESULT_STATE (YYGETSTATE_CONTEXT (Context), (Input), (Result)) \\
+               ? YYPSLR_PSEUDO_SCAN_RESULT_STATE (YYGETSTATE_CONTEXT (Context), (Input), (InputLen), (Result)) \\
                : YYEMPTY)
             #endif
           C_CODE
@@ -828,25 +831,30 @@ module Lrama
 
         /*
          * pseudo_scan: PSLR(1) scanning function
-         * Based on Definition 3.2.16 from the PSLR dissertation
+         * Based on Definition 3.2.16 from the PSLR dissertation,
+         * extended with the fallback row of section 3.5.1.
          *
          * Input:
          *   parser_state: Current parser state
-         *   input: Input buffer pointer
-         *   match_length: Output parameter for matched length
+         *   input: Unconsumed input pointer (may contain NUL bytes)
+         *   input_len: Number of remaining input bytes
+         *   result: Output parameter for the match
          *
-         * Returns: Selected parser token ID. If neither the parser-state row
-         * nor fallback row matches, returns YYUNDEF and consumes one byte.
+         * Returns: Selected parser token ID. YYEOF when input_len is zero.
+         * If neither the parser-state row nor the fallback row matches,
+         * returns YYUNDEF and consumes one byte (character-token handling);
+         * from_fallback is set for both cases because a syntax error is
+         * then guaranteed.
          */
         int
-        yy_pseudo_scan_result (int parser_state, const char *input, yypslr_scan_result *result)
+        yy_pseudo_scan_result (int parser_state, const char *input, size_t input_len, yypslr_scan_result *result)
         {
           int ss = 0;  /* FSA initial state */
           int ibest = 0;
           int pbest = YY_PSLR_EMPTY_PATTERN;
           int fallback_ibest = 0;
           int fallback_pbest = YY_PSLR_EMPTY_PATTERN;
-          int i = 0;
+          size_t i = 0;
 
           if (result == NULL) {
             return YYEMPTY;
@@ -856,17 +864,18 @@ module Lrama
           result->length = 0;
           result->is_layout = 0;
           result->is_character_token = 0;
+          result->from_fallback = 0;
 
           if (parser_state < 0 || parser_state >= YY_NUM_PARSER_STATES || input == NULL) {
             return YYEMPTY;
           }
 
-          if (input[0] == '\\0') {
+          if (input_len == 0) {
             result->token = YYEOF;
             return result->token;
           }
 
-          while (input[i] != '\\0') {
+          while (i < input_len) {
             int c = (unsigned char)input[i];
             int next_ss = yy_scanner_transition[ss][c];
 
@@ -885,7 +894,7 @@ module Lrama
                 if (pbest == YY_PSLR_EMPTY_PATTERN ||
                     yy_pslr_length_precedes[pbest][pattern_index]) {
                   pbest = pattern_index;
-                  ibest = i;
+                  ibest = (int)i;
                 }
               }
 
@@ -894,7 +903,7 @@ module Lrama
                 if (fallback_pbest == YY_PSLR_EMPTY_PATTERN ||
                     yy_pslr_fallback_length_precedes[fallback_pbest][pattern_index]) {
                   fallback_pbest = pattern_index;
-                  fallback_ibest = i;
+                  fallback_ibest = (int)i;
                 }
               }
             }
@@ -911,20 +920,22 @@ module Lrama
             result->token = yy_token_pattern_to_token_id[fallback_pbest];
             result->length = fallback_ibest;
             result->is_layout = yy_token_pattern_is_layout[fallback_pbest];
+            result->from_fallback = 1;
             return result->token;
           }
 
           result->token = YYUNDEF;
           result->length = 1;
           result->is_character_token = 1;
+          result->from_fallback = 1;
           return result->token;
         }
 
         int
-        yy_pseudo_scan(int parser_state, const char *input, int *match_length)
+        yy_pseudo_scan(int parser_state, const char *input, size_t input_len, int *match_length)
         {
           yypslr_scan_result result;
-          int token = yy_pseudo_scan_result (parser_state, input, &result);
+          int token = yy_pseudo_scan_result (parser_state, input, input_len, &result);
 
           if (match_length != NULL) {
             *match_length = result.length;
@@ -1080,25 +1091,34 @@ module Lrama
          * Layout tokens are accumulated in the layout buffer;
          * non-layout tokens are returned to the caller with the
          * accumulated layout available via YYPSLR_LAYOUT_TEXT.
+         * The YYEOF token action (if any) runs before returning YYEOF so
+         * trailing layout can be recovered (paper section 3.6).
          */
         int
         yypslr_scan_with_layout (int parser_state, const char **input,
-                                 yypslr_scan_result *result)
+                                 size_t *input_len, yypslr_scan_result *result)
         {
           YYPSLR_LAYOUT_CLEAR ();
 
           for (;;)
             {
-              int token = yy_pseudo_scan_result (parser_state, *input, result);
+              int token = yy_pseudo_scan_result (parser_state, *input, *input_len, result);
 
-              if (token == YYEMPTY || token == YYEOF)
+              if (token == YYEMPTY)
                 return token;
+
+              if (token == YYEOF)
+                {
+        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, 0);" : ""}
+                  return token;
+                }
 
               if (result->is_layout)
                 {
                   YYPSLR_LAYOUT_APPEND (*input, result->length);
         #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, result->length);" : ""}
                   *input += result->length;
+                  *input_len -= (size_t)result->length;
                   continue;
                 }
 

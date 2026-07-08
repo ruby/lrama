@@ -30,7 +30,7 @@ ID_PATTERN [a-z]+
 
 [>]{1,2} {
     int match_length = 0;
-    int token = YYPSLR_PSEUDO_SCAN(p, yytext, &match_length);
+    int token = YYPSLR_PSEUDO_SCAN(p, yytext, strlen(yytext), &match_length);
 
     if (token == YYEMPTY) {
         token = (yyleng == 2) ? RSHIFT : RANGLE;
