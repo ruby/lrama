@@ -68,6 +68,10 @@
 #define YYPULL 1
 
 
+<%- if output.lexer_context_enabled? -%>
+<%= output.lexer_context_defines_code %>
+<%- end -%>
+
 <%# b4_user_pre_prologue -%>
 <%- if output.aux.prologue -%>
 /* First part of user prologue.  */
@@ -582,6 +586,206 @@ static const <%= output.int_type_for(output.context.yyr2) %> yyr2[] =
 <%= output.int_array_to_string(output.context.yyr2) %>
 };
 
+<%- if output.pslr_enabled? -%>
+<%= output.pslr_function_declarations %>
+<%- end -%>
+
+<%- if output.pslr_enabled? -%>
+<%= output.pslr_tables_and_functions %>
+<%- end -%>
+
+<%- if output.lexer_context_enabled? -%>
+<%= output.lexer_context_table_code %>
+<%- end -%>
+
+<%- if output.pslr_enabled? -%>
+#ifndef YYSETSTATE_CONTEXT
+# define YYSETSTATE_CONTEXT(CurrentState) ((void) 0)
+#endif
+<%- end -%>
+
+int
+yy_state_accepts_token (int yystate, int yychar)
+{
+  yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
+  int yyn = yypact[yystate];
+
+  if (yypact_value_is_default (yyn))
+    return 0;
+
+  yyn += yytoken;
+  if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken)
+    return 0;
+
+  yyn = yytable[yyn];
+  if (yyn <= 0)
+    return !yytable_value_is_error (yyn);
+
+  return 1;
+}
+
+/*
+ * Like yy_state_accepts_token, but also follows chains of default reductions
+ * where the rule has zero symbols on the right-hand side (yyr2 == 0).
+ * This allows the lexer to see tokens that become visible only after
+ * empty productions are reduced (e.g., opt_terms -> epsilon).
+ *
+ * Returns 1 if the token would be accepted in the current state or in a
+ * state reachable via a chain of empty default reductions; 0 otherwise.
+ */
+int
+yy_state_eventually_accepts_token (int yystate, int yychar)
+{
+  yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
+  /* Limit iteration to prevent infinite loops from cyclic empty reductions. */
+  int visited[64];
+  int visited_count = 0;
+
+  for (;;)
+    {
+      int yyn;
+
+      /* 1. Check the current state's action table for the token. */
+      yyn = yypact[yystate];
+      if (!yypact_value_is_default (yyn))
+        {
+          yyn += yytoken;
+          if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == yytoken)
+            {
+              yyn = yytable[yyn];
+              if (yyn > 0 || !yytable_value_is_error (yyn))
+                return 1;
+            }
+        }
+
+      /* 2. Try to follow the default reduction if it's an empty rule. */
+      {
+        int rule = yydefact[yystate];
+        int lhs, goto_state;
+        int i;
+
+        if (rule == 0 || yyr2[rule] != 0)
+          return 0;  /* No default or non-empty rule: can't proceed. */
+
+        /* Cycle detection. */
+        for (i = 0; i < visited_count; i++)
+          if (visited[i] == yystate)
+            return 0;
+        if (visited_count < 64)
+          visited[visited_count++] = yystate;
+        else
+          return 0;
+
+        /* Compute GOTO state after reducing by the empty rule. */
+        lhs = yyr1[rule] - YYNTOKENS;
+        goto_state = yypgoto[lhs] + yystate;
+        if (0 <= goto_state && goto_state <= YYLAST
+            && yycheck[goto_state] == yystate)
+          yystate = yytable[goto_state];
+        else
+          yystate = yydefgoto[lhs];
+      }
+    }
+}
+
+/*
+ * Like yy_state_eventually_accepts_token, but also follows non-empty
+ * default reductions by using the actual parser stack to determine
+ * GOTO states. This allows the lexer to see tokens that become visible
+ * after reductions like stmt -> expr (yyr2 > 0).
+ *
+ * stack_base and stack_top point to the parser's state stack (yy_state_t).
+ * Returns 1 if the token is reachable; 0 otherwise.
+ */
+int
+yy_state_deep_accepts_token (int yystate, int yychar,
+                             const void *stack_base_v, const void *stack_top_v)
+{
+  typedef short yy_state_t_compat;
+  yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
+  const yy_state_t_compat *stack_base = (const yy_state_t_compat *)stack_base_v;
+  const yy_state_t_compat *stack_top = (const yy_state_t_compat *)stack_top_v;
+  int visited[64];
+  int visited_count = 0;
+  int stack_consumed = 0;  /* how many stack items we've "popped" */
+
+  if (!stack_base || !stack_top)
+    return 0;
+
+  for (;;)
+    {
+      int yyn;
+
+      /* 1. Check the current state's action table for the token. */
+      yyn = yypact[yystate];
+      if (!yypact_value_is_default (yyn))
+        {
+          yyn += yytoken;
+          if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == yytoken)
+            {
+              yyn = yytable[yyn];
+              if (yyn > 0 || !yytable_value_is_error (yyn))
+                return 1;
+            }
+        }
+
+      /* 2. Try to follow the default reduction. */
+      {
+        int rule = yydefact[yystate];
+        int rhs_len, lhs, goto_state, uncovered_state;
+        int i;
+
+        if (rule == 0)
+          return 0;  /* No default action. */
+
+        /* Cycle detection. */
+        for (i = 0; i < visited_count; i++)
+          if (visited[i] == yystate)
+            return 0;
+        if (visited_count < 64)
+          visited[visited_count++] = yystate;
+        else
+          return 0;
+
+        rhs_len = yyr2[rule];
+
+        if (rhs_len == 0)
+          {
+            /* Empty reduction: use current state for GOTO (same as eventually_accepts). */
+            lhs = yyr1[rule] - YYNTOKENS;
+            goto_state = yypgoto[lhs] + yystate;
+            if (0 <= goto_state && goto_state <= YYLAST
+                && yycheck[goto_state] == yystate)
+              yystate = yytable[goto_state];
+            else
+              yystate = yydefgoto[lhs];
+          }
+        else
+          {
+            /* Non-empty reduction: need to look at the stack. */
+            int total_depth = stack_consumed + rhs_len;
+            const yy_state_t_compat *target = stack_top - total_depth;
+
+            if (target < stack_base)
+              return 0;  /* Stack too shallow. */
+
+            uncovered_state = (int)*target;
+            lhs = yyr1[rule] - YYNTOKENS;
+            goto_state = yypgoto[lhs] + uncovered_state;
+            if (0 <= goto_state && goto_state <= YYLAST
+                && yycheck[goto_state] == uncovered_state)
+              yystate = yytable[goto_state];
+            else
+              yystate = yydefgoto[lhs];
+
+            /* After a non-empty reduction, the stack effectively shrank.
+             * But since we consumed rhs_len items and pushed 1 (the GOTO state),
+             * net consumption is rhs_len - 1. */
+            stack_consumed += rhs_len - 1;
+          }
+      }
+    }
+}
 
 enum { YYENOMEM = -2 };
 
@@ -858,10 +1062,14 @@ int yydebug;
 # define YYMAXDEPTH 10000
 #endif
 
+<%- if output.pslr_enabled? -%>
+<%= output.pslr_lac_function %>
+<%- end -%>
 
 /* Context of a parse error.  */
 typedef struct
 {
+  yy_state_t *yyss;
   yy_state_t *yyssp;
   yysymbol_kind_t yytoken;
   YYLTYPE *yylloc;
@@ -879,6 +1087,23 @@ yypcontext_expected_tokens (const yypcontext_t *yyctx,
 {
   /* Actual size of YYARG. */
   int yycount = 0;
+<%- if output.pslr_enabled? -%>
+  int yyx;
+  for (yyx = 0; yyx < YYNTOKENS; ++yyx)
+    if (yyx != YYSYMBOL_YYerror
+        && yy_lac_check_ (yyctx->yyss, yyctx->yyssp, YY_CAST (yysymbol_kind_t, yyx)))
+      {
+        if (!yyarg)
+          ++yycount;
+        else if (yycount == yyargn)
+          return 0;
+        else
+          yyarg[yycount++] = YY_CAST (yysymbol_kind_t, yyx);
+      }
+  if (yyarg && yycount == 0 && 0 < yyargn)
+    yyarg[0] = YYSYMBOL_YYEMPTY;
+  return yycount;
+<%- else -%>
   int yyn = yypact[+*yyctx->yyssp];
   if (!yypact_value_is_default (yyn))
     {
@@ -905,6 +1130,7 @@ yypcontext_expected_tokens (const yypcontext_t *yyctx,
   if (yyarg && yycount == 0 && 0 < yyargn)
     yyarg[0] = YYSYMBOL_YYEMPTY;
   return yycount;
+<%- end -%>
 }
 
 
@@ -1582,6 +1808,9 @@ yysetstate:
   YY_IGNORE_USELESS_CAST_BEGIN
   *yyssp = YY_CAST (yy_state_t, yystate);
   YY_IGNORE_USELESS_CAST_END
+<%- if output.pslr_enabled? -%>
+  YYSETSTATE_CONTEXT (yystate);
+<%- end -%>
   YY_STACK_PRINT (yyss, yyssp<%= output.user_args %>);
 
   if (yyss + yystacksize - 1 <= yyssp)
@@ -1668,6 +1897,40 @@ yybackup:
 
   /* First try to decide what to do without reference to lookahead token.  */
   yyn = yypact[yystate];
+<%- if output.pslr_enabled? -%>
+  if (yypact_value_is_default (yyn) && yydefact[yystate] != 0)
+    {
+      if (yychar == YYEMPTY)
+        {
+          YYDPRINTF ((stderr, "Reading a token\n"));
+          yychar = yylex <%= output.yylex_formals %>;
+        }
+
+      if (yychar <= <%= output.eof_symbol.id.s_value %>)
+        {
+          yychar = <%= output.eof_symbol.id.s_value %>;
+          yytoken = <%= output.eof_symbol.enum_name %>;
+          YYDPRINTF ((stderr, "Now at end of input.\n"));
+        }
+      else if (yychar == <%= output.error_symbol.id.s_value %>)
+        {
+          yychar = <%= output.undef_symbol.id.s_value %>;
+          yytoken = <%= output.error_symbol.enum_name %>;
+          yyerror_range[1] = yylloc;
+          goto yyerrlab1;
+        }
+      else
+        {
+          yytoken = YYTRANSLATE (yychar);
+          YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
+        }
+
+      if (!yy_lac_check_ (yyss, yyssp, yytoken))
+        goto yyerrlab;
+
+      goto yydefault;
+    }
+<%- end -%>
   if (yypact_value_is_default (yyn))
     goto yydefault;
 
@@ -1735,6 +1998,11 @@ yybackup:
       yytoken = YYTRANSLATE (yychar);
       YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
     }
+
+<%- if output.pslr_enabled? -%>
+  if (!yy_lac_check_ (yyss, yyssp, yytoken))
+    goto yyerrlab;
+<%- end -%>
 
   /* If the proper action on seeing token YYTOKEN is to reduce or to
      detect an error, take that action.  */
@@ -1854,7 +2122,7 @@ yyerrlab:
       ++yynerrs;
       {
         yypcontext_t yyctx
-          = {yyssp, yytoken, &yylloc};
+          = {yyss, yyssp, yytoken, &yylloc};
         char const *yymsgp = YY_("syntax error");
         int yysyntax_error_status;
         yysyntax_error_status = yysyntax_error (&yymsg_alloc, &yymsg, &yyctx<%= output.user_args %>);
@@ -2065,4 +2333,3 @@ yyreturnlab:
 #line <%= output.aux.epilogue_first_lineno - 1 %> "<%= output.grammar_file_path %>"
 <%= output.aux.epilogue -%>
 <%- end -%>
-
