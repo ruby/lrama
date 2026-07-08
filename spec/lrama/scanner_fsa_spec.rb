@@ -204,6 +204,48 @@ RSpec.describe Lrama::ScannerFSA do
     end
   end
 
+  describe "{NAME} pattern references" do
+    it "inlines the body of an earlier pattern" do
+      com_start = token_pattern("COM_START", "\\/\\*[^*]*", order: 0)
+      com = token_pattern("COM", "{COM_START}\\*\\/", order: 1)
+      fsa = Lrama::ScannerFSA.new([com_start, com])
+
+      names = fsa.scan("/*abc*/").map { |result| result[:token].name }
+      expect(names).to include("COM")
+    end
+
+    it "rejects undefined and forward references" do
+      expect { Lrama::ScannerFSA.new([token_pattern("BAD", "{MISSING}x", lineno: 3)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /BAD at line 3.*undefined or forward pattern reference \{MISSING\}/m)
+    end
+
+    it "rejects self references" do
+      expect { Lrama::ScannerFSA.new([token_pattern("SELF", "{SELF}x", lineno: 4)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /SELF at line 4.*undefined or forward pattern reference \{SELF\}/m)
+    end
+
+    it "still matches escaped literal braces" do
+      brace = token_pattern("LBRACE", "\\{")
+      expect(Lrama::ScannerFSA.new([brace]).scan("{").map { |result| result[:token].name }).to include("LBRACE")
+    end
+
+    it "rejects malformed references" do
+      expect { Lrama::ScannerFSA.new([token_pattern("BAD", "{1x}", lineno: 5)]) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /invalid pattern reference/)
+    end
+  end
+
+  describe "byte-oriented classes" do
+    it "matches multi-byte UTF-8 sequences through negated classes" do
+      not_star = token_pattern("NOT_STAR", "[^*]+")
+      fsa = Lrama::ScannerFSA.new([not_star])
+
+      results = fsa.scan("あ")
+      expect(results.map { |result| result[:token].name }).to include("NOT_STAR")
+      expect(results.map { |result| result[:position] }).to include("あ".bytesize)
+    end
+  end
+
   describe "#pairwise_conflict_pairs" do
     it "detects identity and length conflicts" do
       rangle = Lrama::Grammar::TokenPattern.new(

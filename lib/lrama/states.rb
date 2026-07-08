@@ -333,6 +333,13 @@ module Lrama
       end
     end
 
+    # Public accessor for reporting: acc(sp) with tie expansion and
+    # layout injection, as used by the scanner_accepts construction.
+    # @rbs (State state) -> Set[String]
+    def pslr_acceptable_tokens(state)
+      acceptable_tokens_for_pslr(state)
+    end
+
     private
 
     # @rbs (Grammar::Symbol accessing_symbol, Array[State::Item] kernels, Hash[Array[State::Item], State] states_created) -> [State, bool]
@@ -991,9 +998,12 @@ module Lrama
     def compatible_split_state?(state, filtered_lookaheads, pslr_lookaheads = nil)
       pslr_lookaheads ||= filtered_lookaheads
 
-      return false unless state.is_compatible?(filtered_lookaheads)
+      if @pslr_split_enabled && @grammar.pslr_canonical_tables?
+        return false unless canonical_lookaheads_match?(state, pslr_lookaheads)
+      else
+        return false unless state.is_compatible?(filtered_lookaheads)
+      end
       return true unless @pslr_split_enabled && @scanner_fsa
-      return true unless state.lookaheads_recomputed
 
       pslr_compatible_successors?(state, state.item_lookahead_set, pslr_lookaheads)
     end

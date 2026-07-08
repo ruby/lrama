@@ -679,8 +679,11 @@ module Lrama
     def validate_pslr_configuration!
       validate_parse_lac!
       validate_pslr_lexer!
+      validate_pslr_tables!
 
       return unless pslr_defined?
+
+      validate_no_layout_tokens_in_rules!
 
       member = pslr_state_member
       if member && member !~ /\A[a-zA-Z_][a-zA-Z0-9_]*\z/
