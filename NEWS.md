@@ -49,13 +49,20 @@ This adds the following PSLR-related grammar directives and integration points:
 
 - `%define lr.type pslr` enables PSLR parser generation
 - `%token-pattern` declares token candidates and their regular expressions for PSLR-aware lexical disambiguation
+- `%token-action` attaches user code to matched token patterns; `yytext`, `yyleng`, `yylval`, and the accumulated
+  layout text are available in the action body
 - `%lex-prec` declares explicit lexical precedence for overlapping token patterns
 - `%symbol-set` declares reusable sets of terminal tokens for PSLR lexical declarations
 - `%lex-tie` expands parser-state acceptable-token sets for tied terminals
 - `%lex-no-tie` records an explicit no-tie decision for terminals with overlapping token patterns
 - `YYLAYOUT*` token patterns are recognized in every parser state and discarded by PSLR-aware lexers
+- `%define api.pslr.lexer generated` enables pure mode: the generated parser owns lexical analysis completely
+- `%define api.pslr.state-member` names the parser-state field to be shared with the lexer when using the generated helper macros (bridge mode)
+- `%define parse.lac` controls lookahead correction (`full` by default for PSLR parsers, available to LALR/IELR parsers too)
+- `%define pslr.tables canonical-lr` switches state splitting to canonical LR(1) compatibility for debugging merged conflict reports
 - `%define pslr.max-states` and `%define pslr.max-state-ratio` are Lrama-specific safety guards for state growth
-- `%define api.pslr.state-member` names the parser-state field to be shared with the lexer when using the generated helper macros
+- `--report=pslr` renders split metrics, per-state acceptable-token sets, scanner-accepts rows, unresolved-conflict
+  witnesses, useless `%lex-prec` rules, and lexical tie candidates
 
 Typical usage looks like this:
 
@@ -156,25 +163,38 @@ use the subset accepted by the current state plus tied tokens and layout tokens.
 generated scanner universe so error handling can still identify and consume a token when the current parser state
 has no normal scanner decision.
 
-`%token-pattern` currently uses an ASCII byte-oriented regular-expression subset for PSLR pseudo scanning.
+`%token-pattern` currently uses a byte-oriented regular-expression subset for PSLR pseudo scanning.
 Supported constructs are literals, escaped literals such as `\/`, `\*`, `\+`, `\?`, `\(`, `\)`, `\[`, `\]`,
 and `\\`, grouping with `(...)`, alternation with `|`, repetition operators `*`, `+`, `?`, character classes with
 escapes such as `[\]]`, `[\\]`, and `[\n\t\r]`, ranges such as `[a-z]`, negated classes such as `[^*]`, common
-escapes such as `\n`, `\t`, and `\r`, and `.`. The `.` operator matches ASCII bytes except newline; negated
-character classes range over ASCII bytes. Unicode properties and full Ruby/Onigmo regexp syntax are not supported.
-Unsupported or malformed constructs are rejected during generation rather than silently reinterpreted. Nullable
-token patterns such as `//`, `/()/`, `/a*/`, `/a?/`, and `/a|/` are generation errors because PSLR token lexemes
-must be non-empty.
+escapes such as `\n`, `\t`, and `\r`, `.`, and `{NAME}` references that inline the body of an earlier
+`%token-pattern` (self and forward references are rejected; write a literal brace as `\{`). The `.` operator
+matches any byte except newline; negated character classes range over all bytes (0-255), so multi-byte UTF-8
+sequences pass through negated classes and `.` unmodified. Unicode properties and full Ruby/Onigmo regexp syntax
+are not supported. Unsupported or malformed constructs are rejected during generation rather than silently
+reinterpreted. Nullable token patterns such as `//`, `/()/`, `/a*/`, `/a?/`, and `/a|/` are generation errors
+because PSLR token lexemes must be non-empty.
 
-When the parser and lexer share a context through `%parse-param` / `%lex-param`, the generated header also
-provides helpers such as `YYPSLR_PSEUDO_SCAN(...)`, so the lexer can choose a token based on the current parser
-state. The paper-compatible scanning path needs the lexer to pass the unconsumed input prefix, not only an
-already-decided token fragment, so legacy external lexer bridges may still be limited by the text they provide.
+Two operating modes are supported. In pure mode (`%define api.pslr.lexer generated`), the generated parser owns
+lexical analysis: `yylex` is generated, layout tokens are skipped with their text accumulated, `%token-action`
+bodies build semantic values from `yytext`/`yyleng`, and the caller hands the input to the parser with
+`yypslr_set_input(input, len)` before `yyparse`. Pure mode requires a `%token-pattern` for every terminal.
+In bridge mode (`%define api.pslr.state-member`), an existing hand-written lexer consults the pseudo-scanner
+through helper macros such as `YYPSLR_PSEUDO_SCAN(Context, Input, InputLen, MatchLength)`; terminals without a
+token pattern stay owned by the user lexer and are reported as a warning. The scan API is length-delimited
+(`input` plus `input_len`) so inputs containing NUL bytes are handled correctly, and the scan result reports
+`from_fallback` when the token came from the syntax-error fallback row. The paper-compatible scanning path needs
+the lexer to pass the unconsumed input prefix, not only an already-decided token fragment, so legacy external
+lexer bridges may still be limited by the text they provide.
 
-PSLR parsers enable a lightweight LAC check in the generated parser so syntax errors caused by LR state merging,
-default reductions, or `%nonassoc` error actions are detected before user semantic actions are run for the bad
-lookahead. PSLR support is still experimental. Scoped lexical declarations, lexical nonterminals, and `%lex`
-are not implemented yet. If you find any bugs, please report them.
+Unresolved pseudo-scanner conflict reports include a witness: an example input that reaches the conflicting
+scanner profile. `%lex-prec` rules that never participate in a normal-row resolution are reported as useless.
+
+PSLR parsers enable LAC (lookahead correction, `%define parse.lac full`) by default so syntax errors caused by
+LR state merging, default reductions, or `%nonassoc` error actions are detected before user semantic actions are
+run for the bad lookahead, and expected-token lists in error messages are computed by exploratory parses. LAC can
+also be enabled independently for LALR/IELR parsers. PSLR support is still experimental. Scoped lexical
+declarations, lexical nonterminals, and `%lex` are not implemented yet. If you find any bugs, please report them.
 
 ## Lrama 0.7.1 (2025-12-24)
 
