@@ -3,6 +3,7 @@
 
 require "forwardable"
 require "set"
+require_relative "lexer_context_classifier"
 require_relative "tracer/duration"
 require_relative "state/item"
 
@@ -12,6 +13,8 @@ module Lrama
   # "Efficient Computation of LALR(1) Look-Ahead Sets"
   #   https://dl.acm.org/doi/pdf/10.1145/69622.357187
   class States
+    class StateLimitExceeded < StandardError; end
+
     # TODO: rbs-inline 0.11.0 doesn't support instance variables.
     #       Move these type declarations above instance variable definitions, once it's supported.
     #       see: https://github.com/soutaro/rbs-inline/pull/149
@@ -35,17 +38,29 @@ module Lrama
     #   @la: Hash[state_id, Hash[rule_id, Bitmap::bitmap]]
     #   @bitmap_to_terms_cache: Hash[Bitmap::bitmap, Array[Grammar::Symbol]]
     #   @initial_items: Hash[Grammar::Rule, State::Item]
+    #   @max_states: Integer?
+    #   @max_state_ratio: Float?
+    #   @pslr_split_enabled: bool?
+    #   @pslr_compatibility_checker: State::ScannerAccepts::CompatibilityChecker?
 
     extend Forwardable
     include Lrama::Tracer::Duration
 
     def_delegators "@grammar", :symbols, :terms, :nterms, :rules, :precedences,
-      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?
+      :accept_symbol, :eof_symbol, :undef_symbol, :find_symbol_by_s_value!, :ielr_defined?, :pslr_defined?,
+      :token_patterns, :lex_prec, :lex_tie, :pslr_max_states, :pslr_max_state_ratio
 
     attr_reader :states #: Array[State]
     attr_reader :reads_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
     attr_reader :includes_relation #: Hash[State::Action::Goto, Array[State::Action::Goto]]
     attr_reader :lookback_relation #: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
+    attr_reader :scanner_fsa #: ScannerFSA?
+    attr_reader :length_precedences #: LengthPrecedences?
+    attr_reader :scanner_accepts_table #: State::ScannerAccepts?
+    attr_reader :pslr_inadequacies #: Array[State::PslrInadequacy]
+    attr_reader :pslr_metrics #: Hash[Symbol, Integer | Float | nil]
+    attr_reader :lexer_context_classifier #: LexerContextClassifier?
+    attr_reader :lexical_tie_candidates #: Array[[String, String]]
 
     # @rbs (Grammar grammar, Tracer tracer) -> void
     def initialize(grammar, tracer)
@@ -53,6 +68,10 @@ module Lrama
       @tracer = tracer
 
       @states = []
+      if pslr_defined?
+        @max_states = pslr_max_states
+        @max_state_ratio = pslr_max_state_ratio
+      end
 
       # `DR(p, A) = {t ∈ T | p -(A)-> r -(t)-> }`
       #   where p is state, A is nterm, t is term.
@@ -109,6 +128,18 @@ module Lrama
       # second key is rule_id,
       # value is bitmap of term.
       @la = {}
+      @pslr_inadequacies = []
+      @lexical_tie_candidates = []
+      @pslr_metrics = {
+        base_states_count: nil,
+        total_states_count: nil,
+        split_state_count: 0,
+        growth_count: 0,
+        growth_ratio: nil,
+        token_pattern_count: 0,
+        scanner_fsa_state_count: 0,
+        inadequacies_count: 0
+      }
       @bitmap_to_terms_cache = {}
     end
 
@@ -147,6 +178,47 @@ module Lrama
       # Phase 5
       report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
       report_duration(:compute_default_reduction) { compute_default_reduction }
+    end
+
+    # Compute PSLR(1) states
+    # Based on Section 3.4 of the PSLR dissertation
+    # @rbs () -> void
+    def compute_pslr
+      capture_pslr_metrics_before_split
+      # Preparation
+      report_duration(:clear_conflicts) { clear_conflicts }
+      # Phase 1
+      report_duration(:compute_predecessors) { compute_predecessors }
+      report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
+      always_follows = report_duration(:compute_always_follows) { compute_always_follows }
+      report_duration(:compute_goto_follows) { compute_goto_follows(always_follows) }
+      # Phase 2
+      report_duration(:build_scanner_fsa) { build_scanner_fsa }
+      report_duration(:build_length_precedences) { build_length_precedences }
+      report_duration(:compute_inadequacy_annotations) { compute_inadequacy_annotations }
+      # Phase 3a: PSLR split (Scanner FSA-based)
+      @pslr_split_enabled = true
+      report_duration(:split_states) { split_states }
+      @pslr_split_enabled = false
+      # Phase 3b: Lexer context classification + context-based split.
+      # Lrama/Ruby extension, not part of the PSLR dissertation core.
+      # No-op unless %lexer-context directives are present.
+      if @grammar.lexer_contexts.any?
+        report_duration(:split_states_by_context) { split_states_by_context }
+      end
+      if @states.size != @pslr_metrics[:base_states_count]
+        @states.each(&:clear_predecessors)
+        compute_predecessors
+      end
+      # Phase 4
+      report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
+      report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
+      # Phase 5
+      report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
+      report_duration(:compute_default_reduction) { compute_default_reduction }
+      report_duration(:build_scanner_accepts) { build_scanner_accepts }
+      report_duration(:handle_pslr_inadequacies) { handle_pslr_inadequacies }
+      finalize_pslr_metrics
     end
 
     # @rbs () -> Integer
@@ -197,11 +269,30 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate!(logger)
       validate_conflicts_within_threshold!(logger)
+      validate_pslr_scanner_conflicts!(logger)
+      validate_pslr_inadequacies!(logger)
+      validate_pslr_useless_lex_prec!(logger)
+      validate_pslr_lexical_tie_candidates!(logger)
+    end
+
+    # Return the lexer context table as an array of context values,
+    # one per parser state (indexed by state id).
+    #
+    # @rbs () -> Array[Integer]
+    def lexer_context_table
+      @states.map { |state| state.lexer_context || 0 }
+    end
+
+    # Check if lexer context classification has been performed.
+    #
+    # @rbs () -> bool
+    def lexer_context_enabled?
+      pslr_defined? && @lexer_context_classifier != nil
     end
 
     def compute_la_sources_for_conflicted_states
       reflexive = {}
-      @states.each do |state|
+      reachable_parser_states.each do |state|
         state.nterm_transitions.each do |goto|
           reflexive[goto] = [goto]
         end
@@ -282,6 +373,7 @@ module Lrama
       #
       return [states_created[kernels], false] if states_created[kernels]
 
+      check_state_limit! if @max_states
       state = State.new(@states.count, accessing_symbol, kernels)
       @states << state
       states_created[kernels] = state
@@ -750,6 +842,71 @@ module Lrama
       @nterm_transitions = nil
     end
 
+    # Traverse pairs of parser state and lexer context. Reusing each pair also
+    # closes cycles through symbols without a declared context.
+    # @rbs () -> void
+    def split_states_by_context
+      classifier = LexerContextClassifier.new(@grammar.lexer_contexts, @grammar.parameterized_expansion_args)
+      @lexer_context_classifier = classifier
+      start = @states.first
+      start.lexer_context = classifier.infer_item_context(start.kernels.first)
+      variants = { start => { start.lexer_context => start } }
+      originals = {} #: Hash[State, State]
+      pending = [start]
+
+      pending.each do |state|
+        state.transitions.each do |transition|
+          target = transition.to_state
+          original = originals.fetch(target, target)
+          context = classifier.classify_symbol_context(transition.next_sym)
+          context = state.lexer_context if context.zero?
+          by_context = (variants[original] ||= {})
+          successor = by_context[context]
+          unless successor
+            successor = by_context.empty? ? original : copy_split_state(original)
+            originals[successor] = original
+            successor.lexer_context = context
+            by_context[context] = successor
+            pending << successor
+          end
+          state.update_transition(transition, successor) unless target.equal?(successor)
+        end
+      end
+    end
+
+    # @rbs (State original, ?State::lookahead_set lookaheads) -> State
+    def copy_split_state(original, lookaheads = original.item_lookahead_set.dup)
+      check_state_limit! if @max_states || @max_state_ratio
+      base = original.lalr_isocore
+      state = State.new(@states.size, base.accessing_symbol, base.kernels)
+      state.closure = base.closure
+      state.compute_transitions_and_reduces
+      original.transitions.each do |transition|
+        state.set_items_to_state(transition.to_items, transition.to_state)
+      end
+      @states << state
+      state.lalr_isocore = base
+      state.ielr_isocores = base.ielr_isocores
+      base.ielr_isocores << state
+      state.lookaheads_recomputed = true
+      state.item_lookahead_set = lookaheads
+      state
+    end
+
+    # @rbs () -> void
+    def capture_pslr_metrics_before_split
+      @pslr_metrics = {
+        base_states_count: @states.count,
+        total_states_count: @states.count,
+        split_state_count: 0,
+        growth_count: 0,
+        growth_ratio: 1.0,
+        token_pattern_count: token_patterns.size,
+        scanner_fsa_state_count: 0,
+        inadequacies_count: 0
+      }
+    end
+
     # @rbs () -> void
     def compute_inadequacy_annotations
       @states.each do |state|
@@ -793,7 +950,7 @@ module Lrama
 
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state(state, transition, next_state)
-      if next_state.lalr_isocore.annotation_list.empty?
+      if !@pslr_split_enabled && next_state.lalr_isocore.annotation_list.empty?
         unless next_state.lookaheads_recomputed
           next_state.lookaheads_recomputed = true
           sets = {} #: State::lookahead_set
@@ -804,35 +961,129 @@ module Lrama
         return
       end
 
-      propagating_lookaheads = state.propagate_lookaheads(next_state)
+      filtered = state.propagate_lookaheads(next_state)
+      lookaheads = @pslr_split_enabled ? state.propagate_lookaheads(next_state, filter: false) : filtered
       # @type var incoming_contributions: State::dominant_contributions
       incoming_contributions = {}
-      s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads, incoming_contributions) }
-
-      if s.nil?
-        s = next_state.lalr_isocore
-        new_state = State.new(@states.count, s.accessing_symbol, s.kernels)
-        new_state.closure = s.closure
-        new_state.compute_transitions_and_reduces
-        s.transitions.each do |transition|
-          new_state.set_items_to_state(transition.to_items, transition.to_state)
+      isocore = next_state.ielr_isocores.find do |candidate|
+        if @pslr_split_enabled
+          compatible_split_state?(candidate, filtered, lookaheads)
+        else
+          candidate.is_compatible?(filtered, incoming_contributions)
         end
-        @states << new_state
-        new_state.lalr_isocore = s
-        s.ielr_isocores << new_state
-        s.ielr_isocores.each do |st|
-          st.ielr_isocores = s.ielr_isocores
-        end
-        new_state.lookaheads_recomputed = true
-        new_state.item_lookahead_set = propagating_lookaheads
-        state.update_transition(transition, new_state)
-      elsif(!s.lookaheads_recomputed)
-        s.lookaheads_recomputed = true
-        s.item_lookahead_set = propagating_lookaheads
-      else
-        merge_lookaheads(s, propagating_lookaheads)
-        state.update_transition(transition, s) if state.items_to_state[transition.to_items].id != s.id
       end
+
+      if isocore.nil?
+        isocore = copy_split_state(next_state.lalr_isocore, lookaheads)
+        state.update_transition(transition, isocore)
+      elsif !isocore.lookaheads_recomputed
+        isocore.lookaheads_recomputed = true
+        isocore.item_lookahead_set = lookaheads
+      else
+        merge_lookaheads(isocore, lookaheads)
+        state.update_transition(transition, isocore) unless state.items_to_state[transition.to_items].equal?(isocore)
+      end
+    end
+
+    # @rbs (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
+    def compatible_split_state?(state, filtered_lookaheads, pslr_lookaheads = nil)
+      pslr_lookaheads ||= filtered_lookaheads
+
+      return false unless state.is_compatible?(filtered_lookaheads)
+      return true unless @pslr_split_enabled && @scanner_fsa
+      return true unless state.lookaheads_recomputed
+
+      pslr_compatible_successors?(state, state.item_lookahead_set, pslr_lookaheads)
+    end
+
+    # Shared shift prefixes must preserve scanner decisions made after those shifts.
+    # @rbs (State state, State::lookahead_set left, State::lookahead_set right) -> bool
+    def pslr_compatible_successors?(state, left, right)
+      pending = [[state.lalr_isocore, left, right]] #: Array[[State, State::lookahead_set, State::lookahead_set]]
+      visited = Set.new #: Set[[Integer, State::lookahead_set, State::lookahead_set]]
+
+      until pending.empty?
+        current, left, right = pending.pop
+        next if left == right || !visited.add?([current.id, left, right])
+
+        left_acc = acceptable_tokens_for_pslr(current, left)
+        right_acc = acceptable_tokens_for_pslr(current, right)
+        return false unless pslr_compatible_accept_sets?(left_acc, right_acc)
+
+        current.transitions.each do |transition|
+          successor = transition.to_state.lalr_isocore
+          pending << [successor, current.propagate_lookaheads(successor, left, filter: false), current.propagate_lookaheads(successor, right, filter: false)]
+        end
+      end
+
+      true
+    end
+
+    # Canonical LR(1) compatibility for %define pslr.tables canonical-lr:
+    # states merge only when their kernel lookahead sets are identical,
+    # so unresolved-conflict reports are not merged across contexts.
+    # @rbs (State state, State::lookahead_set filtered_lookaheads) -> bool
+    def canonical_lookaheads_match?(state, filtered_lookaheads)
+      return true unless state.lookaheads_recomputed
+
+      state.item_lookahead_set == filtered_lookaheads
+    end
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
+    def pslr_state_signature(state, filtered_lookaheads = nil)
+      return [] unless @scanner_fsa
+
+      acc_sp = acceptable_tokens_for_pslr(state, filtered_lookaheads)
+      table, conflicts = State::ScannerAccepts.compute_for_acceptable_tokens(
+        @scanner_fsa,
+        lex_prec,
+        @length_precedences || LengthPrecedences.new(lex_prec),
+        acc_sp
+      )
+
+      signature = @scanner_fsa.states.each_with_object([]) do |fsa_state, result|
+        next unless fsa_state.accepting?
+
+        result << [fsa_state.id, table[fsa_state.id]&.name]
+      end
+
+      conflicts.each do |conflict|
+        signature << [
+          :unresolved,
+          conflict.scanner_state_id,
+          conflict.shorter_tokens,
+          conflict.selected_shorter_token,
+          conflict.current_tokens
+        ]
+      end
+
+      signature
+    end
+
+    # @rbs (Set[String] left_acc, Set[String] right_acc) -> bool
+    def pslr_compatible_accept_sets?(left_acc, right_acc)
+      return true unless @scanner_fsa
+
+      @pslr_compatibility_checker ||= State::ScannerAccepts::CompatibilityChecker.new(
+        @scanner_fsa,
+        lex_prec,
+        @length_precedences || LengthPrecedences.new(lex_prec)
+      )
+      @pslr_compatibility_checker.compatible?(left_acc, right_acc)
+    end
+
+    # @rbs (State state, ?State::lookahead_set filtered_lookaheads, ?expand_ties: bool, ?include_layout: bool) -> Set[String]
+    def acceptable_tokens_for_pslr(state, filtered_lookaheads = nil, expand_ties: true, include_layout: true)
+      tokens = State::ScannerAccepts.acceptable_tokens(state, symbols, filtered_lookaheads)
+      tokens = @grammar.expand_lexical_ties(tokens) if expand_ties
+      tokens | layout_token_names_for_pslr(include_layout: include_layout)
+    end
+
+    # @rbs (?include_layout: bool) -> Set[String]
+    def layout_token_names_for_pslr(include_layout: true)
+      return Set.new unless include_layout
+
+      @grammar.layout_token_names
     end
 
     # @rbs (Logger logger) -> void
@@ -883,6 +1134,240 @@ module Lrama
       @_read_sets = nil
       @_follow_sets = nil
       @_la = nil
+    end
+
+    # Build Scanner FSA from token patterns
+    # @rbs () -> void
+    def build_scanner_fsa
+      @grammar.synthesize_implicit_literal_token_patterns!
+      @grammar.finalize_lexical_declarations!
+      return if token_patterns.empty?
+
+      @scanner_fsa = ScannerFSA.new(token_patterns)
+      @grammar.finalize_lexical_ties!(@scanner_fsa)
+      @pslr_compatibility_checker = nil
+    end
+
+    # Build length precedences table
+    # @rbs () -> void
+    def build_length_precedences
+      @length_precedences = LengthPrecedences.new(lex_prec)
+    end
+
+    # Build scanner_accepts table
+    # @rbs () -> void
+    def build_scanner_accepts
+      return unless @scanner_fsa
+
+      collect_lexical_tie_candidates
+
+      @scanner_accepts_table = State::ScannerAccepts.new(
+        reachable_parser_states,
+        @scanner_fsa,
+        lex_prec,
+        @length_precedences,
+        lex_tie,
+        symbols: symbols, layout_token_names: @grammar.layout_token_names
+      )
+      @scanner_accepts_table.build
+    end
+
+    # Handle PSLR inadequacies
+    # Detects and splits states where pseudo-scanner behavior differs
+    # @rbs () -> void
+    def handle_pslr_inadequacies
+      return unless @scanner_fsa && @scanner_accepts_table
+
+      @pslr_inadequacies = detect_pslr_inadequacies
+      return if @pslr_inadequacies.empty?
+
+      @tracer.warn("Detected #{@pslr_inadequacies.size} unresolved PSLR inadequacies") if @tracer.respond_to?(:warn)
+    end
+
+    # @rbs () -> void
+    def finalize_pslr_metrics
+      return unless pslr_defined?
+
+      base_states_count = @pslr_metrics[:base_states_count] || @states.count
+      total_states_count = @states.count
+
+      @pslr_metrics = {
+        base_states_count: base_states_count,
+        total_states_count: total_states_count,
+        split_state_count: @states.count(&:split_state?),
+        growth_count: total_states_count - base_states_count,
+        growth_ratio: base_states_count.zero? ? nil : total_states_count.to_f / base_states_count,
+        token_pattern_count: token_patterns.size,
+        scanner_fsa_state_count: @scanner_fsa ? @scanner_fsa.states.size : 0,
+        inadequacies_count: @pslr_inadequacies.size
+      }
+    end
+
+    # Detect PSLR inadequacies in isocore groups
+    # @rbs () -> Array[State::PslrInadequacy]
+    def detect_pslr_inadequacies
+      inadequacies = []
+
+      @states.each do |state|
+        state.transitions.each do |transition|
+          next_state = transition.to_state
+          next unless next_state
+
+          propagating_lookaheads = state.propagate_lookaheads(next_state.lalr_isocore, filter: false)
+          expected_acc = acceptable_tokens_for_pslr(next_state, propagating_lookaheads)
+          actual_acc = acceptable_tokens_for_pslr(next_state)
+
+          next if pslr_compatible_accept_sets?(expected_acc, actual_acc)
+
+          matching_state = next_state.ielr_isocores.find do |candidate|
+            pslr_compatible_accept_sets?(acceptable_tokens_for_pslr(candidate), expected_acc)
+          end
+
+          inadequacies << State::PslrInadequacy.new(
+            type: State::PslrInadequacy::PSLR_RELATIVE,
+            state: next_state,
+            conflicting_states: [matching_state, next_state].compact.uniq,
+            details: {
+              reason: "Transition reaches a state with an incompatible PSLR scanner profile",
+              from_state_id: state.id,
+              transition_symbol: transition.next_sym.name,
+              expected_profile: pslr_state_signature(next_state, propagating_lookaheads),
+              actual_profile: pslr_state_signature(next_state),
+              matching_state_id: matching_state&.id
+            }
+          )
+        end
+      end
+
+      inadequacies
+    end
+
+    # @rbs () -> void
+    def collect_lexical_tie_candidates
+      @lexical_tie_candidates = []
+      return unless @scanner_fsa
+
+      pairs = @scanner_fsa.pairwise_conflict_pairs
+      return if pairs.empty?
+
+      candidates = Set.new
+      reachable_parser_states.each do |state|
+        pre_tie_tokens = acceptable_tokens_for_pslr(state, nil, expand_ties: false, include_layout: false)
+        pairs.each do |left, right|
+          next unless pre_tie_tokens.include?(left) ^ pre_tie_tokens.include?(right)
+          next if lex_tie.tied?(left, right)
+          next if lex_tie.no_tie?(left, right)
+
+          candidates << [left, right]
+        end
+      end
+
+      @lexical_tie_candidates = candidates.to_a.sort
+    end
+
+    # @rbs () -> Array[State]
+    def reachable_parser_states
+      return [] if @states.empty?
+
+      visited = Set.new
+      stack = [@states.first]
+      reachable = []
+
+      until stack.empty?
+        state = stack.pop
+        next if visited.include?(state.id)
+
+        visited << state.id
+        reachable << state
+        state.transitions.each do |transition|
+          stack << transition.to_state if transition.to_state
+        end
+      end
+
+      reachable.sort_by(&:id)
+    end
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_inadequacies!(logger)
+      return unless pslr_defined?
+      return if @pslr_inadequacies.empty?
+
+      @pslr_inadequacies.each do |inadequacy|
+        logger.error(inadequacy.to_s)
+      end
+
+      exit false
+    end
+
+    # @rbs (Logger logger) -> void
+    def validate_pslr_scanner_conflicts!(logger)
+      return unless pslr_defined?
+      return unless @scanner_accepts_table
+      return unless @scanner_accepts_table.unresolved_conflicts?
+
+      @scanner_accepts_table.conflicts.each do |conflict|
+        logger.error(pslr_scanner_conflict_message(conflict))
+      end
+
+      exit false
+    end
+
+    # @rbs (State::ScannerAccepts::Conflict conflict) -> String
+    def pslr_scanner_conflict_message(conflict)
+      state = conflict.parser_state_id || "unknown"
+      shorter = conflict.shorter_tokens.empty? ? "(none)" : conflict.shorter_tokens.join(", ")
+      selected = conflict.selected_shorter_token || "(none)"
+      current = conflict.current_tokens.empty? ? "(none)" : conflict.current_tokens.join(", ")
+
+      "unresolved PSLR scanner conflict in state #{state}, scanner state #{conflict.scanner_state_id}: " \
+        "shorter matches: #{shorter}; selected shorter token: #{selected}; " \
+        "current matches: #{current}; add an explicit %lex-prec rule or adjust lexical ties"
+    end
+
+    # @rbs () -> void
+    def check_state_limit!
+      count = @states.size + 1
+      base = @pslr_metrics[:base_states_count]
+      if @max_states && count > @max_states
+        raise StateLimitExceeded, "PSLR state growth exceeded pslr.max-states=#{@max_states} (next state count=#{count})"
+      end
+      if @max_state_ratio && base && count.to_f / base > @max_state_ratio
+        raise StateLimitExceeded, "PSLR state growth exceeded pslr.max-state-ratio=#{@max_state_ratio} (next state count=#{count}, base=#{base})"
+      end
+    end
+
+    # Report %lex-prec rules that were never used in scanner conflict resolution.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_useless_lex_prec!(logger)
+      return unless pslr_defined?
+      return unless @scanner_accepts_table
+
+      useless = lex_prec.useless_rules
+      return if useless.empty?
+
+      useless.each do |rule|
+        operator_label = LengthPrecedences.operator_label(rule.operator)
+        logger.warn(
+          "useless %lex-prec rule at line #{rule.lineno}: " \
+          "#{rule.left_name} #{operator_label} #{rule.right_name} " \
+          "does not resolve any PSLR scanner conflict"
+        )
+      end
+    end
+
+    # Report lexical tie candidates that are not covered by %lex-tie or %lex-no-tie.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_lexical_tie_candidates!(logger)
+      return unless pslr_defined?
+      return if @lexical_tie_candidates.empty?
+
+      @lexical_tie_candidates.each do |left, right|
+        logger.warn(
+          "PSLR lexical tie candidate: #{left} and #{right} have scanner conflicts " \
+          "but are not always accepted together. " \
+          "Add %lex-tie #{left} #{right} or %lex-no-tie #{left} #{right}."
+        )
+      end
     end
   end
 end

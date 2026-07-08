@@ -32,10 +32,10 @@ module Lrama
       text = read_input
       grammar = build_grammar(text)
       states, context = compute_status(grammar)
+      states.validate!(@logger)
       render_reports(states) if @options.report_file
       @tracer.trace(grammar)
       render_diagram(grammar)
-      states.validate!(@logger)
       render_output(context, grammar)
       @warnings.warn(grammar, states)
     end
@@ -86,8 +86,15 @@ module Lrama
     def compute_status(grammar)
       states = Lrama::States.new(grammar, @tracer)
       states.compute
-      states.compute_ielr if grammar.ielr_defined?
+      if grammar.pslr_defined?
+        states.compute_pslr
+      elsif grammar.ielr_defined?
+        states.compute_ielr
+      end
       [states, Lrama::Context.new(states)]
+    rescue States::StateLimitExceeded => e
+      @logger.error(e.message)
+      exit false
     end
 
     def render_reports(states)

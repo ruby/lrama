@@ -98,6 +98,8 @@ module Lrama
 
     attr_accessor goto_follows: Hash[Action::Goto, Bitmap::bitmap]
 
+    attr_accessor lexer_context: Integer?
+
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
     def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
 
@@ -121,6 +123,12 @@ module Lrama
 
     # @rbs (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
     def set_look_ahead: (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
+
+    # @rbs (Action::Reduce reduce, ?lookahead_set lookaheads) -> Bitmap::bitmap
+    def acceptable_pslr_reduce_lookahead: (Action::Reduce reduce, ?lookahead_set lookaheads) -> Bitmap::bitmap
+
+    # @rbs (?lookahead_set? lookaheads) -> Array[Grammar::Symbol]
+    def pslr_error_tokens: (?lookahead_set? lookaheads) -> Array[Grammar::Symbol]
 
     # @rbs (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
     def set_look_ahead_sources: (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
@@ -189,8 +197,8 @@ module Lrama
 
     # Definition 3.40 (propagate_lookaheads)
     #
-    # @rbs (State next_state) -> lookahead_set
-    def propagate_lookaheads: (State next_state) -> lookahead_set
+    # @rbs (State next_state, ?lookahead_set? lookaheads, ?filter: bool) -> lookahead_set
+    def propagate_lookaheads: (State next_state, ?lookahead_set? lookaheads, ?filter: bool) -> lookahead_set
 
     # Definition 3.43 (is_compatible)
     #
@@ -242,13 +250,16 @@ module Lrama
     # @rbs (Grammar::Rule rule, Integer position) -> Array[Item]
     def items_for_rule: (Grammar::Rule rule, Integer position) -> Array[Item]
 
+    # @rbs () -> void
+    def clear_predecessors: () -> void
+
     # @rbs (State prev_state) -> void
     def append_predecessor: (State prev_state) -> void
 
     # Definition 3.39 (compute_goto_follow_set)
     #
-    # @rbs (Grammar::Symbol nterm_token) -> Bitmap::bitmap
-    def goto_follow_set: (Grammar::Symbol nterm_token) -> Bitmap::bitmap
+    # @rbs (Grammar::Symbol nterm_token, ?lookahead_set? lookaheads) -> Bitmap::bitmap
+    def goto_follow_set: (Grammar::Symbol nterm_token, ?lookahead_set? lookaheads) -> Bitmap::bitmap
 
     # Definition 3.8 (Goto Follows Internal Relation)
     #
