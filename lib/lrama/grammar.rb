@@ -459,7 +459,7 @@ module Lrama
 
     # Add lex-prec rules from %lex-prec directive.
     # Stores as raw declaration for delayed expansion after implicit literal synthesis.
-    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
+    # @rbs (left_token: Lexer::Token::Base, operator: ::Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
     def add_lex_prec_rule(left_token:, operator:, right_token:, lineno:)
       # Register terminals so they are known to the symbol resolver
       add_term(id: left_token) unless left_token.s_value == "yyall" || @symbol_sets.key?(left_token.s_value)
@@ -601,7 +601,7 @@ module Lrama
 
     # Validate that identity-component operators are not applied to self-pairs.
     # Self-pair is allowed only for length-only operators (-~ and -s).
-    # @rbs (Lexer::Token::Base left, Lexer::Token::Base right, Symbol operator, Integer lineno) -> void
+    # @rbs (Lexer::Token::Base left, Lexer::Token::Base right, ::Symbol operator, Integer lineno) -> void
     def validate_lex_prec_self_pair!(left, right, operator, lineno)
       return unless left.s_value == right.s_value
 

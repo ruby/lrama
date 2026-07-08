@@ -273,6 +273,41 @@ module Lrama
     # @rbs () -> Float?
     def pslr_max_state_ratio: () -> Float?
 
+    # True when the generated parser owns lexical analysis completely
+    # (%define api.pslr.lexer generated, the paper's own model).
+    # @rbs () -> bool
+    def pslr_lexer_generated?: () -> bool
+
+    # Base table construction for PSLR: extended IELR (default) or
+    # canonical LR(1) for debugging unresolved-conflict reports whose
+    # contexts would otherwise be merged (section 3.4.3).
+    # @rbs () -> String
+    def pslr_tables: () -> String
+
+    # @rbs () -> bool
+    def pslr_canonical_tables?: () -> bool
+
+    # Terminals that the pseudo-scanner cannot produce: real terminals
+    # used by the grammar that have no %token-pattern (explicit or
+    # synthesized). Pure mode requires this list to be empty; bridge
+    # mode reports it so users know which tokens their yylex must keep
+    # producing.
+    # @rbs () -> Array[String]
+    def uncovered_pslr_terminals: () -> Array[String]
+
+    # LAC (lookahead correction) setting from %define parse.lac.
+    # PSLR parsers default to full because exploratory parses are what
+    # keep merged-state pseudo-scanning canonical-equivalent; other
+    # parser types default to none for Bison compatibility.
+    # @rbs () -> String
+    def parse_lac: () -> String
+
+    # @rbs () -> bool
+    def parse_lac_full?: () -> bool
+
+    # @rbs () -> bool
+    def parse_lac_explicit_none?: () -> bool
+
     # @rbs () -> Array[Grammar::TokenPattern]
     def layout_token_patterns: () -> Array[Grammar::TokenPattern]
 
@@ -289,8 +324,8 @@ module Lrama
 
     # Add lex-prec rules from %lex-prec directive.
     # Stores as raw declaration for delayed expansion after implicit literal synthesis.
-    # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
-    def add_lex_prec_rule: (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
+    # @rbs (left_token: Lexer::Token::Base, operator: ::Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
+    def add_lex_prec_rule: (left_token: Lexer::Token::Base, operator: ::Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Grammar::LexPrec::Declaration
 
     # Finalize lexical declarations after implicit literal synthesis.
     # Expands yyall and symbol-set operands using the post-synthesis token universe.
@@ -335,8 +370,8 @@ module Lrama
 
     # Validate that identity-component operators are not applied to self-pairs.
     # Self-pair is allowed only for length-only operators (-~ and -s).
-    # @rbs (Lexer::Token::Base left, Lexer::Token::Base right, Symbol operator, Integer lineno) -> void
-    def validate_lex_prec_self_pair!: (Lexer::Token::Base left, Lexer::Token::Base right, Symbol operator, Integer lineno) -> void
+    # @rbs (Lexer::Token::Base left, Lexer::Token::Base right, ::Symbol operator, Integer lineno) -> void
+    def validate_lex_prec_self_pair!: (Lexer::Token::Base left, Lexer::Token::Base right, ::Symbol operator, Integer lineno) -> void
 
     # @rbs (Lexer::Token::Base id) -> String?
     def implicit_literal_regex_pattern: (Lexer::Token::Base id) -> String?
@@ -356,6 +391,20 @@ module Lrama
 
     # @rbs () -> void
     def validate_pslr_configuration!: () -> void
+
+    # @rbs () -> void
+    def validate_parse_lac!: () -> void
+
+    # Layout tokens are consumed by the pseudo-scanner and never reach
+    # the parser, so they must not appear in grammar rules (section 3.6).
+    # @rbs () -> void
+    def validate_no_layout_tokens_in_rules!: () -> void
+
+    # @rbs () -> void
+    def validate_pslr_lexer!: () -> void
+
+    # @rbs () -> void
+    def validate_pslr_tables!: () -> void
 
     # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
     def expand_pslr_operand: (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]

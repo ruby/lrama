@@ -14,20 +14,20 @@ module Lrama
     #   <s  identity conflict: right token wins; length conflict: shortest wins
     #   -s  length conflict: shortest wins
     class LexPrec
-      IDENTITY_RIGHT_LONGEST = :identity_right_longest #: Symbol
-      IDENTITY_RIGHT = :identity_right #: Symbol
-      LONGEST = :longest #: Symbol
-      TOKEN_RIGHT = :token_right #: Symbol
-      TOKEN_RIGHT_LENGTH = :token_right_length #: Symbol
-      IDENTITY_RIGHT_SHORTEST = :identity_right_shortest #: Symbol
-      SHORTEST = :shortest #: Symbol
+      IDENTITY_RIGHT_LONGEST = :identity_right_longest #: ::Symbol
+      IDENTITY_RIGHT = :identity_right #: ::Symbol
+      LONGEST = :longest #: ::Symbol
+      TOKEN_RIGHT = :token_right #: ::Symbol
+      TOKEN_RIGHT_LENGTH = :token_right_length #: ::Symbol
+      IDENTITY_RIGHT_SHORTEST = :identity_right_shortest #: ::Symbol
+      SHORTEST = :shortest #: ::Symbol
 
       IDENTITY_OPERATORS = [
         IDENTITY_RIGHT_LONGEST,
         IDENTITY_RIGHT,
         TOKEN_RIGHT,
         IDENTITY_RIGHT_SHORTEST
-      ].freeze #: Array[Symbol]
+      ].freeze #: Array[::Symbol]
 
       LENGTH_OPERATORS = [
         IDENTITY_RIGHT_LONGEST,
@@ -36,32 +36,32 @@ module Lrama
         TOKEN_RIGHT_LENGTH,
         IDENTITY_RIGHT_SHORTEST,
         SHORTEST
-      ].freeze #: Array[Symbol]
+      ].freeze #: Array[::Symbol]
 
       LONGEST_OPERATORS = [
         IDENTITY_RIGHT_LONGEST,
         LONGEST
-      ].freeze #: Array[Symbol]
+      ].freeze #: Array[::Symbol]
 
       SHORTEST_OPERATORS = [
         IDENTITY_RIGHT_SHORTEST,
         SHORTEST
-      ].freeze #: Array[Symbol]
+      ].freeze #: Array[::Symbol]
 
       RIGHT_TOKEN_LENGTH_OPERATORS = [
         TOKEN_RIGHT,
         TOKEN_RIGHT_LENGTH
-      ].freeze #: Array[Symbol]
+      ].freeze #: Array[::Symbol]
 
       # Raw declaration stored before operand expansion.
       # Operands may be :token, :symbol_set, or :yyall.
       class Declaration
         attr_reader :left_operand #: Lexer::Token::Base
-        attr_reader :operator #: Symbol
+        attr_reader :operator #: ::Symbol
         attr_reader :right_operand #: Lexer::Token::Base
         attr_reader :lineno #: Integer
 
-        # @rbs (left_operand: Lexer::Token::Base, operator: Symbol, right_operand: Lexer::Token::Base, lineno: Integer) -> void
+        # @rbs (left_operand: Lexer::Token::Base, operator: ::Symbol, right_operand: Lexer::Token::Base, lineno: Integer) -> void
         def initialize(left_operand:, operator:, right_operand:, lineno:)
           @left_operand = left_operand
           @operator = operator
@@ -72,11 +72,11 @@ module Lrama
 
       class Rule
         attr_reader :left_token #: Lexer::Token::Base
-        attr_reader :operator #: Symbol
+        attr_reader :operator #: ::Symbol
         attr_reader :right_token #: Lexer::Token::Base
         attr_reader :lineno #: Integer
 
-        # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> void
+        # @rbs (left_token: Lexer::Token::Base, operator: ::Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> void
         def initialize(left_token:, operator:, right_token:, lineno:)
           @left_token = left_token
           @operator = operator
@@ -119,7 +119,7 @@ module Lrama
       end
 
       # Store a raw declaration for delayed expansion.
-      # @rbs (left_operand: Lexer::Token::Base, operator: Symbol, right_operand: Lexer::Token::Base, lineno: Integer) -> Declaration
+      # @rbs (left_operand: Lexer::Token::Base, operator: ::Symbol, right_operand: Lexer::Token::Base, lineno: Integer) -> Declaration
       def add_declaration(left_operand:, operator:, right_operand:, lineno:)
         decl = Declaration.new(
           left_operand: left_operand,
@@ -131,7 +131,7 @@ module Lrama
         decl
       end
 
-      # @rbs (left_token: Lexer::Token::Base, operator: Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Rule
+      # @rbs (left_token: Lexer::Token::Base, operator: ::Symbol, right_token: Lexer::Token::Base, lineno: Integer) -> Rule
       def add_rule(left_token:, operator:, right_token:, lineno:)
         rule = Rule.new(
           left_token: left_token,
@@ -187,7 +187,7 @@ module Lrama
 
       private
 
-      # @rbs (String token1, String token2, Array[Symbol] operators) -> bool
+      # @rbs (String token1, String token2, Array[::Symbol] operators) -> bool
       def pair_rule?(token1, token2, operators)
         @rules.any? do |rule|
           operators.include?(rule.operator) &&

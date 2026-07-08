@@ -119,6 +119,11 @@ module Lrama
 
     def compute_la_sources_for_conflicted_states: () -> untyped
 
+    # Public accessor for reporting: acc(sp) with tie expansion and
+    # layout injection, as used by the scanner_accepts construction.
+    # @rbs (State state) -> Set[String]
+    def pslr_acceptable_tokens: (State state) -> Set[String]
+
     private
 
     # @rbs (Grammar::Symbol accessing_symbol, Array[State::Item] kernels, Hash[Array[State::Item], State] states_created) -> [State, bool]
@@ -278,9 +283,17 @@ module Lrama
     # @rbs (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
     def compatible_split_state?: (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
 
+    # Canonical LR(1) compatibility for %define pslr.tables canonical-lr:
+    # states merge only when their kernel lookahead sets are identical,
+    # so unresolved-conflict reports are not merged across contexts.
+    # @rbs (State state, State::lookahead_set filtered_lookaheads) -> bool
+    def canonical_lookaheads_match?: (State state, State::lookahead_set filtered_lookaheads) -> bool
+
     # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
     def pslr_state_signature: (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[ Integer, String? ]]
 
+    # Pair-based PSLR compatibility (Def 3.4.3, reduced to token pairs as
+    # recommended by section 3.4.3 for splitting performance).
     # @rbs (Set[String] left_acc, Set[String] right_acc) -> bool
     def pslr_compatible_accept_sets?: (Set[String] left_acc, Set[String] right_acc) -> bool
 
@@ -340,6 +353,11 @@ module Lrama
 
     # @rbs (Logger logger) -> void
     def validate_pslr_scanner_conflicts!: (Logger logger) -> void
+
+    # Pure mode owns lexical analysis completely, so every terminal must
+    # be producible by the pseudo-scanner.
+    # @rbs (Logger logger) -> void
+    def validate_pslr_pure_coverage!: (Logger logger) -> void
 
     # @rbs (State::ScannerAccepts::Conflict conflict) -> String
     def pslr_scanner_conflict_message: (State::ScannerAccepts::Conflict conflict) -> String
