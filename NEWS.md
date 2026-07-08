@@ -40,6 +40,142 @@ program: args_list(f_opt(number), opt_tail(string), number)
 
 https://github.com/ruby/lrama/pull/779
 
+### [EXPERIMENTAL] Support core PSLR(1) parser generation
+
+Added experimental support for generating a PSLR(1)-style parser based on this dissertation.
+https://open.clemson.edu/all_dissertations/519/
+
+This adds the following PSLR-related grammar directives and integration points:
+
+- `%define lr.type pslr` enables PSLR parser generation
+- `%token-pattern` declares token candidates and their regular expressions for PSLR-aware lexical disambiguation
+- `%lex-prec` declares explicit lexical precedence for overlapping token patterns
+- `%symbol-set` declares reusable sets of terminal tokens for PSLR lexical declarations
+- `%lex-tie` expands parser-state acceptable-token sets for tied terminals
+- `%lex-no-tie` records an explicit no-tie decision for terminals with overlapping token patterns
+- `YYLAYOUT*` token patterns are recognized in every parser state and discarded by PSLR-aware lexers
+- `%define pslr.max-states` and `%define pslr.max-state-ratio` are Lrama-specific safety guards for state growth
+- `%define api.pslr.state-member` names the parser-state field to be shared with the lexer when using the generated helper macros
+
+Typical usage looks like this:
+
+```yacc
+%define api.pure
+%define lr.type pslr
+%define api.pslr.state-member current_state
+
+%parse-param {struct parse_params *p}
+%lex-param {struct parse_params *p}
+
+%token-pattern RSHIFT />>/ "right shift"
+%token-pattern RANGLE />/ "right angle"
+%token-pattern ID /[a-z]+/
+
+%lex-no-tie RANGLE RSHIFT
+```
+
+In this setup, `%token-pattern` lists the tokens that the generated pseudo-scanner FSA should consider, and
+`%lex-no-tie` records that `RANGLE` and `RSHIFT` should not be treated as tied tokens. In a template-closing
+parser state only `RANGLE` is syntactically acceptable, while a shift-expression state accepts `RSHIFT`; PSLR
+state splitting and scanner profiles choose between the two without a global shortest-match rule. Use `%lex-prec`
+for real lexical precedence relations, such as comment patterns that need a shortest-match or longest-match rule
+in every parser context.
+
+For normal parser-state scanner rows, unresolved pseudo-scanner conflicts are not resolved by token declaration
+order. They are reported as errors so the grammar can add an explicit `%lex-prec`, `%lex-tie`, or `%lex-no-tie`
+declaration. For syntax-error handling, Lrama also emits a fallback scanner row. The fallback row first applies
+explicit PSLR lexical precedence declarations. If a scanner conflict remains unresolved only because it is not a
+pseudo-scanner conflict for any parser state, the fallback row completes the decision with scanner-default rules:
+length conflicts use longest match and identity conflicts use token declaration order only for token pairs without
+an explicit identity precedence relation. These defaults are composed with the explicit graph, so explicit identity
+precedence is still honored when fallback length precedence is needed. For normal parser-state rows, explicit
+precedence cycles remain unresolved and are reported as PSLR scanner conflicts. For the syntax-error fallback row
+only, if explicit PSLR precedence plus fallback length defaults still do not determine a unique identity winner,
+Lrama completes the fallback decision with traditional token declaration order so that a token-pattern match is
+returned whenever `M(input, T0)` is non-empty. If no token pattern matches at all, the PSLR helper consumes one
+byte and returns `YYUNDEF` as a character-token fallback, so error paths do not loop forever.
+
+`%lex-prec` uses ASCII spellings for the PSLR lexical precedence operators:
+
+| Lrama | Meaning |
+|---|---|
+| `<~` | identity conflict: right token wins; length conflict: longest match wins |
+| `<-` | identity conflict: right token wins |
+| `-~` | length conflict: longest match wins |
+| `<<` | identity and length conflicts: right token wins |
+| `-<` | length conflict: right token wins |
+| `<s` | identity conflict: right token wins; length conflict: shortest match wins |
+| `-s` | length conflict: shortest match wins |
+
+The `<s` and `-s` operators make the right token's match length win when it is shorter. They are useful for cases
+such as comment tokens, especially autolength conflicts like `%lex-prec COM -s COM`. They should not be used to
+paper over context-sensitive token choices such as `>` versus `>>`; those cases should be handled by PSLR state
+splitting plus `%lex-no-tie` when the tokens are intentionally not tied.
+
+Contradictory length precedence declarations are rejected instead of being silently overwritten. For example,
+declaring both `%lex-prec A -~ B` and `%lex-prec A -s B` reports the token pair, the two operators and lines, and
+the scan direction where the contradiction occurs.
+
+Lexical ties are separate from precedence. For example:
+
+```yacc
+%token-pattern IF /if/
+%token-pattern ID /[a-z]+/
+%symbol-set keywords IF
+%lex-tie ID keywords
+%lex-prec ID <~ keywords
+```
+
+Here, `IF` can be considered when the parser state accepts `ID`, but `%lex-tie` does not choose a winner.
+The `%lex-prec ID <~ keywords` declaration resolves the `if` identity conflict in favor of `IF` while keeping
+longer identifiers such as `ifx` as `ID`.
+
+When both operands of `%lex-tie` are explicit tokens, Lrama ties them even if their token patterns do not conflict.
+When either operand is a `%symbol-set` or `yyall`, Lrama follows the PSLR paper and ties only token pairs that have
+a pairwise scanner conflict. This avoids unnecessary transitive lexical ties and the pseudo-scanner conflicts they
+would create.
+
+`%lex-no-tie` suppresses lexical tie candidate warnings; it does not break a final transitive tie closure. Generic
+declarations such as `%lex-no-tie yyall yyall` can suppress broad candidate reports, and a more specific `%lex-tie`
+can still tie the relevant token pair.
+
+Token patterns named `YYLAYOUT` or starting with `YYLAYOUT` are layout tokens. They are included in every
+parser-state scanner row and should be consumed and skipped by the PSLR-aware lexer instead of being returned to
+the parser. The generated helpers include `YYPSLR_TOKEN_IS_LAYOUT(Token)` and the structured
+`YYPSLR_PSEUDO_SCAN_RESULT(...)` API for this purpose.
+
+`yy_pseudo_scan_result` is a low-level scanner helper and may report a layout token with `result->is_layout = 1`.
+A PSLR-aware `yylex` must consume that text, keep the same parser state, and scan the remaining input instead of
+passing the layout token to the parser.
+
+The generated PSLR scanner FSA considers terminals declared with `%token-pattern` and character literal terminals
+for which Lrama can synthesize an exact-match implicit token pattern. Grammar terminals without either a token
+pattern or a supported literal spelling remain outside the generated pseudo-scanner helper. Thus, the paper's `T0`
+fallback token set corresponds here to the set of terminals known to the generated scanner FSA. Parser-state rows
+use the subset accepted by the current state plus tied tokens and layout tokens. The fallback row uses the whole
+generated scanner universe so error handling can still identify and consume a token when the current parser state
+has no normal scanner decision.
+
+`%token-pattern` currently uses an ASCII byte-oriented regular-expression subset for PSLR pseudo scanning.
+Supported constructs are literals, escaped literals such as `\/`, `\*`, `\+`, `\?`, `\(`, `\)`, `\[`, `\]`,
+and `\\`, grouping with `(...)`, alternation with `|`, repetition operators `*`, `+`, `?`, character classes with
+escapes such as `[\]]`, `[\\]`, and `[\n\t\r]`, ranges such as `[a-z]`, negated classes such as `[^*]`, common
+escapes such as `\n`, `\t`, and `\r`, and `.`. The `.` operator matches ASCII bytes except newline; negated
+character classes range over ASCII bytes. Unicode properties and full Ruby/Onigmo regexp syntax are not supported.
+Unsupported or malformed constructs are rejected during generation rather than silently reinterpreted. Nullable
+token patterns such as `//`, `/()/`, `/a*/`, `/a?/`, and `/a|/` are generation errors because PSLR token lexemes
+must be non-empty.
+
+When the parser and lexer share a context through `%parse-param` / `%lex-param`, the generated header also
+provides helpers such as `YYPSLR_PSEUDO_SCAN(...)`, so the lexer can choose a token based on the current parser
+state. The paper-compatible scanning path needs the lexer to pass the unconsumed input prefix, not only an
+already-decided token fragment, so legacy external lexer bridges may still be limited by the text they provide.
+
+PSLR parsers enable a lightweight LAC check in the generated parser so syntax errors caused by LR state merging,
+default reductions, or `%nonassoc` error actions are detected before user semantic actions are run for the bad
+lookahead. PSLR support is still experimental. Scoped lexical declarations, lexical nonterminals, and `%lex`
+are not implemented yet. If you find any bugs, please report them.
+
 ## Lrama 0.7.1 (2025-12-24)
 
 ### Optimize IELR
