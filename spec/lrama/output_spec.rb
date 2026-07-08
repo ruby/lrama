@@ -247,6 +247,7 @@ RSpec.describe Lrama::Output do
         lex_param: "struct parse_params *p",
         pslr_defined?: true,
         pslr_state_member: "current_state",
+        parse_lac_full?: true,
         token_actions: []
       )
     end
@@ -525,6 +526,93 @@ RSpec.describe Lrama::Output do
       expect(rendered_header).to include("yypslr_scan_result")
       expect(rendered_header).to include("YYSETSTATE_CONTEXT(CurrentState)")
       expect(rendered_header).to include("YYPSLR_PSEUDO_SCAN(Context, Input, InputLen, MatchLength)")
+    end
+  end
+
+  describe "LAC (%define parse.lac)" do
+    def render_grammar(text)
+      grammar = Lrama::Parser.new(text, "lac_test.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      if grammar.pslr_defined?
+        states.compute_pslr
+      elsif grammar.ielr_defined?
+        states.compute_ielr
+      end
+      out = StringIO.new
+      Lrama::Output.new(
+        out: out,
+        output_file_path: "lac_test.c",
+        template_name: "bison/yacc.c",
+        grammar_file_path: "lac_test.y",
+        context: Lrama::Context.new(states),
+        grammar: grammar
+      ).render
+      out.rewind
+      out.read
+    end
+
+    it "is enabled by default for PSLR parsers" do
+      rendered = render_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %lex-prec RANGLE -s RSHIFT
+        %%
+        program: RSHIFT | RANGLE
+      GRAMMAR
+
+      expect(rendered).to include("yy_lac_check_")
+    end
+
+    it "can be disabled with parse.lac none" do
+      rendered = render_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %define parse.lac none
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %lex-prec RANGLE -s RSHIFT
+        %%
+        program: RSHIFT | RANGLE
+      GRAMMAR
+
+      expect(rendered).not_to include("yy_lac_check_")
+    end
+
+    it "can be enabled independently of PSLR with parse.lac full" do
+      rendered = render_grammar(<<~GRAMMAR)
+        %define lr.type ielr
+        %define parse.lac full
+        %token NUM
+        %%
+        program: NUM
+      GRAMMAR
+
+      expect(rendered).to include("yy_lac_check_")
+    end
+
+    it "is disabled by default for non-PSLR parsers" do
+      rendered = render_grammar(<<~GRAMMAR)
+        %token NUM
+        %%
+        program: NUM
+      GRAMMAR
+
+      expect(rendered).not_to include("yy_lac_check_")
+    end
+
+    it "rejects invalid parse.lac values" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "lac_test.y").parse
+        %define parse.lac sometimes
+        %token NUM
+        %%
+        program: NUM
+      GRAMMAR
+      grammar.prepare
+
+      expect { grammar.validate! }.to raise_error(/parse\.lac must be "full" or "none"/)
     end
   end
 end

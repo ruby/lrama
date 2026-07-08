@@ -1062,7 +1062,7 @@ int yydebug;
 # define YYMAXDEPTH 10000
 #endif
 
-<%- if output.pslr_enabled? -%>
+<%- if output.lac_enabled? -%>
 <%= output.pslr_lac_function %>
 <%- end -%>
 
@@ -1087,7 +1087,7 @@ yypcontext_expected_tokens (const yypcontext_t *yyctx,
 {
   /* Actual size of YYARG. */
   int yycount = 0;
-<%- if output.pslr_enabled? -%>
+<%- if output.lac_enabled? -%>
   int yyx;
   for (yyx = 0; yyx < YYNTOKENS; ++yyx)
     if (yyx != YYSYMBOL_YYerror
@@ -1897,7 +1897,7 @@ yybackup:
 
   /* First try to decide what to do without reference to lookahead token.  */
   yyn = yypact[yystate];
-<%- if output.pslr_enabled? -%>
+<%- if output.lac_enabled? -%>
   if (yypact_value_is_default (yyn) && yydefact[yystate] != 0)
     {
       if (yychar == YYEMPTY)
@@ -1999,7 +1999,7 @@ yybackup:
       YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
     }
 
-<%- if output.pslr_enabled? -%>
+<%- if output.lac_enabled? -%>
   if (!yy_lac_check_ (yyss, yyssp, yytoken))
     goto yyerrlab;
 <%- end -%>

@@ -409,6 +409,13 @@ module Lrama
       @grammar.pslr_defined?
     end
 
+    # Check if LAC (lookahead correction) is enabled.
+    # Defaults to full for PSLR parsers; any parser type can opt in
+    # with %define parse.lac full (section 3.5.2 is orthogonal to PSLR).
+    def lac_enabled?
+      @grammar.parse_lac_full?
+    end
+
     # Check if PSLR scanner tables are available.
     def pslr_scanner_enabled?
       scanner_fsa = @context.states.scanner_fsa
@@ -735,7 +742,7 @@ module Lrama
     end
 
     def pslr_lac_function
-      return "" unless pslr_enabled?
+      return "" unless lac_enabled?
 
       <<~C_CODE
 

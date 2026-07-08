@@ -360,6 +360,28 @@ module Lrama
       parse_pslr_positive_float('pslr.max-state-ratio')
     end
 
+    # LAC (lookahead correction) setting from %define parse.lac.
+    # PSLR parsers default to full because exploratory parses are what
+    # keep merged-state pseudo-scanning canonical-equivalent; other
+    # parser types default to none for Bison compatibility.
+    # @rbs () -> String
+    def parse_lac
+      value = @define['parse.lac']
+      return (pslr_defined? ? 'full' : 'none') if value.nil? || value.empty?
+
+      value
+    end
+
+    # @rbs () -> bool
+    def parse_lac_full?
+      parse_lac == 'full'
+    end
+
+    # @rbs () -> bool
+    def parse_lac_explicit_none?
+      @define['parse.lac'] == 'none'
+    end
+
     # @rbs () -> Array[Grammar::TokenPattern]
     def layout_token_patterns
       @token_patterns.select(&:layout?)
@@ -636,6 +658,8 @@ module Lrama
 
     # @rbs () -> void
     def validate_pslr_configuration!
+      validate_parse_lac!
+
       return unless pslr_defined?
 
       member = pslr_state_member
@@ -645,6 +669,15 @@ module Lrama
 
       pslr_max_states
       pslr_max_state_ratio
+    end
+
+    # @rbs () -> void
+    def validate_parse_lac!
+      value = @define['parse.lac']
+      return if value.nil? || value.empty?
+      return if %w[full none].include?(value)
+
+      raise %(%define parse.lac must be "full" or "none", got "#{value}".)
     end
 
     # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
