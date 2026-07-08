@@ -678,6 +678,7 @@ module Lrama
     # @rbs () -> void
     def validate_pslr_configuration!
       validate_parse_lac!
+      validate_pslr_lexer!
 
       return unless pslr_defined?
 
