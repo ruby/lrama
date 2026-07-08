@@ -33,8 +33,10 @@ module Lrama
 
         attr_reader current_tokens: Array[String]
 
-        # @rbs (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String]) -> void
-        def initialize: (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String]) -> void
+        attr_reader witness: String?
+
+        # @rbs (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String], ?witness: String?) -> void
+        def initialize: (parser_state_id: Integer?, scanner_state_id: Integer, shorter_tokens: Array[String], selected_shorter_token: String?, current_tokens: Array[String], ?witness: String?) -> void
       end
 
       class ProfileOutcome
@@ -64,8 +66,8 @@ module Lrama
       end
 
       class ProfileResolver
-        # @rbs (Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
-        def initialize: (Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
+        # @rbs (Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
+        def initialize: (Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
 
         # @rbs (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
         def resolve: (Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> ProfileOutcome
@@ -90,6 +92,16 @@ module Lrama
         # @rbs (String candidate, Set[String] current_tokens) -> bool
         def fallback_identity_winner?: (String candidate, Set[String] current_tokens) -> bool
 
+        # Mark the %lex-prec rules that made the profile decision as used.
+        # Only normal-row scanner_accepts construction tracks usage:
+        # the fallback row spans the whole token universe and exploratory
+        # resolutions (state compatibility probes) must not mark rules.
+        # @rbs (String selected_shorter_token, Set[String] current_tokens) -> void
+        def mark_shorter_win_rules_used: (String selected_shorter_token, Set[String] current_tokens) -> void
+
+        # @rbs (String winner, Set[String] shorter_tokens, Set[String] current_tokens) -> void
+        def mark_longer_win_rules_used: (String winner, Set[String] shorter_tokens, Set[String] current_tokens) -> void
+
         # @rbs (String candidate, String other) -> bool
         def token_order_precedes?: (String candidate, String other) -> bool
 
@@ -102,19 +114,19 @@ module Lrama
 
         attr_reader conflicts: Array[Conflict]
 
-        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
-        def initialize: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
+        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
+        def initialize: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
 
         # @rbs () -> void
         def compute: () -> void
 
         private
 
-        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
-        def visit_transitions: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited, String path) -> void
+        def visit_transitions: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited, String path) -> void
 
-        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
-        def visit_state: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited) -> void
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited, String path) -> void
+        def visit_state: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited, String path) -> void
 
         # @rbs (ScannerFSA::State fsa_state) -> Set[String]
         def current_acceptable_tokens: (ScannerFSA::State fsa_state) -> Set[String]

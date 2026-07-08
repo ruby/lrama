@@ -229,7 +229,7 @@ module Lrama
         attr_reader :table #: Hash[Integer, Grammar::TokenPattern]
         attr_reader :conflicts #: Array[Conflict]
 
-        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer]) -> void
+        # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
         def initialize(scanner_fsa, lex_prec, length_prec, acceptable_tokens, parser_state_id = nil, fallback: false, token_order: {}, track_rule_usage: false)
           @scanner_fsa = scanner_fsa
           @resolver = ProfileResolver.new(lex_prec, length_prec, fallback: fallback, token_order: token_order, track_rule_usage: track_rule_usage)
