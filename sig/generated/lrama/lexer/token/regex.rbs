@@ -1,0 +1,15 @@
+# Generated from lib/lrama/lexer/token/regex.rb with RBS::Inline
+
+module Lrama
+  class Lexer
+    module Token
+      # Token class for regex patterns used in %token-pattern directive
+      # Example: /[a-zA-Z_][a-zA-Z0-9_]*/
+      class Regex < Base
+        # Returns the regex pattern without the surrounding slashes
+        # @rbs () -> String
+        def pattern: () -> String
+      end
+    end
+  end
+end

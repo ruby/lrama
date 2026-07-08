@@ -8,6 +8,8 @@ module Lrama
 
         attr_accessor created_lhs_list: Array[Lexer::Token::Base]
 
+        attr_reader expansion_args: Hash[String, Array[String]]
+
         # @rbs () -> void
         def initialize: () -> void
 
@@ -22,6 +24,12 @@ module Lrama
 
         # @rbs (String lhs_s_value) -> Lexer::Token::Base?
         def created_lhs: (String lhs_s_value) -> Lexer::Token::Base?
+
+        # Register the argument symbol names for a parameterized rule expansion.
+        # Used by LexerContextClassifier to inherit context from arguments.
+        #
+        # @rbs (String lhs_s_value, Array[Lexer::Token::Base] args) -> void
+        def register_expansion_args: (String lhs_s_value, Array[Lexer::Token::Base] args) -> void
 
         # @rbs () -> Array[Rule]
         def redefined_rules: () -> Array[Rule]

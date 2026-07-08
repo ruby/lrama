@@ -157,6 +157,7 @@ module Lrama
               lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: token.location)
               replaced_rhs << lhs_token
               @parameterized_resolver.created_lhs_list << lhs_token
+              @parameterized_resolver.register_expansion_args(lhs_s_value, token.args)
               parameterized_rule.rhs.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: token.lhs_tag || parameterized_rule.tag)
                 rule_builder.lhs = lhs_token
