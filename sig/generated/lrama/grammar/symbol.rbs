@@ -76,6 +76,9 @@ module Lrama
       # @rbs () -> bool
       def character?: () -> bool
 
+      # @rbs () -> Integer
+      def character_code: () -> Integer
+
       # @rbs () -> bool
       def eof_symbol?: () -> bool
 

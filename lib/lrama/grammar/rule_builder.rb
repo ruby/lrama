@@ -174,6 +174,9 @@ module Lrama
               lhs_id = Grammar::Symbol::Id.new(name: lhs_s_value, kind: :ident)
               replaced_rhs << lhs_id
               @parameterized_resolver.created_lhs_list << lhs_id
+              @parameterized_resolver.register_expansion_args(lhs_s_value, node.args.map { |arg|
+                arg.is_a?(Node::RuleRhs::InstantiateRule) ? bindings.concatenated_args_str(arg) : arg.name
+              })
               parameterized_rule.rhs.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: node.lhs_tag || parameterized_rule.tag)
                 rule_builder.lhs = lhs_id

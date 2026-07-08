@@ -1,0 +1,16 @@
+# Generated from lib/lrama/grammar/node/lexer_context_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class LexerContextDecl < Base
+        attr_reader name: String
+
+        attr_reader symbols: Array[Lexer::Token::Base]
+
+        # @rbs (name: String, symbols: Array[Lexer::Token::Base], location: Lexer::Location) -> void
+        def initialize: (name: String, symbols: Array[Lexer::Token::Base], location: Lexer::Location) -> void
+      end
+    end
+  end
+end

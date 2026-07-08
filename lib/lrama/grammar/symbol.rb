@@ -108,6 +108,50 @@ module Lrama
         term? && id.char?
       end
 
+      # @rbs () -> Integer
+      def character_code
+        # Ignore ' on both sides.
+        code =
+          case name[1..-2]
+          when "\\a"
+            7
+          when "\\b"
+            8
+          when "\\f"
+            12
+          when "\\n"
+            10
+          when "\\r"
+            13
+          when "\\t"
+            9
+          when "\\v"
+            11
+          when "\\\""
+            34
+          when "\\'"
+            39
+          when "\\?"
+            63
+          when "\\\\"
+            92
+          when /\A\\([0-7]{1,3})\z/
+            Integer($1, 8)
+          when /\A\\[xuU]([0-9a-fA-F]+)\z/
+            Integer($1, 16)
+          when /\A(.)\z/
+            $1&.bytes&.first
+          end
+
+        raise "Unknown Char s_value #{name}" unless code
+
+        unless (1..255).cover?(code)
+          raise "Invalid character: `#{name}`. Character code must be between 1 and 255."
+        end
+
+        code
+      end
+
       # @rbs () -> bool
       def eof_symbol?
         !!@eof_symbol

@@ -1,0 +1,30 @@
+# Generated from lib/lrama/grammar/lexer_context.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    # Represents a lexer context defined by %lexer-context directive.
+    #
+    # Example:
+    #   %lexer-context BEG keyword_if keyword_unless '(' '[' '{'
+    #
+    # The bitmask value is automatically assigned by definition order (1 << index).
+    class LexerContext
+      attr_reader name: String
+
+      attr_reader index: Integer
+
+      attr_reader symbols: Array[Lexer::Token::Ident]
+
+      # @rbs (name: String, index: Integer) -> void
+      def initialize: (name: String, index: Integer) -> void
+
+      # Bitmask value for this context (1 << index).
+      # @rbs () -> Integer
+      def bitmask: () -> Integer
+
+      # Add symbols that belong to this context.
+      # @rbs (Array[Lexer::Token::Ident] syms) -> void
+      def add_symbols: (Array[Lexer::Token::Ident] syms) -> void
+    end
+  end
+end

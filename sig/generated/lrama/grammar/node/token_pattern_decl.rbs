@@ -1,0 +1,20 @@
+# Generated from lib/lrama/grammar/node/token_pattern_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class TokenPatternDecl < Base
+        attr_reader id: Lexer::Token::Ident
+
+        attr_reader pattern: Lexer::Token::Regex
+
+        attr_reader alias_name: String?
+
+        attr_accessor tag: Lexer::Token::Tag?
+
+        # @rbs (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, alias_name: String?, location: Lexer::Location) -> void
+        def initialize: (id: Lexer::Token::Ident, pattern: Lexer::Token::Regex, alias_name: String?, location: Lexer::Location) -> void
+      end
+    end
+  end
+end
