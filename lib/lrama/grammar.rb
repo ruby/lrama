@@ -367,6 +367,22 @@ module Lrama
       @define['api.pslr.lexer'] == 'generated'
     end
 
+    # Base table construction for PSLR: extended IELR (default) or
+    # canonical LR(1) for debugging unresolved-conflict reports whose
+    # contexts would otherwise be merged (section 3.4.3).
+    # @rbs () -> String
+    def pslr_tables
+      value = @define['pslr.tables']
+      return 'ielr' if value.nil? || value.empty?
+
+      value
+    end
+
+    # @rbs () -> bool
+    def pslr_canonical_tables?
+      pslr_defined? && pslr_tables == 'canonical-lr'
+    end
+
     # Terminals that the pseudo-scanner cannot produce: real terminals
     # used by the grammar that have no %token-pattern (explicit or
     # synthesized). Pure mode requires this list to be empty; bridge
@@ -682,8 +698,11 @@ module Lrama
     def validate_pslr_configuration!
       validate_parse_lac!
       validate_pslr_lexer!
+      validate_pslr_tables!
 
       return unless pslr_defined?
+
+      validate_no_layout_tokens_in_rules!
 
       member = pslr_state_member
       if member && member !~ /\A[a-zA-Z_][a-zA-Z0-9_]*\z/
@@ -703,6 +722,20 @@ module Lrama
       raise %(%define parse.lac must be "full" or "none", got "#{value}".)
     end
 
+    # Layout tokens are consumed by the pseudo-scanner and never reach
+    # the parser, so they must not appear in grammar rules (section 3.6).
+    # @rbs () -> void
+    def validate_no_layout_tokens_in_rules!
+      @rules.each do |rule|
+        rule.rhs.each do |sym|
+          next unless sym.term?
+          next unless sym.id.s_value.start_with?("YYLAYOUT")
+
+          raise "layout token #{sym.id.s_value} must not appear in a grammar rule (line #{rule.lineno})."
+        end
+      end
+    end
+
     # @rbs () -> void
     def validate_pslr_lexer!
       value = @define['api.pslr.lexer']
@@ -715,6 +748,15 @@ module Lrama
       unless pslr_defined?
         raise "%define api.pslr.lexer generated requires %define lr.type pslr."
       end
+    end
+
+    # @rbs () -> void
+    def validate_pslr_tables!
+      value = @define['pslr.tables']
+      return if value.nil? || value.empty?
+      return if %w[ielr canonical-lr].include?(value)
+
+      raise %(%define pslr.tables must be "ielr" or "canonical-lr", got "#{value}".)
     end
 
     # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]
