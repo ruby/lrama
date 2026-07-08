@@ -284,6 +284,37 @@ RSpec.describe Lrama::Grammar do
           .to raise_error(RuntimeError, '%define pslr.max-state-ratio must be greater than or equal to 1.0, got "0.5".')
       end
     end
+
+    context 'when pslr.tables has an unknown value' do
+      before do
+        grammar.define = {
+          'lr.type' => 'pslr',
+          'pslr.tables' => 'lalr'
+        }
+      end
+
+      it 'raises an error' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, '%define pslr.tables must be "ielr" or "canonical-lr", got "lalr".')
+      end
+    end
+
+    context 'when a layout token appears in a grammar rule' do
+      it 'raises an error' do
+        y = <<~GRAMMAR
+          %define lr.type pslr
+          %token-pattern ID /[a-z]+/
+          %token-pattern YYLAYOUT_WS /[ ]+/
+          %%
+          program: ID YYLAYOUT_WS ID
+        GRAMMAR
+        grammar = Lrama::Parser.new(y, "layout_in_rule.y").parse
+        grammar.prepare
+
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, /layout token YYLAYOUT_WS must not appear in a grammar rule/)
+      end
+    end
   end
 
   describe "#finalize_lexical_ties!" do

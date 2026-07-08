@@ -68,17 +68,18 @@ module Lrama
     end
 
     # Simulate the FSA on input string starting from initial state
-    # Returns all accepting states reached during the scan
+    # Returns all accepting states reached during the scan.
+    # The walk is byte-oriented to match the generated C runtime.
     # @rbs (String input) -> Array[{state: State, position: Integer, token: Grammar::TokenPattern}]
     def scan(input)
       results = []
       current_state_id = 0
 
-      input.each_char.with_index do |char, index|
+      input.each_byte.with_index do |byte, index|
         current_state = @states[current_state_id]
         break unless current_state
 
-        next_state_id = current_state.transitions[char]
+        next_state_id = current_state.transitions[byte.chr]
         break unless next_state_id
 
         current_state_id = next_state_id
@@ -216,6 +217,7 @@ module Lrama
     def build_nfa
       nfa_states = []
       nfa_counter = [0]
+      @pattern_references = {}
 
       # Create NFA start state
       nfa_start = create_nfa_state(nfa_counter, nfa_states)
@@ -235,6 +237,10 @@ module Lrama
 
         # Mark end state as accepting
         end_state.accepting_token = token_pattern
+
+        # {NAME} may only reference patterns that are already defined, so
+        # register after a successful compile (no self/forward references).
+        @pattern_references[token_pattern.name] = token_pattern.regex_pattern
       end
 
       nfa_states
@@ -248,8 +254,11 @@ module Lrama
       state
     end
 
-    ASCII_CHARS = (0..127).map(&:chr).freeze #: Array[String]
-    ANY_CHARS = (ASCII_CHARS - ["\n"]).freeze #: Array[String]
+    # The input alphabet is bytes (0-255): keywords and operators are
+    # ASCII, and byte-oriented classes let multi-byte UTF-8 sequences
+    # pass through negated classes and dot unmodified.
+    BYTE_CHARS = (0..255).map(&:chr).freeze #: Array[String]
+    ANY_CHARS = (BYTE_CHARS - ["\n"]).freeze #: Array[String]
     DIGIT_CHARS = ("0".."9").to_a.freeze #: Array[String]
     WORD_CHARS = (("a".."z").to_a + ("A".."Z").to_a + DIGIT_CHARS + ["_"]).freeze #: Array[String]
     WHITESPACE_CHARS = [" ", "\t", "\n", "\r", "\f", "\v"].freeze #: Array[String]
@@ -329,6 +338,10 @@ module Lrama
           frag, i = compile_expression(pattern, i + 1, counter, states, ")")
           fragments << frag
           next
+        when '{'
+          frag, i = compile_pattern_reference(pattern, i, counter, states)
+          fragments << frag
+          next
         when ')'
           raise PatternError, "unmatched close group at offset #{i}"
         when '.'
@@ -352,6 +365,31 @@ module Lrama
     # @rbs (String? stop_char) -> String
     def empty_sequence_message(stop_char)
       stop_char ? "empty groups are not allowed" : "empty patterns are not allowed"
+    end
+
+    # Compile a {NAME} reference by inlining the body of an already
+    # defined %token-pattern (paper Fig 3.2c/3.2d idiom). Self and
+    # forward references are rejected because @pattern_references only
+    # contains patterns compiled before the current one.
+    # @rbs (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [Fragment, Integer]
+    def compile_pattern_reference(pattern, offset, counter, states)
+      close = pattern.index("}", offset)
+      raise PatternError, "unclosed pattern reference at offset #{offset}" unless close
+
+      name = pattern[offset + 1...close]
+      unless name&.match?(/\A[a-zA-Z_][a-zA-Z0-9_]*\z/)
+        raise PatternError, "invalid pattern reference {#{name}} at offset #{offset} (escape a literal brace as \\{)"
+      end
+
+      referenced = (@pattern_references || {})[name]
+      unless referenced
+        raise PatternError, "undefined or forward pattern reference {#{name}} (references must name an earlier %token-pattern)"
+      end
+
+      fragment, consumed = compile_expression(referenced, 0, counter, states)
+      raise PatternError, "unexpected trailing input in referenced pattern {#{name}}" if consumed < referenced.length
+
+      [fragment, close + 1]
     end
 
     # @rbs (String pattern, Integer offset, Array[Integer] counter, Array[NFAState] states) -> [Fragment, Integer]
@@ -441,7 +479,7 @@ module Lrama
       end
 
       if negated
-        chars = ASCII_CHARS - chars
+        chars = BYTE_CHARS - chars
       end
 
       chars.uniq

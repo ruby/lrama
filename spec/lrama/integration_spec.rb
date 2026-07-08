@@ -316,6 +316,52 @@ RSpec.describe "integration" do
       expect(status.success?).to be false
     end
 
+    it "computes canonical LR(1) tables when pslr.tables is canonical-lr" do
+      base_source = <<~GRAMMAR
+        %token-pattern LT /</
+        %token-pattern START /@/
+        %token-pattern MARK /#/
+        %token-pattern RSHIFT />>/
+        %token-pattern RANGLE />/
+        %token-pattern ID /[a-z]+/
+        %lex-no-tie RANGLE RSHIFT
+
+        %%
+
+        program
+          : template_expr
+          | shift_expr
+          ;
+
+        template_expr
+          : LT shared RANGLE
+          ;
+
+        shift_expr
+          : START shared RSHIFT ID
+          ;
+
+        shared
+          : MARK
+          ;
+      GRAMMAR
+
+      states_by_tables = ["ielr", "canonical-lr"].map do |tables|
+        source = "%define lr.type pslr\n%define pslr.tables #{tables}\n" + base_source
+        grammar = Lrama::Parser.new(source, "integration/pslr_tables_#{tables}.y").parse
+        grammar.prepare
+        grammar.validate!
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        states.compute_pslr
+        states
+      end
+
+      ielr_states, canonical_states = states_by_tables
+      expect(canonical_states.states_count).to be >= ielr_states.states_count
+      expect(canonical_states.scanner_accepts_table).not_to be_nil
+    end
+
     it "rejects pure mode when a terminal has no token pattern" do
       grammar_text = <<~GRAMMAR
         %define lr.type pslr

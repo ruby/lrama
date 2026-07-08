@@ -348,6 +348,13 @@ module Lrama
       end
     end
 
+    # Public accessor for reporting: acc(sp) with tie expansion and
+    # layout injection, as used by the scanner_accepts construction.
+    # @rbs (State state) -> Set[String]
+    def pslr_acceptable_tokens(state)
+      acceptable_tokens_for_pslr(state)
+    end
+
     private
 
     # @rbs (Grammar::Symbol accessing_symbol, Array[State::Item] kernels, Hash[Array[State::Item], State] states_created) -> [State, bool]
@@ -1083,14 +1090,32 @@ module Lrama
 
     # @rbs (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
     def compatible_split_state?(state, filtered_lookaheads, pslr_lookaheads = nil)
-      return false unless state.is_compatible?(filtered_lookaheads)
-      return true unless @pslr_split_enabled && @scanner_fsa
-
       pslr_lookaheads ||= filtered_lookaheads
+
+      if @pslr_split_enabled && @grammar.pslr_canonical_tables?
+        return false unless canonical_lookaheads_match?(state, pslr_lookaheads)
+      else
+        return false unless state.is_compatible?(filtered_lookaheads)
+      end
+      return true unless @pslr_split_enabled && @scanner_fsa
 
       existing_acc = acceptable_tokens_for_pslr(state)
       candidate_acc = acceptable_tokens_for_pslr(state, pslr_lookaheads)
       pslr_compatible_accept_sets?(existing_acc, candidate_acc)
+    end
+
+    # Canonical LR(1) compatibility for %define pslr.tables canonical-lr:
+    # states merge only when their kernel lookahead sets are identical,
+    # so unresolved-conflict reports are not merged across contexts.
+    # @rbs (State state, State::lookahead_set filtered_lookaheads) -> bool
+    def canonical_lookaheads_match?(state, filtered_lookaheads)
+      return true unless state.lookaheads_recomputed
+
+      state.kernels.all? do |kernel|
+        existing = state.item_lookahead_set[kernel] || []
+        candidate = filtered_lookaheads[kernel] || []
+        existing.to_set == candidate.to_set
+      end
     end
 
     # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
