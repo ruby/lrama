@@ -63,19 +63,19 @@ module Lrama
 
         io << "PSLR Scanner Accepts\n\n"
         states.states.each do |state|
-          cells = accepting_states.filter_map do |fsa_state|
+          cells = accepting_states.map {|fsa_state|
             token = scanner_accepts[state.id, fsa_state.id]
             "ss#{fsa_state.id}=>#{token.name}" if token
-          end
+          }.compact
           next if cells.empty?
 
           io << "    State #{state.id}: #{cells.join(' ')}\n"
         end
 
-        fallback_cells = accepting_states.filter_map do |fsa_state|
+        fallback_cells = accepting_states.map {|fsa_state|
           token = scanner_accepts.fallback_table[fsa_state.id]
           "ss#{fsa_state.id}=>#{token.name}" if token
-        end
+        }.compact
         io << "    Fallback: #{fallback_cells.join(' ')}\n" unless fallback_cells.empty?
         io << "\n"
       end
