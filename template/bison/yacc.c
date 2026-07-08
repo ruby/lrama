@@ -602,6 +602,9 @@ static const <%= output.int_type_for(output.context.yyr2) %> yyr2[] =
 #ifndef YYSETSTATE_CONTEXT
 # define YYSETSTATE_CONTEXT(CurrentState) ((void) 0)
 #endif
+#ifndef YYPSLR_SET_PARSER_STATE
+# define YYPSLR_SET_PARSER_STATE(State) ((void) 0)
+#endif
 <%- end -%>
 
 int
@@ -1810,6 +1813,7 @@ yysetstate:
   YY_IGNORE_USELESS_CAST_END
 <%- if output.pslr_enabled? -%>
   YYSETSTATE_CONTEXT (yystate);
+  YYPSLR_SET_PARSER_STATE (yystate);
 <%- end -%>
   YY_STACK_PRINT (yyss, yyssp<%= output.user_args %>);
 

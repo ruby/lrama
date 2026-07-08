@@ -416,6 +416,12 @@ module Lrama
       @grammar.parse_lac_full?
     end
 
+    # Pure mode: the generated parser owns lexical analysis
+    # (%define api.pslr.lexer generated).
+    def pslr_pure_mode?
+      pslr_enabled? && @grammar.pslr_lexer_generated? && pslr_scanner_enabled?
+    end
+
     # Check if PSLR scanner tables are available.
     def pslr_scanner_enabled?
       scanner_fsa = @context.states.scanner_fsa
@@ -468,12 +474,22 @@ module Lrama
           #endif
 
           int yypslr_scan_with_layout (int parser_state, const char **input,
-                                       size_t *input_len, yypslr_scan_result *result);
+                                       size_t *input_len, YYSTYPE *yylvalp,
+                                       yypslr_scan_result *result);
 
           #ifndef YYPSLR_SCAN_WITH_LAYOUT
-          # define YYPSLR_SCAN_WITH_LAYOUT(ParserState, InputPtr, InputLenPtr, Result) \\
-            yypslr_scan_with_layout ((ParserState), (InputPtr), (InputLenPtr), (Result))
+          # define YYPSLR_SCAN_WITH_LAYOUT(ParserState, InputPtr, InputLenPtr, LvalPtr, Result) \\
+            yypslr_scan_with_layout ((ParserState), (InputPtr), (InputLenPtr), (LvalPtr), (Result))
           #endif
+        C_CODE
+      end
+
+      if pslr_pure_mode?
+        declarations << <<~C_CODE
+          /* Pure mode (%define api.pslr.lexer generated): the generated
+             parser owns lexical analysis. Give it the input before
+             calling yyparse. */
+          void yypslr_set_input (const char *input, size_t input_len);
         C_CODE
       end
 
@@ -1054,7 +1070,10 @@ module Lrama
       C_CODE
     end
 
-    # Generate token action dispatch function
+    # Generate token action dispatch function.
+    # yylval inside a %token-action refers to the semantic value slot the
+    # caller passes in, so token actions work with both the generated
+    # (pure-mode) lexer and a user yylex driving the bridge macros.
     def pslr_token_action_function
       return "" unless pslr_token_actions_enabled?
 
@@ -1063,9 +1082,13 @@ module Lrama
       lines << "/* PSLR token action dispatch */"
       lines << "/* Generated from %token-action declarations */"
       lines << ""
+      lines << "#define yylval (*yylvalp)"
       lines << "static void"
-      lines << "yypslr_token_action (int token, const char *yytext, int yyleng)"
+      lines << "yypslr_token_action (int token, const char *yytext, int yyleng, YYSTYPE *yylvalp)"
       lines << "{"
+      lines << "  YY_USE (yytext);"
+      lines << "  YY_USE (yyleng);"
+      lines << "  YY_USE (yylvalp);"
 
       @grammar.token_actions.each_with_index do |action, idx|
         token_id = @context.states.find_symbol_by_s_value!(action.token_name).token_id
@@ -1079,9 +1102,10 @@ module Lrama
       end
 
       lines << "}"
+      lines << "#undef yylval"
       lines << ""
-      lines << "#define YYPSLR_TOKEN_ACTION(Token, Text, Len) \\"
-      lines << "  yypslr_token_action ((Token), (Text), (Len))"
+      lines << "#define YYPSLR_TOKEN_ACTION(Token, Text, Len, LvalPtr) \\"
+      lines << "  yypslr_token_action ((Token), (Text), (Len), (LvalPtr))"
       lines.join("\n")
     end
 
@@ -1103,9 +1127,11 @@ module Lrama
          */
         int
         yypslr_scan_with_layout (int parser_state, const char **input,
-                                 size_t *input_len, yypslr_scan_result *result)
+                                 size_t *input_len, YYSTYPE *yylvalp,
+                                 yypslr_scan_result *result)
         {
           YYPSLR_LAYOUT_CLEAR ();
+          YY_USE (yylvalp);
 
           for (;;)
             {
@@ -1116,22 +1142,75 @@ module Lrama
 
               if (token == YYEOF)
                 {
-        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, 0);" : ""}
+        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, 0, yylvalp);" : ""}
                   return token;
                 }
 
               if (result->is_layout)
                 {
                   YYPSLR_LAYOUT_APPEND (*input, result->length);
-        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, result->length);" : ""}
+        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, result->length, yylvalp);" : ""}
                   *input += result->length;
                   *input_len -= (size_t)result->length;
                   continue;
                 }
 
-        #{pslr_token_actions_enabled? ? "      YYPSLR_TOKEN_ACTION (token, *input, result->length);" : ""}
+        #{pslr_token_actions_enabled? ? "      YYPSLR_TOKEN_ACTION (token, *input, result->length, yylvalp);" : ""}
               return token;
             }
+        }
+      C_CODE
+    end
+
+    # Generate the pure-mode lexer: yylex is emitted by the generator and
+    # drives the pseudo-scanner with the current parser state, so no user
+    # lexer is involved (%define api.pslr.lexer generated, section 3.1).
+    def pslr_generated_lexer_function
+      return "" unless pslr_pure_mode?
+
+      params = ["YYSTYPE *yylvalp"]
+      params << "YYLTYPE *yyllocp" if @grammar.locations
+      params << lex_param unless lex_param.empty?
+      unused = []
+      unused << "  YY_USE (yyllocp);" if @grammar.locations
+      unused << "  YY_USE (#{lex_param_name});" unless lex_param.empty?
+
+      <<~C_CODE
+
+        /* Pure-mode PSLR lexer: generated, owns the input cursor. */
+        static const char *yypslr_input_cursor = 0;
+        static size_t yypslr_input_remain = 0;
+        static int yypslr_parser_state = 0;
+
+        void
+        yypslr_set_input (const char *input, size_t input_len)
+        {
+          yypslr_input_cursor = input;
+          yypslr_input_remain = input_len;
+          yypslr_parser_state = 0;
+        }
+
+        #define YYPSLR_SET_PARSER_STATE(State) (yypslr_parser_state = (State))
+
+        static int
+        yylex (#{params.join(", ")})
+        {
+          yypslr_scan_result yypslr_result;
+          int yypslr_token;
+        #{unused.join("\n")}
+
+          yypslr_token = yypslr_scan_with_layout (yypslr_parser_state,
+                                                  &yypslr_input_cursor,
+                                                  &yypslr_input_remain,
+                                                  yylvalp,
+                                                  &yypslr_result);
+
+          if (yypslr_token == YYEMPTY || yypslr_token == YYEOF)
+            return yypslr_token;
+
+          yypslr_input_cursor += yypslr_result.length;
+          yypslr_input_remain -= (size_t) yypslr_result.length;
+          return yypslr_token;
         }
       C_CODE
     end
@@ -1152,8 +1231,9 @@ module Lrama
         length_precedences_table_code,
         pslr_layout_declarations,
         pseudo_scan_function,
-        pslr_layout_scan_function,
         pslr_token_action_function,
+        pslr_layout_scan_function,
+        pslr_generated_lexer_function,
       ]
 
       parts.join("\n")

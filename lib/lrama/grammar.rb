@@ -360,6 +360,28 @@ module Lrama
       parse_pslr_positive_float('pslr.max-state-ratio')
     end
 
+    # True when the generated parser owns lexical analysis completely
+    # (%define api.pslr.lexer generated, the paper's own model).
+    # @rbs () -> bool
+    def pslr_lexer_generated?
+      @define['api.pslr.lexer'] == 'generated'
+    end
+
+    # Terminals that the pseudo-scanner cannot produce: real terminals
+    # used by the grammar that have no %token-pattern (explicit or
+    # synthesized). Pure mode requires this list to be empty; bridge
+    # mode reports it so users know which tokens their yylex must keep
+    # producing.
+    # @rbs () -> Array[String]
+    def uncovered_pslr_terminals
+      covered = @token_patterns.map(&:name).to_set
+
+      terms.reject do |term|
+        term == eof_symbol || term == error_symbol || term == undef_symbol ||
+          covered.include?(term.id.s_value)
+      end.map {|term| term.id.s_value }
+    end
+
     # LAC (lookahead correction) setting from %define parse.lac.
     # PSLR parsers default to full because exploratory parses are what
     # keep merged-state pseudo-scanning canonical-equivalent; other
@@ -659,6 +681,7 @@ module Lrama
     # @rbs () -> void
     def validate_pslr_configuration!
       validate_parse_lac!
+      validate_pslr_lexer!
 
       return unless pslr_defined?
 
@@ -678,6 +701,20 @@ module Lrama
       return if %w[full none].include?(value)
 
       raise %(%define parse.lac must be "full" or "none", got "#{value}".)
+    end
+
+    # @rbs () -> void
+    def validate_pslr_lexer!
+      value = @define['api.pslr.lexer']
+      return if value.nil? || value.empty?
+
+      unless value == 'generated'
+        raise %(%define api.pslr.lexer must be "generated", got "#{value}".)
+      end
+
+      unless pslr_defined?
+        raise "%define api.pslr.lexer generated requires %define lr.type pslr."
+      end
     end
 
     # @rbs (Lexer::Token::Base operand) -> Array[Lexer::Token::Base]

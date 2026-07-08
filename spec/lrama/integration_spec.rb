@@ -284,6 +284,66 @@ RSpec.describe "integration" do
     end
   end
 
+  describe "PSLR pure mode (api.pslr.lexer generated)" do
+    def compile_pure_parser
+      tmpdir = Dir.tmpdir
+      grammar_file_path = fixture_path("integration/pslr_pure.y")
+      c_path = tmpdir + "/pslr_pure#{file_extension}"
+      h_path = tmpdir + "/pslr_pure.h"
+      obj_path = tmpdir + "/pslr_pure"
+
+      unless IntegrationHelper.compiled_parsers["pslr_pure"] && File.exist?(obj_path)
+        Lrama::Command.new(%W[-H#{h_path} -o#{c_path} #{grammar_file_path}]).run
+        exec_command("#{compiler} -Wall -O0 -g -I#{tmpdir} #{c_path} -o #{obj_path}")
+        IntegrationHelper.compiled_parsers["pslr_pure"] = true
+      end
+
+      obj_path
+    end
+
+    it "parses input with the generated lexer, skipping layout and running token actions" do
+      obj_path = compile_pure_parser
+
+      out, _err, status = Open3.capture3(obj_path, "1 + 23 +\t4")
+      expect(status.success?).to be true
+      expect(out).to eq("=> 28\n")
+    end
+
+    it "reports a syntax error for invalid input" do
+      obj_path = compile_pure_parser
+
+      _out, _err, status = Open3.capture3(obj_path, "1 + + 2")
+      expect(status.success?).to be false
+    end
+
+    it "rejects pure mode when a terminal has no token pattern" do
+      grammar_text = <<~GRAMMAR
+        %define lr.type pslr
+        %define api.pslr.lexer generated
+        %token NUM UNCOVERED
+        %token-pattern NUM /[0-9]+/
+
+        %%
+
+        start
+          : NUM
+          | UNCOVERED
+          ;
+      GRAMMAR
+      grammar = Lrama::Parser.new(grammar_text, "integration/pslr_pure_uncovered.y").parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_pslr
+      logger = Lrama::Logger.new
+      allow(logger).to receive(:error)
+
+      expect { states.validate!(logger) }.to raise_error(SystemExit)
+      expect(logger).to have_received(:error).with(a_string_including("UNCOVERED"))
+    end
+  end
+
   describe "user defined parameterized rules" do
     it "prints messages corresponding to rules" do
       expected = <<~STR
