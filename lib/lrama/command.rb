@@ -8,6 +8,7 @@ module Lrama
     def initialize(argv)
       @logger = Lrama::Logger.new
       @options = OptionParser.parse(argv)
+      Diagnostics::Color.setup(@options.color, $stderr)
       @tracer = Tracer.new(STDERR, **@options.trace_opts)
       @reporter = Reporter.new(**@options.report_opts)
       @warnings = Warnings.new(@logger, @options.warnings)

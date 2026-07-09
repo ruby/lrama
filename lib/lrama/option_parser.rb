@@ -11,6 +11,7 @@ module Lrama
     #   @trace: Array[String]
     #   @report: Array[String]
     #   @profile: Array[String]
+    #   @color: String?
 
     # @rbs (Array[String]) -> Lrama::Options
     def self.parse(argv)
@@ -23,6 +24,7 @@ module Lrama
       @trace = []
       @report = []
       @profile = []
+      @color = nil
     end
 
     # @rbs (Array[String]) -> Lrama::Options
@@ -32,6 +34,7 @@ module Lrama
       @options.trace_opts = validate_trace(@trace)
       @options.report_opts = validate_report(@report)
       @options.profile_opts = validate_profile(@profile)
+      @options.color = validate_color(@color)
       @options.grammar_file = argv.shift
 
       unless @options.grammar_file
@@ -128,6 +131,12 @@ module Lrama
         o.separator ''
         o.separator 'Diagnostics:'
         o.on('-W', '--warnings', 'report the warnings') {|v| @options.warnings = true }
+        o.on('--color[=WHEN]', 'colorize diagnostics (always/never/auto)') {|v| @color = v || 'always' }
+        o.on_tail ''
+        o.on_tail 'WHEN is a word that can be:'
+        o.on_tail '    always, yes                      always colorize output'
+        o.on_tail '    never, no                        never colorize output'
+        o.on_tail '    auto, tty                        colorize if output is a tty (default)'
         o.separator ''
         o.separator 'Error Recovery:'
         o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }
@@ -218,6 +227,26 @@ module Lrama
       end
 
       return h
+    end
+
+    COLOR_OPTIONS = {
+      'always' => :always,
+      'yes'    => :always,
+      'never'  => :never,
+      'no'     => :never,
+      'auto'   => :auto,
+      'tty'    => :auto
+    }.freeze #: Hash[String, Symbol]
+
+    # @rbs (String?) -> Symbol
+    def validate_color(color)
+      return :auto if color.nil?
+
+      if COLOR_OPTIONS.key?(color)
+        COLOR_OPTIONS[color]
+      else
+        raise "Invalid color option \"#{color}\".\nValid options are [#{COLOR_OPTIONS.keys.join(", ")}]."
+      end
     end
   end
 end

@@ -66,6 +66,7 @@ RSpec.describe Lrama::OptionParser do
 
           Diagnostics:
               -W, --warnings                   report the warnings
+                  --color[=WHEN]               colorize diagnostics (always/never/auto)
 
           Error Recovery:
               -e                               enable error recovery
@@ -99,6 +100,11 @@ RSpec.describe Lrama::OptionParser do
           PROFILES is a list of comma-separated words that can include:
               call-stack                       use sampling call-stack profiler (stackprof gem)
               memory                           use memory profiler (memory_profiler gem)
+
+          WHEN is a word that can be:
+              always, yes                      always colorize output
+              never, no                        never colorize output
+              auto, tty                        colorize if output is a tty (default)
 
         HELP
       end
