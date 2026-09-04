@@ -86,7 +86,7 @@ module Lrama
 
     # @rbs () -> Integer
     def column
-      @scanner.pos - @head
+      @scanner.string.byteslice(@head...@scanner.pos).length
     end
 
     # @rbs () -> Location
@@ -104,8 +104,7 @@ module Lrama
         case
         when @scanner.scan(/\n/)
           newline
-        when @scanner.scan(/\s+/)
-          @scanner.matched.count("\n").times { newline }
+        when @scanner.scan(/[^\S\n]+/)
         when @scanner.scan(/\/\*/)
           lex_comment
         when @scanner.scan(/\/\/.*(?<newline>\n)?/)

@@ -409,6 +409,28 @@ RSpec.describe Lrama::Lexer do
     end
   end
 
+  it 'reports an unexpected token after indentation at its actual column' do
+    grammar_file = Lrama::Lexer::GrammarFile.new("indented.y", "%%\nprogram:   \n    @@@ ;")
+    lexer = Lrama::Lexer.new(grammar_file)
+
+    expect { loop { lexer.next_token } }.to raise_error(ParseError, <<~MSG)
+      indented.y:3:4: Unexpected token
+         3 |     @@@ ;
+           |     ^
+    MSG
+  end
+
+  it 'reports columns as character offsets' do
+    grammar_file = Lrama::Lexer::GrammarFile.new("multibyte.y", '"あ" @')
+    lexer = Lrama::Lexer.new(grammar_file)
+
+    expect { loop { lexer.next_token } }.to raise_error(ParseError, <<~MSG)
+      multibyte.y:1:4: Unexpected token
+         1 | "あ" @
+           |     ^
+    MSG
+  end
+
   context 'unexpected_c_code.y' do
     it do
       grammar_file = Lrama::Lexer::GrammarFile.new("invalid.y", "@invalid")
