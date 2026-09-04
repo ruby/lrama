@@ -27,18 +27,28 @@ RSpec.describe Lrama::Reporter::Pslr do
     GRAMMAR
   end
 
-  it "reports summary, accept sets, scanner accepts rows and useless rules" do
+  it "reports summary and diagnostics without per-state details" do
     states = build_states(source)
     io = StringIO.new
     described_class.new(pslr: true).report(io, states)
     output = io.string
 
     expect(output).to include("PSLR Summary")
+    expect(output).to include("PSLR Useless %lex-prec Rules")
+    expect(output).to include("USELESS_A -~ USELESS_B")
+    expect(output).not_to include("PSLR Acceptable Tokens")
+    expect(output).not_to include("PSLR Scanner Accepts")
+  end
+
+  it "reports per-state details when states are requested" do
+    states = build_states(source)
+    io = StringIO.new
+    described_class.new(pslr: true, states: true).report(io, states)
+    output = io.string
+
     expect(output).to include("PSLR Acceptable Tokens")
     expect(output).to include("PSLR Scanner Accepts")
     expect(output).to include("Fallback:")
-    expect(output).to include("PSLR Useless %lex-prec Rules")
-    expect(output).to include("USELESS_A -~ USELESS_B")
   end
 
   it "reports nothing for non-PSLR grammars" do
