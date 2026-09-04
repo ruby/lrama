@@ -122,7 +122,7 @@ module Lrama
         return
       when @scanner.scan(/#{SYMBOLS.join('|')}/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/#{PERCENT_TOKENS.join('|')}/)
+      when @scanner.scan(/(?:#{PERCENT_TOKENS.join('|')})(?![-.\w])/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
