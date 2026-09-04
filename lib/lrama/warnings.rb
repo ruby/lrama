@@ -3,6 +3,7 @@
 
 require_relative 'warnings/conflicts'
 require_relative 'warnings/implicit_empty'
+require_relative 'warnings/mixed_references'
 require_relative 'warnings/name_conflicts'
 require_relative 'warnings/redefined_rules'
 require_relative 'warnings/required'
@@ -14,6 +15,7 @@ module Lrama
     def initialize(logger, warnings)
       @conflicts = Conflicts.new(logger, warnings)
       @implicit_empty = ImplicitEmpty.new(logger, warnings)
+      @mixed_references = MixedReferences.new(logger, warnings)
       @name_conflicts = NameConflicts.new(logger, warnings)
       @redefined_rules = RedefinedRules.new(logger, warnings)
       @required = Required.new(logger, warnings)
@@ -24,6 +26,7 @@ module Lrama
     def warn(grammar, states)
       @conflicts.warn(states)
       @implicit_empty.warn(grammar)
+      @mixed_references.warn(grammar)
       @name_conflicts.warn(grammar)
       @redefined_rules.warn(grammar)
       @required.warn(grammar)

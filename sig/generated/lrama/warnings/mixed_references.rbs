@@ -1,0 +1,43 @@
+# Generated from lib/lrama/warnings/mixed_references.rb with RBS::Inline
+
+module Lrama
+  class Warnings
+    # Warning rationale: Mixing positional and named references in one rule
+    # - It reduces readability and makes semantic actions harder to maintain
+    # - Named references are generally more robust when RHS changes
+    # Scope:
+    # - This warning targets semantic value references (`$...`)
+    #   location references (`@...`), and index references (`$:...`)
+    #   and special LHS references (`$$`, `$<tag>$`, `@$`, `$:$`)
+    class MixedReferences
+      # @rbs (Lrama::Logger logger, bool warnings) -> void
+      def initialize: (Lrama::Logger logger, bool warnings) -> void
+
+      # @rbs (Lrama::Grammar grammar) -> void
+      def warn: (Lrama::Grammar grammar) -> void
+
+      private
+
+      # @rbs (Lrama::Grammar grammar) -> Hash[Lrama::Grammar::Rule, { positional: bool, named: bool }]
+      def build_grouped_usage: (Lrama::Grammar grammar) -> Hash[Lrama::Grammar::Rule, { positional: bool, named: bool }]
+
+      # @rbs (Array[Lrama::Grammar::Reference] references, String source, { positional: bool, named: bool } usage) -> void
+      def classify_references: (Array[Lrama::Grammar::Reference] references, String source, { positional: bool, named: bool } usage) -> void
+
+      # @rbs (Lrama::Grammar::Reference ref) -> bool
+      def positional_reference?: (Lrama::Grammar::Reference ref) -> bool
+
+      # @rbs (Lrama::Grammar::Reference ref, String source) -> bool
+      def named_reference?: (Lrama::Grammar::Reference ref, String source) -> bool
+
+      # @rbs (Lrama::Grammar::Reference ref) -> bool
+      def reference_type_supported?: (Lrama::Grammar::Reference ref) -> bool
+
+      # @rbs (Lrama::Grammar::Reference ref, String source) -> bool
+      def lhs_alias_reference?: (Lrama::Grammar::Reference ref, String source) -> bool
+
+      # @rbs (String lexeme) -> bool
+      def special_lhs_reference_lexeme?: (String lexeme) -> bool
+    end
+  end
+end
