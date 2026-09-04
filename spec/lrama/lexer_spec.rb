@@ -407,6 +407,15 @@ RSpec.describe Lrama::Lexer do
     end
   end
 
+  it 'does not match known percent directives as prefixes' do
+    ["%tokens FOO", "%typeof", "%expect-rr 2"].each do |text|
+      grammar_file = Lrama::Lexer::GrammarFile.new("directive.y", text)
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      expect { lexer.next_token }.to raise_error(ParseError, /Unexpected token/)
+    end
+  end
+
   context 'unexpected_c_code.y' do
     it do
       grammar_file = Lrama::Lexer::GrammarFile.new("invalid.y", "@invalid")
