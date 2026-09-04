@@ -3939,6 +3939,20 @@ RSpec.describe Lrama::States do
       states.instance_variable_set(:@pslr_split_enabled, true)
     end
 
+    it "retains the original lookaheads when a context split changes" do
+      states.compute
+      original = states.states.first
+      kernel = original.kernels.first
+      rshift = grammar.find_symbol_by_s_value!("RSHIFT").number_bitmap
+      rangle = grammar.find_symbol_by_s_value!("RANGLE").number_bitmap
+      original.item_lookahead_set = { kernel => rshift }
+
+      split = states.send(:copy_split_state, original)
+      split.item_lookahead_set[kernel] = rangle
+
+      expect(original.item_lookahead_set[kernel]).to eq(rshift)
+    end
+
     before do
       allow(mock_state).to receive(:acceptable_pslr_reduce_lookahead) { |_reduce, lookaheads| lookaheads.fetch(kernel_item) }
     end
