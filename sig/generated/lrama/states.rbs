@@ -292,8 +292,7 @@ module Lrama
     # @rbs (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[Integer, String?]]
     def pslr_state_signature: (State state, ?State::lookahead_set filtered_lookaheads) -> Array[[ Integer, String? ]]
 
-    # Pair-based PSLR compatibility (Def 3.4.3, reduced to token pairs as
-    # recommended by section 3.4.3 for splitting performance).
+    # PSLR compatibility based on complete pseudo-scanner conflict profiles.
     # @rbs (Set[String] left_acc, Set[String] right_acc) -> bool
     def pslr_compatible_accept_sets?: (Set[String] left_acc, Set[String] right_acc) -> bool
 

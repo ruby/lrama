@@ -4,7 +4,6 @@
 require "forwardable"
 require "set"
 require_relative "lexer_context_classifier"
-require_relative "pslr/pairwise_resolution"
 require_relative "tracer/duration"
 require_relative "state/item"
 
@@ -1149,14 +1148,17 @@ module Lrama
       signature
     end
 
-    # Pair-based PSLR compatibility (Def 3.4.3, reduced to token pairs as
-    # recommended by section 3.4.3 for splitting performance).
+    # PSLR compatibility based on complete pseudo-scanner conflict profiles.
     # @rbs (Set[String] left_acc, Set[String] right_acc) -> bool
     def pslr_compatible_accept_sets?(left_acc, right_acc)
       return true unless @scanner_fsa
 
-      @pslr_pairwise_resolution ||= Pslr::PairwiseResolution.new(@scanner_fsa)
-      @pslr_pairwise_resolution.compatible_accept_sets?(left_acc, right_acc)
+      @pslr_compatibility_checker ||= State::ScannerAccepts::CompatibilityChecker.new(
+        @scanner_fsa,
+        lex_prec,
+        @length_precedences
+      )
+      @pslr_compatibility_checker.compatible?(left_acc, right_acc)
     end
 
     # @rbs (State state, ?State::lookahead_set filtered_lookaheads, ?expand_ties: bool, ?include_layout: bool) -> Set[String]
