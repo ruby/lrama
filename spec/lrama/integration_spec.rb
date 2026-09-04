@@ -75,6 +75,16 @@ RSpec.describe "integration" do
 
   include IntegrationHelper
 
+  it "uses structured tags in declarations and explicit references" do
+    c_path = Dir.tmpdir + "/structured_tags#{file_extension}"
+    obj_path = Dir.tmpdir + "/structured_tags"
+    generate_object(fixture_path("integration/structured_tags.y"), c_path, obj_path)
+
+    output, status = Open3.capture2(obj_path)
+    expect(status.success?).to be(true)
+    expect(output).to eq("result 12\n")
+  end
+
   # Clear cache after all tests to save memory
   after(:all) do
     IntegrationHelper.compiled_parsers.clear

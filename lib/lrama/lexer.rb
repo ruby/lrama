@@ -65,6 +65,7 @@ module Lrama
     IDENTIFIER_PATTERN = /[a-zA-Z_.][-a-zA-Z0-9_.]*/.freeze #: Regexp
     SYMBOL_PATTERN = Regexp.new(SYMBOLS.join('|')) #: Regexp
     PERCENT_TOKEN_PATTERN = Regexp.new("(?:#{PERCENT_TOKENS.join('|')})(?![-a-zA-Z0-9_.])") #: Regexp
+    TAG_PATTERN = /<[a-zA-Z_][a-zA-Z0-9_]*(?:(?:\.|->)[a-zA-Z_][a-zA-Z0-9_]*)*>/.freeze #: Regexp
 
     # @rbs (GrammarFile grammar_file) -> void
     def initialize(grammar_file)
@@ -127,7 +128,7 @@ module Lrama
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/<\w+>/)
+      when @scanner.scan(TAG_PATTERN)
         return [:TAG, Lrama::Lexer::Token::Tag.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/'(?:[^'\\\n]|\\(?:['"?\\abfnrtv]|[0-7]{1,3}|x[0-9a-fA-F]+|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}))'/)
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
