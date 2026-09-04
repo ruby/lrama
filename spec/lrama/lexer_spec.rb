@@ -452,4 +452,18 @@ RSpec.describe Lrama::Lexer do
       }
     CODE
   end
+
+  it 'lexes a rule name with a block comment before the colon as IDENT_COLON' do
+    grammar_file = Lrama::Lexer::GrammarFile.new("commented_rule_lhs.y", <<~INPUT)
+      %%
+      stmt
+        /* some block comment */
+        :
+    INPUT
+    lexer = Lrama::Lexer.new(grammar_file)
+
+    expect(lexer.next_token).to eq(['%%', token_class::Token.new(s_value: '%%')])
+    expect(lexer.next_token).to eq([:IDENT_COLON, token_class::Ident.new(s_value: 'stmt')])
+    expect(lexer.next_token).to eq([':', token_class::Token.new(s_value: ':')])
+  end
 end
