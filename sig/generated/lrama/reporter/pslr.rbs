@@ -3,8 +3,8 @@
 module Lrama
   class Reporter
     class Pslr
-      # @rbs (?pslr: bool, **bool _) -> void
-      def initialize: (?pslr: bool, **bool _) -> void
+      # @rbs (?pslr: bool, ?states: bool, **bool _) -> void
+      def initialize: (?pslr: bool, ?states: bool, **bool _) -> void
 
       # @rbs (IO io, Lrama::States states) -> void
       def report: (IO io, Lrama::States states) -> void
