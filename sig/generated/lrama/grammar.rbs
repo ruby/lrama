@@ -248,6 +248,12 @@ module Lrama
     def resolve_inline_rules: () -> void
 
     # @rbs () -> void
+    def validate_inline_rules!: () -> void
+
+    # @rbs (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
+    def validate_inline_rule!: (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
+
+    # @rbs () -> void
     def normalize_rules: () -> void
 
     # Add $accept rule to the top of rules
