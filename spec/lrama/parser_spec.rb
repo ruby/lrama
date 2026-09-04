@@ -3448,6 +3448,28 @@ RSpec.describe Lrama::Parser do
           ])
         end
       end
+
+      it "renumbers each positional reference once when expanding an inline rule" do
+        y = <<~'GRAMMAR'
+          %union { int i; }
+          %token <i> N
+          %type <i> expression
+
+          %rule %inline op : '+' '=' { "\1" } ;
+
+          %%
+
+          expression : op N N N N N N N N N
+                     { $$ = f($1, $2, $3, $10, @1, @2, @10); }
+                     ;
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        rule = grammar.rules.last
+
+        expect(rule.token_code.s_value).to eq(%q{ $$ = f( "\1" , $3, $4, $11, @2, @3, @11); })
+      end
     end
 
     it "; for rules is optional" do

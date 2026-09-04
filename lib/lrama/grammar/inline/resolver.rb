@@ -66,11 +66,21 @@ module Lrama
           user_code = @rule_builder.user_code
           return user_code if rhs.user_code.nil? || user_code.nil?
 
-          code = user_code.s_value.gsub(/\$#{index + 1}/, rhs.user_code.s_value)
-          user_code.references.each do |ref|
-            next if ref.index.nil? || ref.index <= index # nil は $$ の場合
-            code = code.gsub(/\$#{ref.index}/, "$#{ref.index + (rhs.symbols.count - 1)}")
-            code = code.gsub(/@#{ref.index}/, "@#{ref.index + (rhs.symbols.count - 1)}")
+          inline_index = index + 1
+          index_offset = rhs.symbols.count - 1
+          code = user_code.s_value.dup
+
+          user_code.references.reverse_each do |ref|
+            next if ref.index.nil? || ref.index < inline_index # nil は $$ の場合
+
+            reference = code[ref.first_column...ref.last_column]
+            replacement =
+              if ref.type == :dollar && ref.index == inline_index
+                rhs.user_code.s_value
+              else
+                reference.sub(/\d+\z/, (ref.index + index_offset).to_s)
+              end
+            code[ref.first_column...ref.last_column] = replacement
           end
           Lrama::Lexer::Token::UserCode.new(s_value: code, location: user_code.location)
         end
