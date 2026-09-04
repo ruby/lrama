@@ -163,6 +163,54 @@ RSpec.describe Lrama::State::ScannerAccepts do
 
       expect(outcome).to be_resolved
       expect(outcome.token_name).to eq("ID")
+      expect(outcome).to be_current_match
+    end
+
+    it "writes a same-token autolength winner to scanner_accepts" do
+      id = token_pattern("ID", "a+", 0)
+      scanner_fsa = Lrama::ScannerFSA.new([id])
+      lex_prec = Lrama::Grammar::LexPrec.new
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [parser_state(0, ["ID"])],
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec)
+      )
+
+      scanner_accepts.build
+
+      accepting = scanner_fsa.states.find {|state| state.accepting_tokens.map(&:name) == ["ID"] }
+      expect(scanner_accepts[0, accepting.id].name).to eq("ID")
+    end
+
+    it "does not report a conflict when a shorter-match winner revisits a current accepting state" do
+      x = token_pattern("X", "x", 0)
+      y = token_pattern("Y", "y", 1)
+      states = 4.times.map {|id| Lrama::ScannerFSA::State.new(id) }
+      states[0].add_transition("a", 1)
+      states[0].add_transition("b", 2)
+      states[1].add_accepting_token(x)
+      states[1].add_transition("c", 3)
+      states[2].add_accepting_token(y)
+      states[2].add_transition("c", 3)
+      states[3].add_accepting_token(x)
+      states[3].add_accepting_token(y)
+      scanner_fsa = instance_double(Lrama::ScannerFSA, states: states, token_patterns: [x, y])
+      lex_prec = Lrama::Grammar::LexPrec.new
+      lex_prec.add_rule(left_token: ident("X"), operator: Lrama::Grammar::LexPrec::SHORTEST, right_token: ident("X"), lineno: 1)
+      lex_prec.add_rule(left_token: ident("X"), operator: Lrama::Grammar::LexPrec::SHORTEST, right_token: ident("Y"), lineno: 2)
+      lex_prec.add_rule(left_token: ident("X"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("Y"), lineno: 3)
+      computer = Lrama::State::ScannerAccepts::CompleteProfileComputer.new(
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec),
+        Set["X", "Y"]
+      )
+
+      computer.compute
+
+      expect(computer.table.fetch(3).name).to eq("Y")
+      expect(computer.conflicts).to be_empty
     end
 
     it "uses declaration order only in fallback mode" do
@@ -247,29 +295,65 @@ RSpec.describe Lrama::State::ScannerAccepts do
       expect(scanner_accepts.fallback_table.fetch(accepting.id).name).to eq("A")
     end
 
-    it "keeps normal parser-state rows strict for explicit identity cycles" do
-      tokens = [
-        token_pattern("A", "a", 0),
-        token_pattern("B", "a", 1),
-        token_pattern("C", "a", 2)
-      ]
-      scanner_fsa = Lrama::ScannerFSA.new(tokens)
-      lex_prec = Lrama::Grammar::LexPrec.new
-      lex_prec.add_rule(left_token: ident("A"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("B"), lineno: 1)
-      lex_prec.add_rule(left_token: ident("B"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("C"), lineno: 2)
-      lex_prec.add_rule(left_token: ident("C"), operator: Lrama::Grammar::LexPrec::IDENTITY_RIGHT, right_token: ident("A"), lineno: 3)
-      scanner_accepts = Lrama::State::ScannerAccepts.new(
-        [parser_state(0, ["A", "B", "C"])],
-        scanner_fsa,
-        lex_prec,
-        Lrama::LengthPrecedences.new(lex_prec)
-      )
+    [
+      {
+        figure: "3.3",
+        patterns: { "A" => "a", "B" => "a", "C" => "a" },
+        rules: [
+          ["A", Lrama::Grammar::LexPrec::IDENTITY_RIGHT, "B"],
+          ["B", Lrama::Grammar::LexPrec::IDENTITY_RIGHT, "C"],
+          ["C", Lrama::Grammar::LexPrec::IDENTITY_RIGHT, "A"]
+        ],
+        profile: [[], nil, ["A", "B", "C"]],
+        witness: "a"
+      },
+      {
+        figure: "3.4",
+        patterns: { "A" => "a", "B" => "ab", "C" => "abc" },
+        rules: [
+          ["A", Lrama::Grammar::LexPrec::LONGEST, "B"],
+          ["B", Lrama::Grammar::LexPrec::LONGEST, "C"],
+          ["C", Lrama::Grammar::LexPrec::TOKEN_RIGHT_LENGTH, "A"]
+        ],
+        profile: [["A", "B"], "B", ["C"]],
+        witness: "abc"
+      },
+      {
+        figure: "3.5",
+        patterns: { "A" => "a|abc", "B" => "ab" },
+        rules: [["A", Lrama::Grammar::LexPrec::SHORTEST, "B"]],
+        profile: [["A", "B"], "A", ["A"]],
+        witness: "abc"
+      }
+    ].each do |test_case|
+      it "keeps dissertation Figure #{test_case[:figure]} unresolved" do
+        tokens = test_case[:patterns].each_with_index.map do |(name, regex), order|
+          token_pattern(name, regex, order)
+        end
+        scanner_fsa = Lrama::ScannerFSA.new(tokens)
+        lex_prec = Lrama::Grammar::LexPrec.new
+        test_case[:rules].each_with_index do |(left, operator, right), index|
+          lex_prec.add_rule(left_token: ident(left), operator: operator, right_token: ident(right), lineno: index + 1)
+        end
+        scanner_accepts = Lrama::State::ScannerAccepts.new(
+          [parser_state(0, test_case[:patterns].keys)],
+          scanner_fsa,
+          lex_prec,
+          Lrama::LengthPrecedences.new(lex_prec)
+        )
 
-      scanner_accepts.build
+        scanner_accepts.build
 
-      accepting = scanner_fsa.states.find {|state| state.accepting_tokens.map(&:name).sort == ["A", "B", "C"] }
-      expect(scanner_accepts[0, accepting.id]).to be_nil
-      expect(scanner_accepts.unresolved_conflicts?).to be true
+        expect(scanner_accepts.unresolved_conflicts?).to be true
+        expect(scanner_accepts.conflicts).to include(
+          an_object_having_attributes(
+            shorter_tokens: test_case[:profile][0],
+            selected_shorter_token: test_case[:profile][1],
+            current_tokens: test_case[:profile][2],
+            witness: test_case[:witness]
+          )
+        )
+      end
     end
   end
 
@@ -292,6 +376,26 @@ RSpec.describe Lrama::State::ScannerAccepts do
 
       witnesses = scanner_accepts.conflicts.map(&:witness)
       expect(witnesses).to include("ab")
+    end
+
+    it "reports duplicate scanner states with the same profile once using the first witness" do
+      tokens = [
+        token_pattern("A", "a|b", 0),
+        token_pattern("B", "a|b", 1)
+      ]
+      scanner_fsa = Lrama::ScannerFSA.new(tokens)
+      lex_prec = Lrama::Grammar::LexPrec.new
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        [parser_state(0, ["A", "B"])],
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec)
+      )
+
+      scanner_accepts.build
+
+      expect(scanner_accepts.conflicts.size).to eq(1)
+      expect(scanner_accepts.conflicts.first.witness).to eq("a")
     end
   end
 
@@ -359,6 +463,24 @@ RSpec.describe Lrama::State::ScannerAccepts do
       checker = described_class.new(fsa, lex_prec, Lrama::LengthPrecedences.new(lex_prec))
 
       expect(checker.compatible?(Set["A", "B"], Set["A", "B"])).to be true
+    end
+
+    it "uses lexical precedence when comparing accept sets" do
+      expect(checker.compatible?(Set["RANGLE"], Set["RANGLE", "RSHIFT"])).to be false
+
+      lex_prec.add_rule(
+        left_token: ident("RSHIFT"),
+        operator: Lrama::Grammar::LexPrec::TOKEN_RIGHT,
+        right_token: ident("RANGLE"),
+        lineno: 1
+      )
+      precedence_checker = described_class.new(
+        scanner_fsa,
+        lex_prec,
+        Lrama::LengthPrecedences.new(lex_prec)
+      )
+
+      expect(precedence_checker.compatible?(Set["RANGLE"], Set["RANGLE", "RSHIFT"])).to be true
     end
   end
 

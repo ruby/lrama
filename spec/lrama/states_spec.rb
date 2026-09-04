@@ -3259,6 +3259,20 @@ RSpec.describe Lrama::States do
       expect(states.send(:compatible_split_state?, mock_state, filtered_lookaheads)).to be false
     end
 
+    it "uses lexical precedence when comparing PSLR accept sets" do
+      grammar.lex_prec.add_rule(
+        left_token: grammar.find_symbol_by_s_value!("RSHIFT").id,
+        operator: Lrama::Grammar::LexPrec::TOKEN_RIGHT,
+        right_token: grammar.find_symbol_by_s_value!("RANGLE").id,
+        lineno: 1
+      )
+      states.instance_variable_set(:@length_precedences, Lrama::LengthPrecedences.new(grammar.lex_prec))
+
+      expect(
+        states.send(:pslr_compatible_accept_sets?, Set["RANGLE"], Set["RANGLE", "RSHIFT"])
+      ).to be true
+    end
+
     it "detects unresolved PSLR inadequacies per transition" do
       propagated = { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] }
       matching_state = instance_double(Lrama::State, id: 8)

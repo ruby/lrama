@@ -22,8 +22,6 @@ module Lrama
     # and otherwise-unresolved identity conflicts are resolved by token
     # declaration order.
     #
-    # When %lex-scope declarations are present, each parser state may use
-    # a merged set of global + scope-active lexical precedence rules.
     class ScannerAccepts
       class Conflict
         attr_reader :parser_state_id #: Integer?
@@ -53,11 +51,12 @@ module Lrama
         attr_reader :token_name #: String?
         attr_reader :conflict #: Conflict?
 
-        # @rbs (kind: Symbol, ?token_name: String?, ?conflict: Conflict?) -> void
-        def initialize(kind:, token_name: nil, conflict: nil)
+        # @rbs (kind: Symbol, ?token_name: String?, ?conflict: Conflict?, ?current_match: bool) -> void
+        def initialize(kind:, token_name: nil, conflict: nil, current_match: false)
           @kind = kind
           @token_name = token_name
           @conflict = conflict
+          @current_match = current_match
         end
 
         # @rbs () -> bool
@@ -73,6 +72,11 @@ module Lrama
         # @rbs () -> bool
         def unresolved?
           @kind == UNRESOLVED
+        end
+
+        # @rbs () -> bool
+        def current_match?
+          @current_match
         end
       end
 
@@ -118,7 +122,7 @@ module Lrama
           if winners.size == 1
             winner = winners.first #: String
             mark_longer_win_rules_used(winner, shorter_tokens, current_tokens)
-            return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: winner)
+            return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: winner, current_match: true)
           end
 
           ProfileOutcome.new(kind: ProfileOutcome::UNRESOLVED)
@@ -141,12 +145,16 @@ module Lrama
               shorter_tokens.all? {|shorter| @length_prec.fallback_precedes?(shorter, candidate) }
           end
 
-          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: explicit_winners.first) if explicit_winners.size == 1
+          if explicit_winners.size == 1
+            return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: explicit_winners.first, current_match: true)
+          end
 
           declaration_order_winner = current_tokens.sort_by {|token| token_order_key(token) }.find do |candidate|
             shorter_tokens.all? {|shorter| @length_prec.fallback_precedes?(shorter, candidate) }
           end
-          return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: declaration_order_winner) if declaration_order_winner
+          if declaration_order_winner
+            return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: declaration_order_winner, current_match: true)
+          end
 
           return ProfileOutcome.new(kind: ProfileOutcome::RESOLVED, token_name: selected_shorter_token) if selected_shorter_token
 
@@ -237,6 +245,7 @@ module Lrama
           @parser_state_id = parser_state_id
           @table = {}
           @conflicts = []
+          @reported_conflict_profiles = Set.new
           token_patterns_by_name = {} #: Hash[String, Grammar::TokenPattern]
           @token_patterns_by_name = scanner_fsa.token_patterns.each_with_object(token_patterns_by_name) do |token_pattern, hash|
             hash[token_pattern.name] ||= token_pattern
@@ -274,31 +283,17 @@ module Lrama
           result = @resolver.resolve(shorter_tokens, selected_shorter_token, current_tokens)
 
           if result.resolved?
-            if result.token_name && current_tokens.include?(result.token_name)
+            if result.current_match? && result.token_name
               token_pattern = token_pattern_for(result.token_name)
               existing = @table[fsa_state_id]
               if existing && existing.name != token_pattern.name
-                @conflicts << Conflict.new(
-                  parser_state_id: @parser_state_id,
-                  scanner_state_id: fsa_state_id,
-                  shorter_tokens: shorter_tokens.to_a.sort,
-                  selected_shorter_token: existing.name,
-                  current_tokens: current_tokens.to_a.sort,
-                  witness: path
-                )
+                report_conflict(fsa_state_id, shorter_tokens, selected_shorter_token, current_tokens, path)
               else
                 @table[fsa_state_id] = token_pattern
               end
             end
           elsif result.unresolved?
-            @conflicts << Conflict.new(
-              parser_state_id: @parser_state_id,
-              scanner_state_id: fsa_state_id,
-              shorter_tokens: shorter_tokens.to_a.sort,
-              selected_shorter_token: selected_shorter_token,
-              current_tokens: current_tokens.to_a.sort,
-              witness: path
-            )
+            report_conflict(fsa_state_id, shorter_tokens, selected_shorter_token, current_tokens, path)
           end
 
           next_shorter_tokens = shorter_tokens | current_tokens
@@ -316,6 +311,23 @@ module Lrama
         # @rbs (String token_name) -> Grammar::TokenPattern
         def token_pattern_for(token_name)
           @token_patterns_by_name.fetch(token_name)
+        end
+
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens, String path) -> void
+        def report_conflict(fsa_state_id, shorter_tokens, selected_shorter_token, current_tokens, path)
+          sorted_shorter_tokens = shorter_tokens.to_a.sort
+          sorted_current_tokens = current_tokens.to_a.sort
+          profile = [sorted_shorter_tokens, selected_shorter_token, sorted_current_tokens]
+          return unless @reported_conflict_profiles.add?(profile)
+
+          @conflicts << Conflict.new(
+            parser_state_id: @parser_state_id,
+            scanner_state_id: fsa_state_id,
+            shorter_tokens: sorted_shorter_tokens,
+            selected_shorter_token: selected_shorter_token,
+            current_tokens: sorted_current_tokens,
+            witness: path
+          )
         end
 
         # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> [Integer, Array[String], String?, Array[String]]
