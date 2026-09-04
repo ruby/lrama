@@ -607,7 +607,9 @@ static const <%= output.int_type_for(output.context.yyr2) %> yyr2[] =
 #endif
 <%- end -%>
 
-int
+<%- if output.pslr_enabled? -%>
+YY_ATTRIBUTE_UNUSED
+static int
 yy_state_accepts_token (int yystate, int yychar)
 {
   yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
@@ -636,7 +638,8 @@ yy_state_accepts_token (int yystate, int yychar)
  * Returns 1 if the token would be accepted in the current state or in a
  * state reachable via a chain of empty default reductions; 0 otherwise.
  */
-int
+YY_ATTRIBUTE_UNUSED
+static int
 yy_state_eventually_accepts_token (int yystate, int yychar)
 {
   yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
@@ -700,14 +703,13 @@ yy_state_eventually_accepts_token (int yystate, int yychar)
  * stack_base and stack_top point to the parser's state stack (yy_state_t).
  * Returns 1 if the token is reachable; 0 otherwise.
  */
-int
+YY_ATTRIBUTE_UNUSED
+static int
 yy_state_deep_accepts_token (int yystate, int yychar,
-                             const void *stack_base_v, const void *stack_top_v)
+                             const yy_state_t *stack_base,
+                             const yy_state_t *stack_top)
 {
-  typedef short yy_state_t_compat;
   yysymbol_kind_t yytoken = YYTRANSLATE (yychar);
-  const yy_state_t_compat *stack_base = (const yy_state_t_compat *)stack_base_v;
-  const yy_state_t_compat *stack_top = (const yy_state_t_compat *)stack_top_v;
   int visited[64];
   int visited_count = 0;
   int stack_consumed = 0;  /* how many stack items we've "popped" */
@@ -767,11 +769,12 @@ yy_state_deep_accepts_token (int yystate, int yychar,
           {
             /* Non-empty reduction: need to look at the stack. */
             int total_depth = stack_consumed + rhs_len;
-            const yy_state_t_compat *target = stack_top - total_depth;
+            const yy_state_t *target;
 
-            if (target < stack_base)
+            if (total_depth > stack_top - stack_base)
               return 0;  /* Stack too shallow. */
 
+            target = stack_top - total_depth;
             uncovered_state = (int)*target;
             lhs = yyr1[rule] - YYNTOKENS;
             goto_state = yypgoto[lhs] + uncovered_state;
@@ -789,6 +792,7 @@ yy_state_deep_accepts_token (int yystate, int yychar,
       }
     }
 }
+<%- end -%>
 
 enum { YYENOMEM = -2 };
 
@@ -1092,10 +1096,14 @@ yypcontext_expected_tokens (const yypcontext_t *yyctx,
   int yycount = 0;
 <%- if output.lac_enabled? -%>
   int yyx;
+  int yylac_status;
   for (yyx = 0; yyx < YYNTOKENS; ++yyx)
     if (yyx != YYSYMBOL_YYerror
-        && yy_lac_check_ (yyctx->yyss, yyctx->yyssp, YY_CAST (yysymbol_kind_t, yyx)))
+        && (yylac_status = yy_lac_check_ (yyctx->yyss, yyctx->yyssp,
+                                         YY_CAST (yysymbol_kind_t, yyx))))
       {
+        if (yylac_status == YYENOMEM)
+          return YYENOMEM;
         if (!yyarg)
           ++yycount;
         else if (yycount == yyargn)
@@ -1929,8 +1937,13 @@ yybackup:
           YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
         }
 
-      if (!yy_lac_check_ (yyss, yyssp, yytoken))
-        goto yyerrlab;
+      {
+        int yylac_status = yy_lac_check_ (yyss, yyssp, yytoken);
+        if (yylac_status == YYENOMEM)
+          YYNOMEM;
+        if (!yylac_status)
+          goto yyerrlab;
+      }
 
       goto yydefault;
     }
@@ -2004,8 +2017,13 @@ yybackup:
     }
 
 <%- if output.lac_enabled? -%>
-  if (!yy_lac_check_ (yyss, yyssp, yytoken))
-    goto yyerrlab;
+  {
+    int yylac_status = yy_lac_check_ (yyss, yyssp, yytoken);
+    if (yylac_status == YYENOMEM)
+      YYNOMEM;
+    if (!yylac_status)
+      goto yyerrlab;
+  }
 <%- end -%>
 
   /* If the proper action on seeing token YYTOKEN is to reduce or to
