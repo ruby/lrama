@@ -990,8 +990,8 @@ module Lrama
       end
 
       new_state.lookaheads_recomputed = true
-      new_state.item_lookahead_set = original.item_lookahead_set
-      new_state.pslr_item_lookahead_set = original.pslr_item_lookahead_set
+      new_state.item_lookahead_set = original.item_lookahead_set.transform_values(&:dup)
+      new_state.pslr_item_lookahead_set = original.pslr_item_lookahead_set&.transform_values(&:dup)
 
       new_state
     end

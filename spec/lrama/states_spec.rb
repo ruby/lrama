@@ -3240,6 +3240,23 @@ RSpec.describe Lrama::States do
       states.instance_variable_set(:@pslr_split_enabled, true)
     end
 
+    it "copies lookahead arrays when creating a context split state" do
+      states.compute
+      original = states.states.first
+      kernel = original.kernels.first
+      rshift = grammar.find_symbol_by_s_value!("RSHIFT")
+      rangle = grammar.find_symbol_by_s_value!("RANGLE")
+      original.item_lookahead_set = { kernel => [rshift] }
+      original.pslr_item_lookahead_set = { kernel => [rangle] }
+
+      split = states.send(:create_context_split_state, original)
+      split.item_lookahead_set[kernel] << rangle
+      split.pslr_item_lookahead_set[kernel] << rshift
+
+      expect(original.item_lookahead_set[kernel]).to eq([rshift])
+      expect(original.pslr_item_lookahead_set[kernel]).to eq([rangle])
+    end
+
     it "derives different PSLR signatures from different propagated lookaheads" do
       current = states.send(:pslr_state_signature, mock_state)
       filtered = states.send(
