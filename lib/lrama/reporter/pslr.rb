@@ -4,9 +4,10 @@
 module Lrama
   class Reporter
     class Pslr
-      # @rbs (?pslr: bool, **bool _) -> void
-      def initialize(pslr: false, **_)
+      # @rbs (?pslr: bool, ?states: bool, **bool _) -> void
+      def initialize(pslr: false, states: false, **_)
         @pslr = pslr
+        @states = states
       end
 
       # @rbs (IO io, Lrama::States states) -> void
@@ -15,8 +16,10 @@ module Lrama
         return unless states.pslr_defined?
 
         report_summary(io, states)
-        report_acceptable_tokens(io, states)
-        report_scanner_accepts(io, states)
+        if @states
+          report_acceptable_tokens(io, states)
+          report_scanner_accepts(io, states)
+        end
         report_unresolved_conflicts(io, states)
         report_useless_lex_prec(io, states)
         report_tie_candidates(io, states)

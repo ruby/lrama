@@ -61,8 +61,8 @@ This adds the following PSLR-related grammar directives and integration points:
 - `%define parse.lac` controls lookahead correction (`full` by default for PSLR parsers, available to LALR/IELR parsers too)
 - `%define pslr.tables canonical-lr` switches state splitting to canonical LR(1) compatibility for debugging merged conflict reports
 - `%define pslr.max-states` and `%define pslr.max-state-ratio` are Lrama-specific safety guards for state growth
-- `--report=pslr` renders split metrics, per-state acceptable-token sets, scanner-accepts rows, unresolved-conflict
-  witnesses, useless `%lex-prec` rules, and lexical tie candidates
+- `--report=pslr` renders split metrics, unresolved-conflict witnesses, useless `%lex-prec` rules, and lexical tie
+  candidates; adding `states` (`--report=pslr,states`) also renders per-state acceptable-token sets and scanner-accepts rows
 
 Typical usage looks like this:
 
