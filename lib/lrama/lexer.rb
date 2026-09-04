@@ -198,15 +198,11 @@ module Lrama
 
     # @rbs () -> void
     def lex_comment
-      until @scanner.eos? do
-        case
-        when @scanner.scan_until(/[\s\S]*?\*\//)
-          @scanner.matched.count("\n").times { newline }
-          return
-        when @scanner.scan_until(/\n/)
-          newline
-        end
+      unless @scanner.scan_until(/[\s\S]*?\*\//)
+        raise ParseError, location.generate_error_message("Unterminated comment") # steep:ignore UnknownConstant
       end
+
+      @scanner.matched.count("\n").times { newline }
     end
 
     # @rbs () -> void

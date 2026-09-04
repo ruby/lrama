@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "timeout"
+
 RSpec.describe Lrama::Lexer do
   let(:token_class) { Lrama::Lexer::Token }
 
@@ -427,6 +429,15 @@ RSpec.describe Lrama::Lexer do
     lexer = Lrama::Lexer.new(grammar_file)
 
     expect(lexer.next_token).to be_nil
+  end
+
+  it 'raises an error for an unterminated block comment' do
+    ["/* unterminated\n%%\nprogram: ;", "/* unterminated\n%%\nprogram: ;\n"].each do |text|
+      grammar_file = Lrama::Lexer::GrammarFile.new("comment.y", text)
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      expect { Timeout.timeout(1) { lexer.next_token } }.to raise_error(ParseError, /Unterminated comment/)
+    end
   end
 
   it 'lex a trailing space with newline' do
