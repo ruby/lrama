@@ -440,6 +440,8 @@ module Lrama
 
     # @rbs () -> void
     def resolve_inline_rules
+      validate_inline_rules!
+
       while @rule_builders.any?(&:has_inline_rules?) do
         @rule_builders = @rule_builders.flat_map do |builder|
           if builder.has_inline_rules?
@@ -449,6 +451,34 @@ module Lrama
           end
         end
       end
+    end
+
+    # @rbs () -> void
+    def validate_inline_rules!
+      visiting = {} #: Hash[Parameterized::Rule, bool]
+      visited = {} #: Hash[Parameterized::Rule, bool]
+
+      parameterized_rules.select(&:inline?).each do |rule|
+        validate_inline_rule!(rule, visiting, visited)
+      end
+    end
+
+    # @rbs (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
+    def validate_inline_rule!(rule, visiting, visited)
+      return if visited[rule]
+      raise "Recursive inline rule: #{rule.name}" if visiting[rule]
+
+      visiting[rule] = true
+      rule.rhs.each do |rhs|
+        rhs.symbols.each do |symbol|
+          next if rule.parameters.any? { |parameter| parameter.s_value == symbol.s_value }
+
+          inline_rule = @parameterized_resolver.find_inline(symbol)
+          validate_inline_rule!(inline_rule, visiting, visited) if inline_rule
+        end
+      end
+      visiting.delete(rule)
+      visited[rule] = true
     end
 
     # @rbs () -> void

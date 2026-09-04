@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "tempfile"
+require "timeout"
 
 RSpec.describe Lrama::Parser do
   T ||= Lrama::Lexer::Token
@@ -3037,6 +3038,21 @@ RSpec.describe Lrama::Parser do
               lineno: 28,
             ),
           ])
+        end
+      end
+
+      context 'when inline is recursive' do
+        let(:path) { "recursive_inline.y" }
+        let(:y) do
+          <<~GRAMMAR
+            %rule %inline a : 'x' a | 'y' ;
+            %%
+            program : a ;
+          GRAMMAR
+        end
+
+        it "raises an error" do
+          expect { Timeout.timeout(1) { grammar } }.to raise_error(RuntimeError, "Recursive inline rule: a")
         end
       end
 
