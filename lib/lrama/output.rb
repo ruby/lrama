@@ -431,9 +431,7 @@ module Lrama
     def pslr_function_declarations
       return "" unless pslr_enabled?
 
-      declarations = [<<~C_CODE]
-        int yy_state_accepts_token (int yystate, int yychar);
-      C_CODE
+      declarations = []
 
       if pslr_scanner_enabled?
         declarations << <<~C_CODE
@@ -771,12 +769,12 @@ module Lrama
           yy_state_t *yylac_top;
 
           if (!yylac_base)
-            return 1;
+            return YYENOMEM;
 
           if (YYMAXDEPTH < yylac_len)
             {
               YYFREE (yylac_base);
-              return 1;
+              return YYENOMEM;
             }
 
           YYCOPY (yylac_base, yyss, yylac_len);
@@ -837,7 +835,7 @@ module Lrama
               if (yylac_base + YYMAXDEPTH - 1 <= yylac_top)
                 {
                   YYFREE (yylac_base);
-                  return 1;
+                  return YYENOMEM;
                 }
 
               *++yylac_top = YY_CAST (yy_state_t, yystate);
@@ -1050,15 +1048,18 @@ module Lrama
           yypslr_layout_length = 0;
         }
 
-        static void
+        static int
         yypslr_layout_append (const char *text, int length)
         {
-          if (yypslr_layout_length + length < YYPSLR_LAYOUT_BUFFER_SIZE)
-            {
-              memcpy (yypslr_layout_buffer + yypslr_layout_length, text, length);
-              yypslr_layout_length += length;
-              yypslr_layout_buffer[yypslr_layout_length] = '\\0';
-            }
+          if (length < 0
+              || (size_t) length >= (size_t) YYPSLR_LAYOUT_BUFFER_SIZE
+                                    - (size_t) yypslr_layout_length)
+            return 0;
+
+          memcpy (yypslr_layout_buffer + yypslr_layout_length, text, (size_t) length);
+          yypslr_layout_length += length;
+          yypslr_layout_buffer[yypslr_layout_length] = '\\0';
+          return 1;
         }
 
         # define YYPSLR_LAYOUT_TEXT    yypslr_layout_buffer
@@ -1148,7 +1149,14 @@ module Lrama
 
               if (result->is_layout)
                 {
-                  YYPSLR_LAYOUT_APPEND (*input, result->length);
+                  if (!YYPSLR_LAYOUT_APPEND (*input, result->length))
+                    {
+                      result->token = YYUNDEF;
+                      result->is_layout = 0;
+                      result->is_character_token = 0;
+                      result->from_fallback = 0;
+                      return result->token;
+                    }
         #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, result->length, yylvalp);" : ""}
                   *input += result->length;
                   *input_len -= (size_t)result->length;

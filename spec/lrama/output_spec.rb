@@ -179,6 +179,14 @@ RSpec.describe Lrama::Output do
         expect(h).not_to match(/\[@oline@\]/)
         expect(h).not_to match(/\[@ofile@\]/)
       end
+
+      it "doesn't include PSLR state acceptance helpers" do
+        generated = out.read + header_out.read
+
+        expect(generated).not_to include("yy_state_accepts_token")
+        expect(generated).not_to include("yy_state_eventually_accepts_token")
+        expect(generated).not_to include("yy_state_deep_accepts_token")
+      end
     end
 
     context "header_file_path is not specified" do
@@ -350,6 +358,28 @@ RSpec.describe Lrama::Output do
 
         expect(result).to include("yy_lac_check_")
         expect(result).to include("yydefact")
+        expect(result.scan("return YYENOMEM;").size).to eq(3)
+      end
+    end
+
+    describe "#pslr_layout_declarations" do
+      it "reports layout buffer overflow without signed addition" do
+        result = pslr_output.pslr_layout_declarations
+
+        expect(result).to include("static int\nyypslr_layout_append")
+        expect(result).to include("(size_t) length >= (size_t) YYPSLR_LAYOUT_BUFFER_SIZE")
+        expect(result).not_to include("yypslr_layout_length + length")
+      end
+    end
+
+    describe "#pslr_layout_scan_function" do
+      it "returns an undefined token while preserving the matched length when layout does not fit" do
+        result = pslr_output.pslr_layout_scan_function
+
+        expect(result).to include("if (!YYPSLR_LAYOUT_APPEND")
+        expect(result).to include("result->token = YYUNDEF;")
+        expect(result).not_to include("result->length = 0;")
+        expect(result).to include("result->is_layout = 0;")
       end
     end
 
@@ -405,7 +435,9 @@ RSpec.describe Lrama::Output do
     describe "#pslr_function_declarations" do
       it "declares the PSLR helper entry points" do
         result = pslr_output.pslr_function_declarations
-        expect(result).to include("int yy_state_accepts_token")
+        expect(result).not_to include("yy_state_accepts_token")
+        expect(result).not_to include("yy_state_eventually_accepts_token")
+        expect(result).not_to include("yy_state_deep_accepts_token")
         expect(result).to include("int yy_pseudo_scan")
         expect(result).to include("YYPSLR_PSEUDO_SCAN_STATE")
         expect(result).to include("YYPSLR_PSEUDO_SCAN")
@@ -522,7 +554,23 @@ RSpec.describe Lrama::Output do
       expect(rendered).to include("yy_scanner_fallback_accepts")
       expect(rendered).to include("yy_token_pattern_is_layout")
       expect(rendered).to include("yy_lac_check_")
-      expect(rendered_header).to include("int yy_state_accepts_token")
+      expect(rendered.index("enum { YYENOMEM = -2 };")).to be < rendered.index("yy_lac_check_")
+      expect(rendered.scan("if (yylac_status == YYENOMEM)").size).to eq(3)
+      expect(rendered).to include("static int\nyy_state_accepts_token")
+      expect(rendered).to include("static int\nyy_state_eventually_accepts_token")
+      expect(rendered).to include("static int\nyy_state_deep_accepts_token")
+      expect(rendered.scan("YY_ATTRIBUTE_UNUSED\nstatic int\nyy_state_").size).to eq(3)
+      expect(rendered).to include("const yy_state_t *stack_base")
+      expect(rendered).to include("const yy_state_t *stack_top")
+      expect(rendered).to include("const yy_state_t *target")
+      expect(rendered).to match(
+        /if \(total_depth > stack_top - stack_base\).*target = stack_top - total_depth;/m
+      )
+      expect(rendered).not_to include("yy_state_t_compat")
+      expect(rendered).not_to include("const void *stack_")
+      expect(rendered_header).not_to include("yy_state_accepts_token")
+      expect(rendered_header).not_to include("yy_state_eventually_accepts_token")
+      expect(rendered_header).not_to include("yy_state_deep_accepts_token")
       expect(rendered_header).to include("int yy_pseudo_scan")
       expect(rendered_header).to include("yypslr_scan_result")
       expect(rendered_header).to include("YYSETSTATE_CONTEXT(CurrentState)")

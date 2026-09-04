@@ -285,17 +285,20 @@ RSpec.describe "integration" do
   end
 
   describe "PSLR pure mode (api.pslr.lexer generated)" do
-    def compile_pure_parser
+    def compile_pure_parser(layout_buffer_size: nil)
       tmpdir = Dir.tmpdir
       grammar_file_path = fixture_path("integration/pslr_pure.y")
-      c_path = tmpdir + "/pslr_pure#{file_extension}"
+      suffix = layout_buffer_size ? "_layout_#{layout_buffer_size}" : ""
+      c_path = tmpdir + "/pslr_pure#{suffix}#{file_extension}"
       h_path = tmpdir + "/pslr_pure.h"
-      obj_path = tmpdir + "/pslr_pure"
+      obj_path = tmpdir + "/pslr_pure#{suffix}"
+      cache_key = "pslr_pure#{suffix}"
 
-      unless IntegrationHelper.compiled_parsers["pslr_pure"] && File.exist?(obj_path)
+      unless IntegrationHelper.compiled_parsers[cache_key] && File.exist?(obj_path)
         Lrama::Command.new(%W[-H#{h_path} -o#{c_path} #{grammar_file_path}]).run
-        exec_command("#{compiler} -Wall -O0 -g -I#{tmpdir} #{c_path} -o #{obj_path}")
-        IntegrationHelper.compiled_parsers["pslr_pure"] = true
+        buffer_define = layout_buffer_size ? "-DYYPSLR_LAYOUT_BUFFER_SIZE=#{layout_buffer_size}" : ""
+        exec_command("#{compiler} -Wall -O0 -g -I#{tmpdir} #{buffer_define} #{c_path} -o #{obj_path}")
+        IntegrationHelper.compiled_parsers[cache_key] = true
       end
 
       obj_path
@@ -313,6 +316,17 @@ RSpec.describe "integration" do
       obj_path = compile_pure_parser
 
       _out, _err, status = Open3.capture3(obj_path, "1 + + 2")
+      expect(status.success?).to be false
+    end
+
+    it "fails instead of discarding layout that exceeds the layout buffer" do
+      obj_path = compile_pure_parser(layout_buffer_size: 4)
+
+      out, _err, status = Open3.capture3(obj_path, "  1")
+      expect(status.success?).to be true
+      expect(out).to eq("=> 1\n")
+
+      _out, _err, status = Open3.capture3(obj_path, "    1")
       expect(status.success?).to be false
     end
 
