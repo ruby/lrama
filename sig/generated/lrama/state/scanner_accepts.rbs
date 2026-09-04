@@ -18,9 +18,6 @@ module Lrama
     # length defaults are handled by LengthPrecedences#fallback_precedes?,
     # and otherwise-unresolved identity conflicts are resolved by token
     # declaration order.
-    #
-    # When %lex-scope declarations are present, each parser state may use
-    # a merged set of global + scope-active lexical precedence rules.
     class ScannerAccepts
       class Conflict
         attr_reader parser_state_id: Integer?
@@ -52,8 +49,8 @@ module Lrama
 
         attr_reader conflict: Conflict?
 
-        # @rbs (kind: Symbol, ?token_name: String?, ?conflict: Conflict?) -> void
-        def initialize: (kind: Symbol, ?token_name: String?, ?conflict: Conflict?) -> void
+        # @rbs (kind: Symbol, ?token_name: String?, ?conflict: Conflict?, ?current_match: bool) -> void
+        def initialize: (kind: Symbol, ?token_name: String?, ?conflict: Conflict?, ?current_match: bool) -> void
 
         # @rbs () -> bool
         def empty?: () -> bool
@@ -63,6 +60,9 @@ module Lrama
 
         # @rbs () -> bool
         def unresolved?: () -> bool
+
+        # @rbs () -> bool
+        def current_match?: () -> bool
       end
 
       class ProfileResolver
@@ -133,6 +133,9 @@ module Lrama
 
         # @rbs (String token_name) -> Grammar::TokenPattern
         def token_pattern_for: (String token_name) -> Grammar::TokenPattern
+
+        # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens, String path) -> void
+        def report_conflict: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens, String path) -> void
 
         # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> [Integer, Array[String], String?, Array[String]]
         def profile_key: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[String] current_tokens) -> [ Integer, Array[String], String?, Array[String] ]
