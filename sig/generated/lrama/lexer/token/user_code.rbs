@@ -14,6 +14,9 @@ module Lrama
         # @rbs () -> Array[Lrama::Grammar::Reference]
         def _references: () -> Array[Lrama::Grammar::Reference]
 
+        # @rbs (StringScanner scanner, String quote) -> void
+        def skip_quoted_literal: (StringScanner scanner, String quote) -> void
+
         # @rbs (StringScanner scanner) -> Lrama::Grammar::Reference?
         def scan_reference: (StringScanner scanner) -> Lrama::Grammar::Reference?
       end
