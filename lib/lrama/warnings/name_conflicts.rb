@@ -55,7 +55,7 @@ module Lrama
         parameterized_rules.each do |param_rule|
           next unless symbol_names.include?(param_rule.name)
 
-          @logger.warn("warning: parameterized rule name \"#{param_rule.name}\" conflicts with symbol name")
+          @logger.warn("parameterized rule name \"#{param_rule.name}\" conflicts with symbol name")
         end
       end
     end
