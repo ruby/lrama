@@ -141,6 +141,13 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
              |   ^~~~~
       ERROR
     end
+
+    it "raises error if symbol has no location" do
+      id = Lrama::Lexer::Token::Ident.new(s_value: "alias")
+
+      expect { resolver.find_symbol_by_id!(id) }
+        .to raise_error("symbol alias is used, but is not defined as a token and has no rules")
+    end
   end
 
   describe "#find_symbol_by_token_id" do

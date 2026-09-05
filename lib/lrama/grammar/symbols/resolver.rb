@@ -112,7 +112,11 @@ module Lrama
 
         # @rbs (Lexer::Token::Base id) -> Grammar::Symbol
         def find_symbol_by_id!(id)
-          find_symbol_by_id(id) || (raise id.location.generate_error_message("symbol #{id.s_value} is used, but is not defined as a token and has no rules"))
+          symbol = find_symbol_by_id(id)
+          return symbol if symbol
+
+          message = "symbol #{id.s_value} is used, but is not defined as a token and has no rules"
+          raise(id.location&.generate_error_message(message) || message)
         end
 
         # @rbs (Integer token_id) -> Grammar::Symbol?
