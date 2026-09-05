@@ -81,5 +81,105 @@ RSpec.describe Lrama::Command do
         File.delete("report.output")
       end
     end
+
+    context "when a PSLR grammar needs pure-reduce lookahead to choose tokens" do
+      let(:outfile) { File.join(Dir.tmpdir, "pslr-pure-reduce.c") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      it "emits parser output successfully" do
+        command = Lrama::Command.new(["-o", outfile, fixture_path("command/pslr_pure_reduce.y")])
+
+        expect(command.run).to be_nil
+        expect(File).to exist(outfile)
+      end
+    end
+
+    context "when validation aborts" do
+      let(:outfile) { File.join(Dir.tmpdir, "validate-abort.c") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      it "fails before writing parser output" do
+        allow_any_instance_of(Lrama::States).to receive(:validate!).and_raise(SystemExit)
+
+        command = Lrama::Command.new(["-o", outfile, fixture_path("command/basic.y")])
+
+        expect { command.run }.to raise_error(SystemExit)
+        expect(File).not_to exist(outfile)
+      end
+    end
+
+    context "when a PSLR grammar exceeds the configured state limit" do
+      let(:outfile) { File.join(Dir.tmpdir, "pslr-growth-limit.c") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      it "fails before writing parser output" do
+        command = Lrama::Command.new([
+          "-Dpslr.max-states=5",
+          "-o", outfile,
+          fixture_path("command/pslr_growth_limit.y")
+        ])
+
+        expect do
+          begin
+            command.run
+          rescue SystemExit
+            nil
+          end
+        end.to output(/error: PSLR state growth exceeded pslr.max-states=5/).to_stderr_from_any_process
+
+        expect(File).not_to exist(outfile)
+      end
+    end
+
+    context "when PSLR report output is requested" do
+      let(:outfile) { File.join(Dir.tmpdir, "pslr-report.c") }
+      let(:report_file) { File.join(Dir.tmpdir, "pslr-report.output") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+        File.delete(report_file) if File.exist?(report_file)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+        File.delete(report_file) if File.exist?(report_file)
+      end
+
+      it "writes PSLR metrics into the report file" do
+        command = Lrama::Command.new([
+          "--report=pslr",
+          "--report-file=#{report_file}",
+          "-o", outfile,
+          fixture_path("command/pslr_growth_limit.y")
+        ])
+
+        expect(command.run).to be_nil
+        report = File.read(report_file)
+        expect(report).to include("PSLR Summary")
+        expect(report).to include("Base states:")
+        expect(report).to include("Total states:")
+      end
+    end
   end
 end

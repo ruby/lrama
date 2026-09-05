@@ -1,6 +1,10 @@
 ---
 path: ".gem_rbs_collection"
 gems:
+- name: date
+  version: '0'
+  source:
+    type: stdlib
 - name: dbm
   version: '0'
   source:
@@ -22,6 +26,10 @@ gems:
   source:
     type: stdlib
 - name: forwardable
+  version: '0'
+  source:
+    type: stdlib
+- name: io-console
   version: '0'
   source:
     type: stdlib
@@ -57,11 +65,19 @@ gems:
     revision: 01f77ce44d0ac13c8ebfc3cfdd7104320021f991
     remote: https://github.com/ruby/gem_rbs_collection.git
     repo_dir: gems
+- name: stringio
+  version: '0'
+  source:
+    type: stdlib
 - name: strscan
   version: '0'
   source:
     type: stdlib
 - name: timeout
+  version: '0'
+  source:
+    type: stdlib
+- name: tsort
   version: '0'
   source:
     type: stdlib
