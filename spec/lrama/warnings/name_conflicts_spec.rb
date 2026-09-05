@@ -31,7 +31,7 @@ RSpec.describe Lrama::Warnings::NameConflicts do
           logger = Lrama::Logger.new
           allow(logger).to receive(:warn)
           Lrama::Warnings.new(logger, true).warn(grammar, states)
-          expect(logger).to have_received(:warn).with('warning: parameterized rule name "option" conflicts with symbol name')
+          expect(logger).to have_received(:warn).with('parameterized rule name "option" conflicts with symbol name')
         end
       end
 
@@ -78,7 +78,7 @@ RSpec.describe Lrama::Warnings::NameConflicts do
           logger = Lrama::Logger.new
           allow(logger).to receive(:warn)
           Lrama::Warnings.new(logger, true).warn(grammar, states)
-          expect(logger).to have_received(:warn).with('warning: parameterized rule name "program" conflicts with symbol name')
+          expect(logger).to have_received(:warn).with('parameterized rule name "program" conflicts with symbol name')
         end
       end
 
@@ -193,8 +193,8 @@ RSpec.describe Lrama::Warnings::NameConflicts do
           logger = Lrama::Logger.new
           allow(logger).to receive(:warn)
           Lrama::Warnings.new(logger, true).warn(grammar, states)
-          expect(logger).to have_received(:warn).with('warning: parameterized rule name "option" conflicts with symbol name')
-          expect(logger).to have_received(:warn).with('warning: parameterized rule name "separated" conflicts with symbol name')
+          expect(logger).to have_received(:warn).with('parameterized rule name "option" conflicts with symbol name')
+          expect(logger).to have_received(:warn).with('parameterized rule name "separated" conflicts with symbol name')
         end
       end
     end

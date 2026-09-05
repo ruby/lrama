@@ -19,16 +19,20 @@ RSpec.describe Lrama::Warnings::ImplicitEmpty do
     end
 
     context "when warnings true" do
-      it "has warns for parameterized rule redefined" do
+      it "warns with the rule location" do
         grammar = Lrama::Parser.new(y, "states/empty.y").parse
         grammar.prepare
         grammar.validate!
         states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
         states.compute
-        logger = Lrama::Logger.new
-        allow(logger).to receive(:warn)
+        out = StringIO.new
+        logger = Lrama::Logger.new(out)
         Lrama::Warnings.new(logger, true).warn(grammar, states)
-        expect(logger).to have_received(:warn).with("warning: empty rule without %empty")
+        expect(out.string).to eq(<<~WARNING)
+          warning: states/empty.y:9:0: empty rule for program without %empty
+             9 | program: /* empty */
+               | ^~~~~~~
+        WARNING
       end
     end
 
@@ -42,7 +46,7 @@ RSpec.describe Lrama::Warnings::ImplicitEmpty do
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
         Lrama::Warnings.new(logger, false).warn(grammar, states)
-        expect(logger).not_to have_received(:warn).with("warning: empty rule without %empty")
+        expect(logger).not_to have_received(:warn)
       end
     end
   end

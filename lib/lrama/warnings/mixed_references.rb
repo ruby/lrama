@@ -24,7 +24,7 @@ module Lrama
         build_grouped_usage(grammar).each do |rule, usage|
           next unless usage[:positional] && usage[:named]
 
-          @logger.warn("warning: rule `#{rule.as_comment}` mixes positional and named references; use named references consistently")
+          @logger.warn("rule `#{rule.as_comment}` mixes positional and named references; use named references consistently")
         end
       end
 

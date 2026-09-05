@@ -20,7 +20,8 @@ module Lrama
 
         grammar.rule_builders.each do |builder|
           if builder.rhs.empty?
-            @logger.warn("warning: empty rule without %empty")
+            lhs = builder.lhs #: Lrama::Lexer::Token::Base
+            @logger.warn(lhs.location.generate_error_message("empty rule for #{lhs.s_value} without %empty").chomp)
           end
         end
       end

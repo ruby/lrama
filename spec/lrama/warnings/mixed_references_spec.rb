@@ -32,7 +32,7 @@ RSpec.describe Lrama::Warnings::MixedReferences do
 
         Lrama::Warnings.new(logger, true).warn(grammar, states)
 
-        expect(logger).to have_received(:warn).with("warning: rule `expr: NUM NUM` mixes positional and named references; use named references consistently")
+        expect(logger).to have_received(:warn).with("rule `expr: NUM NUM` mixes positional and named references; use named references consistently")
       end
 
       it "does not warn when named references are used consistently" do
@@ -100,7 +100,7 @@ RSpec.describe Lrama::Warnings::MixedReferences do
 
         Lrama::Warnings.new(logger, true).warn(grammar, states)
 
-        expect(logger).to have_received(:warn).with(/warning: rule `expr: .*` mixes positional and named references; use named references consistently/).once
+        expect(logger).to have_received(:warn).with(/rule `expr: .*` mixes positional and named references; use named references consistently/).once
       end
 
       it "does not warn when positional references are used consistently" do
@@ -165,7 +165,7 @@ RSpec.describe Lrama::Warnings::MixedReferences do
 
         Lrama::Warnings.new(logger, true).warn(grammar, states)
 
-        expect(logger).to have_received(:warn).with("warning: rule `expr: NUM` mixes positional and named references; use named references consistently")
+        expect(logger).to have_received(:warn).with("rule `expr: NUM` mixes positional and named references; use named references consistently")
       end
 
       it "warns when mixing address-of location references and named value references" do
@@ -198,7 +198,7 @@ RSpec.describe Lrama::Warnings::MixedReferences do
 
         Lrama::Warnings.new(logger, true).warn(grammar, states)
 
-        expect(logger).to have_received(:warn).with("warning: rule `expr: NUM NUM` mixes positional and named references; use named references consistently")
+        expect(logger).to have_received(:warn).with("rule `expr: NUM NUM` mixes positional and named references; use named references consistently")
       end
 
       it "warns when mixing index and named value references" do
@@ -231,7 +231,7 @@ RSpec.describe Lrama::Warnings::MixedReferences do
 
         Lrama::Warnings.new(logger, true).warn(grammar, states)
 
-        expect(logger).to have_received(:warn).with("warning: rule `expr: NUM` mixes positional and named references; use named references consistently")
+        expect(logger).to have_received(:warn).with("rule `expr: NUM` mixes positional and named references; use named references consistently")
       end
 
       it "does not warn when using only special and positional index references" do
@@ -296,7 +296,7 @@ RSpec.describe Lrama::Warnings::MixedReferences do
 
         Lrama::Warnings.new(logger, true).warn(grammar, states)
 
-        expect(logger).to have_received(:warn).with("warning: rule `expr: NUM` mixes positional and named references; use named references consistently")
+        expect(logger).to have_received(:warn).with("rule `expr: NUM` mixes positional and named references; use named references consistently")
       end
 
       it "does not warn when mixing special LHS and positional references" do
@@ -458,7 +458,7 @@ RSpec.describe Lrama::Warnings::MixedReferences do
 
         Lrama::Warnings.new(logger, true).warn(grammar, states)
 
-        expect(logger).to have_received(:warn).with("warning: rule `expr: LEFT tPLUS RIGHT` mixes positional and named references; use named references consistently")
+        expect(logger).to have_received(:warn).with("rule `expr: LEFT tPLUS RIGHT` mixes positional and named references; use named references consistently")
       end
 
       it "warns when mixing tagged LHS alias and positional references" do
@@ -490,7 +490,7 @@ RSpec.describe Lrama::Warnings::MixedReferences do
 
         Lrama::Warnings.new(logger, true).warn(grammar, states)
 
-        expect(logger).to have_received(:warn).with("warning: rule `expr: NUM` mixes positional and named references; use named references consistently")
+        expect(logger).to have_received(:warn).with("rule `expr: NUM` mixes positional and named references; use named references consistently")
       end
     end
 
