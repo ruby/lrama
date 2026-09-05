@@ -498,7 +498,7 @@ rule
        | STRING
        | "{...}"
 
-  string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0].s_value) }
+  string_as_id: STRING { result = Lrama::Lexer::Token::Ident.new(s_value: val[0].s_value, location: val[0].location) }
 end
 
 ---- inner
