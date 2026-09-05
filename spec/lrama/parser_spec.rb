@@ -4434,6 +4434,25 @@ RSpec.describe Lrama::Parser do
     end
 
     describe "error messages" do
+      context "when the start symbol is not defined" do
+        it "reports the symbol and its location" do
+          y = <<~INPUT
+            %start nosuch
+            %%
+            program: "a" ;
+          INPUT
+
+          expect do
+            grammar = Lrama::Parser.new(y, "parse.y").parse
+            grammar.prepare
+          end.to raise_error(<<~ERROR)
+            parse.y:1:7: symbol nosuch is used, but is not defined as a token and has no rules
+               1 | %start nosuch
+                 |        ^~~~~~
+          ERROR
+        end
+      end
+
       context "error_value has line number and column" do
         it "contains line number and column" do
           y = <<~INPUT

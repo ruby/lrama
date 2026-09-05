@@ -2272,7 +2272,7 @@ module_eval(<<'.,.,', 'parser.y', 488)
 
 module_eval(<<'.,.,', 'parser.y', 500)
   def _reduce_136(val, _values, result)
-     result = Lrama::Lexer::Token::Ident.new(s_value: val[0].s_value)
+     result = Lrama::Lexer::Token::Ident.new(s_value: val[0].s_value, location: val[0].location)
     result
   end
 .,.,

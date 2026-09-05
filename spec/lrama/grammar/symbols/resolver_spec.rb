@@ -132,10 +132,21 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
     end
 
     it "raises error if symbol not found" do
-      grammar_file = Lrama::Lexer::GrammarFile.new("foo/basic.y", "")
-      location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 2, last_line: 3, last_column: 4)
+      grammar_file = Lrama::Lexer::GrammarFile.new("foo/basic.y", "  alias")
+      location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 2, last_line: 1, last_column: 7)
       symbol = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: "alias", location: location), alias_name: "alias", term: true)
-      expect { resolver.find_symbol_by_id!(symbol.id) }.to raise_error("Symbol not found. value: `alias`, location: foo/basic.y (1,2)-(3,4)")
+      expect { resolver.find_symbol_by_id!(symbol.id) }.to raise_error(<<~ERROR)
+        foo/basic.y:1:2: symbol alias is used, but is not defined as a token and has no rules
+           1 |   alias
+             |   ^~~~~
+      ERROR
+    end
+
+    it "raises error if symbol has no location" do
+      id = Lrama::Lexer::Token::Ident.new(s_value: "alias")
+
+      expect { resolver.find_symbol_by_id!(id) }
+        .to raise_error("symbol alias is used, but is not defined as a token and has no rules")
     end
   end
 
