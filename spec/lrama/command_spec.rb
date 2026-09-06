@@ -81,5 +81,49 @@ RSpec.describe Lrama::Command do
         File.delete("report.output")
       end
     end
+
+    context "when conflicts do not match %expect" do
+      it "does not create the parser output" do
+        grammar = <<~Y
+          %expect 0
+          %token NUM
+          %%
+          expr: NUM | expr '+' expr;
+        Y
+
+        Dir.mktmpdir do |dir|
+          outfile = File.join(dir, "parse.c")
+          allow(STDIN).to receive(:read).and_return(grammar)
+          command = Lrama::Command.new(["-o", outfile, "-", "conflict.y"])
+          errors = StringIO.new
+          command.instance_variable_set(:@logger, Lrama::Logger.new(errors))
+
+          expect { command.run }.to raise_error(SystemExit)
+          expect(errors.string).to eq("error: shift/reduce conflicts: 1 found, 0 expected\n")
+          expect(File).not_to exist(outfile)
+        end
+      end
+    end
+
+    context "when rendering fails" do
+      it "preserves the existing parser output" do
+        Dir.mktmpdir do |dir|
+          outfile = File.join(dir, "parse.c")
+          File.write(outfile, "existing output")
+          command = Lrama::Command.new(["-o", outfile, fixture_path("command/basic.y")])
+          allow(Lrama::Output).to receive(:new) do |out:, **|
+            output = instance_double(Lrama::Output)
+            allow(output).to receive(:render) do
+              out << "partial output"
+              raise "render failed"
+            end
+            output
+          end
+
+          expect { command.run }.to raise_error("render failed")
+          expect(File.read(outfile)).to eq("existing output")
+        end
+      end
+    end
   end
 end
