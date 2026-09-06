@@ -26,13 +26,33 @@ module Lrama
             when reference = scan_reference(scanner)
               references << reference
             when scanner.scan(/\/\*/)
-              scanner.scan_until(/\*\//)
+              scanner.scan_until(/\*\//) || scanner.terminate
+            when scanner.scan(%r{//})
+              scanner.scan_until(/\n/) || scanner.terminate
+            when quote = scanner.scan(/["']/)
+              skip_quoted_literal(scanner, quote)
             else
               scanner.getch
             end
           end
 
           references
+        end
+
+        # @rbs (StringScanner scanner, String quote) -> void
+        def skip_quoted_literal(scanner, quote)
+          escaped = false
+
+          until scanner.eos?
+            char = scanner.getch
+            if escaped
+              escaped = false
+            elsif char == "\\"
+              escaped = true
+            elsif char == quote
+              break
+            end
+          end
         end
 
         # @rbs (StringScanner scanner) -> Lrama::Grammar::Reference?
