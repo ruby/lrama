@@ -21,6 +21,9 @@ RSpec.describe Lrama::Lexer::Token::UserCode do
       references = Lrama::Lexer::Token::UserCode.new(s_value: " $<long>1 ", location: location).references
       expect(references.count).to eq 1
       expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :dollar, number: 1, index: 1, ex_tag: Lrama::Lexer::Token::Tag.new(s_value: "<long>"), first_column: 1, last_column: 9)
+      references = Lrama::Lexer::Token::UserCode.new(s_value: " $<value.integer>1 ", location: location).references
+      expect(references.count).to eq 1
+      expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :dollar, number: 1, index: 1, ex_tag: Lrama::Lexer::Token::Tag.new(s_value: "<value.integer>"), first_column: 1, last_column: 18)
 
       # $foo
       references = Lrama::Lexer::Token::UserCode.new(s_value: " $foo ", location: location).references
