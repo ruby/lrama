@@ -48,6 +48,7 @@ RSpec.describe Lrama::OptionParser do
 
           Tuning the Parser:
               -S, --skeleton=FILE              specify the skeleton to use
+              -L, --language=LANG              target language (c, rust, ruby, javascript, cpp, python)
               -t, --debug                      display debugging outputs of internal parser
                                                same as '-Dparse.trace'
                   --locations                  enable location support
@@ -250,6 +251,34 @@ RSpec.describe Lrama::OptionParser do
         option_parser.send(:parse, ["-o", "parse.c", "-", "test.y"])
         options = option_parser.instance_variable_get(:@options)
         expect(options.outfile).to eq "parse.c"
+      end
+    end
+  end
+
+  describe "@language" do
+    context "language option is not passed" do
+      it "@language is c" do
+        option_parser = Lrama::OptionParser.new
+        option_parser.send(:parse, ["-", "test.y"])
+        options = option_parser.instance_variable_get(:@options)
+        expect(options.language).to eq "c"
+      end
+    end
+
+    context "language option is passed" do
+      it "@language is same with passed value" do
+        option_parser = Lrama::OptionParser.new
+        option_parser.send(:parse, ["-L", "ruby", "-", "test.y"])
+        options = option_parser.instance_variable_get(:@options)
+        expect(options.language).to eq "ruby"
+        expect(options.outfile).to eq "./test.rb"
+      end
+    end
+
+    context "unsupported language is passed" do
+      it "raises error" do
+        option_parser = Lrama::OptionParser.new
+        expect { option_parser.send(:parse, ["-L", "go", "-", "test.y"]) }.to raise_error(/Unknown backend/)
       end
     end
   end

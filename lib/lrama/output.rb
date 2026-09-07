@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "forwardable"
+require_relative "backend"
 require_relative "tracer/duration"
 
 module Lrama
@@ -8,7 +9,7 @@ module Lrama
     extend Forwardable
     include Tracer::Duration
 
-    attr_reader :grammar_file_path, :context, :grammar, :error_recovery, :include_header
+    attr_reader :grammar_file_path, :context, :grammar, :error_recovery, :include_header, :backend
 
     def_delegators "@context", :yyfinal, :yylast, :yyntokens, :yynnts, :yynrules, :yynstates,
                                :yymaxutok, :yypact_ninf, :yytable_ninf
@@ -16,12 +17,13 @@ module Lrama
     def_delegators "@grammar", :eof_symbol, :error_symbol, :undef_symbol, :accept_symbol
 
     def initialize(
-      out:, output_file_path:, template_name:, grammar_file_path:,
+      out:, output_file_path:, grammar_file_path:, template_name: nil, backend: nil,
       context:, grammar:, header_out: nil, header_file_path: nil, error_recovery: false
     )
       @out = out
       @output_file_path = output_file_path
       @template_name = template_name
+      @backend = backend || Backend::C.new(context: context, grammar: grammar, options: nil)
       @grammar_file_path = grammar_file_path
       @header_out = header_out
       @header_file_path = header_file_path
@@ -48,10 +50,12 @@ module Lrama
     def render
       report_duration(:render) do
         tmp = eval_template(template_file, @output_file_path)
+        tmp = @backend.post_process(tmp)
         @out << tmp
 
-        if @header_file_path
+        if @header_file_path && header_template_file
           tmp = eval_template(header_template_file, @header_file_path)
+          tmp = @backend.post_process(tmp)
 
           if @header_out
             @header_out << tmp
@@ -64,94 +68,41 @@ module Lrama
 
     # A part of b4_token_enums
     def token_enums
-      @context.yytokentype.map do |s_value, token_id, display_name|
-        s = sprintf("%s = %d%s", s_value, token_id, token_id == yymaxutok ? "" : ",")
-
-        if display_name
-          sprintf("    %-30s /* %s  */\n", s, display_name)
-        else
-          sprintf("    %s\n", s)
-        end
-      end.join
+      @backend.token_enums
     end
 
     # b4_symbol_enum
     def symbol_enum
-      last_sym_number = @context.yysymbol_kind_t.last[1]
-      @context.yysymbol_kind_t.map do |s_value, sym_number, display_name|
-        s = sprintf("%s = %d%s", s_value, sym_number, (sym_number == last_sym_number) ? "" : ",")
-
-        if display_name
-          sprintf("  %-40s /* %s  */\n", s, display_name)
-        else
-          sprintf("  %s\n", s)
-        end
-      end.join
+      @backend.symbol_enum
     end
 
     def yytranslate
-      int_array_to_string(@context.yytranslate)
+      @backend.format_int_array(@context.yytranslate)
     end
 
     def yytranslate_inverted
-      int_array_to_string(@context.yytranslate_inverted)
+      @backend.format_int_array(@context.yytranslate_inverted)
     end
 
     def yyrline
-      int_array_to_string(@context.yyrline)
+      @backend.format_int_array(@context.yyrline)
     end
 
     def yytname
-      string_array_to_string(@context.yytname) + " YY_NULLPTR"
+      @backend.format_string_array(@context.yytname) + " YY_NULLPTR"
     end
 
     # b4_int_type_for
     def int_type_for(ary)
-      min = ary.min
-      max = ary.max
-
-      case
-      when (-127 <= min && min <= 127) && (-127 <= max && max <= 127)
-        "yytype_int8"
-      when (0 <= min && min <= 255) && (0 <= max && max <= 255)
-        "yytype_uint8"
-      when (-32767 <= min && min <= 32767) && (-32767 <= max && max <= 32767)
-        "yytype_int16"
-      when (0 <= min && min <= 65535) && (0 <= max && max <= 65535)
-        "yytype_uint16"
-      else
-        "int"
-      end
+      @backend.int_type_for(ary)
     end
 
     def symbol_actions_for_printer
-      @grammar.symbols.map do |sym|
-        next unless sym.printer
-
-        <<-STR
-    case #{sym.enum_name}: /* #{sym.comment}  */
-#line #{sym.printer.lineno} "#{@grammar_file_path}"
-         {#{sym.printer.translated_code(sym.tag)}}
-#line [@oline@] [@ofile@]
-        break;
-
-        STR
-      end.join
+      @backend.render_symbol_actions_for_printer(@grammar_file_path)
     end
 
     def symbol_actions_for_destructor
-      @grammar.symbols.map do |sym|
-        next unless sym.destructor
-
-        <<-STR
-    case #{sym.enum_name}: /* #{sym.comment}  */
-#line #{sym.destructor.lineno} "#{@grammar_file_path}"
-         {#{sym.destructor.translated_code(sym.tag)}}
-#line [@oline@] [@ofile@]
-        break;
-
-        STR
-      end.join
+      @backend.render_symbol_actions_for_destructor(@grammar_file_path)
     end
 
     # b4_user_initial_action
@@ -221,42 +172,12 @@ module Lrama
     end
 
     def symbol_actions_for_error_token
-      @grammar.symbols.map do |sym|
-        next unless sym.error_token
-
-        <<-STR
-    case #{sym.enum_name}: /* #{sym.comment}  */
-#line #{sym.error_token.lineno} "#{@grammar_file_path}"
-         {#{sym.error_token.translated_code(sym.tag)}}
-#line [@oline@] [@ofile@]
-        break;
-
-        STR
-      end.join
+      @backend.render_symbol_actions_for_error_token(@grammar_file_path)
     end
 
     # b4_user_actions
     def user_actions
-      action = @context.states.rules.map do |rule|
-        next unless rule.token_code
-
-        code = rule.token_code
-        spaces = " " * (code.column - 1)
-
-        <<-STR
-  case #{rule.id + 1}: /* #{rule.as_comment}  */
-#line #{code.line} "#{@grammar_file_path}"
-#{spaces}{#{rule.translated_code(@grammar)}}
-#line [@oline@] [@ofile@]
-    break;
-
-        STR
-      end.join
-
-      action + <<-STR
-
-#line [@oline@] [@ofile@]
-      STR
+      @backend.render_user_actions(@grammar_file_path)
     end
 
     def omit_blanks(param)
@@ -373,11 +294,7 @@ module Lrama
     end
 
     def int_array_to_string(ary)
-      last = ary.count - 1
-
-      ary.each_with_index.each_slice(10).map do |slice|
-        "  " + slice.map { |e, i| sprintf("%6d%s", e, (i == last) ? "" : ",") }.join
-      end.join("\n")
+      @backend.format_int_array(ary)
     end
 
     def spec_mapped_header_file
@@ -409,11 +326,15 @@ module Lrama
     end
 
     def template_file
-      File.join(template_dir, @template_name)
+      if @template_name
+        File.join(template_dir, @template_name)
+      else
+        @backend.template_file
+      end
     end
 
     def header_template_file
-      File.join(template_dir, "bison/yacc.h")
+      @backend.header_template_file
     end
 
     def partial_file(file)
@@ -422,23 +343,6 @@ module Lrama
 
     def template_dir
       File.expand_path('../../template', __dir__)
-    end
-
-    def string_array_to_string(ary)
-      result = ""
-      tmp = " "
-
-      ary.each do |s|
-        replaced = s.gsub('\\', '\\\\\\\\').gsub('"', '\\"')
-        if (tmp + replaced + " \"\",").length > 75
-          result = "#{result}#{tmp}\n"
-          tmp = "  \"#{replaced}\","
-        else
-          tmp = "#{tmp} \"#{replaced}\","
-        end
-      end
-
-      result + tmp
     end
 
     def replace_special_variables(str, ofile)

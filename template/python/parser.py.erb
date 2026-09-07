@@ -1,0 +1,134 @@
+from __future__ import annotations
+
+# A parser, made by Lrama <%= Lrama::VERSION %>.
+
+<%= output.backend.token_enums %>
+<%= output.backend.symbol_enum %>
+YYFINAL = <%= output.yyfinal %>
+YYLAST = <%= output.yylast %>
+YYNTOKENS = <%= output.yyntokens %>
+YYMAXUTOK = <%= output.yymaxutok %>
+YYPACT_NINF = <%= output.yypact_ninf %>
+YYTABLE_NINF = <%= output.yytable_ninf %>
+YYUNDEF = <%= output.undef_symbol.number %>
+
+YYTRANSLATE = <%= output.backend.format_int_array(output.context.yytranslate) %>
+YYPACT = <%= output.backend.format_int_array(output.context.yypact) %>
+YYDEFACT = <%= output.backend.format_int_array(output.context.yydefact) %>
+YYPGOTO = <%= output.backend.format_int_array(output.context.yypgoto) %>
+YYDEFGOTO = <%= output.backend.format_int_array(output.context.yydefgoto) %>
+YYTABLE = <%= output.backend.format_int_array(output.context.yytable) %>
+YYCHECK = <%= output.backend.format_int_array(output.context.yycheck) %>
+YYR1 = <%= output.backend.format_int_array(output.context.yyr1) %>
+YYR2 = <%= output.backend.format_int_array(output.context.yyr2) %>
+YYTNAME = <%= output.backend.format_string_array(output.context.yytname) %>
+
+
+class Parser:
+    def __init__(self, lexer):
+        self.lexer = lexer
+
+    def parse(self):
+        yychar = None
+        yylval = None
+        yylloc = None
+        state_stack = [0]
+        value_stack = []
+        location_stack = []
+
+        while True:
+            yystate = state_stack[-1]
+            yyn = YYPACT[yystate]
+
+            if not self._yypact_default(yyn):
+                if yychar is None:
+                    yychar, yylval, yylloc = self._read_token()
+
+                yytoken = self._translate(yychar)
+                yyn += yytoken
+
+                if 0 <= yyn <= YYLAST and YYCHECK[yyn] == yytoken:
+                    yyn = YYTABLE[yyn]
+                    if self._yytable_error(yyn):
+                        raise SyntaxError("syntax error")
+
+                    if yyn > 0:
+                        state_stack.append(yyn)
+                        value_stack.append(yylval)
+                        location_stack.append(yylloc)
+                        yychar = None
+                        yylval = None
+                        yylloc = None
+                        if yyn == YYFINAL:
+                            return self._final_value(value_stack)
+                        continue
+
+                    yyn = -yyn
+                else:
+                    yyn = YYDEFACT[yystate]
+                    if yyn == 0:
+                        raise SyntaxError("syntax error")
+            else:
+                yyn = YYDEFACT[yystate]
+                if yyn == 0:
+                    raise SyntaxError("syntax error")
+
+            yylen = YYR2[yyn]
+            yyval, yyloc = self._reduce_action(yyn, value_stack, location_stack, yylen)
+            for _ in range(yylen):
+                state_stack.pop()
+                value_stack.pop()
+                location_stack.pop()
+
+            yystate = state_stack[-1]
+            yylhs = YYR1[yyn] - YYNTOKENS
+            yyi = YYPGOTO[yylhs] + yystate
+            if 0 <= yyi <= YYLAST and YYCHECK[yyi] == yystate:
+                yystate = YYTABLE[yyi]
+            else:
+                yystate = YYDEFGOTO[yylhs]
+
+            state_stack.append(yystate)
+            value_stack.append(yyval)
+            location_stack.append(yyloc)
+
+    def _read_token(self):
+        if hasattr(self.lexer, "next_token"):
+            token = self.lexer.next_token()
+        else:
+            token = next(self.lexer, None)
+
+        if token is None:
+            return 0, None, None
+        if isinstance(token, (list, tuple)):
+            token_type = token[0] if token[0] is not None else 0
+            value = token[1] if len(token) > 1 else None
+            loc = token[2] if len(token) > 2 else None
+            return token_type, value, loc
+
+        return getattr(token, "type", 0) or 0, getattr(token, "value", None), getattr(token, "loc", None)
+
+    def _translate(self, token_id):
+        if 0 <= token_id <= YYMAXUTOK:
+            return YYTRANSLATE[token_id]
+        return YYUNDEF
+
+    def _yypact_default(self, value):
+        return value == YYPACT_NINF
+
+    def _yytable_error(self, value):
+        return value == YYTABLE_NINF
+
+    def _final_value(self, value_stack):
+        return value_stack[-2] if len(value_stack) >= 2 else value_stack[-1]
+
+    def _reduce_action(self, yyn, yyvsp, yylsp, yylen):
+        p = [None]
+        loc = [None]
+        if yylen > 0:
+            p[0] = yyvsp[-yylen]
+            loc[0] = yylsp[-yylen]
+            p.extend(yyvsp[-yylen:])
+            loc.extend(yylsp[-yylen:])
+<%= output.backend.render_user_actions(output.grammar_file_path) -%>
+        return p[0], loc[0]

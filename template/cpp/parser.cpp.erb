@@ -1,0 +1,173 @@
+// A parser, made by Lrama <%= Lrama::VERSION %>.
+
+#include <cstdint>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace lrama_generated {
+
+<%= output.backend.token_enums %>
+<%= output.backend.symbol_enum %>
+static constexpr int YYFINAL = <%= output.yyfinal %>;
+static constexpr int YYLAST = <%= output.yylast %>;
+static constexpr int YYNTOKENS = <%= output.yyntokens %>;
+static constexpr int YYMAXUTOK = <%= output.yymaxutok %>;
+static constexpr int YYPACT_NINF = <%= output.yypact_ninf %>;
+static constexpr int YYTABLE_NINF = <%= output.yytable_ninf %>;
+static constexpr int YYUNDEF = <%= output.undef_symbol.number %>;
+
+static const std::vector<int> YYTRANSLATE = <%= output.backend.format_int_array(output.context.yytranslate) %>;
+static const std::vector<int> YYPACT = <%= output.backend.format_int_array(output.context.yypact) %>;
+static const std::vector<int> YYDEFACT = <%= output.backend.format_int_array(output.context.yydefact) %>;
+static const std::vector<int> YYPGOTO = <%= output.backend.format_int_array(output.context.yypgoto) %>;
+static const std::vector<int> YYDEFGOTO = <%= output.backend.format_int_array(output.context.yydefgoto) %>;
+static const std::vector<int> YYTABLE = <%= output.backend.format_int_array(output.context.yytable) %>;
+static const std::vector<int> YYCHECK = <%= output.backend.format_int_array(output.context.yycheck) %>;
+static const std::vector<int> YYR1 = <%= output.backend.format_int_array(output.context.yyr1) %>;
+static const std::vector<int> YYR2 = <%= output.backend.format_int_array(output.context.yyr2) %>;
+static const std::vector<std::string> YYTNAME = <%= output.backend.format_string_array(output.context.yytname) %>;
+
+using YYValue = int;
+
+struct YYLocation {};
+
+struct Token {
+  int type = 0;
+  YYValue value = {};
+  YYLocation location = {};
+};
+
+class Lexer {
+ public:
+  virtual ~Lexer() = default;
+  virtual bool next_token(Token& token) = 0;
+};
+
+class Parser {
+ public:
+  explicit Parser(Lexer& lexer) : lexer_(lexer) {}
+
+  int parse(YYValue* result = nullptr) {
+    bool yychar_empty = true;
+    int yychar = 0;
+    YYValue yylval = {};
+    YYLocation yylloc = {};
+    std::vector<int> state_stack = {0};
+    std::vector<YYValue> value_stack;
+    std::vector<YYLocation> location_stack;
+
+    while (true) {
+      int yystate = state_stack.back();
+      int yyn = YYPACT[yystate];
+
+      if (!yypact_default(yyn)) {
+        if (yychar_empty) {
+          Token token;
+          if (lexer_.next_token(token)) {
+            yychar = token.type;
+            yylval = token.value;
+            yylloc = token.location;
+          } else {
+            yychar = 0;
+            yylval = {};
+            yylloc = {};
+          }
+          yychar_empty = false;
+        }
+
+        int yytoken = translate(yychar);
+        yyn += yytoken;
+
+        if (0 <= yyn && yyn <= YYLAST && YYCHECK[yyn] == yytoken) {
+          yyn = YYTABLE[yyn];
+          if (yytable_error(yyn)) return 1;
+
+          if (yyn > 0) {
+            state_stack.push_back(yyn);
+            value_stack.push_back(yylval);
+            location_stack.push_back(yylloc);
+            yychar_empty = true;
+            yylval = {};
+            yylloc = {};
+            if (yyn == YYFINAL) {
+              if (result != nullptr) *result = final_value(value_stack);
+              return 0;
+            }
+            continue;
+          }
+
+          yyn = -yyn;
+        } else {
+          yyn = YYDEFACT[yystate];
+          if (yyn == 0) return 1;
+        }
+      } else {
+        yyn = YYDEFACT[yystate];
+        if (yyn == 0) return 1;
+      }
+
+      int yylen = YYR2[yyn];
+      auto reduced = reduce_action(yyn, value_stack, location_stack, yylen);
+      for (int i = 0; i < yylen; i++) {
+        state_stack.pop_back();
+        value_stack.pop_back();
+        location_stack.pop_back();
+      }
+
+      yystate = state_stack.back();
+      int yylhs = YYR1[yyn] - YYNTOKENS;
+      int yyi = YYPGOTO[yylhs] + yystate;
+      if (0 <= yyi && yyi <= YYLAST && YYCHECK[yyi] == yystate) {
+        yystate = YYTABLE[yyi];
+      } else {
+        yystate = YYDEFGOTO[yylhs];
+      }
+
+      state_stack.push_back(yystate);
+      value_stack.push_back(reduced.first);
+      location_stack.push_back(reduced.second);
+    }
+  }
+
+ private:
+  Lexer& lexer_;
+
+  static int translate(int token_id) {
+    if (0 <= token_id && token_id <= YYMAXUTOK) return YYTRANSLATE[token_id];
+    return YYUNDEF;
+  }
+
+  static bool yypact_default(int value) {
+    return value == YYPACT_NINF;
+  }
+
+  static bool yytable_error(int value) {
+    return value == YYTABLE_NINF;
+  }
+
+  static YYValue final_value(const std::vector<YYValue>& value_stack) {
+    return value_stack.size() >= 2 ? value_stack[value_stack.size() - 2] : value_stack.back();
+  }
+
+  std::pair<YYValue, YYLocation> reduce_action(int yyn, const std::vector<YYValue>& yyvsp, const std::vector<YYLocation>& yylsp, int yylen) {
+    YYValue yyval = yylen > 0 ? yyvsp[yyvsp.size() - yylen] : YYValue{};
+    YYLocation yyloc = yylen > 0 ? yylsp[yylsp.size() - yylen] : YYLocation{};
+    std::vector<YYValue> val;
+    std::vector<YYLocation> loc;
+    if (yylen > 0) {
+      val.assign(yyvsp.end() - yylen, yyvsp.end());
+      loc.assign(yylsp.end() - yylen, yylsp.end());
+    }
+
+    switch (yyn) {
+<%= output.backend.render_user_actions(output.grammar_file_path) -%>
+    default:
+      break;
+    }
+
+    return {yyval, yyloc};
+  }
+};
+
+}  // namespace lrama_generated

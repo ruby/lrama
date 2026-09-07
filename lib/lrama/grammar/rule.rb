@@ -104,11 +104,11 @@ module Lrama
         id == 0
       end
 
-      # @rbs (Grammar grammar) -> String?
-      def translated_code(grammar)
+      # @rbs (Grammar grammar, ?untyped translator) -> String?
+      def translated_code(grammar, translator = nil)
         return nil unless token_code
 
-        Code::RuleAction.new(type: :rule_action, token_code: token_code, rule: self, grammar: grammar).translated_code
+        Code::RuleAction.new(type: :rule_action, token_code: token_code, rule: self, grammar: grammar).translated_code(translator)
       end
 
       # @rbs () -> bool

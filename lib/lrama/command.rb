@@ -103,11 +103,15 @@ module Lrama
     end
 
     def render_output(context, grammar)
+      backend_class = Backend.for(@options.language)
+      backend = backend_class.new(context: context, grammar: grammar, options: @options)
+
       File.open(@options.outfile, "w+") do |f|
         Lrama::Output.new(
           out: f,
           output_file_path: @options.outfile,
           template_name: @options.skeleton,
+          backend: backend,
           grammar_file_path: @options.grammar_file,
           header_file_path: @options.header_file,
           context: context,

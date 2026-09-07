@@ -1,0 +1,23 @@
+module Lrama
+  module Backend
+    def self.register: (String | Symbol name, singleton(Base) klass) -> untyped
+
+    def self.for: (String | Symbol name) -> singleton(Base)
+
+    def self.available: () -> Array[Symbol]
+
+    class Base
+      def initialize: (context: untyped, grammar: untyped, options: untyped) -> void
+
+      def file_extension: () -> String
+    end
+
+    class C < Base
+      class ReferenceTranslator
+        def initialize: () -> void
+
+        def translate: (untyped ref, untyped rule, untyped grammar) -> String
+      end
+    end
+  end
+end
