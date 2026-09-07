@@ -65,7 +65,7 @@ RSpec.describe Lrama::OptionParser do
               -v, --verbose                    same as '--report=state'
 
           Diagnostics:
-              -W, --warnings                   report the warnings
+              -W, --warnings[=CATEGORY]        report the warnings
 
           Error Recovery:
               -e                               enable error recovery
@@ -99,6 +99,11 @@ RSpec.describe Lrama::OptionParser do
           PROFILES is a list of comma-separated words that can include:
               call-stack                       use sampling call-stack profiler (stackprof gem)
               memory                           use memory profiler (memory_profiler gem)
+
+          CATEGORY can include:
+              counterexamples, cex             generate conflict counterexamples
+              all                              enable all warnings
+              none                             disable all warnings
 
         HELP
       end
@@ -210,6 +215,51 @@ RSpec.describe Lrama::OptionParser do
     describe "invalid options are passed" do
       it "returns option hash" do
         expect { option_parser.send(:validate_trace, ["invalid"]) }.to raise_error(/Invalid trace option/)
+      end
+    end
+  end
+
+  describe "#validate_warning" do
+    let(:option_parser) { Lrama::OptionParser.new }
+
+    context "when no options are passed" do
+      it "returns empty option hash" do
+        opts = option_parser.send(:validate_warning, [])
+        expect(opts).to eq({})
+      end
+    end
+
+    context "when counterexamples is passed" do
+      it "returns option hash counterexamples flag enabled" do
+        opts = option_parser.send(:validate_warning, ["counterexamples"])
+        expect(opts).to eq({counterexamples: true})
+      end
+    end
+
+    context "when cex is passed" do
+      it "returns option hash counterexamples flag enabled" do
+        opts = option_parser.send(:validate_warning, ["cex"])
+        expect(opts).to eq({counterexamples: true})
+      end
+    end
+
+    context "when all is passed" do
+      it "returns option hash all flags enabled" do
+        opts = option_parser.send(:validate_warning, ["all"])
+        expect(opts).to eq({counterexamples: true})
+      end
+    end
+
+    context "when none is passed" do
+      it "returns empty option hash" do
+        opts = option_parser.send(:validate_warning, ["none"])
+        expect(opts).to eq({})
+      end
+    end
+
+    describe "invalid options are passed" do
+      it "raises error" do
+        expect { option_parser.send(:validate_warning, ["invalid"]) }.to raise_error(/Invalid warning option/)
       end
     end
   end
@@ -341,6 +391,46 @@ RSpec.describe Lrama::OptionParser do
           option_parser.send(:parse, ["-W", fixture_path("command/basic.y")])
           options = option_parser.instance_variable_get(:@options)
           expect(options.warnings).to be true
+        end
+      end
+
+      context "when -Wcounterexamples is passed" do
+        it "returns counterexamples warning option" do
+          option_parser = Lrama::OptionParser.new
+          option_parser.send(:parse, ["-Wcounterexamples", fixture_path("command/basic.y")])
+          options = option_parser.instance_variable_get(:@options)
+          expect(options.warnings).to be true
+          expect(options.warning_opts).to eq({counterexamples: true})
+        end
+      end
+
+      context "when -Wcex is passed" do
+        it "returns counterexamples warning option" do
+          option_parser = Lrama::OptionParser.new
+          option_parser.send(:parse, ["-Wcex", fixture_path("command/basic.y")])
+          options = option_parser.instance_variable_get(:@options)
+          expect(options.warnings).to be true
+          expect(options.warning_opts).to eq({counterexamples: true})
+        end
+      end
+
+      context "when -Wnone is passed" do
+        it "disables warnings" do
+          option_parser = Lrama::OptionParser.new
+          option_parser.send(:parse, ["-Wnone", fixture_path("command/basic.y")])
+          options = option_parser.instance_variable_get(:@options)
+          expect(options.warnings).to be false
+          expect(options.warning_opts).to eq({})
+        end
+      end
+
+      context "when --warnings=none is passed" do
+        it "disables warnings" do
+          option_parser = Lrama::OptionParser.new
+          option_parser.send(:parse, ["--warnings=none", fixture_path("command/basic.y")])
+          options = option_parser.instance_variable_get(:@options)
+          expect(options.warnings).to be false
+          expect(options.warning_opts).to eq({})
         end
       end
     end

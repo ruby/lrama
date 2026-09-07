@@ -228,20 +228,25 @@ module Lrama
 
         examples.each do |example|
           is_shift_reduce = example.type == :shift_reduce
-          label0 = is_shift_reduce ? "shift/reduce" : "reduce/reduce"
-          label1 = is_shift_reduce ? "Shift derivation" : "First Reduce derivation"
-          label2 = is_shift_reduce ? "Reduce derivation" : "Second Reduce derivation"
+          items = if is_shift_reduce
+            [example.path2_item, example.path1_item]
+          else
+            [example.path1_item, example.path2_item]
+          end.uniq
 
-          io << "    #{label0} conflict on token #{example.conflict_symbol.id.s_value}:\n"
-          io << "        #{example.path1_item}\n"
-          io << "        #{example.path2_item}\n"
-          io << "      #{label1}\n"
+          io << "    #{example.type.to_s.tr('_', '/')} conflict on #{example.conflict_label}:\n"
+          items.each do |item|
+            io << "        #{item}\n"
+          end
+          io << "      #{example.example1_label}: #{example.example1}\n"
+          io << "      #{example.derivation_label1}\n"
 
           example.derivations1.render_strings_for_report.each do |str|
             io << "        #{str}\n"
           end
 
-          io << "      #{label2}\n"
+          io << "      #{example.example2_label}: #{example.example2}\n"
+          io << "      #{example.derivation_label2}\n"
 
           example.derivations2.render_strings_for_report.each do |str|
             io << "        #{str}\n"

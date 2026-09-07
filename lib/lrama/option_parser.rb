@@ -10,6 +10,8 @@ module Lrama
     #   @options: Lrama::Options
     #   @trace: Array[String]
     #   @report: Array[String]
+    #   @warning: Array[String]
+    #   @warnings_option_specified: bool
     #   @profile: Array[String]
 
     # @rbs (Array[String]) -> Lrama::Options
@@ -22,6 +24,8 @@ module Lrama
       @options = Options.new
       @trace = []
       @report = []
+      @warning = []
+      @warnings_option_specified = false
       @profile = []
     end
 
@@ -31,6 +35,8 @@ module Lrama
 
       @options.trace_opts = validate_trace(@trace)
       @options.report_opts = validate_report(@report)
+      @options.warning_opts = validate_warning(@warning)
+      @options.warnings = warnings_enabled?
       @options.profile_opts = validate_profile(@profile)
       @options.grammar_file = argv.shift
 
@@ -127,7 +133,15 @@ module Lrama
         o.on('-v', '--verbose', "same as '--report=state'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
-        o.on('-W', '--warnings', 'report the warnings') {|v| @options.warnings = true }
+        o.on('-W', '--warnings[=CATEGORY]', Array, 'report the warnings') do |v|
+          @warnings_option_specified = true
+          @warning.concat(v || [])
+        end
+        o.on_tail ''
+        o.on_tail 'CATEGORY can include:'
+        o.on_tail '    counterexamples, cex             generate conflict counterexamples'
+        o.on_tail '    all                              enable all warnings'
+        o.on_tail '    none                             disable all warnings'
         o.separator ''
         o.separator 'Error Recovery:'
         o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }
@@ -142,6 +156,8 @@ module Lrama
 
     ALIASED_REPORTS = { cex: :counterexamples }.freeze #: Hash[Symbol, Symbol]
     VALID_REPORTS = %i[states itemsets lookaheads solved counterexamples rules terms verbose].freeze #: Array[Symbol]
+    ALIASED_WARNINGS = { cex: :counterexamples }.freeze #: Hash[Symbol, Symbol]
+    VALID_WARNINGS = %i[counterexamples].freeze #: Array[Symbol]
 
     # @rbs (Array[String]) -> Hash[Symbol, bool]
     def validate_report(report)
@@ -168,6 +184,41 @@ module Lrama
     # @rbs (String) -> Symbol
     def aliased_report_option(opt)
       (ALIASED_REPORTS[opt.to_sym] || opt).to_sym
+    end
+
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
+    def validate_warning(warning)
+      h = {} #: Hash[Symbol, bool]
+      return h if warning.empty?
+      return h if warning == ['none']
+      if warning == ['all']
+        VALID_WARNINGS.each { |w| h[w] = true }
+        return h
+      end
+
+      warning.each do |w|
+        aliased = aliased_warning_option(w)
+        if VALID_WARNINGS.include?(aliased)
+          h[aliased] = true
+        else
+          raise "Invalid warning option \"#{w}\"."
+        end
+      end
+
+      h
+    end
+
+    # @rbs (String) -> Symbol
+    def aliased_warning_option(opt)
+      (ALIASED_WARNINGS[opt.to_sym] || opt).to_sym
+    end
+
+    # @rbs () -> bool
+    def warnings_enabled?
+      return false unless @warnings_option_specified
+      return false if @warning == ['none']
+
+      true
     end
 
     VALID_TRACES = %w[

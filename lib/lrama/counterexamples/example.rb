@@ -12,6 +12,7 @@ module Lrama
       #   @path1: ::Array[StateItem]
       #   @path2: ::Array[StateItem]
       #   @conflict: State::conflict
+      #   @conflict_symbols: ::Array[Grammar::Symbol]
       #   @conflict_symbol: Grammar::Symbol
       #   @counterexamples: Counterexamples
       #   @derivations1: Derivation
@@ -20,16 +21,18 @@ module Lrama
       attr_reader :path1 #: ::Array[StateItem]
       attr_reader :path2 #: ::Array[StateItem]
       attr_reader :conflict #: State::conflict
+      attr_reader :conflict_symbols #: ::Array[Grammar::Symbol]
       attr_reader :conflict_symbol #: Grammar::Symbol
 
       # path1 is shift conflict when S/R conflict
       # path2 is always reduce conflict
       #
-      # @rbs (Array[StateItem]? path1, Array[StateItem]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples) -> void
-      def initialize(path1, path2, conflict, conflict_symbol, counterexamples)
+      # @rbs (Array[StateItem]? path1, Array[StateItem]? path2, State::conflict conflict, Grammar::Symbol conflict_symbol, Counterexamples counterexamples, ?conflict_symbols: Array[Grammar::Symbol]) -> void
+      def initialize(path1, path2, conflict, conflict_symbol, counterexamples, conflict_symbols: [conflict_symbol])
         @path1 = path1
         @path2 = path2
         @conflict = conflict
+        @conflict_symbols = conflict_symbols
         @conflict_symbol = conflict_symbol
         @counterexamples = counterexamples
       end
@@ -57,6 +60,70 @@ module Lrama
       # @rbs () -> Derivation
       def derivations2
         @derivations2 ||= _derivations(path2)
+      end
+
+      # @rbs () -> String
+      def example1
+        (shared_example_symbols || full_example_symbols1).join(" ")
+      end
+
+      # @rbs () -> String
+      def example2
+        (shared_example_symbols || full_example_symbols2).join(" ")
+      end
+
+      # @rbs () -> bool
+      def same_example?
+        example1 == example2
+      end
+
+      # @rbs () -> String
+      def example1_label
+        same_example? ? "Example" : "First example"
+      end
+
+      # @rbs () -> String
+      def example2_label
+        same_example? ? "Example" : "Second example"
+      end
+
+      # @rbs () -> String
+      def derivation_label1
+        type == :shift_reduce ? "Shift derivation" : "First Reduce derivation"
+      end
+
+      # @rbs () -> String
+      def derivation_label2
+        type == :shift_reduce ? "Reduce derivation" : "Second Reduce derivation"
+      end
+
+      # @rbs () -> String
+      def conflict_label
+        labels = conflict_symbols.map { |symbol| normalize_symbol_for_example(symbol.display_name) }
+        prefix = labels.size == 1 ? "token" : "tokens"
+
+        "#{prefix} #{labels.join(", ")}"
+      end
+
+      # @rbs (Array[Grammar::Symbol]) -> Example
+      def merge_conflict_symbols!(symbols)
+        @conflict_symbols |= symbols
+        self
+      end
+
+      # @rbs () -> Array[untyped]
+      def merge_key
+        [
+          type,
+          path1.map(&:id),
+          path2.map(&:id),
+          example1_label,
+          example1,
+          derivations1.render_for_report,
+          example2_label,
+          example2,
+          derivations2.render_for_report
+        ]
       end
 
       private
@@ -148,6 +215,57 @@ module Lrama
             end
           end
         end
+      end
+
+      # @rbs (String name) -> String
+      def normalize_symbol_for_example(name)
+        name == '"end of file"' ? "$end" : name
+      end
+
+      # @rbs () -> Array[String]
+      def full_example_symbols1
+        derivations1.render_symbols_for_example
+      end
+
+      # @rbs () -> Array[String]
+      def full_example_symbols2
+        derivations2.render_symbols_for_example
+      end
+
+      # @rbs () -> Array[String]?
+      def shared_example_symbols
+        return @shared_example_symbols if instance_variable_defined?(:@shared_example_symbols)
+
+        @shared_example_symbols = build_shared_example_symbols
+      end
+
+      # @rbs () -> Array[String]?
+      def build_shared_example_symbols
+        return full_example_symbols1 if full_example_symbols1 == full_example_symbols2
+        return nil unless type == :shift_reduce
+
+        common = common_prefix(full_example_symbols1, full_example_symbols2)
+        dot_index = common.index("•")
+        return nil unless dot_index
+
+        shared_after_dot_length = common.length - dot_index - 1
+        return nil if shared_after_dot_length < path1_item.symbols_after_dot.length
+
+        common
+      end
+
+      # @rbs (Array[String] a, Array[String] b) -> Array[String]
+      def common_prefix(a, b)
+        prefix = [] #: Array[String]
+
+        a.zip(b) do |left, right|
+          break unless left && right
+          break unless left == right
+
+          prefix << left
+        end
+
+        prefix
       end
     end
   end

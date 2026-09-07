@@ -59,14 +59,7 @@ module Lrama
         # to avoid one of example's path to be nil.
         next if @exceed_cumulative_time_limit
 
-        case conflict.type
-        when :shift_reduce
-          # @type var conflict: State::ShiftReduceConflict
-          shift_reduce_example(conflict_state, conflict)
-        when :reduce_reduce
-          # @type var conflict: State::ReduceReduceConflict
-          reduce_reduce_examples(conflict_state, conflict)
-        end
+        conflict_examples(conflict_state, conflict)
       rescue Timeout::Error => e
         STDERR.puts "Counterexamples calculation for state #{conflict_state.id} #{e.message} with #{@iterate_count} iteration"
         increment_total_duration(PathSearchTimeLimit)
@@ -75,6 +68,39 @@ module Lrama
     end
 
     private
+
+    # @rbs (State conflict_state, State::conflict conflict) -> Array[Example]
+    def conflict_examples(conflict_state, conflict)
+      examples = conflict.symbols.map do |conflict_symbol|
+        case conflict.type
+        when :shift_reduce
+          # @type var conflict: State::ShiftReduceConflict
+          shift_reduce_example(conflict_state, conflict, conflict_symbol)
+        when :reduce_reduce
+          # @type var conflict: State::ReduceReduceConflict
+          reduce_reduce_example(conflict_state, conflict, conflict_symbol)
+        end
+      end
+
+      merge_examples(examples)
+    end
+
+    # @rbs (Array[Example]) -> Array[Example]
+    def merge_examples(examples)
+      merged = {} #: Hash[Array[untyped], Example]
+
+      examples.each do |example|
+        key = example.merge_key
+
+        if merged[key]
+          merged[key].merge_conflict_symbols!(example.conflict_symbols)
+        else
+          merged[key] = example
+        end
+      end
+
+      merged.values
+    end
 
     # @rbs (State state, State::Item item) -> StateItem
     def get_state_item(state, item)
@@ -176,9 +202,8 @@ module Lrama
       @triples[key] ||= Triple.new(state_item, precise_lookahead_set)
     end
 
-    # @rbs (State conflict_state, State::ShiftReduceConflict conflict) -> Example
-    def shift_reduce_example(conflict_state, conflict)
-      conflict_symbol = conflict.symbols.first
+    # @rbs (State conflict_state, State::ShiftReduceConflict conflict, Grammar::Symbol conflict_symbol) -> Example
+    def shift_reduce_example(conflict_state, conflict, conflict_symbol)
       # @type var shift_conflict_item: ::Lrama::State::Item
       shift_conflict_item = conflict_state.items.find { |item| item.next_sym == conflict_symbol }
       path2 = with_timeout("#shortest_path:") do
@@ -191,9 +216,8 @@ module Lrama
       Example.new(path1, path2, conflict, conflict_symbol, self)
     end
 
-    # @rbs (State conflict_state, State::ReduceReduceConflict conflict) -> Example
-    def reduce_reduce_examples(conflict_state, conflict)
-      conflict_symbol = conflict.symbols.first
+    # @rbs (State conflict_state, State::ReduceReduceConflict conflict, Grammar::Symbol conflict_symbol) -> Example
+    def reduce_reduce_example(conflict_state, conflict, conflict_symbol)
       path1 = with_timeout("#shortest_path:") do
         shortest_path(conflict_state, conflict.reduce1.item, conflict_symbol)
       end

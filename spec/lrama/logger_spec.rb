@@ -28,6 +28,15 @@ RSpec.describe Lrama::Logger do
     end
   end
 
+  describe "#note" do
+    it "prints a note message" do
+      out = StringIO.new
+      logger = described_class.new(out)
+      logger.note("This is a note message.")
+      expect(out.string).to eq("note: This is a note message.\n")
+    end
+  end
+
   describe "#error" do
     it "prints an error message" do
       out = StringIO.new

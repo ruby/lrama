@@ -24,6 +24,11 @@ module Lrama
     end
 
     # @rbs (String message) -> void
+    def note(message)
+      @out << 'note: ' << message << "\n"
+    end
+
+    # @rbs (String message) -> void
     def error(message)
       @out << 'error: ' << message << "\n"
     end

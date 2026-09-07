@@ -3,11 +3,16 @@
 module Lrama
   class Warnings
     class Conflicts
-      # @rbs (Lrama::Logger logger, bool warnings) -> void
-      def initialize: (Lrama::Logger logger, bool warnings) -> void
+      # @rbs (Lrama::Logger logger, bool warnings, counterexamples: bool) -> void
+      def initialize: (Lrama::Logger logger, bool warnings, counterexamples: bool) -> void
 
       # @rbs (Lrama::States states) -> void
       def warn: (Lrama::States states) -> void
+
+      private
+
+      # @rbs (Lrama::States states) -> void
+      def warn_counterexamples: (Lrama::States states) -> void
     end
   end
 end

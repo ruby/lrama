@@ -47,6 +47,12 @@ module Lrama
 
     private
 
+    # @rbs (State conflict_state, State::conflict conflict) -> Array[Example]
+    def conflict_examples: (State conflict_state, State::conflict conflict) -> Array[Example]
+
+    # @rbs (Array[Example]) -> Array[Example]
+    def merge_examples: (Array[Example]) -> Array[Example]
+
     # @rbs (State state, State::Item item) -> StateItem
     def get_state_item: (State state, State::Item item) -> StateItem
 
@@ -71,11 +77,11 @@ module Lrama
     # @rbs (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> Triple
     def get_triple: (StateItem state_item, Bitmap::bitmap precise_lookahead_set) -> Triple
 
-    # @rbs (State conflict_state, State::ShiftReduceConflict conflict) -> Example
-    def shift_reduce_example: (State conflict_state, State::ShiftReduceConflict conflict) -> Example
+    # @rbs (State conflict_state, State::ShiftReduceConflict conflict, Grammar::Symbol conflict_symbol) -> Example
+    def shift_reduce_example: (State conflict_state, State::ShiftReduceConflict conflict, Grammar::Symbol conflict_symbol) -> Example
 
-    # @rbs (State conflict_state, State::ReduceReduceConflict conflict) -> Example
-    def reduce_reduce_examples: (State conflict_state, State::ReduceReduceConflict conflict) -> Example
+    # @rbs (State conflict_state, State::ReduceReduceConflict conflict, Grammar::Symbol conflict_symbol) -> Example
+    def reduce_reduce_example: (State conflict_state, State::ReduceReduceConflict conflict, Grammar::Symbol conflict_symbol) -> Example
 
     # @rbs (Array[StateItem]? reduce_state_items, State conflict_state, State::Item conflict_item) -> Array[StateItem]
     def find_shift_conflict_shortest_path: (Array[StateItem]? reduce_state_items, State conflict_state, State::Item conflict_item) -> Array[StateItem]
