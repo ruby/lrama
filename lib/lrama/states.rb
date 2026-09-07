@@ -661,9 +661,10 @@ module Lrama
       base_function = compute_goto_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
         state = goto.from_state
-        state.follow_kernel_items[goto] = state.kernels.map {|kernel|
-          [kernel, Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)]
-        }.to_h
+        bool_array = Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)
+        state.follow_kernel_items[goto] = state.kernels.each_with_index.to_h {|kernel, i|
+          [kernel, bool_array[i]]
+        }
       end
     end
 
