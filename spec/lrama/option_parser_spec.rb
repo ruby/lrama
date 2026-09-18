@@ -62,7 +62,7 @@ RSpec.describe Lrama::OptionParser do
                   --trace=TRACES               also output trace logs at runtime
                   --diagram=[FILE]             generate a diagram of the rules
                   --profile=PROFILES           profiles parser generation parts
-              -v, --verbose                    same as '--report=state'
+              -v, --verbose                    same as '--report=states'
 
           Diagnostics:
               -W, --warnings                   report the warnings
@@ -137,12 +137,26 @@ RSpec.describe Lrama::OptionParser do
             rules: true, terms: true, verbose: true
           })
         end
+
+        it "can be combined with another report" do
+          opts = option_parser.send(:validate_report, ["all", "cex"])
+          expect(opts).to eq({
+            grammar: true, states: true, itemsets: true,
+            lookaheads: true, solved: true, counterexamples: true,
+            rules: true, terms: true, verbose: true
+          })
+        end
       end
 
       context "when none is passed" do
         it "returns empty option hash" do
           opts = option_parser.send(:validate_report, ["none"])
           expect(opts).to eq({})
+        end
+
+        it "can be followed by another report" do
+          opts = option_parser.send(:validate_report, ["none", "states"])
+          expect(opts).to eq({states: true})
         end
       end
     end
@@ -157,6 +171,13 @@ RSpec.describe Lrama::OptionParser do
       it "returns option hash states flag enabled" do
         opts = option_parser.send(:validate_report, ["states"])
         expect(opts).to eq({grammar: true, states: true})
+      end
+
+      it "combines with --report regardless of argument order" do
+        [["--report=rules", "-v"], ["-v", "--report=rules"], ["-v", "-r", "rules"]].each do |args|
+          opts = Lrama::OptionParser.parse(args + ["-", "test.y"])
+          expect(opts.report_opts).to eq({grammar: true, rules: true, states: true})
+        end
       end
     end
 
@@ -297,6 +318,13 @@ RSpec.describe Lrama::OptionParser do
         option_parser.send(:parse, ["--report=all", "-", "test.y"])
         options = option_parser.instance_variable_get(:@options)
         expect(options.report_file).to eq "./test.output"
+      end
+
+      it "does not set @report_file when reports are disabled" do
+        [["--report=none"], ["--report=states,none"], ["-v", "--report=none"]].each do |args|
+          options = Lrama::OptionParser.parse(args + ["-", "test.y"])
+          expect(options.report_file).to be_nil
+        end
       end
     end
 

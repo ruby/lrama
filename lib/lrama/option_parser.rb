@@ -30,7 +30,7 @@ module Lrama
       parse_by_option_parser(argv)
 
       @options.trace_opts = validate_trace(@trace)
-      @options.report_opts = validate_report(@report)
+      report_opts = @options.report_opts = validate_report(@report)
       @options.profile_opts = validate_profile(@profile)
       @options.grammar_file = argv.shift
 
@@ -44,7 +44,7 @@ module Lrama
         @options.y = File.open(@options.grammar_file, 'r')
       end
 
-      if !@report.empty? && @options.report_file.nil? && @options.grammar_file
+      if !@report.empty? && !report_opts.empty? && @options.report_file.nil? && @options.grammar_file
         @options.report_file = File.dirname(@options.grammar_file) + "/" + File.basename(@options.grammar_file, ".*") + ".output"
       end
 
@@ -89,7 +89,7 @@ module Lrama
         o.separator 'Output:'
         o.on('-H', '--header=[FILE]', 'also produce a header file named FILE') {|v| @options.header = true; @options.header_file = v }
         o.on('-d', 'also produce a header file') { @options.header = true }
-        o.on('-r', '--report=REPORTS', Array, 'also produce details on the automaton') {|v| @report = v }
+        o.on('-r', '--report=REPORTS', Array, 'also produce details on the automaton') {|v| @report.concat(v) }
         o.on_tail ''
         o.on_tail 'REPORTS is a list of comma-separated words that can include:'
         o.on_tail '    states                           describe the states'
@@ -124,7 +124,7 @@ module Lrama
         o.on_tail 'PROFILES is a list of comma-separated words that can include:'
         o.on_tail '    call-stack                       use sampling call-stack profiler (stackprof gem)'
         o.on_tail '    memory                           use memory profiler (memory_profiler gem)'
-        o.on('-v', '--verbose', "same as '--report=state'") {|_v| @report << 'states' }
+        o.on('-v', '--verbose', "same as '--report=states'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
         o.on('-W', '--warnings', 'report the warnings') {|v| @options.warnings = true }
@@ -147,18 +147,21 @@ module Lrama
     def validate_report(report)
       h = { grammar: true }
       return h if report.empty?
-      return {} if report == ['none']
-      if report == ['all']
-        VALID_REPORTS.each { |r| h[r] = true }
-        return h
-      end
 
       report.each do |r|
-        aliased = aliased_report_option(r)
-        if VALID_REPORTS.include?(aliased)
-          h[aliased] = true
+        case r
+        when 'none'
+          h.clear
+        when 'all'
+          h[:grammar] = true
+          VALID_REPORTS.each { |report_name| h[report_name] = true }
         else
-          raise "Invalid report option \"#{r}\"."
+          aliased = aliased_report_option(r)
+          if VALID_REPORTS.include?(aliased)
+            h[aliased] = true
+          else
+            raise "Invalid report option \"#{r}\"."
+          end
         end
       end
 
