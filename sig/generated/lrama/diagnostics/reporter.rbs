@@ -1,0 +1,60 @@
+# Generated from lib/lrama/diagnostics/reporter.rb with RBS::Inline
+
+module Lrama
+  module Diagnostics
+    class Reporter
+      attr_reader error_count: Integer
+
+      attr_reader warning_count: Integer
+
+      attr_reader messages: Array[Message]
+
+      attr_reader output: IO
+
+      # @rbs (?output: IO, ?color_mode: Symbol, ?show_source: bool) -> void
+      def initialize: (?output: IO, ?color_mode: Symbol, ?show_source: bool) -> void
+
+      # @rbs (location: untyped, message: String, ?source_line: String?, ?notes: Array[Message], ?fixit: String?) -> Message
+      def error: (location: untyped, message: String, ?source_line: String?, ?notes: Array[Message], ?fixit: String?) -> Message
+
+      # @rbs (location: untyped, message: String, ?source_line: String?, ?notes: Array[Message], ?fixit: String?) -> Message
+      def warning: (location: untyped, message: String, ?source_line: String?, ?notes: Array[Message], ?fixit: String?) -> Message
+
+      # @rbs (location: untyped, message: String) -> Message
+      def note: (location: untyped, message: String) -> Message
+
+      # @rbs (Message message) -> void
+      def report: (Message message) -> void
+
+      # @rbs () -> bool
+      def errors?: () -> bool
+
+      # @rbs () -> bool
+      def warnings?: () -> bool
+
+      # @rbs () -> bool
+      def any?: () -> bool
+
+      # @rbs () -> String
+      def summary: () -> String
+
+      # @rbs () -> void
+      def print_summary: () -> void
+
+      # @rbs () -> void
+      def reset: () -> void
+
+      # @rbs (untyped location) -> String?
+      def read_source_line: (untyped location) -> String?
+
+      # @rbs (location: untyped, message: String, ?notes: Array[Message]) -> Message
+      def error_with_source: (location: untyped, message: String, ?notes: Array[Message]) -> Message
+
+      # @rbs (location: untyped, message: String, ?notes: Array[Message]) -> Message
+      def warning_with_source: (location: untyped, message: String, ?notes: Array[Message]) -> Message
+
+      # @rbs () -> Array[Message]
+      def sorted_messages: () -> Array[Message]
+    end
+  end
+end

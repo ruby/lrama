@@ -7,6 +7,7 @@ target :lib do
   signature "sig"
 
   check "lib/lrama/counterexamples"
+  check "lib/lrama/diagnostics"
   check "lib/lrama/grammar"
   check "lib/lrama/lexer"
   check "lib/lrama/reporter"

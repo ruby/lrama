@@ -1,0 +1,41 @@
+# Generated from lib/lrama/diagnostics/color.rb with RBS::Inline
+
+module Lrama
+  module Diagnostics
+    module Color
+      CODES: untyped
+
+      SEMANTIC_STYLES: untyped
+
+      # @rbs () -> bool
+      def self.enabled: () -> bool
+
+      # @rbs (bool) -> bool
+      def self.enabled=: (bool) -> bool
+
+      # @rbs (untyped text, *Symbol styles) -> String
+      def self.colorize: (untyped text, *Symbol styles) -> String
+
+      # @rbs (untyped text) -> String
+      def self.strip: (untyped text) -> String
+
+      # @rbs (?IO io) -> bool
+      def self.tty?: (?IO io) -> bool
+
+      # @rbs (Symbol mode, ?IO io) -> bool
+      def self.should_colorize?: (Symbol mode, ?IO io) -> bool
+
+      # @rbs (Symbol mode, ?IO io) -> bool
+      def self.setup: (Symbol mode, ?IO io) -> bool
+
+      # @rbs () -> Symbol
+      def self.default_mode: () -> Symbol
+
+      # @rbs (Array[Symbol] styles) -> Array[String]
+      private def self.resolve_styles: (Array[Symbol] styles) -> Array[String]
+
+      # @rbs () -> bool
+      private def self.supports_color?: () -> bool
+    end
+  end
+end
