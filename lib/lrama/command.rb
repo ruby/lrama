@@ -74,6 +74,19 @@ module Lrama
       ).parse
 
       grammar.prepend_parameterized_rules(stdlib_grammar.parameterized_rules)
+
+      if stdlib_grammar.aux.prologue
+        if grammar.aux.prologue
+          grammar.aux.prologue = stdlib_grammar.aux.prologue + "\n" + grammar.aux.prologue
+        else
+          grammar.aux.prologue = stdlib_grammar.aux.prologue
+          grammar.aux.prologue_first_lineno = stdlib_grammar.aux.prologue_first_lineno
+        end
+      end
+
+      stdlib_grammar.percent_codes.each do |percent_code|
+        grammar.percent_codes.unshift(percent_code)
+      end
     end
 
     def prepare_grammar(grammar)
