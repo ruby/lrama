@@ -29,7 +29,6 @@ module Lrama
 
     # @rbs () -> void
     def render
-      RailroadDiagrams::TextDiagram.set_formatting(RailroadDiagrams::TextDiagram::PARTS_UNICODE)
       @out << ERB.render(template_file, output: self)
     end
 
@@ -38,21 +37,19 @@ module Lrama
       RailroadDiagrams::Style::default_style
     end
 
-    # @rbs () -> string
-    def diagrams
-      result = +''
-      @grammar.unique_rule_s_values.each do |s_value|
-        diagrams =
-          @grammar.select_rules_by_s_value(s_value).map { |r| r.to_diagrams }
-        add_diagram(
-          s_value,
-          RailroadDiagrams::Diagram.new(
-            RailroadDiagrams::Choice.new(0, *diagrams),
-          ),
-          result
-        )
+    # @rbs () -> Array[Hash[Symbol, (String | Array[String])]]
+    def linked_sections
+      document = RailroadDiagrams::Document.new(title: "Lrama syntax diagrams", theme: :default)
+      action_symbols = @grammar.rules.select(&:original_rule).map(&:lhs)
+      @grammar.rules.reject(&:original_rule).group_by { |rule| rule.lhs.id.s_value }.each do |name, rules|
+        alternatives = rules.map do |rule|
+          diagram_rule = rule.dup
+          diagram_rule.rhs = rule.rhs - action_symbols
+          diagram_rule.to_diagrams
+        end
+        document.add_rule(name, RailroadDiagrams::Choice.new(0, *alternatives))
       end
-      result
+      document.rule_sections
     end
 
     private
@@ -67,11 +64,5 @@ module Lrama
       File.join(template_dir, @template_name)
     end
 
-    # @rbs (String name, RailroadDiagrams::Diagram diagram, String result) -> void
-    def add_diagram(name, diagram, result)
-      result << "\n<h2 class=\"diagram-header\">#{RailroadDiagrams.escape_html(name)}</h2>"
-      diagram.write_svg(result.method(:<<))
-      result << "\n"
-    end
   end
 end

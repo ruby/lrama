@@ -7,9 +7,10 @@ gemspec
 gem "memory_profiler"
 gem "pry"
 gem "racc", "1.8.1"
-gem "railroad_diagrams", "0.3.0"
+gem "railroad_diagrams", ">= 1.0.0"
 gem "rake"
 gem "rdoc"
+gem "rexml", require: false
 gem "rspec"
 gem "simplecov", require: false
 gem "stackprof", platforms: [:ruby] # stackprof doesn't support Windows

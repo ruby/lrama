@@ -17,8 +17,8 @@ module Lrama
     # @rbs () -> string
     def default_style: () -> string
 
-    # @rbs () -> string
-    def diagrams: () -> string
+    # @rbs () -> Array[Hash[Symbol, (String | Array[String])]]
+    def linked_sections: () -> Array[Hash[Symbol, String | Array[String]]]
 
     private
 
@@ -27,8 +27,5 @@ module Lrama
 
     # @rbs () -> string
     def template_file: () -> string
-
-    # @rbs (String name, RailroadDiagrams::Diagram diagram, String result) -> void
-    def add_diagram: (String name, RailroadDiagrams::Diagram diagram, String result) -> void
   end
 end
