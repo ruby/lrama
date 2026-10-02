@@ -14,6 +14,21 @@ RSpec.describe Lrama::Command do
       end
     end
 
+    context "when `--diagram` is specified" do
+      it "generates links and reverse references without text diagrams" do
+        diagram_file = File.join(Dir.tmpdir, "diagram.html")
+        command = Lrama::Command.new(o_option + ["--diagram=#{diagram_file}", fixture_path("command/basic.y")])
+        command.run
+
+        html = File.read(diagram_file)
+        expect(html).to include('<section id="rule-expr">')
+        expect(html).to include('href="#rule-expr"')
+        expect(html).to include("Referenced by:")
+        expect(html).not_to include("<details", "<pre", "Text diagram")
+        expect(html).not_to include("<script")
+      end
+    end
+
     context "when STDIN mode and a grammar file is specified" do
       it "ends successfully" do
         File.open(fixture_path("command/basic.y")) do |f|

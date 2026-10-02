@@ -47,6 +47,20 @@ Enter the formula:
 => 9
 ```
 
+### Syntax diagrams
+
+Install `railroad_diagrams` 1.0.0 or later to generate SVG diagrams with links to
+referenced rules and links back to referencing rules:
+
+```shell
+$ lrama --diagram=diagram.html -o calc.c sample/calc.y
+```
+
+Open `diagram.html` in a browser. Click a nonterminal symbol to visit its rule
+or follow the referencing-rule links to navigate back.
+
+Midrule action symbols are omitted from diagrams. User-defined empty rules remain visible.
+
 ## Supported Ruby version
 
 Lrama is executed with BASERUBY when building ruby from source code. Therefore Lrama needs to support BASERUBY, currently 3.1, or later version.
