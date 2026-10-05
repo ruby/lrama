@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "stringio"
+
 module Lrama
   class Command
     LRAMA_LIB = File.realpath(File.join(File.dirname(__FILE__)))
@@ -33,8 +35,8 @@ module Lrama
       render_reports(states) if @options.report_file
       @tracer.trace(grammar)
       render_diagram(grammar)
-      render_output(context, grammar)
       states.validate!(@logger)
+      render_output(context, grammar)
       @warnings.warn(grammar, states)
     end
 
@@ -103,18 +105,18 @@ module Lrama
     end
 
     def render_output(context, grammar)
-      File.open(@options.outfile, "w+") do |f|
-        Lrama::Output.new(
-          out: f,
-          output_file_path: @options.outfile,
-          template_name: @options.skeleton,
-          grammar_file_path: @options.grammar_file,
-          header_file_path: @options.header_file,
-          context: context,
-          grammar: grammar,
-          error_recovery: @options.error_recovery,
-        ).render
-      end
+      out = StringIO.new
+      Lrama::Output.new(
+        out: out,
+        output_file_path: @options.outfile,
+        template_name: @options.skeleton,
+        grammar_file_path: @options.grammar_file,
+        header_file_path: @options.header_file,
+        context: context,
+        grammar: grammar,
+        error_recovery: @options.error_recovery,
+      ).render
+      File.write(@options.outfile, out.string)
     end
   end
 end
