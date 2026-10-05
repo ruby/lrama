@@ -392,6 +392,25 @@ RSpec.describe Lrama::Lexer do
         expect(lexer.next_token).to eq([':', token_class::Token.new(s_value: ':')])
       end
     end
+
+    it 'lexes structured semantic value tags' do
+      tags = ["<value>", "<value.integer>", "<value.pointer->integer>"]
+      grammar_file = Lrama::Lexer::GrammarFile.new("tags.y", tags.join(" "))
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      tags.each do |tag|
+        expect(lexer.next_token).to eq([:TAG, token_class::Tag.new(s_value: tag)])
+      end
+    end
+
+    it 'rejects unsupported type and default tags' do
+      ["<int *>", "<std::vector<int>>", "<*>", "<>"].each do |tag|
+        grammar_file = Lrama::Lexer::GrammarFile.new("tags.y", tag)
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        expect { lexer.next_token }.to raise_error(ParseError, /Unexpected token/)
+      end
+    end
   end
 
   context 'unexpected_token.y' do

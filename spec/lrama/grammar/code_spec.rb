@@ -165,6 +165,7 @@ RSpec.describe Lrama::Grammar::Code do
             int rule5;
             int rule6;
             int rule7;
+            struct { int integer; } value;
         }
 
         %token <i> keyword_class
@@ -209,7 +210,7 @@ RSpec.describe Lrama::Grammar::Code do
         rule4: expr '+' expr[expr-right] { @1 + @[expr-right]; @0; }
              ;
 
-        rule5: expr '+' expr { $1 + $<integer>3; }
+        rule5: expr '+' expr { $1 + $<value.integer>3; }
              ;
 
         rule6: expr '+' { $<integer>$ = $1; @$ = @1; } expr { $1 + $<integer>4; }
@@ -268,7 +269,7 @@ RSpec.describe Lrama::Grammar::Code do
 
       it "respects explicit tag in a rule" do
         code = grammar.rules.find {|r| r.lhs.id.s_value == "rule5" }
-        expect(code.translated_code(grammar)).to eq(" (yyvsp[-2].expr) + (yyvsp[0].integer); ")
+        expect(code.translated_code(grammar)).to eq(" (yyvsp[-2].expr) + (yyvsp[0].value.integer); ")
       end
 
       context "midrule action exists" do

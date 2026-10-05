@@ -63,6 +63,7 @@ module Lrama
       %start
     ).freeze #: Array[String]
     IDENTIFIER_PATTERN = /[a-zA-Z_.][-a-zA-Z0-9_.]*/.freeze #: Regexp
+    TAG_PATTERN = /<[a-zA-Z_][a-zA-Z0-9_]*(?:(?:\.|->)[a-zA-Z_][a-zA-Z0-9_]*)*>/.freeze #: Regexp
 
     # @rbs (GrammarFile grammar_file) -> void
     def initialize(grammar_file)
@@ -125,7 +126,7 @@ module Lrama
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/[\?\+\*]/)
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/<\w+>/)
+      when @scanner.scan(TAG_PATTERN)
         return [:TAG, Lrama::Lexer::Token::Tag.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/'.'/)
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]

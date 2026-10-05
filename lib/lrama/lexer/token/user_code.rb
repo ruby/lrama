@@ -41,7 +41,7 @@ module Lrama
           if scanner.scan(/
             # $ references
             # It need to wrap an identifier with brackets to use ".-" for identifiers
-            \$(<[a-zA-Z0-9_]+>)?(?:
+            \$(#{Lrama::Lexer::TAG_PATTERN})?(?:
               (\$)                            # $$, $<long>$
             | (\d+)                           # $1, $2, $<long>1
             | ([a-zA-Z_][a-zA-Z0-9_]*)        # $foo, $expr, $<long>program (named reference without brackets)
