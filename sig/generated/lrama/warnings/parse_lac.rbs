@@ -1,0 +1,13 @@
+# Generated from lib/lrama/warnings/parse_lac.rb with RBS::Inline
+
+module Lrama
+  class Warnings
+    class ParseLac
+      # @rbs (Logger logger, bool warnings) -> void
+      def initialize: (Logger logger, bool warnings) -> void
+
+      # @rbs (Lrama::Grammar grammar) -> void
+      def warn: (Lrama::Grammar grammar) -> void
+    end
+  end
+end

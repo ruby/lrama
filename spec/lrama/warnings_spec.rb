@@ -116,5 +116,32 @@ RSpec.describe Lrama::Warnings do
         expect(logger).to have_received(:warn).with("parameterized rule redefined: foo(Y)")
       end
     end
+
+    context "when a PSLR grammar disables LAC explicitly" do
+      let(:y) do
+        <<~STR
+          %define lr.type pslr
+          %define parse.lac none
+          %token-pattern RSHIFT />>/
+          %token-pattern RANGLE />/
+          %lex-prec RANGLE -s RSHIFT
+          %%
+          program: RSHIFT | RANGLE
+        STR
+      end
+
+      it "warns that error detection may be delayed" do
+        grammar = Lrama::Parser.new(y, "states/pslr_lac_none.y").parse
+        grammar.prepare
+        grammar.validate!
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        states.compute_pslr
+        logger = Lrama::Logger.new
+        allow(logger).to receive(:warn)
+        Lrama::Warnings.new(logger, true).warn(grammar, states)
+        expect(logger).to have_received(:warn).with(a_string_including("parse.lac is disabled for a PSLR parser"))
+      end
+    end
   end
 end

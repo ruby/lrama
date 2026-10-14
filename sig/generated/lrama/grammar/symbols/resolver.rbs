@@ -108,6 +108,9 @@ module Lrama
         # @rbs (Lexer::Token::Base id) -> Grammar::Symbol
         def find_nterm_by_id!: (Lexer::Token::Base id) -> Grammar::Symbol
 
+        # @rbs (Grammar::Symbol sym, id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?) -> void
+        def replace_term_attributes: (Grammar::Symbol sym, id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?) -> void
+
         # @rbs () -> void
         def fill_terms_number: () -> void
 

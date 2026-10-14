@@ -1,0 +1,36 @@
+# Generated from lib/lrama/reporter/pslr.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    class Pslr
+      # @rbs (?pslr: bool, ?states: bool, **bool _) -> void
+      def initialize: (?pslr: bool, ?states: bool, **bool _) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report: (IO io, Lrama::States states) -> void
+
+      private
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_summary: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_acceptable_tokens: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_scanner_accepts: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_unresolved_conflicts: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_useless_lex_prec: (IO io, Lrama::States states) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report_tie_candidates: (IO io, Lrama::States states) -> void
+
+      # @rbs (Numeric?) -> String
+      def format_ratio: (Numeric?) -> String
+    end
+  end
+end
