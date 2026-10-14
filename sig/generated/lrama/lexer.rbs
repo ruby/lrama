@@ -24,6 +24,10 @@ module Lrama
 
     IDENTIFIER_PATTERN: Regexp
 
+    SYMBOL_PATTERN: Regexp
+
+    PERCENT_TOKEN_PATTERN: Regexp
+
     # @rbs (GrammarFile grammar_file) -> void
     def initialize: (GrammarFile grammar_file) -> void
 

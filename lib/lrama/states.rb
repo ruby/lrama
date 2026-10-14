@@ -467,12 +467,19 @@ module Lrama
 
     # @rbs () -> void
     def compute_la
+      rules_by_id = {}
+      rules.each do |rule|
+        rules_by_id[rule.id] = rule
+      end
+
       @states.each do |state|
         lookback_relation_on_state = @lookback_relation[state.id]
         next unless lookback_relation_on_state
-        rules.each do |rule|
-          ary = lookback_relation_on_state[rule.id]
-          next unless ary
+
+        needs_look_ahead = !(state.reduces.count == 1 && state.term_transitions.count == 0)
+
+        lookback_relation_on_state.each do |rule_id, ary|
+          look_ahead = 0
 
           ary.each do |goto|
             # q = state, A -> ω = rule, p = state2, A = nterm
@@ -480,18 +487,21 @@ module Lrama
 
             next if follows == 0
 
-            @la[state.id] ||= {}
-            @la[state.id][rule.id] ||= 0
-            look_ahead = @la[state.id][rule.id] | follows
-            @la[state.id][rule.id] |= look_ahead
-
-            # No risk of conflict when
-            # * the state only has single reduce
-            # * the state only has nterm_transitions (GOTO)
-            next if state.reduces.count == 1 && state.term_transitions.count == 0
-
-            state.set_look_ahead(rule, bitmap_to_terms(look_ahead))
+            look_ahead |= follows
           end
+
+          next if look_ahead == 0
+
+          @la[state.id] ||= {}
+          @la[state.id][rule_id] ||= 0
+          @la[state.id][rule_id] |= look_ahead
+
+          # No risk of conflict when
+          # * the state only has single reduce
+          # * the state only has nterm_transitions (GOTO)
+          next unless needs_look_ahead
+
+          state.set_look_ahead(rules_by_id[rule_id], bitmap_to_terms(@la[state.id][rule_id]))
         end
       end
     end

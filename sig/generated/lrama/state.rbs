@@ -32,6 +32,8 @@ module Lrama
 
     @transitions: Array[transition]
 
+    @transitions_by_symbol_number: Hash[Integer, transition]
+
     @internal_dependencies: Hash[Action::Goto, Array[Action::Goto]]
 
     @successor_dependencies: Hash[Action::Goto, Array[Action::Goto]]
@@ -111,6 +113,9 @@ module Lrama
 
     # @rbs () -> Array[transition]
     def transitions: () -> Array[transition]
+
+    # @rbs () -> Hash[Integer, transition]
+    def transitions_by_symbol_number: () -> Hash[Integer, transition]
 
     # @rbs (transition transition, State next_state) -> void
     def update_transition: (transition transition, State next_state) -> void
