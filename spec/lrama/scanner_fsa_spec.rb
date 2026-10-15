@@ -161,9 +161,24 @@ RSpec.describe Lrama::ScannerFSA do
       expect(fsa.scan("a\nb").map { |result| result[:token].name }).to include("NOT_STAR")
       expect(fsa.scan("*")).to be_empty
     end
+
+    it "matches multibyte input as bytes through dot and negated classes" do
+      [".+", "[^*]+"].each do |pattern|
+        fsa = Lrama::ScannerFSA.new([token_pattern("BYTES", pattern)])
+
+        expect(fsa.scan("éλ").last[:position]).to eq("éλ".bytesize)
+      end
+    end
   end
 
   describe "pattern validation" do
+    ["é", "λ", "[é]", "[^λ]", "[a-λ]"].each do |pattern|
+      it "rejects non-ASCII pattern #{pattern.inspect} before building transitions" do
+        expect { Lrama::ScannerFSA.new([token_pattern("NON_ASCII", pattern, lineno: 12)]) }
+          .to raise_error(Lrama::ScannerFSA::PatternError, /NON_ASCII at line 12.*non-ASCII characters are not supported/m)
+      end
+    end
+
     it "rejects empty token patterns" do
       expect { Lrama::ScannerFSA.new([token_pattern("EMPTY", "", lineno: 42)]) }
         .to raise_error(Lrama::ScannerFSA::PatternError, /EMPTY at line 42.*empty patterns/m)

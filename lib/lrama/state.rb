@@ -387,7 +387,7 @@ module Lrama
             kernel = kernels.find {|k| k.predecessor_item_of?(next_kernel) }
             (lookaheads || item_lookahead_set).fetch(kernel)
           else
-            goto_follow_set(next_kernel.lhs)
+            goto_follow_set(next_kernel.lhs, lookaheads)
           end
 
         sets[next_kernel] = mask ? lookahead_sets & mask : lookahead_sets

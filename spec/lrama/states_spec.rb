@@ -627,6 +627,30 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe '#compute_follow_kernel_items' do
+    it "maps each kernel to whether the goto inherits its lookaheads" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "follow_kernel_items.y").parse
+        %token P X Y
+        %%
+        start: first | second;
+        first: P shared X;
+        second: P shared;
+        shared: Y;
+      GRAMMAR
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.send(:compute_predecessors)
+      states.send(:compute_follow_kernel_items)
+      state = states.states.find { |candidate| candidate.accessing_symbol.name == "P" }
+      goto = state.nterm_transitions.find { |transition| transition.next_sym.name == "shared" }
+      first = state.kernels.find { |kernel| kernel.lhs.name == "first" }
+      second = state.kernels.find { |kernel| kernel.lhs.name == "second" }
+
+      expect(state.follow_kernel_items[goto]).to eq({ first => false, second => true }.compare_by_identity)
+    end
+  end
+
   describe '#reads_relation' do
     it do
       path = "states/reads_relation.y"
@@ -3980,9 +4004,9 @@ RSpec.describe Lrama::States do
 
     it "uses lexical precedence when comparing PSLR accept sets" do
       grammar.lex_prec.add_rule(
-        left_token: grammar.find_symbol_by_s_value!("RSHIFT").id,
+        left_token: Lrama::Lexer::Token::Ident.new(s_value: "RSHIFT"),
         operator: Lrama::Grammar::LexPrec::TOKEN_RIGHT,
-        right_token: grammar.find_symbol_by_s_value!("RANGLE").id,
+        right_token: Lrama::Lexer::Token::Ident.new(s_value: "RANGLE"),
         lineno: 1
       )
       states.instance_variable_set(:@length_precedences, Lrama::LengthPrecedences.new(grammar.lex_prec))

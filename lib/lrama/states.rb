@@ -1003,6 +1003,7 @@ module Lrama
         return false unless state.is_compatible?(filtered_lookaheads)
       end
       return true unless @pslr_split_enabled && @scanner_fsa
+      return true unless state.lookaheads_recomputed
 
       pslr_compatible_successors?(state, state.item_lookahead_set, pslr_lookaheads)
     end

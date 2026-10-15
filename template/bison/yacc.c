@@ -361,6 +361,9 @@ typedef int yy_state_fast_t;
 #  ifndef YYSTACK_ALLOC_MAXIMUM
 #   define YYSTACK_ALLOC_MAXIMUM YYSIZE_MAXIMUM
 #  endif
+# endif
+
+   /* LAC and error recovery need heap allocation even with alloca stacks.  */
 #  if (defined __cplusplus && ! defined EXIT_SUCCESS \
        && ! ((defined YYMALLOC || defined malloc) \
              && (defined YYFREE || defined free)))
@@ -381,7 +384,6 @@ void *malloc (YYSIZE_T); /* INFRINGES ON USER NAME SPACE */
 void free (void *); /* INFRINGES ON USER NAME SPACE */
 #   endif
 #  endif
-# endif
 #endif /* 1 */
 
 #if (! defined yyoverflow \
@@ -427,7 +429,7 @@ union yyalloc
 
 #endif
 
-#if defined YYCOPY_NEEDED && YYCOPY_NEEDED
+#if (defined YYCOPY_NEEDED && YYCOPY_NEEDED) || <%= output.lac_enabled? ? 1 : 0 %>
 /* Copy COUNT objects from SRC to DST.  The source and destination do
    not overlap.  */
 # ifndef YYCOPY
@@ -445,7 +447,7 @@ union yyalloc
       while (0)
 #  endif
 # endif
-#endif /* !YYCOPY_NEEDED */
+#endif /* YYCOPY_NEEDED or LAC */
 
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  <%= output.yyfinal %>

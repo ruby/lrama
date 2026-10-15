@@ -546,6 +546,9 @@ module Lrama
       end
 
       unless ctx = @lexer_contexts[name]
+        # Generated C stores context flags in an unsigned long long.
+        raise "%lexer-context supports at most 64 distinct contexts" if @lexer_context_counter >= 64
+
         ctx = Grammar::LexerContext.new(name: name, index: @lexer_context_counter)
         @lexer_context_counter += 1
         @lexer_contexts[name] = ctx
