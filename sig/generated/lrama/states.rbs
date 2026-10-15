@@ -283,6 +283,10 @@ module Lrama
     # @rbs (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
     def compatible_split_state?: (State state, State::lookahead_set filtered_lookaheads, ?State::lookahead_set pslr_lookaheads) -> bool
 
+    # Shared shift prefixes must preserve scanner decisions made after those shifts.
+    # @rbs (State state, State::lookahead_set left, State::lookahead_set right) -> bool
+    def pslr_compatible_successors?: (State state, State::lookahead_set left, State::lookahead_set right) -> bool
+
     # Canonical LR(1) compatibility for %define pslr.tables canonical-lr:
     # states merge only when their kernel lookahead sets are identical,
     # so unresolved-conflict reports are not merged across contexts.

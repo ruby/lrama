@@ -279,7 +279,7 @@ module Lrama
           in_char_class = false
         elsif char == "/" && !in_char_class
           return Lrama::Lexer::Token::Regex.new(
-            s_value: @scanner.string[start_pos...@scanner.pos],
+            s_value: @scanner.string.byteslice(start_pos...@scanner.pos),
             location: location
           )
         elsif char == "\n"

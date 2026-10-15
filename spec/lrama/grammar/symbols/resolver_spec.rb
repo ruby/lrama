@@ -63,6 +63,49 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
       term2 = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"), replace: true)
       expect(term1).to eq(term2)
     end
+
+    [nil, 300].each do |token_id|
+      it "preserves omitted attributes when redeclaring a term with token_id #{token_id.inspect}" do
+        tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
+        term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "NUM"), alias_name: '"number"', tag: tag, token_id: 300)
+
+        redeclared = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "NUM"), token_id: token_id, replace: true)
+
+        expect(redeclared).to equal(term)
+        expect(redeclared.alias_name).to eq('"number"')
+        expect(redeclared.tag).to eq(tag)
+        expect(redeclared.token_id).to eq(300)
+      end
+    end
+
+    it "updates supplied attributes while preserving omitted attributes" do
+      id = Lrama::Lexer::Token::Ident.new(s_value: "NUM")
+      tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
+      term = resolver.add_term(id: id, alias_name: '"number"', tag: tag)
+      new_tag = Lrama::Lexer::Token::Tag.new(s_value: "<l>")
+
+      resolver.add_term(id: id, tag: new_tag, replace: true)
+      expect(term.tag).to eq(new_tag)
+      expect(term.alias_name).to eq('"number"')
+
+      resolver.add_term(id: id, alias_name: '"integer"', token_id: 301, replace: true)
+      expect(term.tag).to eq(new_tag)
+      expect(term.alias_name).to eq('"integer"')
+      expect(term.token_id).to eq(301)
+    end
+
+    it "replaces omitted attributes when renaming a term with the same token_id" do
+      tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
+      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "NUM"), alias_name: '"number"', tag: tag, token_id: 300)
+      new_id = Lrama::Lexer::Token::Ident.new(s_value: "INTEGER")
+
+      renamed = resolver.add_term(id: new_id, token_id: 300, replace: true)
+
+      expect(renamed).to equal(term)
+      expect(renamed.id).to eq(new_id)
+      expect(renamed.alias_name).to be_nil
+      expect(renamed.tag).to be_nil
+    end
   end
 
   describe "#add_nterm" do

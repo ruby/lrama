@@ -445,7 +445,7 @@ module Lrama
       @token_patterns << token_pattern
 
       # Also register as a terminal symbol
-      add_term(id: id, alias_name: alias_name, tag: tag)
+      add_term(id: id, alias_name: alias_name, tag: tag, replace: true)
 
       token_pattern
     end
@@ -453,8 +453,7 @@ module Lrama
     # Add a symbol set from %symbol-set directive.
     # @rbs (name: String, symbols: Array[Lexer::Token::Base]) -> Array[Lexer::Token::Base]
     def add_symbol_set(name:, symbols:)
-      @symbol_sets[name] = symbols
-      symbols.each {|id| add_term(id: id) }
+      @symbol_sets[name] = symbols.map {|id| add_term(id: id).id }
     end
 
     # Add lex-prec rules from %lex-prec directive.
@@ -527,6 +526,9 @@ module Lrama
     # @rbs (name: String, symbols: Array[Lexer::Token::Ident]) -> Grammar::LexerContext
     def add_lexer_context(name:, symbols:)
       unless ctx = @lexer_contexts[name]
+        # Generated C stores context flags in an unsigned long long.
+        raise "%lexer-context supports at most 64 distinct contexts" if @lexer_context_counter >= 64
+
         ctx = Grammar::LexerContext.new(name: name, index: @lexer_context_counter)
         @lexer_context_counter += 1
         @lexer_contexts[name] = ctx
@@ -764,8 +766,7 @@ module Lrama
       return @token_patterns.map(&:id) if operand.s_value == "yyall"
       return @symbol_sets.fetch(operand.s_value) if @symbol_sets.key?(operand.s_value)
 
-      add_term(id: operand)
-      [operand]
+      [add_term(id: operand).id]
     end
 
     # @rbs (Lexer::Token::Base operand) -> Grammar::LexTie::OperandGroup
@@ -775,8 +776,7 @@ module Lrama
       elsif @symbol_sets.key?(operand.s_value)
         Grammar::LexTie::OperandGroup.new(names: @symbol_sets.fetch(operand.s_value).map(&:s_value), kind: :set)
       else
-        add_term(id: operand)
-        Grammar::LexTie::OperandGroup.new(names: [operand.s_value], kind: :token)
+        Grammar::LexTie::OperandGroup.new(names: [add_term(id: operand).id.s_value], kind: :token)
       end
     end
 

@@ -237,6 +237,11 @@ module Lrama
 
         # @rbs (Grammar::Symbol sym, id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?) -> void
         def replace_term_attributes(sym, id:, alias_name: nil, tag: nil, token_id: nil)
+          if sym.id == id
+            alias_name ||= sym.alias_name
+            tag ||= sym.tag
+          end
+
           sym.id = id
           sym.alias_name = alias_name
           sym.tag = tag

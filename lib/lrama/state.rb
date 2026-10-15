@@ -161,6 +161,9 @@ module Lrama
 
     # @rbs (Action::Reduce reduce) -> Array[Grammar::Symbol]
     def acceptable_pslr_reduce_lookahead(reduce)
+      unless kernels.include?(reduce.item)
+        return goto_follow_set(reduce.item.lhs, @pslr_item_lookahead_set || item_lookahead_set)
+      end
       return acceptable_reduce_lookahead(reduce) unless @pslr_item_lookahead_set
 
       @pslr_item_lookahead_set[reduce.item] || acceptable_reduce_lookahead(reduce)
@@ -316,20 +319,20 @@ module Lrama
       propagate_lookaheads_with_filter(next_state, true)
     end
 
-    # @rbs (State next_state) -> lookahead_set
-    def propagate_lookaheads_without_filter(next_state)
-      propagate_lookaheads_with_filter(next_state, false)
+    # @rbs (State next_state, ?lookahead_set lookaheads) -> lookahead_set
+    def propagate_lookaheads_without_filter(next_state, lookaheads = pslr_item_lookahead_set || item_lookahead_set)
+      propagate_lookaheads_with_filter(next_state, false, lookaheads)
     end
 
-    # @rbs (State next_state, bool apply_filter) -> lookahead_set
-    def propagate_lookaheads_with_filter(next_state, apply_filter)
+    # @rbs (State next_state, bool apply_filter, ?lookahead_set lookaheads) -> lookahead_set
+    def propagate_lookaheads_with_filter(next_state, apply_filter, lookaheads = item_lookahead_set)
       next_state.kernels.map {|next_kernel|
         lookahead_sets =
           if next_kernel.position > 1
             kernel = kernels.find {|k| k.predecessor_item_of?(next_kernel) }
-            item_lookahead_set[kernel]
+            lookaheads[kernel]
           else
-            goto_follow_set(next_kernel.lhs)
+            goto_follow_set(next_kernel.lhs, lookaheads)
           end
 
         lookahead_sets =
@@ -520,8 +523,8 @@ module Lrama
 
     # Definition 3.39 (compute_goto_follow_set)
     #
-    # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
-    def goto_follow_set(nterm_token)
+    # @rbs (Grammar::Symbol nterm_token, ?lookahead_set lookaheads) -> Array[Grammar::Symbol]
+    def goto_follow_set(nterm_token, lookaheads = item_lookahead_set)
       return [] if nterm_token.accept_symbol?
       goto = @lalr_isocore.nterm_transitions.find {|g| g.next_sym == nterm_token }
       return [] unless goto
@@ -530,7 +533,7 @@ module Lrama
 
       @kernels
         .select {|kernel| @lalr_isocore.follow_kernel_items[goto][kernel] }
-        .map {|kernel| item_lookahead_set[kernel] }
+        .map {|kernel| lookaheads[kernel] }
         .compact
         .reduce(base_terms) {|result, terms| result | terms }
     end

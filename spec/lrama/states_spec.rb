@@ -397,6 +397,30 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe '#compute_follow_kernel_items' do
+    it "maps each kernel to whether the goto inherits its lookaheads" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "follow_kernel_items.y").parse
+        %token P X Y
+        %%
+        start: first | second;
+        first: P shared X;
+        second: P shared;
+        shared: Y;
+      GRAMMAR
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.send(:compute_predecessors)
+      states.send(:compute_follow_kernel_items)
+      state = states.states.find { |candidate| candidate.accessing_symbol.id.s_value == "P" }
+      goto = state.nterm_transitions.find { |transition| transition.next_sym.id.s_value == "shared" }
+      first = state.kernels.find { |kernel| kernel.lhs.id.s_value == "first" }
+      second = state.kernels.find { |kernel| kernel.lhs.id.s_value == "second" }
+
+      expect(state.follow_kernel_items[goto]).to eq(first => false, second => true)
+    end
+  end
+
   describe '#reads_relation' do
     it do
       path = "states/reads_relation.y"
@@ -3227,6 +3251,7 @@ RSpec.describe Lrama::States do
       instance_double(
         Lrama::State,
         is_compatible?: true,
+        lookaheads_recomputed: true,
         kernels: [kernel_item],
         term_transitions: [],
         reduces: [reduce],
@@ -3272,6 +3297,9 @@ RSpec.describe Lrama::States do
     end
 
     it "treats states with different PSLR signatures as incompatible during splitting" do
+      allow(mock_state).to receive(:lalr_isocore).and_return(mock_state)
+      allow(mock_state).to receive(:id).and_return(0)
+      allow(mock_state).to receive(:pslr_item_lookahead_set).and_return(kernel_item => [grammar.find_symbol_by_s_value!("RSHIFT")])
       filtered_lookaheads = { kernel_item => [grammar.find_symbol_by_s_value!("RANGLE")] }
       expect(states.send(:compatible_split_state?, mock_state, filtered_lookaheads)).to be false
     end
@@ -3336,12 +3364,14 @@ RSpec.describe Lrama::States do
       )
 
       allow(split_state).to receive(:item_lookahead_set=)
+      allow(states).to receive(:compute_state)
 
       states.send(:merge_lookaheads, split_state, incoming_lookaheads)
 
       expect(split_state).to have_received(:item_lookahead_set=).with(
         kernel_item => [grammar.find_symbol_by_s_value!("RSHIFT"), grammar.find_symbol_by_s_value!("RANGLE")],
       )
+      expect(states).to have_received(:compute_state).with(split_state, transition, target_state)
     end
   end
 

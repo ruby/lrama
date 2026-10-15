@@ -270,6 +270,7 @@ module Lrama
     # @rbs (String pattern, Array[Integer] counter, Array[NFAState] states) -> [NFAState, NFAState]
     def compile_regex(pattern, counter, states)
       raise PatternError, "empty patterns are not allowed" if pattern.empty?
+      raise PatternError, "non-ASCII characters are not supported in byte-oriented patterns" unless pattern.ascii_only?
 
       fragment, pos = compile_expression(pattern, 0, counter, states)
       raise PatternError, "unexpected trailing input at offset #{pos}" if pos < pattern.length

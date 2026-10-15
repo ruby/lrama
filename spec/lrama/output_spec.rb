@@ -246,7 +246,7 @@ RSpec.describe Lrama::Output do
     let(:mock_grammar) do
       instance_double(
         Lrama::Grammar,
-        eof_symbol: nil,
+        eof_symbol: instance_double(Lrama::Grammar::Symbol, id: Lrama::Lexer::Token::Ident.new(s_value: "YYEOF")),
         error_symbol: nil,
         undef_symbol: nil,
         accept_symbol: nil,

@@ -137,6 +137,69 @@ RSpec.describe Lrama::Command do
       end
     end
 
+    context "when validation fails with requested reports" do
+      let(:outfile) { File.join(Dir.tmpdir, "invalid-parser.c") }
+      let(:report_file) { File.join(Dir.tmpdir, "invalid-parser.output") }
+
+      before do
+        allow(STDIN).to receive(:read).and_return(source)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+        File.delete(report_file) if File.exist?(report_file)
+      end
+
+      shared_examples "a diagnostic report without parser output" do
+        it "writes the requested report before aborting" do
+          command = Lrama::Command.new([
+            "--report=pslr,states",
+            "--report-file=#{report_file}",
+            "-o", outfile,
+            "-", "invalid.y"
+          ])
+
+          expect do
+            expect { command.run }.to raise_error(SystemExit)
+          end.to output(error_message).to_stderr_from_any_process
+
+          expect(File).to exist(report_file)
+          expect(File.read(report_file)).to include(report_message, "State 0")
+          expect(File).not_to exist(outfile)
+        end
+      end
+
+      context "with an unresolved PSLR scanner conflict" do
+        let(:source) do
+          <<~GRAMMAR
+            %define lr.type pslr
+            %token-pattern A /a/
+            %token-pattern B /a/
+            %%
+            start: A | B;
+          GRAMMAR
+        end
+        let(:error_message) { /unresolved PSLR scanner conflict/ }
+        let(:report_message) { "PSLR Unresolved Scanner Conflicts" }
+
+        include_examples "a diagnostic report without parser output"
+      end
+
+      context "with a LALR %expect mismatch" do
+        let(:source) do
+          <<~GRAMMAR
+            %expect 0
+            %%
+            start: 'a' | start start;
+          GRAMMAR
+        end
+        let(:error_message) { /shift\/reduce conflicts: 1 found, 0 expected/ }
+        let(:report_message) { "conflicts: 1 shift/reduce" }
+
+        include_examples "a diagnostic report without parser output"
+      end
+    end
+
     context "when a PSLR grammar exceeds the configured state limit" do
       let(:outfile) { File.join(Dir.tmpdir, "pslr-growth-limit.c") }
 

@@ -173,11 +173,11 @@ module Lrama
     # @rbs (State next_state) -> lookahead_set
     def propagate_lookaheads: (State next_state) -> lookahead_set
 
-    # @rbs (State next_state) -> lookahead_set
-    def propagate_lookaheads_without_filter: (State next_state) -> lookahead_set
+    # @rbs (State next_state, ?lookahead_set lookaheads) -> lookahead_set
+    def propagate_lookaheads_without_filter: (State next_state, ?lookahead_set lookaheads) -> lookahead_set
 
-    # @rbs (State next_state, bool apply_filter) -> lookahead_set
-    def propagate_lookaheads_with_filter: (State next_state, bool apply_filter) -> lookahead_set
+    # @rbs (State next_state, bool apply_filter, ?lookahead_set lookaheads) -> lookahead_set
+    def propagate_lookaheads_with_filter: (State next_state, bool apply_filter, ?lookahead_set lookaheads) -> lookahead_set
 
     # Definition 3.43 (is_compatible)
     #
@@ -231,8 +231,8 @@ module Lrama
 
     # Definition 3.39 (compute_goto_follow_set)
     #
-    # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
-    def goto_follow_set: (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
+    # @rbs (Grammar::Symbol nterm_token, ?lookahead_set lookaheads) -> Array[Grammar::Symbol]
+    def goto_follow_set: (Grammar::Symbol nterm_token, ?lookahead_set lookaheads) -> Array[Grammar::Symbol]
 
     # Definition 3.8 (Goto Follows Internal Relation)
     #

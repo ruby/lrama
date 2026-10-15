@@ -431,6 +431,19 @@ RSpec.describe Lrama::Lexer do
     MSG
   end
 
+  it 'preserves regex text after a multibyte comment' do
+    text = "/* 日本語 */\n%token-pattern ID /[a-z]+/\n%%"
+    grammar_file = Lrama::Lexer::GrammarFile.new("multibyte.y", text)
+    lexer = Lrama::Lexer.new(grammar_file)
+    2.times { lexer.next_token }
+
+    type, token = lexer.next_token
+
+    expect(type).to eq(:REGEX)
+    expect(token.s_value).to eq('/[a-z]+/')
+    expect(token.pattern).to eq('[a-z]+')
+  end
+
   context 'unexpected_c_code.y' do
     it do
       grammar_file = Lrama::Lexer::GrammarFile.new("invalid.y", "@invalid")

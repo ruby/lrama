@@ -4754,6 +4754,53 @@ RSpec.describe Lrama::Parser do
         expect(token_pattern.tag.s_value).to eq("<str>")
       end
 
+      [
+        "%token A",
+        "%left A",
+        "%lex-prec A -~ A",
+        "%lex-tie A B",
+        "%lex-no-tie A B",
+        "%symbol-set letters A",
+        '%token <old> A 300 "old letter"'
+      ].each do |declaration|
+        it "applies token pattern tags and aliases after #{declaration}" do
+          y = <<~GRAMMAR
+            %union { int val; int old; }
+            #{declaration}
+            %token-pattern <val> A /a/ "letter"
+            %%
+            start: "letter" { use($1); } ;
+          GRAMMAR
+          grammar = Lrama::Parser.new(y, "token_pattern_attributes.y").parse
+          grammar.prepare
+          grammar.validate!
+
+          rule = grammar.rules.last
+          expect(rule.translated_code(grammar)).to eq(" use((yyvsp[0].val)); ")
+          expect(rule.rhs.first.id.s_value).to eq("A")
+          expect(rule.rhs.first.alias_name).to eq('"letter"')
+        end
+      end
+
+      it "preserves token attributes omitted by a token pattern declaration" do
+        y = <<~GRAMMAR
+          %union { int val; }
+          %token <val> A 300 "letter"
+          %token-pattern A /a/
+          %%
+          start: "letter" { use($1); } ;
+        GRAMMAR
+        grammar = Lrama::Parser.new(y, "token_pattern_attributes.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        rule = grammar.rules.last
+        expect(rule.translated_code(grammar)).to eq(" use((yyvsp[0].val)); ")
+        expect(rule.rhs.first.id.s_value).to eq("A")
+        expect(rule.rhs.first.alias_name).to eq('"letter"')
+        expect(rule.rhs.first.token_id).to eq(300)
+      end
+
       it "parses escaped slashes inside token patterns" do
         y = <<~GRAMMAR
           %token-pattern SLASH /\\//

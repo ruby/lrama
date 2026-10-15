@@ -793,8 +793,9 @@ module Lrama
       base_function = compute_goto_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
         state = goto.from_state
-        state.follow_kernel_items[goto] = state.kernels.map {|kernel|
-          [kernel, Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)]
+        bools = Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)
+        state.follow_kernel_items[goto] = state.kernels.each_with_index.map {|kernel, index|
+          [kernel, bools[index]]
         }.to_h
       end
     end
@@ -1042,8 +1043,8 @@ module Lrama
       return if state.kernels.all? {|item| (filtered_lookaheads[item] - state.item_lookahead_set[item]).empty? }
 
       state.item_lookahead_set = state.item_lookahead_set.merge(filtered_lookaheads) {|_, v1, v2| v1 | v2 }
-      state.transitions.each do |transition|
-        next if transition.to_state.lookaheads_recomputed
+      state.transitions.dup.each do |transition|
+        next if transition.to_state.lookaheads_recomputed && !@pslr_split_enabled
         compute_state(state, transition, transition.to_state)
       end
     end
@@ -1092,7 +1093,7 @@ module Lrama
         s.pslr_item_lookahead_set = pslr_lookaheads
       else
         merge_pslr_lookaheads(s, pslr_lookaheads) if @pslr_split_enabled
-        merge_lookaheads(s, propagating_lookaheads)
+        merge_lookaheads(s, @pslr_split_enabled ? pslr_lookaheads : propagating_lookaheads)
         state.update_transition(transition, s) if state.items_to_state[transition.to_items].id != s.id
       end
     end
@@ -1107,10 +1108,34 @@ module Lrama
         return false unless state.is_compatible?(filtered_lookaheads)
       end
       return true unless @pslr_split_enabled && @scanner_fsa
+      return true unless state.lookaheads_recomputed
 
-      existing_acc = acceptable_tokens_for_pslr(state)
-      candidate_acc = acceptable_tokens_for_pslr(state, pslr_lookaheads)
-      pslr_compatible_accept_sets?(existing_acc, candidate_acc)
+      pslr_compatible_successors?(state, state.pslr_item_lookahead_set || state.item_lookahead_set, pslr_lookaheads)
+    end
+
+    # Shared shift prefixes must preserve scanner decisions made after those shifts.
+    # @rbs (State state, State::lookahead_set left, State::lookahead_set right) -> bool
+    def pslr_compatible_successors?(state, left, right)
+      pending = [[state.lalr_isocore, left, right]] #: Array[[State, State::lookahead_set, State::lookahead_set]]
+      visited = Set.new #: Set[[Integer, Hash[State::Item, Array[Integer]], Hash[State::Item, Array[Integer]]]]
+
+      until pending.empty?
+        current, left, right = pending.pop
+        key = [current.id, left.transform_values {|tokens| tokens.map(&:number).sort }, right.transform_values {|tokens| tokens.map(&:number).sort }]
+        next if key[1] == key[2] || visited.include?(key)
+        visited << key
+
+        left_acc = acceptable_tokens_for_pslr(current, left)
+        right_acc = acceptable_tokens_for_pslr(current, right)
+        return false unless pslr_compatible_accept_sets?(left_acc, right_acc)
+
+        current.transitions.each do |transition|
+          successor = transition.to_state.lalr_isocore
+          pending << [successor, current.propagate_lookaheads_without_filter(successor, left), current.propagate_lookaheads_without_filter(successor, right)]
+        end
+      end
+
+      true
     end
 
     # Canonical LR(1) compatibility for %define pslr.tables canonical-lr:
@@ -1183,8 +1208,12 @@ module Lrama
 
       state.reduces.each do |reduce|
         look_ahead =
-          if filtered_lookaheads && kernel_reduce_items.include?(reduce.item)
-            filtered_lookaheads[reduce.item] || []
+          if filtered_lookaheads
+            if kernel_reduce_items.include?(reduce.item)
+              filtered_lookaheads[reduce.item] || []
+            else
+              state.goto_follow_set(reduce.item.lhs, filtered_lookaheads)
+            end
           else
             state.acceptable_pslr_reduce_lookahead(reduce)
           end
