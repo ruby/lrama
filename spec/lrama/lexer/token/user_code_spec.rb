@@ -58,5 +58,20 @@ RSpec.describe Lrama::Lexer::Token::UserCode do
       expect(references.count).to eq 1
       expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :at, name: "expr.right", ex_tag: nil, first_column: 1, last_column: 14)
     end
+
+    it "ignores references in C literals and comments" do
+      code = <<~'C'
+        $1;
+        printf("total $2 and @2 \"done\"");
+        int character = '$3';
+        // note $3 and @3
+        $4; @4;
+        /* note $5 and @5 */
+      C
+
+      references = Lrama::Lexer::Token::UserCode.new(s_value: code, location: location).references
+
+      expect(references.map { |ref| [ref.type, ref.index] }).to eq([[:dollar, 1], [:dollar, 4], [:at, 4]])
+    end
   end
 end
