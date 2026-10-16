@@ -238,10 +238,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
-        expected = <<~TEXT
-          parse.y:1:53: Can not refer following component. 10 >= 4.
-             1 | class : keyword_class tSTRING keyword_end { $class = $10; }
-               |                                                      ^~~
+        expected = <<~TEXT.chomp
+          parse.y:1.53-56: error: Can not refer following component. 10 >= 4.
+              1 | class : keyword_class tSTRING keyword_end { $class = $10; }
+                |                                                      ^~~
         TEXT
 
         expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
@@ -273,10 +273,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.user_code = token_6
         rule_builder.complete_input
 
-        expected = <<~TEXT
-          parse.y:1:24: Can not refer following component. 3 >= 2.
-             1 | class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }
-               |                         ^~
+        expected = <<~TEXT.chomp
+          parse.y:1.24-26: error: Can not refer following component. 3 >= 2.
+              1 | class : keyword_class { $3; } tSTRING keyword_end { $class = $1; }
+                |                         ^~
         TEXT
 
         expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
@@ -305,10 +305,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
-        expected = <<~TEXT
-          parse.y:1:44: Referring symbol `classes` is not found.
-             1 | class : keyword_class tSTRING keyword_end { $classes = $1; }
-               |                                             ^~~~~~~~
+        expected = <<~TEXT.chomp
+          parse.y:1.44-52: error: Referring symbol `classes` is not found.
+              1 | class : keyword_class tSTRING keyword_end { $classes = $1; }
+                |                                             ^~~~~~~~
         TEXT
 
         expect { rule_builder.send(:preprocess_references) }.to raise_error(expected)
@@ -335,10 +335,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         end
 
         it "raises error" do
-          expected = <<~TEXT
-            parse.y:10:60: Referring symbol `tSTRING` is duplicated.
-              10 | class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
-                 |                                                             ^~~~~~~~
+          expected = <<~TEXT.chomp
+            parse.y:10.60-68: error: Referring symbol `tSTRING` is duplicated.
+               10 | class: keyword_class tSTRING tSTRING keyword_end { $class = $tSTRING; }
+                  |                                                             ^~~~~~~~
           TEXT
           expect {
             grammar = Lrama::Parser.new(y, "parse.y").parse
@@ -367,10 +367,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         end
 
         it "raises error" do
-          expected = <<~TEXT
-            parse.y:10:35: Referring symbol `class` is duplicated.
-              10 | class: class tSTRING keyword_end { $class = $tSTRING; }
-                 |                                    ^~~~~~
+          expected = <<~TEXT.chomp
+            parse.y:10.35-41: error: Referring symbol `class` is duplicated.
+               10 | class: class tSTRING keyword_end { $class = $tSTRING; }
+                  |                                    ^~~~~~
           TEXT
           expect {
             grammar = Lrama::Parser.new(y, "parse.y").parse
@@ -399,10 +399,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         end
 
         it "raises error" do
-          expected = <<~TEXT
-            parse.y:10:42: Referring symbol `class` is duplicated.
-              10 | klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
-                 |                                           ^~~~~~
+          expected = <<~TEXT.chomp
+            parse.y:10.42-48: error: Referring symbol `class` is duplicated.
+               10 | klass[class]: class tSTRING keyword_end { $class = $tSTRING; }
+                  |                                           ^~~~~~
           TEXT
           expect {
             grammar = Lrama::Parser.new(y, "parse.y").parse
@@ -431,10 +431,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         end
 
         it "raises error" do
-          expected = <<~TEXT
-            parse.y:10:49: Referring symbol `class` is duplicated.
-              10 | klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
-                 |                                                  ^~~~~~
+          expected = <<~TEXT.chomp
+            parse.y:10.49-55: error: Referring symbol `class` is duplicated.
+               10 | klass[class]: Klass[class] tSTRING keyword_end { $class = $tSTRING; }
+                  |                                                  ^~~~~~
           TEXT
           expect {
             grammar = Lrama::Parser.new(y, "parse.y").parse
