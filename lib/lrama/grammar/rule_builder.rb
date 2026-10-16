@@ -245,13 +245,12 @@ module Lrama
               ref.index = ref.number
             end
 
-            # TODO: Need to check index of @ too?
-            next if ref.type == :at
-
             if ref.index
               # TODO: Prohibit $0 even so Bison allows it?
               # See: https://www.gnu.org/software/bison/manual/html_node/Actions.html
               token.invalid_ref(ref, "Can not refer following component. #{ref.index} >= #{i}.") if ref.index >= i
+              next if ref.type == :at
+
               rhs[ref.index - 1].referred = true
             end
           end
