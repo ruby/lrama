@@ -79,11 +79,9 @@ module Lrama
         o.on('-t', '--debug', 'display debugging outputs of internal parser') {|v| @options.debug = true }
         o.separator "                                     same as '-Dparse.trace'"
         o.on('--locations', 'enable location support') {|v| @options.locations = true }
-        o.on('-D', '--define=NAME[=VALUE]', Array, "similar to '%define NAME VALUE'") do |v|
-          @options.define = v.each_with_object({}) do |item, hash| # steep:ignore UnannotatedEmptyCollection
-            key, value = item.split('=', 2)
-            hash[key] = value
-          end
+        o.on('-D', '--define=NAME[=VALUE]', "similar to '%define NAME VALUE'") do |v|
+          key, value = v.split('=', 2)
+          @options.define[key] = value
         end
         o.separator ''
         o.separator 'Output:'
