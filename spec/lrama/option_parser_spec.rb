@@ -403,5 +403,14 @@ RSpec.describe Lrama::OptionParser do
         end
       end
     end
+
+    context "when multiple define options are passed" do
+      it "returns hash of define options" do
+        option_parser = Lrama::OptionParser.new
+        option_parser.send(:parse, ["--define=foo=1", "--define=bar", fixture_path("command/basic.y")])
+        options = option_parser.instance_variable_get(:@options)
+        expect(options.define).to eq({'foo' => "1", 'bar' => nil})
+      end
+    end
   end
 end
