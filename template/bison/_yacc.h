@@ -71,6 +71,10 @@ struct YYLTYPE
   <%-# b4_declare_yyparse -%>
 int yyparse (<%= output.parse_param %>);
 
+<%- if output.pslr_enabled? -%>
+<%= output.pslr_function_declarations %>
+<%- end -%>
+
 
 <%= output.percent_code("provides") %>
   <%-# b4_cpp_guard_close([b4_spec_mapped_header_file]) -%>

@@ -1,0 +1,13 @@
+# Generated from lib/lrama/warnings/lexical_tie_candidates.rb with RBS::Inline
+
+module Lrama
+  class Warnings
+    class LexicalTieCandidates
+      # @rbs (Logger logger, bool warnings) -> void
+      def initialize: (Logger logger, bool warnings) -> void
+
+      # @rbs (Lrama::States states) -> void
+      def warn: (Lrama::States states) -> void
+    end
+  end
+end
