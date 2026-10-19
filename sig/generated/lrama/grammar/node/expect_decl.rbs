@@ -1,0 +1,14 @@
+# Generated from lib/lrama/grammar/node/expect_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class ExpectDecl < Base
+        attr_reader number: Integer
+
+        # @rbs (number: Integer, location: Lexer::Location) -> void
+        def initialize: (number: Integer, location: Lexer::Location) -> void
+      end
+    end
+  end
+end

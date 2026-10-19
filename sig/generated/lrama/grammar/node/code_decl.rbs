@@ -1,0 +1,16 @@
+# Generated from lib/lrama/grammar/node/code_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class CodeDecl < Base
+        attr_reader id: Lexer::Token::Ident
+
+        attr_reader code: Lexer::Token::UserCode
+
+        # @rbs (id: Lexer::Token::Ident, code: Lexer::Token::UserCode, location: Lexer::Location) -> void
+        def initialize: (id: Lexer::Token::Ident, code: Lexer::Token::UserCode, location: Lexer::Location) -> void
+      end
+    end
+  end
+end

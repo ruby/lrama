@@ -7,11 +7,11 @@ module Lrama
       class Base
         attr_reader :s_value #: String
         attr_reader :location #: Location
-        attr_accessor :alias_name #: String
+        attr_accessor :alias_name #: String?
         attr_accessor :referred #: bool
         attr_reader :errors #: Array[String]
 
-        # @rbs (s_value: String, ?alias_name: String, ?location: Location) -> void
+        # @rbs (s_value: String, ?alias_name: String?, ?location: Location) -> void
         def initialize(s_value:, alias_name: nil, location: nil)
           s_value.freeze
           @s_value = s_value
@@ -19,6 +19,8 @@ module Lrama
           @location = location
           @errors = []
         end
+
+        alias :loc :location
 
         # @rbs () -> String
         def to_s

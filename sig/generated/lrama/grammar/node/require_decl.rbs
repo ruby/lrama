@@ -1,0 +1,10 @@
+# Generated from lib/lrama/grammar/node/require_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class RequireDecl < Base
+      end
+    end
+  end
+end

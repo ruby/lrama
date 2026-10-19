@@ -1,0 +1,10 @@
+# Generated from lib/lrama/grammar/node/no_stdlib_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class NoStdlibDecl < Base
+      end
+    end
+  end
+end

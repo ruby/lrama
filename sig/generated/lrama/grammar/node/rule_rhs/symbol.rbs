@@ -1,0 +1,21 @@
+# Generated from lib/lrama/grammar/node/rule_rhs/symbol.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      module RuleRhs
+        class Symbol < Node::Base
+          attr_reader token: Lexer::Token::Base
+
+          attr_reader alias_name: String?
+
+          # @rbs (token: Lexer::Token::Base, ?alias_name: String?, location: Lexer::Location) -> void
+          def initialize: (token: Lexer::Token::Base, location: Lexer::Location, ?alias_name: String?) -> void
+
+          # @rbs () -> String
+          def s_value: () -> String
+        end
+      end
+    end
+  end
+end

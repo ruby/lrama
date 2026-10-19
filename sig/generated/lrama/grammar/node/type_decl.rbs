@@ -1,0 +1,14 @@
+# Generated from lib/lrama/grammar/node/type_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class TypeDecl < Base
+        attr_reader symbols: Array[Node::Symbol]
+
+        # @rbs (symbols: Array[Node::Symbol], location: Lexer::Location) -> void
+        def initialize: (symbols: Array[Node::Symbol], location: Lexer::Location) -> void
+      end
+    end
+  end
+end

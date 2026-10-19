@@ -1,0 +1,14 @@
+# Generated from lib/lrama/grammar/node/parse_param_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class ParseParamDecl < Base
+        attr_reader params: Array[Lexer::Token::UserCode]
+
+        # @rbs (params: Array[Lexer::Token::UserCode], location: Lexer::Location) -> void
+        def initialize: (params: Array[Lexer::Token::UserCode], location: Lexer::Location) -> void
+      end
+    end
+  end
+end

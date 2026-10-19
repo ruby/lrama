@@ -10,12 +10,12 @@ module Lrama
       #
       # @rbs!
       #   @id: Lexer::Token::Base
-      #   @tag: Lexer::Token::Tag
+      #   @tag: Lexer::Token::Tag?
 
       attr_reader :id #: Lexer::Token::Base
-      attr_reader :tag #: Lexer::Token::Tag
+      attr_reader :tag #: Lexer::Token::Tag?
 
-      # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> void
+      # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag?) -> void
       def initialize(id:, tag:)
         @id = id
         @tag = tag
