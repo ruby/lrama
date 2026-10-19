@@ -1,0 +1,81 @@
+# Generated from lib/lrama/diagnostics/message.rb with RBS::Inline
+
+module Lrama
+  module Diagnostics
+    class Message
+      SEVERITY: untyped
+
+      attr_reader type: Symbol
+
+      attr_reader location: untyped
+
+      attr_reader message: String
+
+      attr_reader source_line: String?
+
+      attr_reader notes: Array[Message]
+
+      attr_reader fixit: String?
+
+      # @rbs (type: Symbol, location: untyped, message: String, ?source_line: String?, ?notes: Array[Message], ?fixit: String?) -> void
+      def initialize: (type: Symbol, location: untyped, message: String, ?source_line: String?, ?notes: Array[Message], ?fixit: String?) -> void
+
+      # @rbs () -> Integer
+      def severity: () -> Integer
+
+      # @rbs () -> bool
+      def error?: () -> bool
+
+      # @rbs () -> bool
+      def warning?: () -> bool
+
+      # @rbs () -> bool
+      def note?: () -> bool
+
+      # @rbs () -> String?
+      def file: () -> String?
+
+      # @rbs () -> Integer?
+      def line: () -> Integer?
+
+      # @rbs () -> Integer?
+      def column: () -> Integer?
+
+      # @rbs () -> Integer?
+      def end_line: () -> Integer?
+
+      # @rbs () -> Integer?
+      def end_column: () -> Integer?
+
+      # @rbs () -> bool
+      def location?: () -> bool
+
+      # @rbs () -> bool
+      def source_line?: () -> bool
+
+      # @rbs () -> bool
+      def notes?: () -> bool
+
+      # @rbs () -> bool
+      def fixit?: () -> bool
+
+      # @rbs () -> Integer
+      def range_length: () -> Integer
+
+      # @rbs (untyped other) -> Integer?
+      def <=>: (untyped other) -> Integer?
+
+      # @rbs () -> String
+      def inspect: () -> String
+
+      # @rbs () -> String
+      def to_s: () -> String
+
+      # @rbs (Message note) -> self
+      def add_note: (Message note) -> self
+
+      # @rbs () -> Message
+      def dup: () -> Message
+    end
+  end
+end
