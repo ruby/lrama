@@ -21,6 +21,8 @@ module Lrama
 
           def token_to_symbol: (Lexer::Token::Base token) -> Grammar::Symbol
 
+          def find_term_by_s_value: (::String s_value) -> Grammar::Symbol?
+
           def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
 
           def fill_nterm_type: (Array[Grammar::Type] types) -> void

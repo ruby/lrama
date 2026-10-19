@@ -16,6 +16,7 @@ module Lrama
         #     def find_symbol_by_number!: (Integer number) -> Grammar::Symbol
         #     def find_symbol_by_id!: (Lexer::Token::Base id) -> Grammar::Symbol
         #     def token_to_symbol: (Lexer::Token::Base token) -> Grammar::Symbol
+        #     def find_term_by_s_value: (::String s_value) -> Grammar::Symbol?
         #     def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
         #     def fill_nterm_type: (Array[Grammar::Type] types) -> void
         #     def fill_symbol_number: () -> void

@@ -1,0 +1,14 @@
+# Generated from lib/lrama/grammar/node/epilogue_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class EpilogueDecl < Base
+        attr_reader code: Lexer::Token::UserCode
+
+        # @rbs (code: Lexer::Token::UserCode, location: Lexer::Location) -> void
+        def initialize: (code: Lexer::Token::UserCode, location: Lexer::Location) -> void
+      end
+    end
+  end
+end

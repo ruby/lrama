@@ -1,0 +1,16 @@
+# Generated from lib/lrama/grammar/node/base.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class Base
+        attr_reader location: Lexer::Location
+
+        # @rbs (location: Lexer::Location) -> void
+        def initialize: (location: Lexer::Location) -> void
+
+        alias loc location
+      end
+    end
+  end
+end

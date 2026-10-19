@@ -8,14 +8,16 @@ module Lrama
 
         attr_reader location: Location
 
-        attr_accessor alias_name: String
+        attr_accessor alias_name: String?
 
         attr_accessor referred: bool
 
         attr_reader errors: Array[String]
 
-        # @rbs (s_value: String, ?alias_name: String, ?location: Location) -> void
-        def initialize: (s_value: String, ?alias_name: String, ?location: Location) -> void
+        # @rbs (s_value: String, ?alias_name: String?, ?location: Location) -> void
+        def initialize: (s_value: String, ?alias_name: String?, ?location: Location) -> void
+
+        alias loc location
 
         # @rbs () -> String
         def to_s: () -> String

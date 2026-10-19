@@ -8,8 +8,8 @@ module Lrama
 
         attr_reader lhs_tag: Lexer::Token::Tag?
 
-        # @rbs (s_value: String, ?alias_name: String, ?location: Location, ?args: Array[Lexer::Token::Base], ?lhs_tag: Lexer::Token::Tag?) -> void
-        def initialize: (s_value: String, ?alias_name: String, ?location: Location, ?args: Array[Lexer::Token::Base], ?lhs_tag: Lexer::Token::Tag?) -> void
+        # @rbs (s_value: String, ?alias_name: String?, ?location: Location, ?args: Array[Lexer::Token::Base], ?lhs_tag: Lexer::Token::Tag?) -> void
+        def initialize: (s_value: String, ?alias_name: String?, ?location: Location, ?args: Array[Lexer::Token::Base], ?lhs_tag: Lexer::Token::Tag?) -> void
 
         # @rbs () -> String
         def rule_name: () -> String

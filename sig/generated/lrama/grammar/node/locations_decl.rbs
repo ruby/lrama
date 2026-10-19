@@ -1,0 +1,10 @@
+# Generated from lib/lrama/grammar/node/locations_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class LocationsDecl < Base
+      end
+    end
+  end
+end

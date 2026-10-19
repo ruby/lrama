@@ -1,0 +1,14 @@
+# Generated from lib/lrama/grammar/node/after_shift_decl.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class AfterShiftDecl < Base
+        attr_reader id: Lexer::Token::Ident
+
+        # @rbs (id: Lexer::Token::Ident, location: Lexer::Location) -> void
+        def initialize: (id: Lexer::Token::Ident, location: Lexer::Location) -> void
+      end
+    end
+  end
+end

@@ -1,0 +1,12 @@
+# Generated from lib/lrama/grammar/node/rule_rhs/empty.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      module RuleRhs
+        class Empty < Node::Base
+        end
+      end
+    end
+  end
+end

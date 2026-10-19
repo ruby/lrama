@@ -1,0 +1,20 @@
+# Generated from lib/lrama/grammar/node/rule_rhs/action.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      module RuleRhs
+        class Action < Node::Base
+          attr_reader code: Lexer::Token::UserCode
+
+          attr_reader alias_name: String?
+
+          attr_reader tag: Lexer::Token::Tag?
+
+          # @rbs (code: Lexer::Token::UserCode, ?alias_name: String?, ?tag: Lexer::Token::Tag?, location: Lexer::Location) -> void
+          def initialize: (code: Lexer::Token::UserCode, location: Lexer::Location, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> void
+        end
+      end
+    end
+  end
+end

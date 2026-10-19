@@ -1,0 +1,16 @@
+# Generated from lib/lrama/grammar/node/symbol.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class Symbol < Base
+        attr_reader id: Lexer::Token::Base
+
+        attr_accessor tag: Lexer::Token::Tag?
+
+        # @rbs (id: Lexer::Token::Base, ?tag: Lexer::Token::Tag?, location: Lexer::Location) -> void
+        def initialize: (id: Lexer::Token::Base, location: Lexer::Location, ?tag: Lexer::Token::Tag?) -> void
+      end
+    end
+  end
+end

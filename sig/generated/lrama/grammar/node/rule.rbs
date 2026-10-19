@@ -1,0 +1,18 @@
+# Generated from lib/lrama/grammar/node/rule.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class Rule < Base
+        attr_reader id: Lexer::Token::Base
+
+        attr_reader alias_name: String?
+
+        attr_reader rhs: Array[Node::Base]
+
+        # @rbs (id: Lexer::Token::Base, ?alias_name: String?, rhs: Array[Node::Base], location: Lexer::Location) -> void
+        def initialize: (id: Lexer::Token::Base, rhs: Array[Node::Base], location: Lexer::Location, ?alias_name: String?) -> void
+      end
+    end
+  end
+end

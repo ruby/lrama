@@ -9,6 +9,7 @@ require_relative "grammar/counter"
 require_relative "grammar/destructor"
 require_relative "grammar/error_token"
 require_relative "grammar/inline"
+require_relative "grammar/node"
 require_relative "grammar/parameterized"
 require_relative "grammar/percent_code"
 require_relative "grammar/precedence"
@@ -63,11 +64,12 @@ module Lrama
     #   @aux: Auxiliary
     #   @no_stdlib: bool
     #   @locations: bool
-    #   @define: Hash[String, String]
+    #   @define: Hash[String, String?]
     #   @required: bool
     #   @union: Union
     #   @precedences: Array[Precedence]
     #   @start_nterm: Lrama::Lexer::Token::Base?
+    #   @nodes: Array[Node::Base]
 
     extend Forwardable
 
@@ -98,17 +100,19 @@ module Lrama
     attr_accessor :sym_to_rules #: Hash[Integer, Array[Rule]]
     attr_accessor :no_stdlib #: bool
     attr_accessor :locations #: bool
-    attr_accessor :define #: Hash[String, String]
+    attr_accessor :define #: Hash[String, String?]
     attr_accessor :required #: bool
+    attr_accessor :nodes #: Array[Node::Base]
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term, :find_term_by_s_value,
                                         :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
                                         :find_symbol_by_s_value!, :fill_symbol_number, :fill_nterm_type,
                                         :fill_printer, :fill_destructor, :fill_error_token, :sort_by_number!
 
-    # @rbs (Counter rule_counter, bool locations, Hash[String, String] define) -> void
-    def initialize(rule_counter, locations, define = {})
+    # @rbs (Counter rule_counter, bool locations, Hash[String, String?] define) -> void
+    def initialize(rule_counter, midrule_action_counter, locations, define = {})
       @rule_counter = rule_counter
+      @midrule_action_counter = midrule_action_counter
 
       # Code defined by "%code"
       @percent_codes = []
@@ -133,8 +137,14 @@ module Lrama
       @required = false
       @precedences = []
       @start_nterm = nil
+      @nodes = nil
 
       append_special_symbols
+    end
+
+    # @rbs () -> void
+    def evaluate_nodes
+      _evaluate_nodes
     end
 
     # @rbs (Counter rule_counter, Counter midrule_action_counter) -> RuleBuilder
@@ -162,7 +172,7 @@ module Lrama
       @error_tokens << ErrorToken.new(ident_or_tags: ident_or_tags, token_code: token_code, lineno: lineno)
     end
 
-    # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag) -> Array[Type]
+    # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag?) -> Array[Type]
     def add_type(id:, tag:)
       @types << Type.new(id: id, tag: tag)
     end
@@ -305,6 +315,186 @@ module Lrama
     end
 
     private
+
+    # @rbs () -> void
+    def _evaluate_nodes
+      @nodes.each do |node|
+        case node
+        when Node::DefineDecl
+          self.define[node.variable] = node.value
+        when Node::ExpectDecl
+          self.expect = node.number
+        when Node::PrologueDecl
+          self.prologue_first_lineno = node.location.first_line
+          self.prologue = node.code.s_value
+        when Node::EpilogueDecl
+          self.epilogue_first_lineno = node.location.first_line + 1
+          self.epilogue = node.code.s_value
+        when Node::RequireDecl
+          @required = true
+        when Node::LexParamDecl
+          node.params.each do |param|
+            self.lex_param = Grammar::Code::NoReferenceCode.new(type: :lex_param, token_code: param).token_code.s_value
+          end
+        when Node::ParseParamDecl
+          node.params.each do |param|
+            self.parse_param = Grammar::Code::NoReferenceCode.new(type: :parse_param, token_code: param).token_code.s_value
+          end
+        when Node::UnionDecl
+          self.set_union(
+            Grammar::Code::NoReferenceCode.new(type: :union, token_code: node.code),
+            node.loc.first_line
+          )
+        when Node::DestructorDecl
+          self.add_destructor(
+            ident_or_tags: node.ident_or_tags,
+            token_code: node.code,
+            lineno: node.location.first_line
+          )
+        when Node::PrinterDecl
+          self.add_printer(
+            ident_or_tags: node.ident_or_tags,
+            token_code: node.code,
+            lineno: node.location.first_line
+          )
+        when Node::ErrorTokenDecl
+          self.add_error_token(
+            ident_or_tags: node.ident_or_tags,
+            token_code: node.code,
+            lineno: node.location.first_line
+          )
+        when Node::StartDecl
+          self.set_start_nterm(node.id)
+        when Node::CodeDecl
+          add_percent_code(id: node.id, code: node.code)
+        when Node::InitialActionDecl
+          self.initial_action = Grammar::Code::InitialActionCode.new(type: :initial_action, token_code: node.code)
+        when Node::NoStdlibDecl
+          self.no_stdlib = true
+        when Node::LocationsDecl
+          self.locations = true
+        when Node::AfterShiftDecl
+          self.after_shift = node.id
+        when Node::BeforeReduceDecl
+          self.before_reduce = node.id
+        when Node::AfterReduceDecl
+          self.after_reduce = node.id
+        when Node::AfterShiftErrorTokenDecl
+          self.after_shift_error_token = node.id
+        when Node::AfterPopStackDecl
+          self.after_pop_stack = node.id
+        when Node::TokenDecl
+          node.tokens.each do |token|
+            add_term(id: token.id, alias_name: token.alias_name, token_id: token.token_id, tag: token.tag, replace: true)
+          end
+        when Node::TypeDecl
+          node.symbols.each do |sym|
+            add_type(id: sym.id, tag: sym.tag)
+          end
+        when Node::NtermDecl
+          node.symbols.each do |sym|
+            if find_term_by_s_value(sym.id.s_value)
+              raise ParseError, sym.id.location.generate_error_message("symbol #{sym.id.s_value} redeclared as a nonterminal") # steep:ignore UnknownConstant
+            else
+              add_type(id: sym.id, tag: sym.tag)
+            end
+          end
+        when Node::PrecedenceDecl
+          node.tokens.each do |token|
+            sym = add_term(id: token.id, tag: token.tag)
+
+            case node.type
+            when :left
+              add_left(sym, node.number, token.id.s_value, token.loc.first_line)
+            when :right
+              add_right(sym, node.number, token.id.s_value, token.loc.first_line)
+            when :precedence
+              add_precedence(sym, node.number, token.id.s_value, token.loc.first_line)
+            when :nonassoc
+              add_nonassoc(sym, node.number, token.id.s_value, token.loc.first_line)
+            else
+              raise "Unknown precedence type: #{node.type}, Node: #{node}"
+            end
+          end
+        when Node::Rule
+          builder = create_rule_builder(@rule_counter, @midrule_action_counter)
+          builder.line = (node.rhs.first || node).location.first_line
+          lhs = node.id
+          lhs.alias_name = node.alias_name
+          builder.lhs = lhs
+
+          node.rhs.each do |rhs_node|
+            case rhs_node
+            when Node::RuleRhs::Empty
+              builder.line = rhs_node.location.first_line
+              builder.add_rhs(Lrama::Lexer::Token::Empty.new(location: rhs_node.location))
+            when Node::RuleRhs::Symbol
+              token = rhs_node.token
+              token.alias_name = rhs_node.alias_name
+              builder.add_rhs(token)
+            when Node::RuleRhs::InstantiateRule
+              token = Lrama::Lexer::Token::InstantiateRule.new(
+                s_value: rhs_node.s_value, alias_name: rhs_node.alias_name,
+                args: rhs_node.args, lhs_tag: rhs_node.lhs_tag,
+                location: rhs_node.location
+              )
+              builder.add_rhs(token)
+              builder.line = rhs_node.location.first_line
+            when Node::RuleRhs::Action
+              user_code = rhs_node.code
+              user_code.alias_name = rhs_node.alias_name
+              user_code.tag = rhs_node.tag
+              builder.user_code = user_code
+            when Node::RuleRhs::Prec
+              sym = find_symbol_by_id!(rhs_node.token)
+              builder.precedence_sym = sym
+            else
+              raise "Unknown Node: #{rhs_node}"
+            end
+          end
+
+          builder.complete_input
+          add_rule_builder(builder)
+        when Grammar::Node::ParameterizedRule
+          rhs_list = node.rhs_list.map do |rhs|
+            builder = Grammar::Parameterized::Rhs.new
+
+            rhs.each do |rhs_node|
+              case rhs_node
+              when Node::RuleRhs::Empty
+              when Node::RuleRhs::Symbol
+                token = rhs_node.token
+                token.alias_name = rhs_node.alias_name
+                builder.symbols << token
+              when Node::RuleRhs::InstantiateRule
+                token = Lrama::Lexer::Token::InstantiateRule.new(
+                  s_value: rhs_node.s_value, alias_name: rhs_node.alias_name,
+                  args: rhs_node.args, lhs_tag: rhs_node.lhs_tag,
+                  location: rhs_node.location
+                )
+                builder.symbols << token
+              when Node::RuleRhs::Action
+                user_code = rhs_node.code
+                user_code.alias_name = rhs_node.alias_name
+                builder.user_code = user_code
+              when Node::RuleRhs::Prec
+                sym = find_symbol_by_id!(rhs_node.token)
+                builder.precedence_sym = sym
+              else
+                raise "Unknown Node: #{rhs_node}"
+              end
+            end
+
+            builder
+          end
+
+          rule = Grammar::Parameterized::Rule.new(node.name, node.parameters, rhs_list, tag: node.tag, is_inline: node.is_inline)
+          add_parameterized_rule(rule)
+        else
+          raise "Unknown Node: #{node}"
+        end
+      end
+    end
 
     # @rbs () -> void
     def sort_precedence

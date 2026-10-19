@@ -7,7 +7,7 @@ module Lrama
   class Lexer
     module Token
       class UserCode < Base
-        attr_accessor :tag #: Lexer::Token::Tag
+        attr_accessor :tag #: Lexer::Token::Tag?
 
         # @rbs () -> Array[Lrama::Grammar::Reference]
         def references

@@ -1,0 +1,20 @@
+# Generated from lib/lrama/grammar/node/token.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    module Node
+      class Token < Base
+        attr_reader id: Lexer::Token::Base
+
+        attr_reader token_id: Integer?
+
+        attr_reader alias_name: String?
+
+        attr_accessor tag: Lexer::Token::Tag?
+
+        # @rbs (id: Lexer::Token::Base, ?token_id: Integer?, ?alias_name: String?, ?tag: Lexer::Token::Tag?, location: Lexer::Location) -> void
+        def initialize: (id: Lexer::Token::Base, location: Lexer::Location, ?token_id: Integer?, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> void
+      end
+    end
+  end
+end
