@@ -12,6 +12,19 @@ RSpec.describe Lrama::Parser do
   Printer = Lrama::Grammar::Printer
   Code = Lrama::Grammar::Code
 
+  def rule_builder_rhs_values(builder)
+    builder.rhs.map do |node|
+      case node
+      when Lrama::Grammar::Node::RuleRhs::Symbol
+        node.token
+      when Lrama::Grammar::Node::RuleRhs::Action
+        node.code
+      else
+        node
+      end
+    end + [builder.precedence_sym, builder.user_code].compact
+  end
+
   let(:header) do
     <<~HEADER
       %{
@@ -259,7 +272,7 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: T::Ident.new(s_value: "unused"),    alias_name: nil, number: 31, tag: nil,                                 term: false, token_id: 12, nullable: false, precedence: nil, printer: nil),
       ])
       expect(grammar.types).to eq([Type.new(id: T::Ident.new(s_value: "class"), tag: T::Tag.new(s_value: "<i>"))])
-      _rules = grammar.rule_builders.map {|b| [b.lhs, (b.rhs + [b.precedence_sym, b.user_code]).compact, b.line] }
+      _rules = grammar.rule_builders.map {|b| [b.lhs, rule_builder_rhs_values(b), b.line] }
       expect(_rules).to eq([
         [
           T::Ident.new(s_value: "program"),
@@ -1013,7 +1026,7 @@ RSpec.describe Lrama::Parser do
 
             it "preserves each suffixed argument's source range" do
               args = grammar.nodes.last.rhs.first.args
-              expect(args.map { |arg| [arg.first_line, arg.first_column, arg.last_line, arg.last_column] }).to eq([
+              expect(args.map { |arg| [arg.location.first_line, arg.location.first_column, arg.location.last_line, arg.location.last_column] }).to eq([
                 [5, 16, 5, 18],
                 [5, 20, 5, 22],
                 [5, 24, 5, 28],
@@ -1057,7 +1070,7 @@ RSpec.describe Lrama::Parser do
 
         it "preserves each nested call's source range" do
           args = grammar.nodes.last.rhs.first.args
-          expect(args.map { |arg| [arg.first_line, arg.first_column, arg.last_line, arg.last_column] }).to eq([
+          expect(args.map { |arg| [arg.location.first_line, arg.location.first_column, arg.location.last_line, arg.location.last_column] }).to eq([
             [5, 2, 5, 11],
             [6, 2, 8, 3],
             [9, 2, 9, 13],
@@ -3624,7 +3637,7 @@ RSpec.describe Lrama::Parser do
       grammar.prepare
       grammar.validate!
 
-      _rules = grammar.rule_builders.map {|b| [b.lhs, (b.rhs + [b.precedence_sym, b.user_code]).compact, b.line] }
+      _rules = grammar.rule_builders.map {|b| [b.lhs, rule_builder_rhs_values(b), b.line] }
       expect(_rules).to eq([
         [
           T::Ident.new(s_value: "program"),
@@ -3683,7 +3696,7 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: T::Ident.new(s_value: "tEQ"),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2)),
         Sym.new(id: T::Ident.new(s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0)),
       ])
-      _rules = grammar.rule_builders.map {|b| [b.lhs, (b.rhs + [b.precedence_sym, b.user_code]).compact, b.line] }
+      _rules = grammar.rule_builders.map {|b| [b.lhs, rule_builder_rhs_values(b), b.line] }
       expect(_rules).to eq([
         [
           T::Ident.new(s_value: "program"),

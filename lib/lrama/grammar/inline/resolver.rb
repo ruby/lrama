@@ -13,10 +13,12 @@ module Lrama
         # @rbs () -> Array[Lrama::Grammar::RuleBuilder]
         def resolve
           resolved_builders = []  #: Array[Lrama::Grammar::RuleBuilder]
-          @rule_builder.rhs.each_with_index do |token, i|
-            if (rule = @rule_builder.parameterized_resolver.find_inline(token))
+          @rule_builder.rhs.each_with_index do |node, i|
+            next unless node.is_a?(Node::RuleRhs::Symbol) || node.is_a?(Node::RuleRhs::InstantiateRule)
+
+            if (rule = @rule_builder.parameterized_resolver.find_inline(node))
               rule.rhs.each do |rhs|
-                builder = build_rule(rhs, token, i, rule)
+                builder = build_rule(rhs, node, i, rule)
                 resolved_builders << builder
               end
               break
@@ -27,15 +29,15 @@ module Lrama
 
         private
 
-        # @rbs (Lrama::Grammar::Parameterized::Rhs rhs, Lrama::Lexer::Token token, Integer index, Lrama::Grammar::Parameterized::Rule rule) -> Lrama::Grammar::RuleBuilder
-        def build_rule(rhs, token, index, rule)
+        # @rbs (Lrama::Grammar::Parameterized::Rhs rhs, Node::RuleRhs::value node, Integer index, Lrama::Grammar::Parameterized::Rule rule) -> Lrama::Grammar::RuleBuilder
+        def build_rule(rhs, node, index, rule)
           builder = RuleBuilder.new(
             @rule_builder.rule_counter,
             @rule_builder.midrule_action_counter,
             @rule_builder.parameterized_resolver,
             lhs_tag: @rule_builder.lhs_tag
           )
-          resolve_rhs(builder, rhs, index, token, rule)
+          resolve_rhs(builder, rhs, index, node, rule)
           builder.lhs = @rule_builder.lhs
           builder.line = @rule_builder.line
           builder.precedence_sym = @rule_builder.precedence_sym
@@ -43,20 +45,20 @@ module Lrama
           builder
         end
 
-        # @rbs (Lrama::Grammar::RuleBuilder builder, Lrama::Grammar::Parameterized::Rhs rhs, Integer index, Lrama::Lexer::Token token, Lrama::Grammar::Parameterized::Rule rule) -> void
-        def resolve_rhs(builder, rhs, index, token, rule)
-          @rule_builder.rhs.each_with_index do |tok, i|
+        # @rbs (Lrama::Grammar::RuleBuilder builder, Lrama::Grammar::Parameterized::Rhs rhs, Integer index, Node::RuleRhs::value node, Lrama::Grammar::Parameterized::Rule rule) -> void
+        def resolve_rhs(builder, rhs, index, node, rule)
+          @rule_builder.rhs.each_with_index do |rhs_node, i|
             if i == index
               rhs.symbols.each do |sym|
-                if token.is_a?(Lexer::Token::InstantiateRule)
-                  bindings = Binding.new(rule.parameters, token.args)
+                if node.is_a?(Node::RuleRhs::InstantiateRule)
+                  bindings = Binding.new(rule.parameters, node.args)
                   builder.add_rhs(bindings.resolve_symbol(sym))
                 else
                   builder.add_rhs(sym)
                 end
               end
             else
-              builder.add_rhs(tok)
+              builder.add_rhs(rhs_node)
             end
           end
         end

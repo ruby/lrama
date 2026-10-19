@@ -5,7 +5,7 @@ module Lrama
   class Grammar
     class Parameterized
       class Rhs
-        attr_accessor :symbols #: Array[Lexer::Token::Base]
+        attr_accessor :symbols #: Array[Node::RuleRhs::value]
         attr_accessor :user_code #: Lexer::Token::UserCode?
         attr_accessor :precedence_sym #: Grammar::Symbol?
 

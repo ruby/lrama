@@ -19,14 +19,14 @@ module Lrama
           @rules << rule
         end
 
-        # @rbs (Lexer::Token::InstantiateRule token) -> Rule?
-        def find_rule(token)
-          select_rules(@rules, token).last
+        # @rbs (Node::RuleRhs::InstantiateRule instantiate_rule) -> Rule?
+        def find_rule(instantiate_rule)
+          select_rules(@rules, instantiate_rule).last
         end
 
-        # @rbs (Lexer::Token::Base token) -> Rule?
-        def find_inline(token)
-          @rules.reverse.find { |rule| rule.name == token.s_value && rule.inline? }
+        # @rbs (Node::RuleRhs::value node) -> Rule?
+        def find_inline(node)
+          @rules.reverse.find { |rule| rule.name == node.s_value && rule.inline? }
         end
 
         # @rbs (String lhs_s_value) -> Lexer::Token::Base?
@@ -41,13 +41,13 @@ module Lrama
 
         private
 
-        # @rbs (Array[Rule] rules, Lexer::Token::InstantiateRule token) -> Array[Rule]
-        def select_rules(rules, token)
+        # @rbs (Array[Rule] rules, Node::RuleRhs::InstantiateRule instantiate_rule) -> Array[Rule]
+        def select_rules(rules, instantiate_rule)
           rules = reject_inline_rules(rules)
-          rules = select_rules_by_name(rules, token.rule_name)
-          rules = rules.select { |rule| rule.required_parameters_count == token.args_count }
+          rules = select_rules_by_name(rules, instantiate_rule.s_value)
+          rules = rules.select { |rule| rule.required_parameters_count == instantiate_rule.args.count }
           if rules.empty?
-            raise "Invalid number of arguments. `#{token.rule_name}`"
+            raise "Invalid number of arguments. `#{instantiate_rule.s_value}`"
           else
             rules
           end

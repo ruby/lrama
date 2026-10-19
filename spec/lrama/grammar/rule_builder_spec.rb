@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Grammar::RuleBuilder do
+  def symbol_node(token)
+    Lrama::Grammar::Node::RuleRhs::Symbol.new(token: token, location: token.location)
+  end
+
   let(:rule_counter) { Lrama::Grammar::Counter.new(1) }
   let(:midrule_action_counter) { Lrama::Grammar::Counter.new(1) }
   let(:rule_builder) { Lrama::Grammar::RuleBuilder.new(rule_counter, midrule_action_counter, Lrama::Grammar::Parameterized::Resolver.new) }
@@ -16,7 +20,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
           # Assertion
           expect(rule_builder.line).to be nil
 
-          rule_builder.add_rhs(token)
+          rule_builder.add_rhs(symbol_node(token))
           expect(rule_builder.line).to eq 1
         end
       end
@@ -27,7 +31,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
           # Assertion
           expect(rule_builder.line).to eq 0
 
-          rule_builder.add_rhs(token)
+          rule_builder.add_rhs(symbol_node(token))
           expect(rule_builder.line).to eq 0
         end
       end
@@ -59,7 +63,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
           rule_builder.user_code = token_2
           expect(rule_builder.user_code).to eq token_2
-          expect(rule_builder.rhs).to eq([token_1])
+          expect(rule_builder.rhs.map(&:code)).to eq([token_1])
         end
       end
     end
@@ -105,7 +109,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
           rule_builder.precedence_sym = sym
           expect(rule_builder.user_code).to be nil
-          expect(rule_builder.rhs).to eq([token_1])
+          expect(rule_builder.rhs.map(&:code)).to eq([token_1])
         end
       end
     end
@@ -116,9 +120,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     let(:token) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
 
     it "can not add rhs after #freeze_rhs is called" do
-      rule_builder.add_rhs(token)
+      rule_builder.add_rhs(symbol_node(token))
       rule_builder.send(:freeze_rhs)
-      expect { rule_builder.add_rhs(token) }.to raise_error(FrozenError)
+      expect { rule_builder.add_rhs(symbol_node(token)) }.to raise_error(FrozenError)
     end
   end
 
@@ -134,9 +138,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       it "resolves index of references and fills its value with index" do
         # class : keyword_class tSTRING keyword_end { $class = $1 + $keyword_end; @class = @1 + @keyword_end; }
         rule_builder.lhs = token_1
-        rule_builder.add_rhs(token_2)
-        rule_builder.add_rhs(token_3)
-        rule_builder.add_rhs(token_4)
+        rule_builder.add_rhs(symbol_node(token_2))
+        rule_builder.add_rhs(symbol_node(token_3))
+        rule_builder.add_rhs(symbol_node(token_4))
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
@@ -180,10 +184,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       it "raises error" do
         # class : keyword_class tSTRING { $$ = $keyword_class + $2; @$ = @keyword_class + @2; } keyword_end
         rule_builder.lhs = token_1
-        rule_builder.add_rhs(token_2)
-        rule_builder.add_rhs(token_3)
+        rule_builder.add_rhs(symbol_node(token_2))
+        rule_builder.add_rhs(symbol_node(token_3))
         rule_builder.user_code = token_4
-        rule_builder.add_rhs(token_5)
+        rule_builder.add_rhs(symbol_node(token_5))
         rule_builder.complete_input
 
         rule_builder.send(:preprocess_references)
@@ -232,9 +236,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
       it "raises error" do
         rule_builder.lhs = token_1
-        rule_builder.add_rhs(token_2)
-        rule_builder.add_rhs(token_3)
-        rule_builder.add_rhs(token_4)
+        rule_builder.add_rhs(symbol_node(token_2))
+        rule_builder.add_rhs(symbol_node(token_3))
+        rule_builder.add_rhs(symbol_node(token_4))
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
@@ -266,10 +270,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
       it "raises error" do
         rule_builder.lhs = token_1
-        rule_builder.add_rhs(token_2)
+        rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.user_code = token_3
-        rule_builder.add_rhs(token_4)
-        rule_builder.add_rhs(token_5)
+        rule_builder.add_rhs(symbol_node(token_4))
+        rule_builder.add_rhs(symbol_node(token_5))
         rule_builder.user_code = token_6
         rule_builder.complete_input
 
@@ -299,9 +303,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
       it "raises error" do
         rule_builder.lhs = token_1
-        rule_builder.add_rhs(token_2)
-        rule_builder.add_rhs(token_3)
-        rule_builder.add_rhs(token_4)
+        rule_builder.add_rhs(symbol_node(token_2))
+        rule_builder.add_rhs(symbol_node(token_3))
+        rule_builder.add_rhs(symbol_node(token_4))
         rule_builder.user_code = token_5
         rule_builder.complete_input
 
@@ -459,11 +463,11 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     it "builds rules from midrule actions" do
       # class : keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
       rule_builder.lhs = token_1
-      rule_builder.add_rhs(token_2)
+      rule_builder.add_rhs(symbol_node(token_2))
       rule_builder.user_code = token_3
-      rule_builder.add_rhs(token_4)
+      rule_builder.add_rhs(symbol_node(token_4))
       rule_builder.user_code = token_5
-      rule_builder.add_rhs(token_6)
+      rule_builder.add_rhs(symbol_node(token_6))
       rule_builder.user_code = token_7
       rule_builder.complete_input
       rule_builder.setup_rules
@@ -496,11 +500,11 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     it "is a token list whose user codes are replaced with @n token" do
       # class : keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
       rule_builder.lhs = token_1
-      rule_builder.add_rhs(token_2)
+      rule_builder.add_rhs(symbol_node(token_2))
       rule_builder.user_code = token_3
-      rule_builder.add_rhs(token_4)
+      rule_builder.add_rhs(symbol_node(token_4))
       rule_builder.user_code = token_5
-      rule_builder.add_rhs(token_6)
+      rule_builder.add_rhs(symbol_node(token_6))
       rule_builder.user_code = token_7
       rule_builder.complete_input
       rule_builder.setup_rules

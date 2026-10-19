@@ -31,7 +31,7 @@ module Lrama
 
       attr_reader lhs_tag: Lexer::Token::Tag?
 
-      attr_reader rhs: Array[Lexer::Token::Base]
+      attr_reader rhs: Array[Node::RuleRhs::rhs]
 
       attr_reader user_code: Lexer::Token::UserCode?
 
@@ -40,8 +40,8 @@ module Lrama
       # @rbs (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
       def initialize: (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
 
-      # @rbs (Lexer::Token::Base rhs) -> void
-      def add_rhs: (Lexer::Token::Base rhs) -> void
+      # @rbs (Node::RuleRhs::rhs rhs) -> void
+      def add_rhs: (Node::RuleRhs::rhs rhs) -> void
 
       # @rbs (Lexer::Token::UserCode? user_code) -> void
       def user_code=: (Lexer::Token::UserCode? user_code) -> void
@@ -72,8 +72,7 @@ module Lrama
       # @rbs () -> void
       def build_rules: () -> void
 
-      # rhs is a mixture of variety type of tokens like `Ident`, `InstantiateRule`, `UserCode` and so on.
-      # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
+      # `#process_rhs` lowers RHS nodes to tokens so that all `@replaced_rhs` are `Ident` or `Char`.
       #
       # @rbs () -> void
       def process_rhs: () -> void
@@ -83,6 +82,12 @@ module Lrama
 
       # @rbs () -> void
       def numberize_references: () -> void
+
+      # @rbs (Lexer::Token::Base? | Node::RuleRhs::rhs node, String name) -> bool
+      def rhs_node_referred_by?: (Lexer::Token::Base? | Node::RuleRhs::rhs node, String name) -> bool
+
+      # @rbs (Node::RuleRhs::rhs node) -> void
+      def mark_rhs_node_referred: (Node::RuleRhs::rhs node) -> void
 
       # @rbs () -> void
       def flush_user_code: () -> void

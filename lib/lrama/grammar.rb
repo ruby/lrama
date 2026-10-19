@@ -427,18 +427,11 @@ module Lrama
             case rhs_node
             when Node::RuleRhs::Empty
               builder.line = rhs_node.location.first_line
-              builder.add_rhs(Lrama::Lexer::Token::Empty.new(location: rhs_node.location))
+              builder.add_rhs(rhs_node)
             when Node::RuleRhs::Symbol
-              token = rhs_node.token
-              token.alias_name = rhs_node.alias_name
-              builder.add_rhs(token)
+              builder.add_rhs(rhs_node)
             when Node::RuleRhs::InstantiateRule
-              token = Lrama::Lexer::Token::InstantiateRule.new(
-                s_value: rhs_node.s_value, alias_name: rhs_node.alias_name,
-                args: rhs_node.args, lhs_tag: rhs_node.lhs_tag,
-                location: rhs_node.location
-              )
-              builder.add_rhs(token)
+              builder.add_rhs(rhs_node)
               builder.line = rhs_node.location.first_line
             when Node::RuleRhs::Action
               user_code = rhs_node.code
@@ -463,16 +456,9 @@ module Lrama
               case rhs_node
               when Node::RuleRhs::Empty
               when Node::RuleRhs::Symbol
-                token = rhs_node.token
-                token.alias_name = rhs_node.alias_name
-                builder.symbols << token
+                builder.symbols << rhs_node
               when Node::RuleRhs::InstantiateRule
-                token = Lrama::Lexer::Token::InstantiateRule.new(
-                  s_value: rhs_node.s_value, alias_name: rhs_node.alias_name,
-                  args: rhs_node.args, lhs_tag: rhs_node.lhs_tag,
-                  location: rhs_node.location
-                )
-                builder.symbols << token
+                builder.symbols << rhs_node
               when Node::RuleRhs::Action
                 user_code = rhs_node.code
                 user_code.alias_name = rhs_node.alias_name
