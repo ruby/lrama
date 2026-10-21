@@ -265,24 +265,16 @@ module Lrama
 
     # b4_parse_param
     def parse_param
-      if @grammar.parse_param
-        omit_blanks(@grammar.parse_param)
-      else
-        ""
-      end
+      @grammar.parse_params.map { |param| omit_blanks(param) }.join(", ")
     end
 
     def lex_param
-      if @grammar.lex_param
-        omit_blanks(@grammar.lex_param)
-      else
-        ""
-      end
+      @grammar.lex_params.map { |param| omit_blanks(param) }.join(", ")
     end
 
     # b4_user_formals
     def user_formals
-      if @grammar.parse_param
+      if @grammar.parse_params.any?
         ", #{parse_param}"
       else
         ""
@@ -291,7 +283,7 @@ module Lrama
 
     # b4_user_args
     def user_args
-      if @grammar.parse_param
+      if @grammar.parse_params.any?
         ", #{parse_param_name}"
       else
         ""
@@ -303,19 +295,11 @@ module Lrama
     end
 
     def parse_param_name
-      if @grammar.parse_param
-        extract_param_name(parse_param)
-      else
-        ""
-      end
+      @grammar.parse_params.map { |param| extract_param_name(param) }.join(", ")
     end
 
     def lex_param_name
-      if @grammar.lex_param
-        extract_param_name(lex_param)
-      else
-        ""
-      end
+      @grammar.lex_params.map { |param| extract_param_name(param) }.join(", ")
     end
 
     # b4_parse_param_use
@@ -325,9 +309,7 @@ module Lrama
   YY_USE (#{loc});
       STR
 
-      if @grammar.parse_param
-        str << "  YY_USE (#{parse_param_name});"
-      end
+      str << @grammar.parse_params.map { |param| "  YY_USE (#{extract_param_name(param)});" }.join("\n")
 
       str
     end
@@ -337,7 +319,7 @@ module Lrama
       ary = ["&yylval"]
       ary << "&yylloc" if @grammar.locations
 
-      if @grammar.lex_param
+      if @grammar.lex_params.any?
         ary << lex_param_name
       end
 
@@ -357,7 +339,7 @@ module Lrama
     def yyerror_args
       ary = ["&yylloc"]
 
-      if @grammar.parse_param
+      if @grammar.parse_params.any?
         ary << parse_param_name
       end
 
