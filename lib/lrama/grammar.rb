@@ -332,6 +332,12 @@ module Lrama
           self.epilogue = node.code.s_value
         when Node::RequireDecl
           @required = true
+        when Node::ParamDecl
+          node.params.each do |param|
+            code = Grammar::Code::NoReferenceCode.new(type: :param, token_code: param).token_code.s_value
+            self.lex_param = code
+            self.parse_param = code
+          end
         when Node::LexParamDecl
           node.params.each do |param|
             self.lex_param = Grammar::Code::NoReferenceCode.new(type: :lex_param, token_code: param).token_code.s_value
