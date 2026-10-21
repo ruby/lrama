@@ -6,6 +6,44 @@ RSpec.describe Lrama::Lexer do
   let(:token_class) { Lrama::Lexer::Token }
 
   describe '#next_token' do
+    context 'directives' do
+      %w(%tokens %token_extra %token.A %token-extra %expect0 %after-shift-error-tokens).each do |directive|
+        it "rejects #{directive} instead of matching a directive prefix" do
+          grammar_file = Lrama::Lexer::GrammarFile.new("directive.y", "#{directive} A")
+          lexer = Lrama::Lexer.new(grammar_file)
+
+          expect { lexer.next_token }.to raise_error(ParseError, /directive\.y:1:0: Unexpected token/)
+        end
+      end
+
+      it 'recognizes every complete directive name at end of input' do
+        described_class::PERCENT_TOKENS.each do |directive|
+          grammar_file = Lrama::Lexer::GrammarFile.new("directive.y", directive)
+          lexer = Lrama::Lexer.new(grammar_file)
+
+          expect(lexer.next_token).to eq([directive, token_class::Token.new(s_value: directive)])
+          expect(lexer.next_token).to be_nil
+        end
+      end
+
+      it 'recognizes directives before whitespace, punctuation, and comments' do
+        {
+          "%token A" => "%token",
+          "%token\nA" => "%token",
+          "%token<tag>A" => "%token",
+          "%left'+'" => "%left",
+          "%code{}" => "%code",
+          "%token/* comment */A" => "%token",
+          "%token// comment\nA" => "%token",
+        }.each do |text, directive|
+          grammar_file = Lrama::Lexer::GrammarFile.new("directive.y", text)
+          lexer = Lrama::Lexer.new(grammar_file)
+
+          expect(lexer.next_token).to eq([directive, token_class::Token.new(s_value: directive)])
+        end
+      end
+    end
+
     context 'basic.y' do
       it do
         path = fixture_path("common/basic.y")
