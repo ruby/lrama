@@ -64,8 +64,9 @@ module Lrama
 
     # A part of b4_token_enums
     def token_enums
-      @context.yytokentype.map do |s_value, token_id, display_name|
-        s = sprintf("%s = %d%s", s_value, token_id, token_id == yymaxutok ? "" : ",")
+      tokens = @context.yytokentype
+      tokens.map.with_index do |(s_value, token_id, display_name), index|
+        s = sprintf("%s = %d%s", s_value, token_id, index == tokens.length - 1 ? "" : ",")
 
         if display_name
           sprintf("    %-30s /* %s  */\n", s, display_name)
