@@ -118,6 +118,19 @@ RSpec.describe Lrama::Parser do
   end
 
   describe '#parse' do
+    it 'uses %param for both lexer and parser parameters' do
+      grammar = Lrama::Parser.new(<<~'GRAMMAR', "param.y").parse
+        %param {struct context *ctx}
+        %%
+        start: ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      expect(grammar.lex_param).to eq("struct context *ctx")
+      expect(grammar.parse_param).to eq("struct context *ctx")
+    end
+
     it "no_union" do
       path = "common/no_union.y"
       y = File.read(fixture_path(path))

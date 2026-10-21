@@ -42,6 +42,7 @@ module Lrama
       %require
       %printer
       %destructor
+      %param
       %lex-param
       %parse-param
       %initial-action
