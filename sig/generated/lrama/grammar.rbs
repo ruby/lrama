@@ -456,6 +456,9 @@ module Lrama
     # @rbs () -> void
     def set_lhs_and_rhs: () -> void
 
+    # @rbs () -> void
+    def resolve_lexer_contexts: () -> void
+
     # Rule inherits precedence from the last term in RHS.
     #
     # https://www.gnu.org/software/bison/manual/html_node/How-Precedence.html

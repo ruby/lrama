@@ -420,6 +420,61 @@ RSpec.describe Lrama::Grammar do
       expect(grammar.lex_tie.tied?("A", "B")).to be true
     end
 
+    it "preserves transitive ties through terminals without scanner patterns" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token ID NAME
+        %token-pattern IF /if/
+        %lex-tie ID NAME
+        %lex-tie NAME IF
+        %lex-no-tie yyall yyall
+        %%
+        start: ID | NAME | IF ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      %w[ID NAME IF].each do |name|
+        expect(grammar.lex_tie.tied_names(name)).to contain_exactly("ID", "NAME", "IF")
+      end
+    end
+
+    it "rejects no-ties conflicting with transitive ties through external terminals" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token ID NAME
+        %token-pattern IF /if/
+        %lex-tie ID NAME
+        %lex-tie NAME IF
+        %lex-no-tie ID IF
+        %%
+        start: ID | NAME | IF ;
+      GRAMMAR
+
+      expect do
+        grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+      end.to raise_error(RuntimeError, /%lex-no-tie ID IF conflicts/)
+    end
+
+    it "includes patterns tied to external terminals in normal scanner rows" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token ID
+        %token-pattern IF /if/
+        %token-pattern OTHER /[a-z]+/
+        %lex-tie ID IF
+        %lex-prec OTHER <~ IF
+        %%
+        start: ID | OTHER ;
+      GRAMMAR
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_pslr
+
+      accepting = states.scanner_fsa.states.find { |state| state.accepting_tokens.any? { |token| token.name == "IF" } }
+      expect(states.scanner_accepts_table[0, accepting.id].name).to eq("IF")
+    end
+
     ["lex-tie", "lex-no-tie"].each do |directive|
       ['"if"', "keywords"].each do |operand|
         it "resolves #{directive} aliases in #{operand}" do

@@ -94,6 +94,35 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
       expect(term.token_id).to eq(301)
     end
 
+    [nil, 256].each do |token_id|
+      it "preserves the canonical identifier when redeclaring an alias with token_id #{token_id.inspect}" do
+        id = Lrama::Lexer::Token::Ident.new(s_value: "YYerror")
+        tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
+        term = resolver.add_term(id: id, alias_name: "error", tag: tag, token_id: 256)
+
+        redeclared = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "error"), token_id: token_id, replace: true)
+
+        expect(redeclared).to equal(term)
+        expect(redeclared.id).to eq(id)
+        expect(redeclared.alias_name).to eq("error")
+        expect(redeclared.tag).to eq(tag)
+        expect(redeclared.token_id).to eq(256)
+      end
+    end
+
+    it "updates explicit attributes through an alias without renaming the terminal" do
+      id = Lrama::Lexer::Token::Ident.new(s_value: "NUM")
+      term = resolver.add_term(id: id, alias_name: '"number"')
+      tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
+
+      resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: '"number"'), alias_name: '"integer"', tag: tag, token_id: 300, replace: true)
+
+      expect(term.id).to eq(id)
+      expect(term.alias_name).to eq('"integer"')
+      expect(term.tag).to eq(tag)
+      expect(term.token_id).to eq(300)
+    end
+
     it "replaces omitted attributes when renaming a term with the same token_id" do
       tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
       term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "NUM"), alias_name: '"number"', tag: tag, token_id: 300)

@@ -319,15 +319,16 @@ RSpec.describe "integration" do
       expect(status.success?).to be false
     end
 
-    it "fails instead of discarding layout that exceeds the layout buffer" do
+    it "grows the initial layout buffer to retain longer layout" do
       obj_path = compile_pure_parser(layout_buffer_size: 4)
 
       out, _err, status = Open3.capture3(obj_path, "  1")
       expect(status.success?).to be true
       expect(out).to eq("=> 1\n")
 
-      _out, _err, status = Open3.capture3(obj_path, "    1")
-      expect(status.success?).to be false
+      out, _err, status = Open3.capture3(obj_path, "    1")
+      expect(status.success?).to be true
+      expect(out).to eq("=> 1\n")
     end
 
     it "computes canonical LR(1) tables when pslr.tables is canonical-lr" do

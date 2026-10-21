@@ -169,9 +169,44 @@ RSpec.describe Lrama::ScannerFSA do
         expect(fsa.scan("éλ").last[:position]).to eq("éλ".bytesize)
       end
     end
+
+    it "quantifies escaped literals, classes, and groups independently" do
+      {
+        "a\\?+" => "a???",
+        "a[?]+" => "a???",
+        "a(b+)?" => "abbb",
+        "ab*c+" => "abbccc"
+      }.each do |pattern, input|
+        fsa = Lrama::ScannerFSA.new([token_pattern("VALID", pattern)])
+
+        expect(fsa.scan(input).last[:position]).to eq(input.bytesize)
+      end
+    end
+
+    it "matches escaped anchor characters and preserves character class syntax" do
+      { "\\^foo\\$" => "^foo$", "[$^]+" => "$^^$", "[^a]+" => "^$" }.each do |pattern, input|
+        fsa = Lrama::ScannerFSA.new([token_pattern("LITERAL", pattern)])
+
+        expect(fsa.scan(input).last[:position]).to eq(input.bytesize)
+      end
+    end
   end
 
   describe "pattern validation" do
+    ["^foo", "foo$", "^foo$", "f^oo", "fo$o", "(foo|^bar)", "(foo$)bar"].each do |pattern|
+      it "rejects unsupported anchors in #{pattern.inspect}" do
+        expect { Lrama::ScannerFSA.new([token_pattern("ANCHORED", pattern, lineno: 14)]) }
+          .to raise_error(Lrama::ScannerFSA::PatternError, /ANCHORED at line 14.*anchors are not supported.*offset/m)
+      end
+    end
+
+    ["ab*?", "ab+?", "ab??", "ab**", "ab*+", "ab++", "ab+*", "ab?*", "ab?+", "a(b+?)"].each do |pattern|
+      it "rejects consecutive quantifiers in #{pattern.inspect}" do
+        expect { Lrama::ScannerFSA.new([token_pattern("BAD_REPEAT", pattern, lineno: 13)]) }
+          .to raise_error(Lrama::ScannerFSA::PatternError, /BAD_REPEAT at line 13.*consecutive quantifiers.*offset/m)
+      end
+    end
+
     ["é", "λ", "[é]", "[^λ]", "[a-λ]"].each do |pattern|
       it "rejects non-ASCII pattern #{pattern.inspect} before building transitions" do
         expect { Lrama::ScannerFSA.new([token_pattern("NON_ASCII", pattern, lineno: 12)]) }
@@ -220,6 +255,50 @@ RSpec.describe Lrama::ScannerFSA do
   end
 
   describe "{NAME} pattern references" do
+    ["a", "b", "{A}b"].each do |pattern|
+      it "rejects redefining A with /#{pattern}/ before expanding further references" do
+        patterns = [
+          token_pattern("A", "a", order: 0),
+          token_pattern("A", pattern, lineno: 9, order: 1),
+          token_pattern("B", "{A}", lineno: 10, order: 2)
+        ]
+
+        expect { Lrama::ScannerFSA.new(patterns) }
+          .to raise_error(Lrama::ScannerFSA::PatternError, /A at line 9.*duplicate pattern definition/m)
+      end
+    end
+
+    it "rejects redefinitions that introduce indirect recursive references" do
+      patterns = [
+        token_pattern("A", "a", order: 0),
+        token_pattern("B", "{A}b", order: 1),
+        token_pattern("A", "{B}c", lineno: 8, order: 2),
+        token_pattern("C", "{A}", order: 3)
+      ]
+
+      expect { Lrama::ScannerFSA.new(patterns) }
+        .to raise_error(Lrama::ScannerFSA::PatternError, /A at line 8.*duplicate pattern definition/m)
+    end
+
+    it "expands distinct patterns through multiple earlier references" do
+      patterns = [
+        token_pattern("A", "a", order: 0),
+        token_pattern("B", "{A}b", order: 1),
+        token_pattern("C", "{B}{A}c", order: 2)
+      ]
+
+      expect(Lrama::ScannerFSA.new(patterns).scan("abac").last)
+        .to include(token: patterns.last, position: 4)
+    end
+
+    it "quantifies a reference to a quantified pattern" do
+      ref = token_pattern("REF", "b+", order: 0)
+      repeated = token_pattern("REPEATED", "a{REF}+", order: 1)
+      fsa = Lrama::ScannerFSA.new([ref, repeated])
+
+      expect(fsa.scan("abbb").last).to include(token: repeated, position: 4)
+    end
+
     it "inlines the body of an earlier pattern" do
       com_start = token_pattern("COM_START", "\\/\\*[^*]*", order: 0)
       com = token_pattern("COM", "{COM_START}\\*\\/", order: 1)

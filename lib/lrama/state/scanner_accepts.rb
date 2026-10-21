@@ -21,6 +21,7 @@ module Lrama
     # length defaults are handled by LengthPrecedences#fallback_precedes?,
     # and otherwise-unresolved identity conflicts are resolved by token
     # declaration order.
+    # Fallback profile transitions retain the matching history when winners differ.
     #
     class ScannerAccepts
       class Conflict
@@ -236,6 +237,7 @@ module Lrama
       class CompleteProfileComputer
         attr_reader :table #: Hash[Integer, Grammar::TokenPattern]
         attr_reader :conflicts #: Array[Conflict]
+        attr_reader :fallback_profiles #: Array[Hash[Integer, [Integer, Grammar::TokenPattern?]]]
 
         # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
         def initialize(scanner_fsa, lex_prec, length_prec, acceptable_tokens, parser_state_id = nil, fallback: false, token_order: {}, track_rule_usage: false)
@@ -243,8 +245,12 @@ module Lrama
           @resolver = ProfileResolver.new(lex_prec, length_prec, fallback: fallback, token_order: token_order, track_rule_usage: track_rule_usage)
           @acceptable_tokens = acceptable_tokens
           @parser_state_id = parser_state_id
+          @fallback = fallback
           @table = {}
           @conflicts = []
+          @fallback_profiles = []
+          @fallback_profile_ids = {} #: Hash[[Array[String], String?], Integer]
+          fallback_profile_id(Set.new, nil) if fallback
           @reported_conflict_profiles = Set.new
           token_patterns_by_name = {} #: Hash[String, Grammar::TokenPattern]
           @token_patterns_by_name = scanner_fsa.token_patterns.each_with_object(token_patterns_by_name) do |token_pattern, hash|
@@ -298,7 +304,23 @@ module Lrama
 
           next_shorter_tokens = shorter_tokens | current_tokens
           next_selected = result.resolved? ? result.token_name : nil
+          if @fallback && !current_tokens.empty?
+            profile_id = fallback_profile_id(shorter_tokens, selected_shorter_token)
+            next_profile_id = fallback_profile_id(next_shorter_tokens, next_selected)
+            token = result.current_match? && result.token_name ? token_pattern_for(result.token_name) : nil
+            @fallback_profiles[profile_id][fsa_state_id] = [next_profile_id, token]
+          end
           visit_transitions(fsa_state_id, next_shorter_tokens, next_selected, visited, path)
+        end
+
+        # @rbs (Set[String] shorter_tokens, String? selected_shorter_token) -> Integer
+        def fallback_profile_id(shorter_tokens, selected_shorter_token)
+          key = [shorter_tokens.to_a.sort, selected_shorter_token] #: [Array[String], String?]
+          @fallback_profile_ids.fetch(key) do
+            id = @fallback_profiles.size
+            @fallback_profiles << {}
+            @fallback_profile_ids[key] = id
+          end
         end
 
         # @rbs (ScannerFSA::State fsa_state) -> Set[String]
@@ -420,6 +442,7 @@ module Lrama
 
       attr_reader :table #: Hash[[Integer, Integer], Grammar::TokenPattern?]
       attr_reader :fallback_table #: Hash[Integer, Grammar::TokenPattern]
+      attr_reader :fallback_profiles #: Array[Hash[Integer, [Integer, Grammar::TokenPattern?]]]
       attr_reader :conflicts #: Array[Conflict]
 
       # @rbs (Array[State] parser_states, ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, ?Grammar::LexTie? lex_tie, ?layout_token_names: Set[String]) -> void
@@ -432,6 +455,7 @@ module Lrama
         @layout_token_names = layout_token_names.to_set
         @table = {}
         @fallback_table = {}
+        @fallback_profiles = []
         @conflicts = []
       end
 
@@ -493,8 +517,16 @@ module Lrama
           token_order: token_order
         )
         computer.compute
+        @fallback_profiles = computer.fallback_profiles
 
-        computer.table.each do |scanner_state_id, token_pattern|
+        # Only history-independent winners belong in the flat diagnostic row.
+        @scanner_fsa.states.each do |state|
+          tokens = @fallback_profiles.map do |profile|
+            profile[state.id]
+          end.compact.map(&:last).uniq
+          next unless tokens.size == 1 && (token_pattern = tokens.first)
+
+          scanner_state_id = state.id
           @fallback_table[scanner_state_id] = token_pattern
           @table[[FALLBACK_ROW_ID, scanner_state_id]] = token_pattern
         end

@@ -308,7 +308,7 @@ module Lrama
 
     def compute_la_sources_for_conflicted_states
       reflexive = {}
-      reachable_parser_states.each do |state|
+      @states.each do |state|
         state.nterm_transitions.each do |goto|
           reflexive[goto] = [goto]
         end
@@ -595,10 +595,14 @@ module Lrama
       end
 
       @states.each do |state|
+        needs_look_ahead = !(state.reduces.count == 1 && state.term_transitions.count == 0)
+        if needs_look_ahead
+          # Splitting can leave reductions without any lookback paths.
+          state.reduces.each { |reduce| reduce.look_ahead = [] }
+        end
+
         lookback_relation_on_state = @lookback_relation[state.id]
         next unless lookback_relation_on_state
-
-        needs_look_ahead = !(state.reduces.count == 1 && state.term_transitions.count == 0)
 
         lookback_relation_on_state.each do |rule_id, ary|
           look_ahead = 0

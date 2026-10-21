@@ -295,6 +295,38 @@ RSpec.describe Lrama::State::ScannerAccepts do
       expect(scanner_accepts.fallback_table.fetch(accepting.id).name).to eq("A")
     end
 
+    it "preserves fallback winners for paths with different shorter matches" do
+      tokens = [token_pattern("A", "aa", 0), token_pattern("B", "a+b", 1), token_pattern("C", "a+b", 2)]
+      scanner_fsa = Lrama::ScannerFSA.new(tokens)
+      lex_prec = Lrama::Grammar::LexPrec.new
+      [["C", Lrama::Grammar::LexPrec::TOKEN_RIGHT, "A"],
+       ["B", Lrama::Grammar::LexPrec::IDENTITY_RIGHT, "C"],
+       ["A", Lrama::Grammar::LexPrec::LONGEST, "B"]].each do |left, operator, right|
+        lex_prec.add_rule(left_token: ident(left), operator: operator, right_token: ident(right), lineno: 1)
+      end
+      scanner_accepts = Lrama::State::ScannerAccepts.new(
+        tokens.each_with_index.map { |token, index| parser_state(index, [token.name]) },
+        scanner_fsa, lex_prec, Lrama::LengthPrecedences.new(lex_prec)
+      )
+      scanner_accepts.build
+
+      { "ab" => "C", "aab" => "B", "aaaaab" => "B" }.each do |input, expected|
+        profile = 0
+        selected = nil
+        scanner_fsa.scan(input).group_by { |match| match[:position] }.each_value do |matches|
+          state_id = matches.first[:state].id
+          profile, token = scanner_accepts.fallback_profiles.fetch(profile).fetch(state_id)
+          selected = token.name if token
+        end
+        expect(selected).to eq(expected)
+      end
+      accepting = scanner_fsa.scan("ab").last[:state].id
+      expect(scanner_accepts.fallback_table).not_to have_key(accepting)
+      expect(scanner_accepts[1, accepting].name).to eq("B")
+      expect(scanner_accepts[2, accepting].name).to eq("C")
+      expect(scanner_accepts).not_to be_unresolved_conflicts
+    end
+
     [
       {
         figure: "3.3",

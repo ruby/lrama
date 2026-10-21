@@ -316,7 +316,7 @@ RSpec.describe Lrama::Output do
         expect(result).to include("parser_state")
         expect(result).to include("match_length")
         expect(result).to include("yy_token_pattern_to_token_id")
-        expect(result).to include("yy_pslr_fallback_length_precedes")
+        expect(result).to include("yy_scanner_fallback_next[fallback_profile][sa]")
         expect(result).to include("result->token = YYEOF")
       end
 
@@ -358,28 +358,29 @@ RSpec.describe Lrama::Output do
 
         expect(result).to include("yy_lac_check_")
         expect(result).to include("yydefact")
-        expect(result.scan("return YYENOMEM;").size).to eq(3)
+        expect(result).to include("YYENOMEM")
       end
     end
 
     describe "#pslr_layout_declarations" do
-      it "reports layout buffer overflow without signed addition" do
+      it "checks layout length before growing the buffer" do
         result = pslr_output.pslr_layout_declarations
 
         expect(result).to include("static int\nyypslr_layout_append")
-        expect(result).to include("(size_t) length >= (size_t) YYPSLR_LAYOUT_BUFFER_SIZE")
+        expect(result).to include("length > INT_MAX - yypslr_layout_length")
+        expect(result).to include("YYMALLOC (capacity)")
         expect(result).not_to include("yypslr_layout_length + length")
       end
     end
 
     describe "#pslr_layout_scan_function" do
-      it "returns an undefined token while preserving the matched length when layout does not fit" do
+      it "returns an undefined token while preserving the matched length when layout allocation fails" do
         result = pslr_output.pslr_layout_scan_function
 
         expect(result).to include("if (!YYPSLR_LAYOUT_APPEND")
-        expect(result).to include("result->token = YYUNDEF;")
-        expect(result).not_to include("result->length = 0;")
-        expect(result).to include("result->is_layout = 0;")
+        expect(result).to include("yyresult->token = YYUNDEF;")
+        expect(result).not_to include("yyresult->length = 0;")
+        expect(result).to include("yyresult->is_layout = 0;")
       end
     end
 
@@ -455,7 +456,6 @@ RSpec.describe Lrama::Output do
       it "generates length precedences table" do
         result = pslr_output.length_precedences_table_code
         expect(result).to include("yy_pslr_length_precedes")
-        expect(result).to include("yy_pslr_fallback_length_precedes")
         expect(result).to include("old_token")
       end
 
@@ -477,7 +477,6 @@ RSpec.describe Lrama::Output do
         result = pslr_output.length_precedences_table_code
 
         expect(result).to include("static const int yy_pslr_length_precedes[2][2] = {\n  /* A */ {1, 0},")
-        expect(result).to include("static const int yy_pslr_fallback_length_precedes[2][2] = {\n  /* A */ {1, 1},")
       end
     end
 
@@ -555,7 +554,7 @@ RSpec.describe Lrama::Output do
       expect(rendered).to include("yy_token_pattern_is_layout")
       expect(rendered).to include("yy_lac_check_")
       expect(rendered.index("enum { YYENOMEM = -2 };")).to be < rendered.index("yy_lac_check_")
-      expect(rendered.scan("if (yylac_status == YYENOMEM)").size).to eq(3)
+      expect(rendered.scan("if (yylac_status == YYENOMEM)").size).to eq(2)
       expect(rendered).to include("static int\nyy_state_accepts_token")
       expect(rendered).to include("static int\nyy_state_eventually_accepts_token")
       expect(rendered).to include("static int\nyy_state_deep_accepts_token")

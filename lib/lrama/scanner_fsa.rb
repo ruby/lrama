@@ -225,6 +225,8 @@ module Lrama
       @token_patterns.each do |token_pattern|
         # Build NFA fragment for this pattern
         begin
+          raise PatternError, "duplicate pattern definition" if @pattern_references.key?(token_pattern.name)
+
           start_state, end_state = compile_regex(token_pattern.regex_pattern, nfa_counter, nfa_states)
         rescue PatternError => e
           raise PatternError,
@@ -332,6 +334,9 @@ module Lrama
           if fragments.empty?
             raise PatternError, "quantifier #{char} without preceding element at offset #{i}"
           end
+          if QUANTIFIERS.include?(pattern[i + 1])
+            raise PatternError, "consecutive quantifiers are not supported at offset #{i + 1}"
+          end
           fragments << apply_quantifier(fragments.pop, char, counter, states)
         when '|'
           break
@@ -350,6 +355,8 @@ module Lrama
           fragments << frag
         when ']'
           raise PatternError, "unmatched character class close at offset #{i}"
+        when '^', '$'
+          raise PatternError, "anchors are not supported at offset #{i}"
         else
           frag = compile_literal(char, counter, states)
           fragments << frag

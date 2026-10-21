@@ -293,6 +293,7 @@ module Lrama
       normalize_rules
       collect_symbols
       set_lhs_and_rhs
+      resolve_lexer_contexts
       fill_default_precedence
       fill_symbols
       fill_sym_to_rules
@@ -1034,6 +1035,16 @@ module Lrama
 
         rule.rhs = rule._rhs.map do |t|
           token_to_symbol(t)
+        end
+      end
+    end
+
+    # @rbs () -> void
+    def resolve_lexer_contexts
+      @lexer_contexts.each_value do |context|
+        context.symbols.map! do |id|
+          symbol = @symbols_resolver.find_symbol_by_id(id)
+          symbol ? Lexer::Token::Ident.new(s_value: symbol.id.s_value, location: id.location) : id
         end
       end
     end

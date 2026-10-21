@@ -136,6 +136,27 @@ RSpec.describe Lrama::LexerContextClassifier do
   end
 
   describe "#classify with grammar-defined contexts" do
+    [false, true].each do |context_first|
+      it "resolves context aliases declared #{context_first ? 'before' : 'after'} their tokens" do
+        context = '%lexer-context END "a"'
+        grammar = build_grammar(<<~GRAMMAR, "lexer_context/alias.y")
+          %define lr.type pslr
+          #{context if context_first}
+          %token A "a" B
+          #{context unless context_first}
+          %lexer-context ALSO_END A
+          %%
+          start: A B;
+        GRAMMAR
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        states.compute_pslr
+
+        target = states.states.first.term_transitions.find { |shift| shift.next_sym.id.s_value == "A" }.to_state
+        expect(target.lexer_context).to eq(3)
+      end
+    end
+
     context "with %lexer-context directives" do
       let(:grammar) do
         build_grammar(<<~GRAMMAR, "lexer_context/basic.y")

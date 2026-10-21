@@ -469,13 +469,13 @@ module Lrama
           # define YYPSLR_TOKEN_IS_LAYOUT(Token) yy_pslr_token_is_layout ((Token))
           #endif
 
-          int yypslr_scan_with_layout (int parser_state, const char **input,
-                                       size_t *input_len, YYSTYPE *yylvalp,
-                                       yypslr_scan_result *result);
+          int yypslr_scan_with_layout (int yyparser_state, const char **yyinput,
+                                       size_t *yyinput_len, YYSTYPE *yylvalp,
+                                       yypslr_scan_result *yyresult#{lex_param.empty? ? "" : ", #{lex_param}"});
 
           #ifndef YYPSLR_SCAN_WITH_LAYOUT
-          # define YYPSLR_SCAN_WITH_LAYOUT(ParserState, InputPtr, InputLenPtr, LvalPtr, Result) \\
-            yypslr_scan_with_layout ((ParserState), (InputPtr), (InputLenPtr), (LvalPtr), (Result))
+          # define YYPSLR_SCAN_WITH_LAYOUT(yyParserState, yyInputPtr, yyInputLenPtr, yyLvalPtr, yyResult) \\
+            yypslr_scan_with_layout ((yyParserState), (yyInputPtr), (yyInputLenPtr), (yyLvalPtr), (yyResult)#{lex_param.empty? ? "" : ", #{lex_param_name}"})
           #endif
         C_CODE
       end
@@ -690,16 +690,98 @@ module Lrama
 
         lines << "};"
         lines << ""
-        lines << "static const int yy_scanner_fallback_accepts[YY_NUM_ACCEPTING_STATES] = {"
-        fallback_row = pslr_accepting_states.map do |fsa_state|
-          token = scanner_accepts.fallback_table[fsa_state.id]
-          token ? token_pattern_indexes.fetch(token) : -1
+        lines << "#define YY_NUM_FALLBACK_PROFILES #{scanner_accepts.fallback_profiles.size}"
+        lines << "static const int yy_scanner_fallback_accepts[YY_NUM_FALLBACK_PROFILES][YY_NUM_ACCEPTING_STATES] = {"
+        scanner_accepts.fallback_profiles.each do |profile|
+          row = pslr_accepting_states.map do |fsa_state|
+            transition = profile[fsa_state.id]
+            token = transition && transition.last
+            token ? token_pattern_indexes.fetch(token) : -1
+          end
+          lines << "  {#{row.join(', ')}},"
         end
-        lines << "  #{fallback_row.join(', ')}"
         lines << "};"
+        lines << "static const int yy_scanner_fallback_next[YY_NUM_FALLBACK_PROFILES][YY_NUM_ACCEPTING_STATES] = {"
+        scanner_accepts.fallback_profiles.each do |profile|
+          row = pslr_accepting_states.map do |fsa_state|
+            transition = profile[fsa_state.id]
+            transition ? transition.first : -1
+          end
+          lines << "  {#{row.join(', ')}},"
+        end
+        lines << "};"
+        lines << scanner_continuation_table_code
       end
 
       lines.join("\n")
+    end
+
+    def scanner_continuation_table_code
+      scanner_fsa = @context.states.scanner_fsa
+      scanner_accepts = @context.states.scanner_accepts_table
+      patterns = @context.states.token_patterns
+      accepting_states = pslr_accepting_states
+      relations = scanner_fsa.states.map {|state| [state.id, state.transitions.values.uniq] }.to_h
+      accepting_bits = scanner_fsa.states.map {|state| [state.id, 0] }.to_h
+      accepting_states.each_with_index {|state, index| accepting_bits[state.id] = 1 << index }
+      reachable = Digraph.new(relations.keys, relations, accepting_bits).compute
+      future = scanner_fsa.states.map do |state|
+        relations.fetch(state.id).inject(0) {|bits, target| bits | reachable.fetch(target) }
+      end
+
+      # Rows share a profile when the same future accepting states can replace the winner.
+      profiles = {}
+      normal_profiles = @context.states.states.map do |parser_state|
+        [nil, *patterns].map do |winner|
+          mask = 0
+          accepting_states.each_with_index do |state, index|
+            token = scanner_accepts[parser_state.id, state.id]
+            if token && (!winner || @context.states.length_precedences.normal_precedes?(winner.name, token.name))
+              mask |= 1 << index
+            end
+          end
+          profiles[mask] ||= profiles.size
+        end
+      end
+
+      lines = ["/* Continue only while a future match can replace the selected token. */"]
+      lines << "static const int yy_scanner_normal_profile[YY_NUM_PARSER_STATES][YY_NUM_TOKEN_PATTERNS + 1] = {"
+      normal_profiles.each {|row| lines << "  {#{row.join(', ')}}," }
+      lines << "};"
+      lines << "static const unsigned char yy_scanner_continue[#{profiles.size}][YY_SCANNER_NUM_STATES] = {"
+      profiles.each_key do |mask|
+        lines << "  {#{future.map {|bits| (bits & mask).zero? ? 0 : 1 }.join(', ')}},"
+      end
+      lines << "};"
+      lines << "static const unsigned char yy_scanner_fallback_continue[YY_NUM_FALLBACK_PROFILES][YY_SCANNER_NUM_STATES] = {"
+      scanner_fallback_continuations.each {|row| lines << "  {#{row.join(', ')}}," }
+      lines << "};"
+      lines.join("\n")
+    end
+
+    def scanner_fallback_continuations
+      scanner_fsa = @context.states.scanner_fsa
+      profiles = @context.states.scanner_accepts_table.fallback_profiles
+      initial = [0, 0]
+      nodes = [initial]
+      visited = Set.new(nodes)
+      relations = {}
+      updates = {}
+      nodes.each do |node|
+        profile_id, state_id = node
+        updates[node] = 0
+        relations[node] = scanner_fsa.states[state_id].transitions.values.uniq.map do |target_id|
+          transition = profiles[profile_id][target_id]
+          updates[node] = 1 if transition && transition.last
+          target = [transition ? transition.first : profile_id, target_id]
+          nodes << target if visited.add?(target)
+          target
+        end
+      end
+      reachable_updates = Digraph.new(nodes, relations, updates).compute
+      profiles.each_index.map do |profile_id|
+        scanner_fsa.states.map {|state| reachable_updates.fetch([profile_id, state.id], 0) }
+      end
     end
 
     # Generate length_precedences table as C code
@@ -720,17 +802,6 @@ module Lrama
           "yy_pslr_length_precedes",
           num_tokens,
           :normal_precedes?
-        )
-
-        lines << ""
-        lines << "/* yy_pslr_fallback_length_precedes keeps explicit PSLR length"
-        lines << "   precedence and otherwise uses traditional longest-match fallback. */"
-        lines << ""
-
-        lines << length_precedence_matrix_code(
-          "yy_pslr_fallback_length_precedes",
-          num_tokens,
-          :fallback_precedes?
         )
       end
 
@@ -761,26 +832,18 @@ module Lrama
         static int
         yy_lac_check_ (yy_state_t *yyss, yy_state_t *yyssp, yysymbol_kind_t yytoken)
         {
-          YYPTRDIFF_T yylac_len = yyssp - yyss + 1;
-          yy_state_t *yylac_base = YY_CAST (yy_state_t *,
-            YYMALLOC (YY_CAST (YYSIZE_T, YYMAXDEPTH * YYSIZEOF (yy_state_t))));
-          yy_state_t *yylac_top;
+          yy_state_t yylac_states[YYINITDEPTH];
+          yy_state_t *yylac_base = yylac_states;
+          YYPTRDIFF_T yylac_size = YYINITDEPTH;
+          YYPTRDIFF_T yylac_len = 0;
+          int yylac_status = 0;
 
-          if (!yylac_base)
+          if (YYMAXDEPTH < yyssp - yyss + 1)
             return YYENOMEM;
-
-          if (YYMAXDEPTH < yylac_len)
-            {
-              YYFREE (yylac_base);
-              return YYENOMEM;
-            }
-
-          YYCOPY (yylac_base, yyss, yylac_len);
-          yylac_top = yylac_base + yylac_len - 1;
 
           for (;;)
             {
-              int yystate = *yylac_top;
+              int yystate = yylac_len ? yylac_base[yylac_len - 1] : *yyssp;
               int yyn = yypact[yystate];
 
               if (!yypact_value_is_default (yyn))
@@ -791,53 +854,71 @@ module Lrama
                       yyn = yytable[yyn];
                       if (0 < yyn)
                         {
-                          YYFREE (yylac_base);
-                          return 1;
+                          yylac_status = 1;
+                          break;
                         }
                       if (yytable_value_is_error (yyn))
-                        {
-                          YYFREE (yylac_base);
-                          return 0;
-                        }
+                        break;
                       yyn = -yyn;
                     }
                   else
                     {
                       yyn = yydefact[yystate];
                       if (yyn == 0)
-                        {
-                          YYFREE (yylac_base);
-                          return 0;
-                        }
+                        break;
                     }
                 }
               else
                 {
                   yyn = yydefact[yystate];
                   if (yyn == 0)
-                    {
-                      YYFREE (yylac_base);
-                      return 0;
-                    }
+                    break;
                 }
 
-              yylac_top -= yyr2[yyn];
+              /* Keep the parser's stack read-only; only speculative states need storage. */
+              if (yylac_len < yyr2[yyn])
+                {
+                  yyssp -= yyr2[yyn] - yylac_len;
+                  yylac_len = 0;
+                }
+              else
+                yylac_len -= yyr2[yyn];
               {
                 const int yylhs = yyr1[yyn] - YYNTOKENS;
-                const int yyi = yypgoto[yylhs] + *yylac_top;
-                yystate = (0 <= yyi && yyi <= YYLAST && yycheck[yyi] == *yylac_top
+                const int yytop = yylac_len ? yylac_base[yylac_len - 1] : *yyssp;
+                const int yyi = yypgoto[yylhs] + yytop;
+                yystate = (0 <= yyi && yyi <= YYLAST && yycheck[yyi] == yytop
                            ? yytable[yyi]
                            : yydefgoto[yylhs]);
               }
 
-              if (yylac_base + YYMAXDEPTH - 1 <= yylac_top)
+              if (YYMAXDEPTH <= yyssp - yyss + 1 + yylac_len)
                 {
-                  YYFREE (yylac_base);
-                  return YYENOMEM;
+                  yylac_status = YYENOMEM;
+                  break;
+                }
+              if (yylac_len == yylac_size)
+                {
+                  yy_state_t *yylac_new;
+                  yylac_size = yylac_size <= YYMAXDEPTH / 2 ? 2 * yylac_size : YYMAXDEPTH;
+                  yylac_new = YY_CAST (yy_state_t *,
+                    YYMALLOC (YY_CAST (YYSIZE_T, yylac_size * YYSIZEOF (yy_state_t))));
+                  if (!yylac_new)
+                    {
+                      yylac_status = YYENOMEM;
+                      break;
+                    }
+                  YYCOPY (yylac_new, yylac_base, yylac_len);
+                  if (yylac_base != yylac_states)
+                    YYFREE (yylac_base);
+                  yylac_base = yylac_new;
                 }
 
-              *++yylac_top = YY_CAST (yy_state_t, yystate);
+              yylac_base[yylac_len++] = YY_CAST (yy_state_t, yystate);
             }
+          if (yylac_base != yylac_states)
+            YYFREE (yylac_base);
+          return yylac_status;
         }
       C_CODE
     end
@@ -873,6 +954,7 @@ module Lrama
           int pbest = YY_PSLR_EMPTY_PATTERN;
           int fallback_ibest = 0;
           int fallback_pbest = YY_PSLR_EMPTY_PATTERN;
+          int fallback_profile = 0;
           size_t i = 0;
 
           if (result == NULL) {
@@ -917,14 +999,17 @@ module Lrama
                 }
               }
 
-              pattern_index = yy_scanner_fallback_accepts[sa];
+              pattern_index = yy_scanner_fallback_accepts[fallback_profile][sa];
+              fallback_profile = yy_scanner_fallback_next[fallback_profile][sa];
               if (pattern_index != YY_PSLR_EMPTY_PATTERN) {
-                if (fallback_pbest == YY_PSLR_EMPTY_PATTERN ||
-                    yy_pslr_fallback_length_precedes[fallback_pbest][pattern_index]) {
-                  fallback_pbest = pattern_index;
-                  fallback_ibest = (int)i;
-                }
+                fallback_pbest = pattern_index;
+                fallback_ibest = (int)i;
               }
+            }
+
+            if (!yy_scanner_continue[yy_scanner_normal_profile[parser_state][pbest + 1]][ss] &&
+                (pbest != YY_PSLR_EMPTY_PATTERN || !yy_scanner_fallback_continue[fallback_profile][ss])) {
+              break;
             }
           }
 
@@ -1028,6 +1113,7 @@ module Lrama
         #ifndef YYPSLR_LAYOUT_DEFINED
         # define YYPSLR_LAYOUT_DEFINED
 
+        #include <limits.h>
         #include <string.h>
 
         typedef struct yypslr_layout {
@@ -1039,22 +1125,47 @@ module Lrama
         #  define YYPSLR_LAYOUT_BUFFER_SIZE 4096
         # endif
 
-        static char yypslr_layout_buffer[YYPSLR_LAYOUT_BUFFER_SIZE];
+        static char yypslr_layout_initial[YYPSLR_LAYOUT_BUFFER_SIZE];
+        static char *yypslr_layout_buffer = yypslr_layout_initial;
+        static size_t yypslr_layout_capacity = sizeof yypslr_layout_initial;
         static int yypslr_layout_length = 0;
 
         static void
         yypslr_layout_clear (void)
         {
+          if (yypslr_layout_buffer != yypslr_layout_initial)
+            YYFREE (yypslr_layout_buffer);
+          yypslr_layout_buffer = yypslr_layout_initial;
+          yypslr_layout_capacity = sizeof yypslr_layout_initial;
           yypslr_layout_length = 0;
+          yypslr_layout_buffer[0] = '\\0';
         }
 
         static int
         yypslr_layout_append (const char *text, int length)
         {
-          if (length < 0
-              || (size_t) length >= (size_t) YYPSLR_LAYOUT_BUFFER_SIZE
-                                    - (size_t) yypslr_layout_length)
+          size_t required;
+          if (length < 0 || length > INT_MAX - yypslr_layout_length)
             return 0;
+
+          required = (size_t) yypslr_layout_length + (size_t) length + 1;
+          if (required > (size_t) YYSIZE_MAXIMUM)
+            return 0;
+          if (required > yypslr_layout_capacity)
+            {
+              size_t capacity = yypslr_layout_capacity;
+              char *buffer;
+              while (capacity < required)
+                capacity = capacity > (size_t) YYSIZE_MAXIMUM / 2 ? required : capacity * 2;
+              buffer = YY_CAST (char *, YYMALLOC (capacity));
+              if (!buffer)
+                return 0;
+              memcpy (buffer, yypslr_layout_buffer, (size_t) yypslr_layout_length);
+              if (yypslr_layout_buffer != yypslr_layout_initial)
+                YYFREE (yypslr_layout_buffer);
+              yypslr_layout_buffer = buffer;
+              yypslr_layout_capacity = capacity;
+            }
 
           memcpy (yypslr_layout_buffer + yypslr_layout_length, text, (size_t) length);
           yypslr_layout_length += length;
@@ -1085,16 +1196,17 @@ module Lrama
       lines << ""
       lines << "#define yylval (*yylvalp)"
       lines << "static void"
-      lines << "yypslr_token_action (int token, const char *yytext, int yyleng, YYSTYPE *yylvalp)"
+      lines << "yypslr_token_action (int yytoken, const char *yytext, int yyleng, YYSTYPE *yylvalp#{lex_param.empty? ? "" : ", #{lex_param}"})"
       lines << "{"
       lines << "  YY_USE (yytext);"
       lines << "  YY_USE (yyleng);"
       lines << "  YY_USE (yylvalp);"
+      lines << "  YY_USE (#{lex_param_name});" unless lex_param.empty?
 
       @grammar.token_actions.each_with_index do |action, idx|
         token_id = @context.states.find_symbol_by_s_value!(action.token_name).token_id
         keyword = idx == 0 ? "if" : "else if"
-        lines << "  #{keyword} (token == #{token_id})"
+        lines << "  #{keyword} (yytoken == #{token_id})"
         lines << "    {"
         lines << "#line #{action.lineno} \"#{@grammar_file_path}\""
         lines << "      {#{action.code.s_value}}"
@@ -1105,8 +1217,8 @@ module Lrama
       lines << "}"
       lines << "#undef yylval"
       lines << ""
-      lines << "#define YYPSLR_TOKEN_ACTION(Token, Text, Len, LvalPtr) \\"
-      lines << "  yypslr_token_action ((Token), (Text), (Len), (LvalPtr))"
+      lines << "#define YYPSLR_TOKEN_ACTION(yyToken, yyText, yyLen, yyLvalPtr) \\"
+      lines << "  yypslr_token_action ((yyToken), (yyText), (yyLen), (yyLvalPtr)#{lex_param.empty? ? "" : ", #{lex_param_name}"})"
       lines.join("\n")
     end
 
@@ -1127,44 +1239,45 @@ module Lrama
          * trailing layout can be recovered (paper section 3.6).
          */
         int
-        yypslr_scan_with_layout (int parser_state, const char **input,
-                                 size_t *input_len, YYSTYPE *yylvalp,
-                                 yypslr_scan_result *result)
+        yypslr_scan_with_layout (int yyparser_state, const char **yyinput,
+                                 size_t *yyinput_len, YYSTYPE *yylvalp,
+                                 yypslr_scan_result *yyresult#{lex_param.empty? ? "" : ", #{lex_param}"})
         {
           YYPSLR_LAYOUT_CLEAR ();
           YY_USE (yylvalp);
+        #{lex_param.empty? ? "" : "  YY_USE (#{lex_param_name});"}
 
           for (;;)
             {
-              int token = yy_pseudo_scan_result (parser_state, *input, *input_len, result);
+              int yytoken = yy_pseudo_scan_result (yyparser_state, *yyinput, *yyinput_len, yyresult);
 
-              if (token == YYEMPTY)
-                return token;
+              if (yytoken == YYEMPTY)
+                return yytoken;
 
-              if (token == #{eof_symbol.id.s_value})
+              if (yytoken == #{eof_symbol.id.s_value})
                 {
-        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, 0, yylvalp);" : ""}
-                  return token;
+        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (yytoken, *yyinput, 0, yylvalp);" : ""}
+                  return yytoken;
                 }
 
-              if (result->is_layout)
+              if (yyresult->is_layout)
                 {
-                  if (!YYPSLR_LAYOUT_APPEND (*input, result->length))
+                  if (!YYPSLR_LAYOUT_APPEND (*yyinput, yyresult->length))
                     {
-                      result->token = YYUNDEF;
-                      result->is_layout = 0;
-                      result->is_character_token = 0;
-                      result->from_fallback = 0;
-                      return result->token;
+                      yyresult->token = YYUNDEF;
+                      yyresult->is_layout = 0;
+                      yyresult->is_character_token = 0;
+                      yyresult->from_fallback = 0;
+                      return yyresult->token;
                     }
-        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (token, *input, result->length, yylvalp);" : ""}
-                  *input += result->length;
-                  *input_len -= (size_t)result->length;
+        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (yytoken, *yyinput, yyresult->length, yylvalp);" : ""}
+                  *yyinput += yyresult->length;
+                  *yyinput_len -= (size_t)yyresult->length;
                   continue;
                 }
 
-        #{pslr_token_actions_enabled? ? "      YYPSLR_TOKEN_ACTION (token, *input, result->length, yylvalp);" : ""}
-              return token;
+        #{pslr_token_actions_enabled? ? "      YYPSLR_TOKEN_ACTION (yytoken, *yyinput, yyresult->length, yylvalp);" : ""}
+              return yytoken;
             }
         }
       C_CODE
@@ -1227,7 +1340,7 @@ module Lrama
                                                     &yypslr_input_cursor,
                                                     &yypslr_input_remain,
                                                     yylvalp,
-                                                    &yypslr_result);
+                                                    &yypslr_result#{lex_param.empty? ? "" : ", #{lex_param_name}"});
             yypslr_length = yypslr_result.length;
         C_CODE
       else
@@ -1251,6 +1364,7 @@ module Lrama
         void
         yypslr_set_input (const char *input, size_t input_len)
         {
+          YYPSLR_LAYOUT_CLEAR ();
           yypslr_input_cursor = input;
           yypslr_input_remain = input_len;
           yypslr_parser_state = 0;

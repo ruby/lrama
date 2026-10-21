@@ -194,7 +194,7 @@ module Lrama
         end
 
         @ties = Hash.new { |h, k| h[k] = Set.new([k]) }
-        groups = token_names.group_by {|name| root(parents, name) }
+        groups = parents.keys.group_by {|name| root(parents, name) }
         groups.each_value do |names|
           tied = names.to_set
           names.each {|name| @ties[name] = tied.dup }
