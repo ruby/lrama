@@ -320,7 +320,7 @@ rule
         {
           on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           node = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: val[2], args: [val[1]],
+            s_value: val[2].s_value, args: [val[1]],
             location: val[1].loc
           )
           result.append(node)
@@ -500,7 +500,7 @@ rule
         {
           on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           node = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: val[2], args: [val[1]],
+            s_value: val[2].s_value, args: [val[1]],
             alias_name: val[3], lhs_tag: val[4],
             location: merge_locations(val[1].loc, val[4]&.loc)
           )
@@ -541,22 +541,30 @@ rule
         }
 
   parameterized_suffix:
-      "?" { result = "option" }
-    | "+" { result = "nonempty_list" }
-    | "*" { result = "list" }
+      "?" { result = Lrama::Lexer::Token::Ident.new(s_value: "option", location: val[0].loc) }
+    | "+" { result = Lrama::Lexer::Token::Ident.new(s_value: "nonempty_list", location: val[0].loc) }
+    | "*" { result = Lrama::Lexer::Token::Ident.new(s_value: "list", location: val[0].loc) }
 
   parameterized_args:
-      symbol parameterized_suffix?
+      parameterized_arg { result = [val[0]] }
+    | parameterized_args ',' parameterized_arg { result = val[0].append(val[2]) }
+
+  parameterized_arg:
+      symbol
+    | symbol parameterized_suffix
         {
-          result = if val[1]
-            [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[1].s_value, location: @lexer.location, args: val[0])]
-          else
-            [val[0]]
-          end
+          result = Lrama::Lexer::Token::InstantiateRule.new(
+            s_value: val[1].s_value, args: [val[0]],
+            location: merge_locations(val[0].loc, val[1].loc)
+          )
         }
-    | parameterized_args ',' symbol { result = val[0].append(val[2]) }
-    | parameterized_args ',' IDENTIFIER "(" parameterized_args ")" { result = val[0].append(Lrama::Lexer::Token::InstantiateRule.new(s_value: val[2].s_value, location: @lexer.location, args: val[4])) }
-    | IDENTIFIER "(" parameterized_args ")" { result = [Lrama::Lexer::Token::InstantiateRule.new(s_value: val[0].s_value, location: @lexer.location, args: val[2])] }
+    | IDENTIFIER "(" parameterized_args ")"
+        {
+          result = Lrama::Lexer::Token::InstantiateRule.new(
+            s_value: val[0].s_value, args: val[2],
+            location: merge_locations(val[0].loc, val[3].loc)
+          )
+        }
 
   action:
       "{"

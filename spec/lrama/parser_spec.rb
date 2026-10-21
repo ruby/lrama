@@ -945,6 +945,84 @@ RSpec.describe Lrama::Parser do
       end
       let(:y) { File.read(fixture_path(path)) }
 
+      context "when parameterized arguments have suffixes" do
+        let(:path) { "parameterized_args.y" }
+
+        { "?" => "option", "+" => "nonempty_list", "*" => "list" }.each do |suffix, name|
+          context "with #{suffix}" do
+            let(:y) do
+              <<~GRAMMAR
+                %token A B
+                %rule triple(X, Y, Z): X Y Z;
+                %rule wrapped(X): triple(X#{suffix}, B#{suffix}, 'c'#{suffix});
+                %%
+                program: triple(A#{suffix}, B#{suffix}, 'c'#{suffix}) wrapped(A);
+              GRAMMAR
+            end
+
+            it "expands suffixes in every argument position and in rule definitions" do
+              triple = "triple_#{name}_A_#{name}_B_#{name}_'c'"
+              expect(grammar.rules.map { |rule| [rule.lhs.id.s_value, rule.rhs.map { |sym| sym.id.s_value }] }).to include(
+                [triple, ["#{name}_A", "#{name}_B", "#{name}_'c'"]],
+                ["wrapped_A", [triple]],
+                ["program", [triple, "wrapped_A"]]
+              )
+            end
+
+            it "preserves each suffixed argument's source range" do
+              args = grammar.nodes.last.rhs.first.args
+              expect(args.map { |arg| [arg.first_line, arg.first_column, arg.last_line, arg.last_column] }).to eq([
+                [5, 16, 5, 18],
+                [5, 20, 5, 22],
+                [5, 24, 5, 28],
+              ])
+            end
+          end
+        end
+
+        context "with a nested optional argument" do
+          let(:y) { "%token A\n%%\nprogram: list(A?);\n" }
+
+          it "expands list(A?) as list(option(A))" do
+            expect(grammar.rules.map { |rule| [rule.lhs.id.s_value, rule.rhs.map { |sym| sym.id.s_value }] }).to eq([
+              ["$accept", ["program", "YYEOF"]],
+              ["list_option_A", []],
+              ["option_A", []],
+              ["option_A", ["A"]],
+              ["list_option_A", ["list_option_A", "option_A"]],
+              ["program", ["list_option_A"]],
+            ])
+          end
+        end
+      end
+
+      context "when parameterized arguments contain nested calls" do
+        let(:path) { "parameterized_args.y" }
+        let(:y) do
+          <<~GRAMMAR
+            %token A B
+            %rule triple(X, Y, Z): X Y Z;
+            %%
+            program: triple(
+              option(A),
+              list(
+                B
+              ),
+              option('c')
+            );
+          GRAMMAR
+        end
+
+        it "preserves each nested call's source range" do
+          args = grammar.nodes.last.rhs.first.args
+          expect(args.map { |arg| [arg.first_line, arg.first_column, arg.last_line, arg.last_column] }).to eq([
+            [5, 2, 5, 11],
+            [6, 2, 8, 3],
+            [9, 2, 9, 13],
+          ])
+        end
+      end
+
       context "when stdlib" do
         context "when option" do
           let(:path) { "parameterized/stdlib/option.y" }
