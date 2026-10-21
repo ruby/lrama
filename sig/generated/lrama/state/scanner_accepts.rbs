@@ -18,6 +18,7 @@ module Lrama
     # length defaults are handled by LengthPrecedences#fallback_precedes?,
     # and otherwise-unresolved identity conflicts are resolved by token
     # declaration order.
+    # Fallback profile transitions retain the matching history when winners differ.
     class ScannerAccepts
       class Conflict
         attr_reader parser_state_id: Integer?
@@ -114,6 +115,8 @@ module Lrama
 
         attr_reader conflicts: Array[Conflict]
 
+        attr_reader fallback_profiles: Array[Hash[Integer, [ Integer, Grammar::TokenPattern? ]]]
+
         # @rbs (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
         def initialize: (ScannerFSA scanner_fsa, Grammar::LexPrec lex_prec, LengthPrecedences length_prec, Set[String] acceptable_tokens, ?Integer? parser_state_id, ?fallback: bool, ?token_order: Hash[String, Integer], ?track_rule_usage: bool) -> void
 
@@ -127,6 +130,9 @@ module Lrama
 
         # @rbs (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited, String path) -> void
         def visit_state: (Integer fsa_state_id, Set[String] shorter_tokens, String? selected_shorter_token, Set[untyped] visited, String path) -> void
+
+        # @rbs (Set[String] shorter_tokens, String? selected_shorter_token) -> Integer
+        def fallback_profile_id: (Set[String] shorter_tokens, String? selected_shorter_token) -> Integer
 
         # @rbs (ScannerFSA::State fsa_state) -> Set[String]
         def current_acceptable_tokens: (ScannerFSA::State fsa_state) -> Set[String]
@@ -168,6 +174,8 @@ module Lrama
       attr_reader table: Hash[[ Integer, Integer ], Grammar::TokenPattern?]
 
       attr_reader fallback_table: Hash[Integer, Grammar::TokenPattern]
+
+      attr_reader fallback_profiles: Array[Hash[Integer, [ Integer, Grammar::TokenPattern? ]]]
 
       attr_reader conflicts: Array[Conflict]
 

@@ -799,7 +799,7 @@ yy_state_deep_accepts_token (int yystate, int yychar,
 enum { YYENOMEM = -2 };
 
 #define yyerrok         (yyerrstatus = 0)
-#define yyclearin       (yychar = YYEMPTY)
+#define yyclearin       (yychar = YYEMPTY<%= output.lac_enabled? ? ", yylac_token = YYEMPTY" : "" %>)
 
 #define YYACCEPT        goto yyacceptlab
 #define YYABORT         goto yyabortlab
@@ -813,6 +813,9 @@ enum { YYENOMEM = -2 };
   do                                                              \
     if (yychar == YYEMPTY)                                        \
       {                                                           \
+<%- if output.lac_enabled? -%>
+        yylac_token = YYEMPTY;                                    \
+<%- end -%>
         yychar = (Token);                                         \
         yylval = (Value);                                         \
         YYPOPSTACK (yylen);                                       \
@@ -1539,7 +1542,24 @@ yy_process_repairs(yy_repairs *reps, yysymbol_kind_t token)
   goto yyrecover_backup;
 
 yyrecover_newstate:
-  // TODO: check reps->stack_length
+  if (reps->state - reps->states + 1 == reps->stack_length)
+    {
+      YYPTRDIFF_T used = reps->stack_length;
+      YYPTRDIFF_T capacity = used * 2;
+      yy_state_t *states;
+      if (YYMAXDEPTH <= used)
+        return 0;
+      if (YYMAXDEPTH < capacity)
+        capacity = YYMAXDEPTH;
+      states = (yy_state_t *) YYMALLOC (sizeof (yy_state_t) * capacity);
+      if (!states)
+        return 0;
+      YYCOPY (states, reps->states, used);
+      YYFREE (reps->states);
+      reps->states = states;
+      reps->state = states + used - 1;
+      reps->stack_length = capacity;
+    }
   reps->state += 1;
   *reps->state = (yy_state_t) yystate;
 
@@ -1580,6 +1600,8 @@ yyrecover_default:
 
 yyrecover_reduce:
   yylen = yyr2[yyn];
+  if (reps->state - reps->states < yylen)
+    goto yyrecover_errlab;
   /* YYPOPSTACK */
   reps->state -= yylen;
   yylen = 0;
@@ -1608,19 +1630,23 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
   yy_repairs *head = (yy_repairs *) YYMALLOC (sizeof (yy_repairs));
   yy_repairs *current = head;
   yy_repairs *tail = head;
-  YYPTRDIFF_T stack_length = yyssp - yyss + 1;
+  YYPTRDIFF_T used = yyssp - yyss + 1;
+  YYPTRDIFF_T stack_length = used * 2 > 100 ? used * 2 : 100;
 
   head->id = count;
   head->next = 0;
   head->stack_length = stack_length;
   head->states = (yy_state_t *) YYMALLOC (sizeof (yy_state_t) * (stack_length));
   head->state = head->states + (yyssp - yyss);
-  YYCOPY (head->states, yyss, stack_length);
+  YYCOPY (head->states, yyss, used);
   head->repair_length = 0;
   head->prev_repair = 0;
 
-  stack_length = (stack_length * 2 > 100) ? (stack_length * 2) : 100;
   count++;
+
+  /* LAC can detect an error before the parser performs default reductions.  */
+  if (!yy_process_repairs (head, YYSYMBOL_YYEMPTY))
+    goto done;
 
   while (current)
     {
@@ -1643,8 +1669,8 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
                   yy_repairs *reps = (yy_repairs *) YYMALLOC (sizeof (yy_repairs));
                   reps->id = count;
                   reps->next = 0;
-                  reps->stack_length = stack_length;
-                  reps->states = (yy_state_t *) YYMALLOC (sizeof (yy_state_t) * (stack_length));
+                  reps->stack_length = current->stack_length;
+                  reps->states = (yy_state_t *) YYMALLOC (sizeof (yy_state_t) * reps->stack_length);
                   reps->state = reps->states + (current->state - current->states);
                   YYCOPY (reps->states, current->states, current->state - current->states + 1);
                   reps->repair_length = current->repair_length + 1;
@@ -1655,6 +1681,7 @@ yyrecover(yy_state_t *yyss, yy_state_t *yyssp, int yychar<%= output.user_formals
                   /* Process PDA assuming next token is yyx */
                   if (! yy_process_repairs (reps, (yysymbol_kind_t)yyx))
                     {
+                      YYFREE (reps->states);
                       YYFREE (reps);
                       continue;
                     }
@@ -1765,6 +1792,10 @@ YYLTYPE yylloc = yyloc_default;
   int yyresult;
   /* Lookahead symbol kind.  */
   yysymbol_kind_t yytoken = YYSYMBOL_YYEMPTY;
+<%- if output.lac_enabled? -%>
+  /* A successful LAC check remains valid through ordinary reductions.  */
+  int yylac_token = YYEMPTY;
+<%- end -%>
   /* The variables used to return semantic value and location from the
      action routines.  */
   YYSTYPE yyval;
@@ -1912,49 +1943,19 @@ yybackup:
   /* First try to decide what to do without reference to lookahead token.  */
   yyn = yypact[yystate];
 <%- if output.lac_enabled? -%>
-  if (yypact_value_is_default (yyn) && yydefact[yystate] != 0)
-    {
-      if (yychar == YYEMPTY)
-        {
-          YYDPRINTF ((stderr, "Reading a token\n"));
-          yychar = yylex <%= output.yylex_formals %>;
-        }
-
-      if (yychar <= <%= output.eof_symbol.id.s_value %>)
-        {
-          yychar = <%= output.eof_symbol.id.s_value %>;
-          yytoken = <%= output.eof_symbol.enum_name %>;
-          YYDPRINTF ((stderr, "Now at end of input.\n"));
-        }
-      else if (yychar == <%= output.error_symbol.id.s_value %>)
-        {
-          yychar = <%= output.undef_symbol.id.s_value %>;
-          yytoken = <%= output.error_symbol.enum_name %>;
-          yyerror_range[1] = yylloc;
-          goto yyerrlab1;
-        }
-      else
-        {
-          yytoken = YYTRANSLATE (yychar);
-          YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc<%= output.user_args %>);
-        }
-
-      {
-        int yylac_status = yy_lac_check_ (yyss, yyssp, yytoken);
-        if (yylac_status == YYENOMEM)
-          YYNOMEM;
-        if (!yylac_status)
-          goto yyerrlab;
-      }
-
-      goto yydefault;
-    }
-<%- end -%>
+  /* Default reductions also need lookahead from the repair queue for LAC.  */
+  if (yypact_value_is_default (yyn) && yydefact[yystate] == 0)
+<%- else -%>
   if (yypact_value_is_default (yyn))
+<%- end -%>
     goto yydefault;
 
   /* Not known => get a lookahead token if don't already have one.  */
 
+<%- if output.lac_enabled? -%>
+  if (yychar == YYEMPTY)
+    yylac_token = YYEMPTY;
+<%- end -%>
 <%- if output.error_recovery -%>
   if (YYERROR_RECOVERY_ENABLED(<%= output.parse_param_name %>))
     {
@@ -2019,13 +2020,17 @@ yybackup:
     }
 
 <%- if output.lac_enabled? -%>
-  {
-    int yylac_status = yy_lac_check_ (yyss, yyssp, yytoken);
-    if (yylac_status == YYENOMEM)
-      YYNOMEM;
-    if (!yylac_status)
-      goto yyerrlab;
-  }
+  if (yylac_token != yychar)
+    {
+      int yylac_status = yy_lac_check_ (yyss, yyssp, yytoken);
+      if (yylac_status == YYENOMEM)
+        YYNOMEM;
+      if (!yylac_status)
+        goto yyerrlab;
+      yylac_token = yychar;
+    }
+  if (yypact_value_is_default (yyn))
+    goto yydefault;
 <%- end -%>
 
   /* If the proper action on seeing token YYTOKEN is to reduce or to
@@ -2058,6 +2063,9 @@ yybackup:
 
   /* Discard the shifted token.  */
   yychar = YYEMPTY;
+<%- if output.lac_enabled? -%>
+  yylac_token = YYEMPTY;
+<%- end -%>
   goto yynewstate;
 
 
@@ -2137,6 +2145,9 @@ yyreduce:
 | yyerrlab -- here on detecting error.  |
 `--------------------------------------*/
 yyerrlab:
+<%- if output.lac_enabled? -%>
+  yylac_token = YYEMPTY;
+<%- end -%>
   /* Make sure we have latest lookahead translation.  See comments at
      user semantic actions for why this is necessary.  */
   yytoken = yychar == YYEMPTY ? YYSYMBOL_YYEMPTY : YYTRANSLATE (yychar);
@@ -2226,6 +2237,9 @@ yyerrorlab:
 | yyerrlab1 -- common code for both syntax error and YYERROR.  |
 `-------------------------------------------------------------*/
 yyerrlab1:
+<%- if output.lac_enabled? -%>
+  yylac_token = YYEMPTY;
+<%- end -%>
 <%- if output.error_recovery -%>
   if (YYERROR_RECOVERY_ENABLED(<%= output.parse_param_name %>))
     {

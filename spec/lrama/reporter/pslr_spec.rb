@@ -62,4 +62,25 @@ RSpec.describe Lrama::Reporter::Pslr do
 
     expect(io.string).to eq("")
   end
+
+  it "reports path-dependent fallback choices without a universal winner" do
+    states = build_states(<<~GRAMMAR)
+      %define lr.type pslr
+      %token-pattern A /aa/
+      %token-pattern B /a+b/
+      %token-pattern C /a+b/
+      %lex-prec C << A
+      %lex-prec B <- C
+      %lex-prec A -~ B
+      %%
+      start: 'x' A | 'y' B | 'z' C;
+    GRAMMAR
+    io = StringIO.new
+    described_class.new(pslr: true, states: true).report(io, states)
+    fallback = io.string.split("    Fallback:").last
+    accepting = states.scanner_fsa.scan("ab").last[:state].id
+
+    expect(fallback).to include("profile 0")
+    expect(fallback).to include("ss#{accepting}=>B", "ss#{accepting}=>C")
+  end
 end

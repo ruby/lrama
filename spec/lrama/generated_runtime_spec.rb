@@ -106,7 +106,7 @@ RSpec.describe "generated runtime" do
           int main(void) {
             #{type == "pslr" ? 'yypslr_set_input("a", 1);' : ""}
             if (yyparse()) return 1;
-            return #{custom_copy ? 'copy_count == 0' : '0'};
+            return #{custom_copy ? 'copy_count != 0' : '0'};
           }
         GRAMMAR
           _out, err, status = Open3.capture3(parser)
@@ -178,6 +178,33 @@ RSpec.describe "generated runtime" do
     GRAMMAR
       _out, err, status = Open3.capture3(parser)
       expect(status.success?).to be(true), err
+    end
+  end
+
+  it "clears layout text for adjacent tokens and EOF and after replacing input" do
+    with_parser(<<~'GRAMMAR') do |parser|
+      %code provides { #include <stdio.h> }
+      %define lr.type pslr
+      %define api.pslr.lexer generated
+      %token-pattern A /a/
+      %token-pattern B /b/
+      %token-pattern YYLAYOUT_WS / +/
+      %token-action A { printf("A %d:[%s]\n", YYPSLR_LAYOUT_LENGTH, YYPSLR_LAYOUT_TEXT); }
+      %token-action B { printf("B %d:[%s]\n", YYPSLR_LAYOUT_LENGTH, YYPSLR_LAYOUT_TEXT); }
+      %token-action YYEOF { printf("EOF %d:[%s]\n", YYPSLR_LAYOUT_LENGTH, YYPSLR_LAYOUT_TEXT); }
+      %%
+      start: A B;
+      %%
+      int main(void) {
+        yypslr_set_input(" ab", 3);
+        if (yyparse()) return 1;
+        yypslr_set_input("a b ", 4);
+        return yyparse();
+      }
+    GRAMMAR
+      out, err, status = Open3.capture3(parser)
+      expect(status.success?).to be(true), err
+      expect(out).to eq("A 1:[ ]\nB 0:[]\nEOF 0:[]\nA 0:[]\nB 1:[ ]\nEOF 1:[ ]\n")
     end
   end
 

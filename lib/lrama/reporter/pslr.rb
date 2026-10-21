@@ -75,11 +75,24 @@ module Lrama
           io << "    State #{state.id}: #{cells.join(' ')}\n"
         end
 
-        fallback_cells = accepting_states.map {|fsa_state|
-          token = scanner_accepts.fallback_table[fsa_state.id]
-          "ss#{fsa_state.id}=>#{token.name}" if token
-        }.compact
-        io << "    Fallback: #{fallback_cells.join(' ')}\n" unless fallback_cells.empty?
+        path_dependent = scanner_accepts.fallback_profiles.any? do |profile|
+          profile.any? { |state_id, (_, token)| token && token != scanner_accepts.fallback_table[state_id] }
+        end
+        if path_dependent
+          io << "    Fallback: starts in profile 0\n"
+          scanner_accepts.fallback_profiles.each_with_index do |profile, id|
+            cells = profile.map do |state_id, (next_id, token)|
+              "ss#{state_id}=>#{token ? token.name : 'keep'} (profile #{next_id})"
+            end
+            io << "      profile #{id}: #{cells.join(' ')}\n"
+          end
+        else
+          fallback_cells = accepting_states.map {|fsa_state|
+            token = scanner_accepts.fallback_table[fsa_state.id]
+            "ss#{fsa_state.id}=>#{token.name}" if token
+          }.compact
+          io << "    Fallback: #{fallback_cells.join(' ')}\n" unless fallback_cells.empty?
+        end
         io << "\n"
       end
 
