@@ -27,8 +27,7 @@ module Lrama
               references << reference
             when scanner.scan(/\/\*/)
               scanner.scan_until(/\*\//) || scanner.terminate
-            when scanner.scan(%r{//})
-              scanner.scan_until(/\n/) || scanner.terminate
+            when scanner.scan(%r{//(?:\\\r?\n|[^\n])*})
             when quote = scanner.scan(/["']/)
               skip_quoted_literal(scanner, quote)
             else

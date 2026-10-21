@@ -177,7 +177,7 @@ module Lrama
         when @scanner.scan(/\n/)
           code << @scanner.matched
           newline
-        when (fragment = @scanner.scan(%r{/\*|//[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'}m))
+        when (fragment = @scanner.scan(%r{/\*|//(?:\\\r?\n|[^\n])*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'}m))
           if fragment == '/*'
             comment = @scanner.scan_until(%r{\*/})
             raise ParseError, location.generate_error_message("Unterminated comment") unless comment

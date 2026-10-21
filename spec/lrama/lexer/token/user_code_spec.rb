@@ -59,6 +59,16 @@ RSpec.describe Lrama::Lexer::Token::UserCode do
       expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :at, name: "expr.right", ex_tag: nil, first_column: 1, last_column: 14)
     end
 
+    ["\n", "\r\n"].each do |newline|
+      it "ignores references in a continued line comment with #{newline.inspect}" do
+        code = "$1; // comment\\#{newline}$9; @9; $:9;#{newline}$2;"
+        references = described_class.new(s_value: code, location: location).references
+
+        expect(references.map { |ref| [ref.type, ref.number] }).to eq([[:dollar, 1], [:dollar, 2]])
+        expect(references.last.first_column).to eq(code.index('$2'))
+      end
+    end
+
     it "ignores references in C literals and comments" do
       code = <<~'C'
         $1;
