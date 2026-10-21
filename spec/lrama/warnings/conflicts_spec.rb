@@ -3,7 +3,7 @@
 RSpec.describe Lrama::Warnings::Conflicts do
   describe "#warn" do
     let(:y) do
-      <<~STR
+      <<~'STR'
         %{
         // Prologue
         %}

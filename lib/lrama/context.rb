@@ -26,7 +26,7 @@ module Lrama
     # enum yytokentype
     def yytokentype
       @states.terms.reject do |term|
-        0 < term.token_id && term.token_id < 128
+        term.id.is_a?(Lexer::Token::Char)
       end.map do |term|
         [term.id.s_value, term.token_id, term.display_name]
       end.unshift(["YYEMPTY", -2, nil])

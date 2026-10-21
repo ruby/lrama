@@ -129,9 +129,7 @@ module Lrama
         return [@scanner.matched, Lrama::Lexer::Token::Token.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/<\w+>/)
         return [:TAG, Lrama::Lexer::Token::Tag.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/'.'/)
-        return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/'\\\\'|'\\b'|'\\t'|'\\f'|'\\r'|'\\n'|'\\v'|'\\13'/)
+      when @scanner.scan(/'(?:[^'\\\n]|\\(?:['"?\\abfnrtv]|[0-7]{1,3}|x[0-9a-fA-F]+|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}))'/)
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/".*?"/)
         return [:STRING, Lrama::Lexer::Token::Str.new(s_value: %Q(#{@scanner.matched}), location: location)]

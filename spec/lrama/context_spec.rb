@@ -1,6 +1,23 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Context do
+  it 'omits character literals from token enums regardless of their token number' do
+    grammar = Lrama::Parser.new(<<~'GRAMMAR', "character.y").parse
+      %token '\x41' 300
+      %%
+      start: '\377' '\x41';
+    GRAMMAR
+    grammar.prepare
+    grammar.validate!
+    states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+    states.compute
+    context = Lrama::Context.new(states)
+
+    expect(context.yytokentype.map(&:first)).to eq(["YYEMPTY", "YYEOF", "YYerror", "YYUNDEF"])
+    expect(context.yytranslate[255]).to eq(grammar.find_symbol_by_s_value!(%q('\377')).number)
+    expect(context.yytranslate[300]).to eq(grammar.find_symbol_by_s_value!(%q('\x41')).number)
+  end
+
   describe "basic" do
     it do
       path = "context/basic.y"

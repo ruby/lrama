@@ -118,6 +118,48 @@ RSpec.describe Lrama::Parser do
   end
 
   describe '#parse' do
+    {
+      %q('a') => 97, %q('"') => 34, %q('\\\\') => 92,
+      %q('\'') => 39, %q('\"') => 34, %q('\?') => 63,
+      %q('\a') => 7, %q('\b') => 8, %q('\t') => 9, %q('\n') => 10,
+      %q('\v') => 11, %q('\f') => 12, %q('\r') => 13,
+      %q('\1') => 1, %q('\12') => 10, %q('\13') => 11,
+      %q('\101') => 65, %q('\377') => 255,
+      %q('\x41') => 65, %q('\x0041') => 65, %q('\xff') => 255,
+      %q('\u0041') => 65, %q('\U000000FF') => 255,
+    }.each do |literal, code|
+      it "assigns character code #{code} to #{literal.inspect}" do
+        grammar = Lrama::Parser.new("%token #{literal}\n%%\nstart: #{literal};\n", "character.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        token = grammar.find_symbol_by_s_value!(literal)
+        expect(token.token_id).to eq(code)
+        expect(grammar.rules.last.rhs).to eq([token])
+      end
+    end
+
+    it 'preserves an explicit token number for an escaped character' do
+      grammar = Lrama::Parser.new("%token '\\x41' 300\n%%\nstart: '\\x41';\n", "character.y").parse
+      grammar.prepare
+      grammar.validate!
+
+      expect(grammar.find_symbol_by_s_value!(%q('\x41')).token_id).to eq(300)
+    end
+
+    [%q('\0'), %q('\00'), %q('\000'), %q('\x00'), %q('\u0000'),
+     %q('\400'), %q('\777'), %q('\x100'), %q('\U00000100')].each do |literal|
+      it "rejects an out-of-range character code in #{literal.inspect}" do
+        ["", "%token #{literal} 300\n"].each do |declaration|
+          expect do
+            grammar = Lrama::Parser.new("#{declaration}%%\nstart: #{literal};\n", "character.y").parse
+            grammar.prepare
+            grammar.validate!
+          end.to raise_error(/Invalid character: .*Character code must be between 1 and 255/)
+        end
+      end
+    end
+
     it "no_union" do
       path = "common/no_union.y"
       y = File.read(fixture_path(path))

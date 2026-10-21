@@ -252,48 +252,50 @@ module Lrama
               @number += 1
             end
 
-            # If id is Token::Char, it uses ASCII code
-            if sym.token_id.nil?
-              if sym.id.is_a?(Lrama::Lexer::Token::Char)
-                # Ignore ' on the both sides
+            if sym.id.is_a?(Lrama::Lexer::Token::Char)
+              # Ignore ' on both sides.
+              code =
                 case sym.id.s_value[1..-2]
+                when "\\a"
+                  7
                 when "\\b"
-                  sym.token_id = 8
+                  8
                 when "\\f"
-                  sym.token_id = 12
+                  12
                 when "\\n"
-                  sym.token_id = 10
+                  10
                 when "\\r"
-                  sym.token_id = 13
+                  13
                 when "\\t"
-                  sym.token_id = 9
+                  9
                 when "\\v"
-                  sym.token_id = 11
-                when "\""
-                  sym.token_id = 34
-                when "'"
-                  sym.token_id = 39
+                  11
+                when "\\\""
+                  34
+                when "\\'"
+                  39
+                when "\\?"
+                  63
                 when "\\\\"
-                  sym.token_id = 92
-                when /\A\\(\d+)\z/
-                  unless (id = Integer($1, 8)).nil?
-                    sym.token_id = id
-                  else
-                    raise "Unknown Char s_value #{sym}"
-                  end
+                  92
+                when /\A\\([0-7]{1,3})\z/
+                  Integer($1, 8)
+                when /\A\\[xuU]([0-9a-fA-F]+)\z/
+                  Integer($1, 16)
                 when /\A(.)\z/
-                  unless (id = $1&.bytes&.first).nil?
-                    sym.token_id = id
-                  else
-                    raise "Unknown Char s_value #{sym}"
-                  end
-                else
-                  raise "Unknown Char s_value #{sym}"
+                  $1&.bytes&.first
                 end
-              else
-                sym.token_id = token_id
-                token_id += 1
+
+              raise "Unknown Char s_value #{sym}" unless code
+
+              unless (1..255).cover?(code)
+                raise "Invalid character: `#{sym.id.s_value}`. Character code must be between 1 and 255."
               end
+
+              sym.token_id ||= code
+            elsif sym.token_id.nil?
+              sym.token_id = token_id
+              token_id += 1
             end
           end
         end

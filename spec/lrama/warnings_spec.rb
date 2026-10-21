@@ -4,7 +4,7 @@ RSpec.describe Lrama::Warnings do
   describe "#warn" do
     context "when rule has conflicts" do
       let(:y) do
-        <<~STR
+        <<~'STR'
           %{
           // Prologue
           %}
