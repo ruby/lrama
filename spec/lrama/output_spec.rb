@@ -51,24 +51,61 @@ RSpec.describe Lrama::Output do
     end
   end
 
+  context 'with multiple parameter declarations' do
+    let(:text) do
+      <<~'GRAMMAR'
+        %lex-param {int lex_only} {char *input}
+        %parse-param {int parse_only}
+        %param {int shared} {void *context}
+        %parse-param {int *result}
+        %param {int last}
+        %%
+        start: ;
+      GRAMMAR
+    end
+
+    it 'preserves declaration order in function signatures and calls' do
+      expect(output.lex_param).to eq("int lex_only, char *input, int shared, void *context, int last")
+      expect(output.parse_param).to eq("int parse_only, int shared, void *context, int *result, int last")
+      expect(output.lex_param_name).to eq("lex_only, input, shared, context, last")
+      expect(output.parse_param_name).to eq("parse_only, shared, context, result, last")
+      expect(output.user_formals).to eq(", int parse_only, int shared, void *context, int *result, int last")
+      expect(output.user_args).to eq(", parse_only, shared, context, result, last")
+      expect(output.yylex_formals).to eq("(&yylval, lex_only, input, shared, context, last)")
+      expect(output.yyerror_args).to eq("&yylloc, parse_only, shared, context, result, last")
+    end
+
+    it 'marks each parser parameter as used separately' do
+      expect(output.parse_param_use("yyvaluep", "yylocationp")).to eq(<<-C.chomp)
+  YY_USE (yyvaluep);
+  YY_USE (yylocationp);
+  YY_USE (parse_only);
+  YY_USE (shared);
+  YY_USE (context);
+  YY_USE (result);
+  YY_USE (last);
+      C
+    end
+  end
+
   describe "#parse_param" do
     it "returns declaration of parse param without blanks" do
-      allow(grammar).to receive(:parse_param).and_return("struct parser_params *p")
+      allow(grammar).to receive(:parse_params).and_return(["struct parser_params *p"])
       expect(output.parse_param).to eq("struct parser_params *p")
 
-      allow(grammar).to receive(:parse_param).and_return(" struct parser_params *p  ")
+      allow(grammar).to receive(:parse_params).and_return([" struct parser_params *p  "])
       expect(output.parse_param).to eq("struct parser_params *p")
 
-      allow(grammar).to receive(:parse_param).and_return("int i")
+      allow(grammar).to receive(:parse_params).and_return(["int i"])
       expect(output.parse_param).to eq("int i")
 
-      allow(grammar).to receive(:parse_param).and_return(" int i  ")
+      allow(grammar).to receive(:parse_params).and_return([" int i  "])
       expect(output.parse_param).to eq("int i")
 
-      allow(grammar).to receive(:parse_param).and_return("int parse_param")
+      allow(grammar).to receive(:parse_params).and_return(["int parse_param"])
       expect(output.parse_param).to eq("int parse_param")
 
-      allow(grammar).to receive(:parse_param).and_return(" int parse_param  ")
+      allow(grammar).to receive(:parse_params).and_return([" int parse_param  "])
       expect(output.parse_param).to eq("int parse_param")
     end
   end
@@ -76,29 +113,29 @@ RSpec.describe Lrama::Output do
   describe "#user_formals" do
     context "when parse_param exists" do
       it "returns declaration of parse param without blanks with a leading comma" do
-        allow(grammar).to receive(:parse_param).and_return("struct parser_params *p")
+        allow(grammar).to receive(:parse_params).and_return(["struct parser_params *p"])
         expect(output.user_formals).to eq(", struct parser_params *p")
 
-        allow(grammar).to receive(:parse_param).and_return(" struct parser_params *p  ")
+        allow(grammar).to receive(:parse_params).and_return([" struct parser_params *p  "])
         expect(output.user_formals).to eq(", struct parser_params *p")
 
-        allow(grammar).to receive(:parse_param).and_return("int i")
+        allow(grammar).to receive(:parse_params).and_return(["int i"])
         expect(output.user_formals).to eq(", int i")
 
-        allow(grammar).to receive(:parse_param).and_return(" int i  ")
+        allow(grammar).to receive(:parse_params).and_return([" int i  "])
         expect(output.user_formals).to eq(", int i")
 
-        allow(grammar).to receive(:parse_param).and_return("int parse_param")
+        allow(grammar).to receive(:parse_params).and_return(["int parse_param"])
         expect(output.user_formals).to eq(", int parse_param")
 
-        allow(grammar).to receive(:parse_param).and_return(" int parse_param  ")
+        allow(grammar).to receive(:parse_params).and_return([" int parse_param  "])
         expect(output.user_formals).to eq(", int parse_param")
       end
     end
 
     context "when parse_param does not exist" do
       it "returns blank" do
-        allow(grammar).to receive(:parse_param).and_return(nil)
+        allow(grammar).to receive(:parse_params).and_return([])
         expect(output.user_formals).to eq("")
       end
     end
@@ -107,29 +144,29 @@ RSpec.describe Lrama::Output do
   describe "#user_args" do
     context "when parse_param exists" do
       it "returns name of parse param without blanks with a leading comma" do
-        allow(grammar).to receive(:parse_param).and_return("struct parser_params *p")
+        allow(grammar).to receive(:parse_params).and_return(["struct parser_params *p"])
         expect(output.user_args).to eq(", p")
 
-        allow(grammar).to receive(:parse_param).and_return(" struct parser_params *p  ")
+        allow(grammar).to receive(:parse_params).and_return([" struct parser_params *p  "])
         expect(output.user_args).to eq(", p")
 
-        allow(grammar).to receive(:parse_param).and_return("int i")
+        allow(grammar).to receive(:parse_params).and_return(["int i"])
         expect(output.user_args).to eq(", i")
 
-        allow(grammar).to receive(:parse_param).and_return(" int i  ")
+        allow(grammar).to receive(:parse_params).and_return([" int i  "])
         expect(output.user_args).to eq(", i")
 
-        allow(grammar).to receive(:parse_param).and_return("int parse_param")
+        allow(grammar).to receive(:parse_params).and_return(["int parse_param"])
         expect(output.user_args).to eq(", parse_param")
 
-        allow(grammar).to receive(:parse_param).and_return(" int parse_param  ")
+        allow(grammar).to receive(:parse_params).and_return([" int parse_param  "])
         expect(output.user_args).to eq(", parse_param")
       end
     end
 
     context "when parse_param does not exist" do
       it "returns blank" do
-        allow(grammar).to receive(:parse_param).and_return(nil)
+        allow(grammar).to receive(:parse_params).and_return([])
         expect(output.user_args).to eq("")
       end
     end
@@ -137,44 +174,44 @@ RSpec.describe Lrama::Output do
 
   describe "#parse_param_name" do
     it "returns name of parse param" do
-      allow(grammar).to receive(:parse_param).and_return("struct parser_params *p")
+      allow(grammar).to receive(:parse_params).and_return(["struct parser_params *p"])
       expect(output.parse_param_name).to eq("p")
 
-      allow(grammar).to receive(:parse_param).and_return(" struct parser_params *p  ")
+      allow(grammar).to receive(:parse_params).and_return([" struct parser_params *p  "])
       expect(output.parse_param_name).to eq("p")
 
-      allow(grammar).to receive(:parse_param).and_return("int i")
+      allow(grammar).to receive(:parse_params).and_return(["int i"])
       expect(output.parse_param_name).to eq("i")
 
-      allow(grammar).to receive(:parse_param).and_return(" int i  ")
+      allow(grammar).to receive(:parse_params).and_return([" int i  "])
       expect(output.parse_param_name).to eq("i")
 
-      allow(grammar).to receive(:parse_param).and_return("int parse_param")
+      allow(grammar).to receive(:parse_params).and_return(["int parse_param"])
       expect(output.parse_param_name).to eq("parse_param")
 
-      allow(grammar).to receive(:parse_param).and_return(" int parse_param  ")
+      allow(grammar).to receive(:parse_params).and_return([" int parse_param  "])
       expect(output.parse_param_name).to eq("parse_param")
     end
   end
 
   describe "#lex_param_name" do
     it "returns name of lex param" do
-      allow(grammar).to receive(:lex_param).and_return("struct parser_params *p")
+      allow(grammar).to receive(:lex_params).and_return(["struct parser_params *p"])
       expect(output.lex_param_name).to eq("p")
 
-      allow(grammar).to receive(:lex_param).and_return(" struct parser_params *p  ")
+      allow(grammar).to receive(:lex_params).and_return([" struct parser_params *p  "])
       expect(output.lex_param_name).to eq("p")
 
-      allow(grammar).to receive(:lex_param).and_return("int i")
+      allow(grammar).to receive(:lex_params).and_return(["int i"])
       expect(output.lex_param_name).to eq("i")
 
-      allow(grammar).to receive(:lex_param).and_return(" int i  ")
+      allow(grammar).to receive(:lex_params).and_return([" int i  "])
       expect(output.lex_param_name).to eq("i")
 
-      allow(grammar).to receive(:lex_param).and_return("int lex_param")
+      allow(grammar).to receive(:lex_params).and_return(["int lex_param"])
       expect(output.lex_param_name).to eq("lex_param")
 
-      allow(grammar).to receive(:lex_param).and_return(" int lex_param  ")
+      allow(grammar).to receive(:lex_params).and_return([" int lex_param  "])
       expect(output.lex_param_name).to eq("lex_param")
     end
   end
