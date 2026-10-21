@@ -118,6 +118,21 @@ RSpec.describe Lrama::Parser do
   end
 
   describe '#parse' do
+    it 'resolves an escaped string alias to its declared token' do
+      y = <<~'GRAMMAR'
+        %token QUOTE "\""
+        %%
+        start: "\"";
+      GRAMMAR
+      grammar = Lrama::Parser.new(y, "alias.y").parse
+      grammar.prepare
+      grammar.validate!
+
+      quote = grammar.find_symbol_by_s_value!("QUOTE")
+      expect(quote.alias_name).to eq(%q("\""))
+      expect(grammar.rules.last.rhs).to eq([quote])
+    end
+
     it "no_union" do
       path = "common/no_union.y"
       y = File.read(fixture_path(path))
