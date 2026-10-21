@@ -431,6 +431,58 @@ RSpec.describe Lrama::Lexer do
     MSG
   end
 
+  [
+    [' /* } */ { int x; } ', 1, 21],
+    [' /* { */ int x; ', 1, 17],
+    [" // don't {\n int x; ", 2, 8],
+    [" // }\n int x; ", 2, 8],
+    [" /* あ\n } */ int x; ", 2, 13],
+    [%q( const char *s = "\"//"; int x; ), 1, 33],
+  ].each do |code, last_line, last_column|
+    it "finds the action terminator after #{code.inspect}" do
+      grammar_file = Lrama::Lexer::GrammarFile.new("action.y", "{#{code}};")
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      expect(lexer.next_token).to eq(['{', token_class::Token.new(s_value: '{')])
+      lexer.status = :c_declaration
+      lexer.end_symbol = '}'
+      token = lexer.next_token
+
+      expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: code)])
+      expect(token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 1, last_line: last_line, last_column: last_column)
+      lexer.status = :initial
+
+      expect(lexer.next_token).to eq(['}', token_class::Token.new(s_value: '}')])
+      expect(lexer.next_token).to eq([';', token_class::Token.new(s_value: ';')])
+      expect(lexer.next_token).to be_nil
+    end
+  end
+
+  [
+    [%q( printf("\"}"); ), 1, 17],
+    [%q( printf("\"{"); ), 1, 17],
+    [%q( printf("\\\\"); { int x; } ), 1, 27],
+    [" printf(\"あ\\\n\\\"}\"); ", 2, 7],
+  ].each do |code, last_line, last_column|
+    it "lexes an action containing an escaped C string in #{code.inspect}" do
+      grammar_file = Lrama::Lexer::GrammarFile.new("escaped.y", "{#{code}};")
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      expect(lexer.next_token).to eq(['{', token_class::Token.new(s_value: '{')])
+      lexer.status = :c_declaration
+      lexer.end_symbol = '}'
+      token = lexer.next_token
+
+      expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: code)])
+      expect(token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 1, last_line: last_line, last_column: last_column)
+      lexer.status = :initial
+
+      expect(lexer.next_token).to eq(['}', token_class::Token.new(s_value: '}')])
+      expect(lexer.next_token).to eq([';', token_class::Token.new(s_value: ';')])
+      expect(lexer.next_token).to be_nil
+    end
+  end
+
   context 'unexpected_c_code.y' do
     it do
       grammar_file = Lrama::Lexer::GrammarFile.new("invalid.y", "@invalid")
@@ -460,6 +512,63 @@ RSpec.describe Lrama::Lexer do
 
       expect { Timeout.timeout(1) { lexer.next_token } }.to raise_error(ParseError, /Unterminated comment/)
     end
+  end
+
+  ['%}', '}', '\Z'].each do |end_symbol|
+    ['/*', '/*/', '/* unterminated } %}', "/* unterminated\n/* still unterminated"].each do |code|
+      it "rejects an unterminated C comment #{code.inspect} before #{end_symbol.inspect}" do
+        grammar_file = Lrama::Lexer::GrammarFile.new("comment.y", code)
+        lexer = Lrama::Lexer.new(grammar_file)
+        lexer.status = :c_declaration
+        lexer.end_symbol = end_symbol
+
+        expect { lexer.next_token }.to raise_error(ParseError, /Unterminated comment/)
+      end
+    end
+  end
+
+  [
+    'value / 2 % 3',
+    '/**/value/2;/***/',
+    'value /= 2; value %= 3;',
+    'value / 2/* } */%3;',
+    "value/2// }\n%3;",
+    %q(value/2; const char *s = "/* } */";),
+    'value/',
+    'value%',
+    'value\Z',
+    '%}',
+    '/%}',
+    '"',
+    '"unterminated\\',
+  ].each do |code|
+    it "preserves C operators and comments in #{code.inspect}" do
+      grammar_file = Lrama::Lexer::GrammarFile.new("operators.y", code)
+      lexer = Lrama::Lexer.new(grammar_file)
+      lexer.status = :c_declaration
+      lexer.end_symbol = '\Z'
+
+      expect(lexer.next_token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: code)])
+    end
+  end
+
+  it 'tracks action locations after multibyte comments and operators' do
+    code = " value/2; /* あ\n } */value%3; "
+    grammar_file = Lrama::Lexer::GrammarFile.new("operators.y", "{#{code}};")
+    lexer = Lrama::Lexer.new(grammar_file)
+
+    expect(lexer.next_token).to eq(['{', token_class::Token.new(s_value: '{')])
+    lexer.status = :c_declaration
+    lexer.end_symbol = '}'
+    token = lexer.next_token
+
+    expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: code)])
+    expect(token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 1, last_line: 2, last_column: 14)
+    lexer.status = :initial
+
+    expect(lexer.next_token).to eq(['}', token_class::Token.new(s_value: '}')])
+    expect(lexer.next_token).to eq([';', token_class::Token.new(s_value: ';')])
+    expect(lexer.next_token).to be_nil
   end
 
   it 'lex a trailing space with newline' do
