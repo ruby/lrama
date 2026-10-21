@@ -14,8 +14,7 @@ static int yyerror(YYLTYPE *loc, int parse_param, const char *str);
 
 %}
 
-%lex-param {int parse_param}
-%parse-param {int parse_param}
+%param {int parse_param}
 
 %union {
     int val;
