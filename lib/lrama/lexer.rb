@@ -159,7 +159,6 @@ module Lrama
       raise "end_symbol is not set" unless end_symbol
 
       end_symbol_pattern = Regexp.new(end_symbol)
-      escaped_end_symbol_pattern = Regexp.new(Regexp.escape(end_symbol))
       reset_first_position
 
       until @scanner.eos? do
@@ -180,17 +179,33 @@ module Lrama
         when @scanner.scan(/\n/)
           code << @scanner.matched
           newline
-        when @scanner.scan(/".*?"/)
-          code << %Q(#{@scanner.matched})
-          @line += @scanner.matched.count("\n")
-        when @scanner.scan(/'.*?'/)
-          code << %Q(#{@scanner.matched})
-        when @scanner.scan(/[^\"'\{\}\n]+/)
-          code << @scanner.matched
-        when @scanner.scan(escaped_end_symbol_pattern)
-          code << @scanner.matched
+        when (fragment = @scanner.scan(%r{/\*|//[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'}m))
+          if fragment == '/*'
+            comment = @scanner.scan_until(%r{\*/})
+            raise ParseError, location.generate_error_message("Unterminated comment") unless comment # steep:ignore UnknownConstant
+
+            fragment << comment
+          end
+          code << fragment
+          @line += fragment.count("\n")
+          if (last_newline = fragment.b.rindex("\n"))
+            @head = @scanner.pos - fragment.bytesize + last_newline + 1
+          end
         else
-          code << @scanner.getch
+          start = @scanner.pos
+          # Search for delimiters without retaining backtracking positions for ordinary C text.
+          if (length = @scanner.skip_until(%r{["'{}\n]|/[/*]|%\}}))
+            delimiter_size = @scanner.matched_size
+            @scanner.pos -= delimiter_size
+            if length > delimiter_size
+              code << @scanner.string.byteslice(start, length - delimiter_size)
+            else
+              code << @scanner.getch
+            end
+          else
+            code << @scanner.rest
+            @scanner.terminate
+          end
         end
       end
 
