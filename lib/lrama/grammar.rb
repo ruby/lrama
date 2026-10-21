@@ -85,8 +85,8 @@ module Lrama
     attr_accessor :expect #: Integer
     attr_accessor :printers #: Array[Printer]
     attr_accessor :error_tokens #: Array[ErrorToken]
-    attr_accessor :lex_param #: String
-    attr_accessor :parse_param #: String
+    attr_reader :lex_params #: Array[String]
+    attr_reader :parse_params #: Array[String]
     attr_accessor :initial_action #: Grammar::Code::InitialActionCode
     attr_accessor :after_shift #: Lexer::Token::Base
     attr_accessor :before_reduce #: Lexer::Token::Base
@@ -119,6 +119,8 @@ module Lrama
       @printers = []
       @destructors = []
       @error_tokens = []
+      @lex_params = []
+      @parse_params = []
       @symbols_resolver = Grammar::Symbols::Resolver.new
       @types = []
       @rule_builders = []
@@ -335,16 +337,16 @@ module Lrama
         when Node::ParamDecl
           node.params.each do |param|
             code = Grammar::Code::NoReferenceCode.new(type: :param, token_code: param).token_code.s_value
-            self.lex_param = code
-            self.parse_param = code
+            lex_params << code
+            parse_params << code
           end
         when Node::LexParamDecl
           node.params.each do |param|
-            self.lex_param = Grammar::Code::NoReferenceCode.new(type: :lex_param, token_code: param).token_code.s_value
+            lex_params << Grammar::Code::NoReferenceCode.new(type: :lex_param, token_code: param).token_code.s_value
           end
         when Node::ParseParamDecl
           node.params.each do |param|
-            self.parse_param = Grammar::Code::NoReferenceCode.new(type: :parse_param, token_code: param).token_code.s_value
+            parse_params << Grammar::Code::NoReferenceCode.new(type: :parse_param, token_code: param).token_code.s_value
           end
         when Node::UnionDecl
           self.set_union(
