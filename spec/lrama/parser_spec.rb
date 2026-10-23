@@ -3861,6 +3861,47 @@ RSpec.describe Lrama::Parser do
       end
     end
 
+    describe "%prec in rule definitions" do
+      ["%rule", "%rule %inline"].each do |directive|
+        context "with #{directive}" do
+          [
+            ["X %prec P %prec Q", /multiple %prec in a rule/],
+            ["%prec P X %prec Q", /multiple %prec in a rule/],
+            ["X %prec P X", /intermediate %prec in a rule/],
+            ["X %prec P { first; } { second; }", /multiple User_code after %prec/],
+          ].each do |rhs, error|
+            it "rejects #{rhs}" do
+              y = <<~INPUT
+                %token A P Q
+                #{directive} item(X): #{rhs};
+                %%
+                program: item(A);
+              INPUT
+
+              parser = Lrama::Parser.new(y, "parse.y")
+
+              expect { parser.parse }.to raise_error(ParseError, error)
+            end
+          end
+
+          it "allows one %prec per alternative and resets the state between rules" do
+            y = <<~INPUT
+              %token A P Q
+              #{directive} item(X): %prec P X { first; }
+                                 | X %prec Q { second; };
+              #{directive} other(X): X %prec P { third; };
+              %%
+              program: item(A) other(A) %prec Q { last; };
+            INPUT
+
+            parser = Lrama::Parser.new(y, "parse.y")
+
+            expect { parser.parse }.not_to raise_error
+          end
+        end
+      end
+    end
+
     describe "\" in user code" do
       it do
         y = header + <<~INPUT

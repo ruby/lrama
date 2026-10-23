@@ -346,7 +346,12 @@ rule
     | rule_rhs "%prec" symbol
         {
           on_action_error("multiple %prec in a rule", val[0]) if prec_seen?
-          @prec_seen = true
+          if val[0].empty?
+            @opening_prec_seen = true
+          else
+            @trailing_prec_seen = true
+          end
+
           node = Grammar::Node::RuleRhs::Prec.new(
             token: val[2],
             location: val[2].loc
