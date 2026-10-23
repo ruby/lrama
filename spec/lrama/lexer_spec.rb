@@ -469,6 +469,29 @@ RSpec.describe Lrama::Lexer do
     MSG
   end
 
+  [%q('\''), %q('\"'), %q('\a'), %q('\?'), %q('\1'), %q('\12'), %q('\101'), %q('\x41')].each do |literal|
+    it "lexes the escaped character literal #{literal.inspect}" do
+      grammar_file = Lrama::Lexer::GrammarFile.new("character.y", "#{literal} NEXT")
+      lexer = Lrama::Lexer.new(grammar_file)
+      token = lexer.next_token
+
+      expect(token).to eq([:CHARACTER, token_class::Char.new(s_value: literal)])
+      expect(token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: literal.length)
+      expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: "NEXT")])
+      expect(lexer.next_token).to be_nil
+    end
+  end
+
+  it 'rejects malformed character literals' do
+    [%q(''), %q('''), %q('\'), %q('ab'), %q('\8'), %q('\x'), %q('\q'), %q('\1234'),
+     %q('\u041'), %q('\U0000041'), "'\n'", "'\\\n'"].each do |literal|
+      grammar_file = Lrama::Lexer::GrammarFile.new("character.y", literal)
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      expect { lexer.next_token }.to raise_error(ParseError, /Unexpected token/)
+    end
+  end
+
   context 'unexpected_c_code.y' do
     it do
       grammar_file = Lrama::Lexer::GrammarFile.new("invalid.y", "@invalid")

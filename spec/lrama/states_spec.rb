@@ -3024,7 +3024,7 @@ RSpec.describe Lrama::States do
 
   describe "#validate!" do
     let(:y) do
-      <<~STR
+      <<~'STR'
         %union {
             int i;
             long l;
