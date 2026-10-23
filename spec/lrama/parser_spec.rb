@@ -4601,6 +4601,31 @@ RSpec.describe Lrama::Parser do
           ERROR
         end
       end
+
+      context "when %empty is misused in a later alternative" do
+        [
+          ["A | B %empty", 13],
+          ["A | %empty B", 11],
+          ["A | %empty %empty", 11],
+          ["A | A | B %empty", 17],
+        ].each do |rhs, column|
+          it "rejects #{rhs}" do
+            y = <<~INPUT
+              %token A B
+              %%
+              start: #{rhs};
+            INPUT
+
+            parser = Lrama::Parser.new(y, "error_messages/parse.y")
+
+            expect { parser.parse }.to raise_error(ParseError, <<~ERROR)
+              error_messages/parse.y:3:#{column}: %empty on non-empty rule
+                 3 | start: #{rhs};
+                   | #{' ' * column}^~~~~~
+            ERROR
+          end
+        end
+      end
     end
   end
 

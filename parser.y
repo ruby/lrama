@@ -446,6 +446,12 @@ rule
       IDENT_COLON named_ref? ":" rhs_list
         {
           result = val[3].map do |rhs|
+            if rhs.reject {|sym| sym.is_a?(Grammar::Node::RuleRhs::Action) || sym.is_a?(Grammar::Node::RuleRhs::Prec) }.count > 1
+              empties = rhs.select { |sym| sym.is_a?(Grammar::Node::RuleRhs::Empty) }
+              empties.each do |empty|
+                on_action_error("%empty on non-empty rule", empty)
+              end
+            end
             Grammar::Node::Rule.new(
               id: val[0],
               alias_name: val[1],
@@ -458,12 +464,6 @@ rule
   rhs_list:
       rhs
         {
-          if val[0].reject {|sym| sym.is_a?(Grammar::Node::RuleRhs::Action) || sym.is_a?(Grammar::Node::RuleRhs::Prec) }.count > 1
-            empties = val[0].select { |sym| sym.is_a?(Grammar::Node::RuleRhs::Empty) }
-            empties.each do |empty|
-              on_action_error("%empty on non-empty rule", empty)
-            end
-          end
           result = [val[0]]
         }
     | rhs_list "|" rhs

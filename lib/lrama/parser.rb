@@ -2129,6 +2129,12 @@ module_eval(<<'.,.,', 'parser.y', 445)
 module_eval(<<'.,.,', 'parser.y', 447)
   def _reduce_106(val, _values, result)
               result = val[3].map do |rhs|
+            if rhs.reject {|sym| sym.is_a?(Grammar::Node::RuleRhs::Action) || sym.is_a?(Grammar::Node::RuleRhs::Prec) }.count > 1
+              empties = rhs.select { |sym| sym.is_a?(Grammar::Node::RuleRhs::Empty) }
+              empties.each do |empty|
+                on_action_error("%empty on non-empty rule", empty)
+              end
+            end
             Grammar::Node::Rule.new(
               id: val[0],
               alias_name: val[1],
@@ -2141,15 +2147,9 @@ module_eval(<<'.,.,', 'parser.y', 447)
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.y', 460)
+module_eval(<<'.,.,', 'parser.y', 466)
   def _reduce_107(val, _values, result)
-              if val[0].reject {|sym| sym.is_a?(Grammar::Node::RuleRhs::Action) || sym.is_a?(Grammar::Node::RuleRhs::Prec) }.count > 1
-            empties = val[0].select { |sym| sym.is_a?(Grammar::Node::RuleRhs::Empty) }
-            empties.each do |empty|
-              on_action_error("%empty on non-empty rule", empty)
-            end
-          end
-          result = [val[0]]
+              result = [val[0]]
 
     result
   end
