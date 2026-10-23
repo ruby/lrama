@@ -64,7 +64,7 @@ module Lrama
     ).freeze #: Array[String]
     IDENTIFIER_PATTERN = /[a-zA-Z_.][-a-zA-Z0-9_.]*/.freeze #: Regexp
     SYMBOL_PATTERN = Regexp.new(SYMBOLS.join('|')) #: Regexp
-    PERCENT_TOKEN_PATTERN = Regexp.new(PERCENT_TOKENS.join('|')) #: Regexp
+    PERCENT_TOKEN_PATTERN = Regexp.new("(?:#{PERCENT_TOKENS.join('|')})(?![-a-zA-Z0-9_.])") #: Regexp
 
     # @rbs (GrammarFile grammar_file) -> void
     def initialize(grammar_file)
