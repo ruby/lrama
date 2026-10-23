@@ -431,6 +431,31 @@ RSpec.describe Lrama::Lexer do
     MSG
   end
 
+  [%q("\""), %q("a\"b"), %q("\\\\"), %q("\n")].each do |literal|
+    it "lexes the escaped string alias #{literal.inspect}" do
+      grammar_file = Lrama::Lexer::GrammarFile.new("alias.y", "%token QUOTE #{literal} NEXT")
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      expect(lexer.next_token).to eq(['%token', token_class::Token.new(s_value: '%token')])
+      expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'QUOTE')])
+      token = lexer.next_token
+
+      expect(token).to eq([:STRING, token_class::Str.new(s_value: literal)])
+      expect(token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 13, last_line: 1, last_column: 13 + literal.length)
+      expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'NEXT')])
+      expect(lexer.next_token).to be_nil
+    end
+  end
+
+  it 'rejects unterminated or multiline string aliases' do
+    [%q("\"), "\"a\nb\"", "\"a\\\nb\""].each do |literal|
+      grammar_file = Lrama::Lexer::GrammarFile.new("alias.y", literal)
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      expect { lexer.next_token }.to raise_error(ParseError, /Unexpected token/)
+    end
+  end
+
   context 'unexpected_c_code.y' do
     it do
       grammar_file = Lrama::Lexer::GrammarFile.new("invalid.y", "@invalid")

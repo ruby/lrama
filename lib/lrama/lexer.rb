@@ -133,7 +133,7 @@ module Lrama
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
       when @scanner.scan(/'\\\\'|'\\b'|'\\t'|'\\f'|'\\r'|'\\n'|'\\v'|'\\13'/)
         return [:CHARACTER, Lrama::Lexer::Token::Char.new(s_value: @scanner.matched, location: location)]
-      when @scanner.scan(/".*?"/)
+      when @scanner.scan(/"(?:\\.|[^"\\\n])*"/)
         return [:STRING, Lrama::Lexer::Token::Str.new(s_value: %Q(#{@scanner.matched}), location: location)]
       when @scanner.scan(/\d+/)
         return [:INTEGER, Lrama::Lexer::Token::Int.new(s_value: Integer(@scanner.matched), location: location)]
