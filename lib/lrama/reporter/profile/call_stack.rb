@@ -9,7 +9,7 @@ module Lrama
         #
         # @rbs enabled: bool
         # @rbs &: -> void
-        # @rbs return: StackProf::result | void
+        # @rbs return: void
         def self.report(enabled)
           if enabled && require_stackprof
             ex = nil #: Exception?

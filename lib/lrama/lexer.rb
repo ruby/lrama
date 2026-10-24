@@ -145,7 +145,7 @@ module Lrama
           end
         return [type, token]
       else
-        raise ParseError, location.generate_error_message("Unexpected token") # steep:ignore UnknownConstant
+        raise ParseError, location.generate_error_message("Unexpected token")
       end
     end
 
@@ -196,7 +196,7 @@ module Lrama
         return [:C_DECLARATION, Lrama::Lexer::Token::UserCode.new(s_value: code, location: location)]
       end
 
-      raise ParseError, location.generate_error_message("Unexpected code: #{code}") # steep:ignore UnknownConstant
+      raise ParseError, location.generate_error_message("Unexpected code: #{code}")
     end
 
     private
@@ -234,7 +234,7 @@ module Lrama
     # @rbs () -> void
     def lex_comment
       unless @scanner.scan_until(/[\s\S]*?\*\//)
-        raise ParseError, location.generate_error_message("Unterminated comment") # steep:ignore UnknownConstant
+        raise ParseError, location.generate_error_message("Unterminated comment")
       end
 
       @scanner.matched.count("\n").times { newline }

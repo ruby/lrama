@@ -394,7 +394,7 @@ module Lrama
         when Node::NtermDecl
           node.symbols.each do |sym|
             if find_term_by_s_value(sym.id.s_value)
-              raise ParseError, sym.id.location.generate_error_message("symbol #{sym.id.s_value} redeclared as a nonterminal") # steep:ignore UnknownConstant
+              raise ParseError, sym.id.location.generate_error_message("symbol #{sym.id.s_value} redeclared as a nonterminal")
             else
               add_type(id: sym.id, tag: sym.tag)
             end

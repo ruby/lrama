@@ -8,8 +8,8 @@ module Lrama
         #
         # @rbs enabled: bool
         # @rbs &: -> void
-        # @rbs return: StackProf::result | void
-        def self.report: (bool enabled) { () -> void } -> (StackProf::result | void)
+        # @rbs return: void
+        def self.report: (bool enabled) { () -> void } -> void
 
         # @rbs return: bool
         def self.require_memory_profiler: () -> bool
