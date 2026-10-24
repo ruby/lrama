@@ -786,6 +786,104 @@ RSpec.describe Lrama::Parser do
       ])
     end
 
+    [
+      "%left PLUS\n%token <i> PLUS \"+\"",
+      "%token PLUS \"+\"\n%left <i> PLUS",
+      "%left <i> PLUS\n%token PLUS \"+\"",
+      "%token <i> PLUS \"+\"\n%left PLUS",
+    ].each do |declarations|
+      it "preserves token metadata across declarations: #{declarations.inspect}" do
+        y = <<~GRAMMAR
+          %union { int i; }
+          #{declarations}
+          %type <i> start
+          %%
+          start: PLUS "+" { $$ = $1 + $2; };
+        GRAMMAR
+        grammar = Lrama::Parser.new(y, "redeclared_token.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        token = grammar.find_symbol_by_s_value!("PLUS")
+        rule = grammar.rules.last
+        expect(token.alias_name).to eq('"+"')
+        expect(token.tag).to eq(T::Tag.new(s_value: "<i>"))
+        expect(token.precedence).to eq(Precedence.new(type: :left, precedence: 0))
+        expect(rule.rhs).to eq([token, token])
+        expect(rule.translated_code(grammar)).to eq(" (yyval.i) = (yyvsp[-1].i) + (yyvsp[0].i); ")
+      end
+    end
+
+    [
+      "%token <i> PLUS\n%token <i> PLUS",
+      "%token <i> PLUS\n%token <l> PLUS",
+      "%token <i> PLUS\n%left <i> PLUS",
+      "%left <i> PLUS\n%token <l> PLUS",
+      "%token <i> PLUS 300\n%token <i> PLUS 300",
+    ].each do |declarations|
+      it "rejects a redeclared token type: #{declarations.inspect}" do
+        y = "%union { int i; long l; }\n#{declarations}\n%%\nstart: PLUS;\n"
+
+        expect { Lrama::Parser.new(y, "redeclared_token.y").parse }
+          .to raise_error(/redeclared_token.y:3:\d+: %type redeclaration for PLUS.*previous declaration/m)
+      end
+    end
+
+    ["%token <i> PLUS 300 \"+\"", "%left <i> PLUS\n%token PLUS 300 \"+\""].each do |declaration|
+      it "preserves metadata when repeating a numbered token: #{declaration.inspect}" do
+        y = <<~GRAMMAR
+          %union { int i; }
+          #{declaration}
+          %token PLUS 300
+          %type <i> start
+          %%
+          start: "+" { $$ = $1; };
+        GRAMMAR
+        grammar = Lrama::Parser.new(y, "redeclared_token.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        token = grammar.find_symbol_by_s_value!("PLUS")
+        expect(token.token_id).to eq(300)
+        expect(token.alias_name).to eq('"+"')
+        expect(token.tag).to eq(T::Tag.new(s_value: "<i>"))
+        expect(grammar.rules.last.translated_code(grammar)).to eq(" (yyval.i) = (yyvsp[0].i); ")
+      end
+    end
+
+    it "rejects changing the code of a declared token" do
+      y = "%token PLUS 300\n%token PLUS 301\n%%\nstart: PLUS;\n"
+
+      expect { Lrama::Parser.new(y, "redeclared_token.y").parse }
+        .to raise_error(/redeclared_token.y:2:7: redefining code of token PLUS/)
+    end
+
+    ["", "%token B\n"].each do |declaration|
+      it "attaches an additional literal to a later named token: #{declaration.inspect}" do
+        y = "%token A \"a\"\n%token A \"b\"\n#{declaration}%token B \"b\"\n%%\nstart: B \"b\";\n"
+        grammar = Lrama::Parser.new(y, "redeclared_alias.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        token = grammar.find_symbol_by_s_value!("B")
+        expect(token.alias_name).to eq('"b"')
+        expect(grammar.rules.last.rhs).to eq([token, token])
+        expect(grammar.terms.map(&:name)).to contain_exactly("YYEOF", "YYerror", "YYUNDEF", "A", "B")
+      end
+    end
+
+    it "uses the EOF symbol when an additional literal names token zero" do
+      y = "%token A \"a\"\n%token A \"b\"\n%token END 0 \"b\"\n%%\nstart: A;\n"
+      grammar = Lrama::Parser.new(y, "redeclared_alias.y").parse
+      grammar.prepare
+      grammar.validate!
+
+      expect(grammar.eof_symbol.name).to eq("END")
+      expect(grammar.eof_symbol.alias_name).to eq('"b"')
+      expect(grammar.terms.select { |token| token.token_id == 0 }).to eq([grammar.eof_symbol])
+      expect(grammar.terms.map(&:name)).to contain_exactly("END", "YYerror", "YYUNDEF", "A")
+    end
+
     it "precedence" do
       path = "common/precedence.y"
       y = File.read(fixture_path(path))

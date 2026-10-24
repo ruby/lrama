@@ -107,7 +107,7 @@ module Lrama
           res = "YYACCEPT"
         when eof_symbol?
           res = "YYEOF"
-        when term? && id.is_a?(Lrama::Lexer::Token::Char)
+        when term? && (id.is_a?(Lrama::Lexer::Token::Char) || name.start_with?('"'))
           res = number.to_s + display_name
         when term? && id.is_a?(Lrama::Lexer::Token::Ident)
           res = name
