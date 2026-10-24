@@ -14,6 +14,16 @@ RSpec.describe Lrama::Command do
       end
     end
 
+    it "warns about redeclared aliases without -W and still generates a parser" do
+      y = "%token PLUS \"+\"\n%token PLUS \"plus\"\n%%\nstart: PLUS \"+\" \"plus\";\n"
+      allow(STDIN).to receive(:read).and_return(y)
+      command = Lrama::Command.new(o_option + ["-", "redeclared_token.y"])
+
+      expect { command.run }.to output(/symbol PLUS given more than one literal string/).to_stderr_from_any_process
+      expect(File.read(outfile)).to include("PLUS =")
+      expect(File.read(outfile)).not_to include('"plus" =')
+    end
+
     context "when `--diagram` is specified" do
       it "generates links and reverse references without text diagrams" do
         diagram_file = File.join(Dir.tmpdir, "diagram.html")
