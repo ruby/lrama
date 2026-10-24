@@ -90,7 +90,7 @@ module Lrama
             if lookahead_sym && item.next_next_sym && item.next_next_sym.first_set.include?(lookahead_sym)
               si2 = @counterexamples.transitions[[si, item.next_sym]]
               derivation2 = find_derivation_for_symbol(si2, lookahead_sym)
-              derivation.right = derivation2 # steep:ignore
+              derivation.right = derivation2
               lookahead_sym = nil
             end
 

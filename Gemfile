@@ -15,10 +15,10 @@ gem "rspec"
 gem "simplecov", require: false
 gem "stackprof", platforms: [:ruby] # stackprof doesn't support Windows
 
-# Recent steep requires Ruby >= 3.0.0.
+# Recent rbs and steep require Ruby >= 3.3.0.
 # Then skip install on some CI jobs.
 if !ENV['GITHUB_ACTION'] || ENV['INSTALL_STEEP'] == 'true'
-  gem "rbs", "3.10.3", require: false
+  gem "rbs", "4.2.0", require: false
   gem "rbs-inline", require: false
-  gem "steep", "1.10.0", require: false
+  gem "steep", "2.1.0", require: false
 end
