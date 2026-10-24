@@ -482,6 +482,31 @@ RSpec.describe Lrama::Lexer do
     end
   end
 
+  [
+    [%q( printf("\"}"); ), 1, 17],
+    [%q( printf("\"{"); ), 1, 17],
+    [%q( printf("\\\\"); { int x; } ), 1, 27],
+    [" printf(\"あ\\\n\\\"}\"); ", 2, 7],
+  ].each do |code, last_line, last_column|
+    it "lexes an action containing an escaped C string in #{code.inspect}" do
+      grammar_file = Lrama::Lexer::GrammarFile.new("escaped.y", "{#{code}};")
+      lexer = Lrama::Lexer.new(grammar_file)
+
+      expect(lexer.next_token).to eq(['{', token_class::Token.new(s_value: '{')])
+      lexer.status = :c_declaration
+      lexer.end_symbol = '}'
+      token = lexer.next_token
+
+      expect(token).to eq([:C_DECLARATION, token_class::UserCode.new(s_value: code)])
+      expect(token[1].location).to eq Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 1, last_line: last_line, last_column: last_column)
+      lexer.status = :initial
+
+      expect(lexer.next_token).to eq(['}', token_class::Token.new(s_value: '}')])
+      expect(lexer.next_token).to eq([';', token_class::Token.new(s_value: ';')])
+      expect(lexer.next_token).to be_nil
+    end
+  end
+
   it 'rejects malformed character literals' do
     [%q(''), %q('''), %q('\'), %q('ab'), %q('\8'), %q('\x'), %q('\q'), %q('\1234'),
      %q('\u041'), %q('\U0000041'), "'\n'", "'\\\n'"].each do |literal|
