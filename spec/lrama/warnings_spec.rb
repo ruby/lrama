@@ -2,6 +2,32 @@
 
 RSpec.describe Lrama::Warnings do
   describe "#warn" do
+    [false, true].each do |warnings|
+      {
+        "%token PLUS\n%token PLUS" => ["symbol PLUS redeclared"],
+        "%token PLUS \"+\"\n%token PLUS \"+\"" => ["symbol PLUS redeclared", 'symbol "+" used more than once as a literal string'],
+        "%token PLUS \"+\"\n%token PLUS \"plus\"" => ["symbol PLUS redeclared", "symbol PLUS given more than one literal string"],
+        "%left PLUS\n%token PLUS \"+\"" => [],
+      }.each do |declarations, messages|
+        it "reports token redeclarations with warnings=#{warnings}: #{declarations.inspect}" do
+          grammar = Lrama::Parser.new("#{declarations}\n%%\nstart: PLUS;\n", "redeclared_token.y").parse
+          grammar.prepare
+          grammar.validate!
+          states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+          states.compute
+          logger = Lrama::Logger.new
+          allow(logger).to receive(:warn)
+
+          Lrama::Warnings.new(logger, warnings).warn(grammar, states)
+
+          messages.each do |message|
+            expect(logger).to have_received(:warn).with(a_string_including("redeclared_token.y:2:", message)).once
+          end
+          expect(logger).not_to have_received(:warn).with(a_string_including("redeclared")) if messages.empty?
+        end
+      end
+    end
+
     context "when rule has conflicts" do
       let(:y) do
         <<~'STR'

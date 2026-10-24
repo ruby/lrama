@@ -7,6 +7,7 @@ require_relative 'warnings/mixed_references'
 require_relative 'warnings/name_conflicts'
 require_relative 'warnings/redefined_rules'
 require_relative 'warnings/required'
+require_relative 'warnings/token_redeclarations'
 require_relative 'warnings/useless_precedence'
 
 module Lrama
@@ -19,11 +20,13 @@ module Lrama
       @name_conflicts = NameConflicts.new(logger, warnings)
       @redefined_rules = RedefinedRules.new(logger, warnings)
       @required = Required.new(logger, warnings)
+      @token_redeclarations = TokenRedeclarations.new(logger)
       @useless_precedence = UselessPrecedence.new(logger, warnings)
     end
 
     # @rbs (Lrama::Grammar grammar, Lrama::States states) -> void
     def warn(grammar, states)
+      @token_redeclarations.warn(grammar)
       @conflicts.warn(states)
       @implicit_empty.warn(grammar)
       @mixed_references.warn(grammar)

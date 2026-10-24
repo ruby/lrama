@@ -51,6 +51,41 @@ module Lrama
 
         # @rbs (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
         def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
+          sym = find_symbol_by_id(id)
+          if alias_name&.start_with?('"') && (!sym || !sym.alias_name) && (literal = find_term_by_s_value(alias_name))
+            if sym || (token_id && find_symbol_by_token_id(token_id))
+              @terms.delete(literal)
+              @symbols = nil
+            else
+              sym = literal
+              sym.id = id
+            end
+          end
+
+          if sym
+            if tag && (previous_tag = sym.tag)
+              message = "%type redeclaration for #{id.s_value}"
+              message = id.location&.generate_error_message(message) || message
+              if previous_tag.location
+                message += "\n" + previous_tag.location.generate_error_message("previous declaration")
+              end
+              raise message
+            end
+
+            if token_id && sym.token_id && sym.token_id != token_id
+              message = "redefining code of token #{id.s_value}"
+              raise(id.location&.generate_error_message(message) || message)
+            end
+
+            if alias_name && sym.alias_name && sym.alias_name != alias_name
+              add_term(id: Lexer::Token::Str.new(s_value: alias_name, location: id.location))
+            end
+            sym.alias_name ||= alias_name
+            sym.tag ||= tag
+            sym.token_id = token_id if token_id
+            return sym
+          end
+
           if token_id && (sym = find_symbol_by_token_id(token_id))
             if replace
               sym.id = id
@@ -58,10 +93,6 @@ module Lrama
               sym.tag = tag
             end
 
-            return sym
-          end
-
-          if (sym = find_symbol_by_id(id))
             return sym
           end
 
