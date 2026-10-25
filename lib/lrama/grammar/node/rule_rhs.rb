@@ -11,6 +11,9 @@ module Lrama
   class Grammar
     module Node
       module RuleRhs
+        # @rbs!
+        #   type value = Symbol | InstantiateRule
+        #   type rhs = value | Action | Empty
       end
     end
   end

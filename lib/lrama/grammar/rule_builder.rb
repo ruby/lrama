@@ -24,7 +24,7 @@ module Lrama
       attr_reader :midrule_action_counter #: Counter
       attr_reader :parameterized_resolver #: Grammar::Parameterized::Resolver
       attr_reader :lhs_tag #: Lexer::Token::Tag?
-      attr_reader :rhs #: Array[Lexer::Token::Base]
+      attr_reader :rhs #: Array[Node::RuleRhs::rhs]
       attr_reader :user_code #: Lexer::Token::UserCode?
       attr_reader :precedence_sym #: Grammar::Symbol?
 
@@ -49,9 +49,9 @@ module Lrama
         @midrule_action_rules = []
       end
 
-      # @rbs (Lexer::Token::Base rhs) -> void
+      # @rbs (Node::RuleRhs::rhs rhs) -> void
       def add_rhs(rhs)
-        @line ||= rhs.line
+        @line ||= rhs.location.first_line
 
         flush_user_code
 
@@ -94,7 +94,10 @@ module Lrama
 
       # @rbs () -> bool
       def has_inline_rules?
-        rhs.any? { |token| @parameterized_resolver.find_inline(token) }
+        rhs.any? do |node|
+          (node.is_a?(Node::RuleRhs::Symbol) || node.is_a?(Node::RuleRhs::InstantiateRule)) &&
+            @parameterized_resolver.find_inline(node)
+        end
       end
 
       private
@@ -112,7 +115,7 @@ module Lrama
       # @rbs () -> void
       def build_rules
         tokens = @replaced_rhs #: Array[Lexer::Token::Base]
-        return if tokens.any? { |t| @parameterized_resolver.find_inline(t) }
+        return if has_inline_rules?
 
         rule = Rule.new(
           id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
@@ -130,8 +133,7 @@ module Lrama
         end
       end
 
-      # rhs is a mixture of variety type of tokens like `Ident`, `InstantiateRule`, `UserCode` and so on.
-      # `#process_rhs` replaces some kind of tokens to `Ident` so that all `@replaced_rhs` are `Ident` or `Char`.
+      # `#process_rhs` lowers RHS nodes to tokens so that all `@replaced_rhs` are `Ident` or `Char`.
       #
       # @rbs () -> void
       def process_rhs
@@ -139,26 +141,26 @@ module Lrama
 
         replaced_rhs = [] #: Array[Lexer::Token::Base]
 
-        rhs.each_with_index do |token, i|
-          case token
-          when Lrama::Lexer::Token::Char
+        rhs.each_with_index do |node, i|
+          case node
+          when Node::RuleRhs::Symbol
+            token = node.token
+            token.alias_name = node.alias_name
             replaced_rhs << token
-          when Lrama::Lexer::Token::Ident
-            replaced_rhs << token
-          when Lrama::Lexer::Token::InstantiateRule
-            parameterized_rule = @parameterized_resolver.find_rule(token)
-            raise "Unexpected token. #{token}" unless parameterized_rule
+          when Node::RuleRhs::InstantiateRule
+            parameterized_rule = @parameterized_resolver.find_rule(node)
+            raise "Unexpected node. #{node}" unless parameterized_rule
 
-            bindings = Binding.new(parameterized_rule.parameters, token.args)
-            lhs_s_value = bindings.concatenated_args_str(token)
+            bindings = Binding.new(parameterized_rule.parameters, node.args)
+            lhs_s_value = bindings.concatenated_args_str(node)
             if (created_lhs = @parameterized_resolver.created_lhs(lhs_s_value))
               replaced_rhs << created_lhs
             else
-              lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: token.location)
+              lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: node.location)
               replaced_rhs << lhs_token
               @parameterized_resolver.created_lhs_list << lhs_token
               parameterized_rule.rhs.each do |r|
-                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: token.lhs_tag || parameterized_rule.tag)
+                rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: node.lhs_tag || parameterized_rule.tag)
                 rule_builder.lhs = lhs_token
                 r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
@@ -169,9 +171,10 @@ module Lrama
                 @rule_builders_for_parameterized << rule_builder
               end
             end
-          when Lrama::Lexer::Token::UserCode
+          when Node::RuleRhs::Action
+            token = node.code
             prefix = token.referred ? "@" : "$@"
-            tag = token.tag || lhs_tag
+            tag = node.tag || lhs_tag
             new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
             replaced_rhs << new_token
 
@@ -182,10 +185,10 @@ module Lrama
             rule_builder.setup_rules
 
             @rule_builders_for_derived_rules << rule_builder
-          when Lrama::Lexer::Token::Empty
+          when Node::RuleRhs::Empty
             # Noop
           else
-            raise "Unexpected token. #{token}"
+            raise "Unexpected node. #{node}"
           end
         end
 
@@ -210,7 +213,8 @@ module Lrama
       # @rbs () -> void
       def numberize_references
         # Bison n'th component is 1-origin
-        (rhs + [user_code]).compact.each.with_index(1) do |token, i|
+        (rhs + [user_code]).compact.each.with_index(1) do |node, i|
+          token = node.is_a?(Node::RuleRhs::Action) ? node.code : node
           next unless token.is_a?(Lrama::Lexer::Token::UserCode)
 
           token.references.each do |ref|
@@ -220,9 +224,8 @@ module Lrama
               if ref_name == '$'
                 ref.name = '$'
               else
-                candidates = ([lhs] + rhs).each_with_index.select do |token, _i|
-                  # @type var token: Lexer::Token::Base
-                  token.referred_by?(ref_name)
+                candidates = ([lhs] + rhs).each_with_index.select do |node, _i|
+                  rhs_node_referred_by?(node, ref_name)
                 end
 
                 if candidates.size >= 2
@@ -252,16 +255,45 @@ module Lrama
               # TODO: Prohibit $0 even so Bison allows it?
               # See: https://www.gnu.org/software/bison/manual/html_node/Actions.html
               token.invalid_ref(ref, "Can not refer following component. #{ref.index} >= #{i}.") if ref.index >= i
-              rhs[ref.index - 1].referred = true
+              mark_rhs_node_referred(rhs[ref.index - 1])
             end
           end
+        end
+      end
+
+      # @rbs (Lexer::Token::Base? | Node::RuleRhs::rhs node, String name) -> bool
+      def rhs_node_referred_by?(node, name)
+        case node
+        when Lexer::Token::Base
+          node.referred_by?(name)
+        when Node::RuleRhs::Symbol, Node::RuleRhs::InstantiateRule
+          [node.s_value, node.alias_name].compact.include?(name)
+        when Node::RuleRhs::Action
+          [node.code.s_value, node.alias_name].compact.include?(name)
+        else
+          false
+        end
+      end
+
+      # @rbs (Node::RuleRhs::rhs node) -> void
+      def mark_rhs_node_referred(node)
+        case node
+        when Node::RuleRhs::Symbol
+          node.token.referred = true
+        when Node::RuleRhs::Action
+          node.code.referred = true
         end
       end
 
       # @rbs () -> void
       def flush_user_code
         if (c = @user_code)
-          @rhs << c
+          @rhs << Node::RuleRhs::Action.new(
+            code: c,
+            alias_name: c.alias_name,
+            tag: c.tag,
+            location: c.location
+          )
           @user_code = nil
         end
       end

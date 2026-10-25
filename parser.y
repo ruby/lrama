@@ -319,8 +319,11 @@ rule
     | rule_rhs symbol parameterized_suffix
         {
           on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
+          argument = Grammar::Node::RuleRhs::Symbol.new(
+            token: val[1], location: val[1].loc
+          )
           node = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: val[2].s_value, args: [val[1]],
+            s_value: parameterized_rule_name(val[2]), args: [argument],
             location: val[1].loc
           )
           result.append(node)
@@ -499,8 +502,11 @@ rule
     | rhs symbol parameterized_suffix named_ref? TAG?
         {
           on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
+          argument = Grammar::Node::RuleRhs::Symbol.new(
+            token: val[1], location: val[1].loc
+          )
           node = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: val[2].s_value, args: [val[1]],
+            s_value: parameterized_rule_name(val[2]), args: [argument],
             alias_name: val[3], lhs_tag: val[4],
             location: merge_locations(val[1].loc, val[4]&.loc)
           )
@@ -541,9 +547,9 @@ rule
         }
 
   parameterized_suffix:
-      "?" { result = Lrama::Lexer::Token::Ident.new(s_value: "option", location: val[0].loc) }
-    | "+" { result = Lrama::Lexer::Token::Ident.new(s_value: "nonempty_list", location: val[0].loc) }
-    | "*" { result = Lrama::Lexer::Token::Ident.new(s_value: "list", location: val[0].loc) }
+      "?"
+    | "+"
+    | "*"
 
   parameterized_args:
       parameterized_arg { result = [val[0]] }
@@ -551,16 +557,24 @@ rule
 
   parameterized_arg:
       symbol
+        {
+          result = Grammar::Node::RuleRhs::Symbol.new(
+            token: val[0], location: val[0].loc
+          )
+        }
     | symbol parameterized_suffix
         {
-          result = Lrama::Lexer::Token::InstantiateRule.new(
-            s_value: val[1].s_value, args: [val[0]],
+          symbol = Grammar::Node::RuleRhs::Symbol.new(
+            token: val[0], location: val[0].loc
+          )
+          result = Grammar::Node::RuleRhs::InstantiateRule.new(
+            s_value: parameterized_rule_name(val[1]), args: [symbol],
             location: merge_locations(val[0].loc, val[1].loc)
           )
         }
     | IDENTIFIER "(" parameterized_args ")"
         {
-          result = Lrama::Lexer::Token::InstantiateRule.new(
+          result = Grammar::Node::RuleRhs::InstantiateRule.new(
             s_value: val[0].s_value, args: val[2],
             location: merge_locations(val[0].loc, val[3].loc)
           )
@@ -697,6 +711,15 @@ end
 
 def raise_parse_error(error_message, location)
   raise ParseError, location.generate_error_message(error_message)
+end
+
+def parameterized_rule_name(suffix)
+  case suffix.s_value
+  when "?" then "option"
+  when "+" then "nonempty_list"
+  when "*" then "list"
+  else raise "Unexpected parameterized suffix: #{suffix.s_value}"
+  end
 end
 
 def merge_locations(*locations)

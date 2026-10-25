@@ -14,11 +14,11 @@ module Lrama
         # @rbs (Rule rule) -> Array[Rule]
         def add_rule: (Rule rule) -> Array[Rule]
 
-        # @rbs (Lexer::Token::InstantiateRule token) -> Rule?
-        def find_rule: (Lexer::Token::InstantiateRule token) -> Rule?
+        # @rbs (Node::RuleRhs::InstantiateRule instantiate_rule) -> Rule?
+        def find_rule: (Node::RuleRhs::InstantiateRule instantiate_rule) -> Rule?
 
-        # @rbs (Lexer::Token::Base token) -> Rule?
-        def find_inline: (Lexer::Token::Base token) -> Rule?
+        # @rbs (Node::RuleRhs::value node) -> Rule?
+        def find_inline: (Node::RuleRhs::value node) -> Rule?
 
         # @rbs (String lhs_s_value) -> Lexer::Token::Base?
         def created_lhs: (String lhs_s_value) -> Lexer::Token::Base?
@@ -28,8 +28,8 @@ module Lrama
 
         private
 
-        # @rbs (Array[Rule] rules, Lexer::Token::InstantiateRule token) -> Array[Rule]
-        def select_rules: (Array[Rule] rules, Lexer::Token::InstantiateRule token) -> Array[Rule]
+        # @rbs (Array[Rule] rules, Node::RuleRhs::InstantiateRule instantiate_rule) -> Array[Rule]
+        def select_rules: (Array[Rule] rules, Node::RuleRhs::InstantiateRule instantiate_rule) -> Array[Rule]
 
         # @rbs (Array[Rule] rules) -> Array[Rule]
         def reject_inline_rules: (Array[Rule] rules) -> Array[Rule]
