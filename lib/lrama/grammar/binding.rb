@@ -27,7 +27,7 @@ module Lrama
 
       # @rbs (Node::RuleRhs::InstantiateRule instantiate_rule) -> String
       def concatenated_args_str(instantiate_rule)
-        "#{instantiate_rule.s_value}_#{format_args(instantiate_rule)}"
+        "#{instantiate_rule.name}_#{format_args(instantiate_rule)}"
       end
 
       private
@@ -35,7 +35,7 @@ module Lrama
       # @rbs (Node::RuleRhs::InstantiateRule sym) -> Node::RuleRhs::InstantiateRule
       def create_instantiate_rule(sym)
         Node::RuleRhs::InstantiateRule.new(
-          s_value: sym.s_value,
+          name: sym.name,
           alias_name: sym.alias_name,
           location: sym.location,
           args: resolve_args(sym.args),
@@ -50,11 +50,11 @@ module Lrama
 
       # @rbs (Node::RuleRhs::Symbol sym) -> Node::RuleRhs::value
       def find_arg_for_param(sym)
-        if (arg = @param_to_arg[sym.s_value])
+        if (arg = @param_to_arg[sym.name])
           case arg
           when Node::RuleRhs::InstantiateRule
             Node::RuleRhs::InstantiateRule.new(
-              s_value: arg.s_value,
+              name: arg.name,
               alias_name: sym.alias_name,
               location: arg.location,
               args: arg.args,
@@ -83,17 +83,17 @@ module Lrama
 
       # @rbs (Node::RuleRhs::InstantiateRule instantiate_rule) -> String
       def format_args(instantiate_rule)
-        instantiate_rule_args_s_values(instantiate_rule).join('_')
+        instantiate_rule_arg_names(instantiate_rule).join('_')
       end
 
       # @rbs (Node::RuleRhs::InstantiateRule instantiate_rule) -> Array[String]
-      def instantiate_rule_args_s_values(instantiate_rule)
+      def instantiate_rule_arg_names(instantiate_rule)
         instantiate_rule.args.flat_map do |arg|
           resolved = resolve_symbol(arg)
           if resolved.is_a?(Node::RuleRhs::InstantiateRule)
-            [resolved.s_value] + resolved.args.map { |arg| arg.s_value }
+            [resolved.name] + resolved.args.map { |arg| arg.name }
           else
-            [resolved.s_value]
+            [resolved.name]
           end
         end
       end

@@ -26,7 +26,7 @@ module Lrama
 
         # @rbs (Node::RuleRhs::value node) -> Rule?
         def find_inline(node)
-          @rules.reverse.find { |rule| rule.name == node.s_value && rule.inline? }
+          @rules.reverse.find { |rule| rule.name == node.name && rule.inline? }
         end
 
         # @rbs (String lhs_s_value) -> Lexer::Token::Base?
@@ -44,10 +44,10 @@ module Lrama
         # @rbs (Array[Rule] rules, Node::RuleRhs::InstantiateRule instantiate_rule) -> Array[Rule]
         def select_rules(rules, instantiate_rule)
           rules = reject_inline_rules(rules)
-          rules = select_rules_by_name(rules, instantiate_rule.s_value)
+          rules = select_rules_by_name(rules, instantiate_rule.name)
           rules = rules.select { |rule| rule.required_parameters_count == instantiate_rule.args.count }
           if rules.empty?
-            raise "Invalid number of arguments. `#{instantiate_rule.s_value}`"
+            raise "Invalid number of arguments. `#{instantiate_rule.name}`"
           else
             rules
           end

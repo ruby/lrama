@@ -34,7 +34,7 @@ module Lrama
       def format_args: (Node::RuleRhs::InstantiateRule instantiate_rule) -> String
 
       # @rbs (Node::RuleRhs::InstantiateRule instantiate_rule) -> Array[String]
-      def instantiate_rule_args_s_values: (Node::RuleRhs::InstantiateRule instantiate_rule) -> Array[String]
+      def instantiate_rule_arg_names: (Node::RuleRhs::InstantiateRule instantiate_rule) -> Array[String]
     end
   end
 end

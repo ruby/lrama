@@ -17,7 +17,7 @@ module Lrama
           end
 
           # @rbs () -> String
-          def s_value
+          def name
             @token.s_value
           end
         end

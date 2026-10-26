@@ -267,7 +267,7 @@ module Lrama
         when Lexer::Token::Base
           node.referred_by?(name)
         when Node::RuleRhs::Symbol, Node::RuleRhs::InstantiateRule
-          [node.s_value, node.alias_name].compact.include?(name)
+          [node.name, node.alias_name].compact.include?(name)
         when Node::RuleRhs::Action
           [node.code.s_value, node.alias_name].compact.include?(name)
         else
