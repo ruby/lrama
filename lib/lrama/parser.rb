@@ -1084,7 +1084,7 @@ racc_reduce_table = [
   1, 74, :_reduce_none,
   1, 74, :_reduce_none,
   1, 74, :_reduce_none,
-  1, 101, :_reduce_135 ]
+  1, 101, :_reduce_none ]
 
 racc_reduce_n = 136
 
@@ -2387,12 +2387,7 @@ module_eval(<<'.,.,', 'parser.y', 609)
 
 # reduce 134 omitted
 
-module_eval(<<'.,.,', 'parser.y', 620)
-  def _reduce_135(val, _values, result)
-     result = Lrama::Lexer::Token::Ident.new(s_value: val[0].s_value, location: val[0].location)
-    result
-  end
-.,.,
+# reduce 135 omitted
 
 def _reduce_none(val, _values, result)
   val[0]
