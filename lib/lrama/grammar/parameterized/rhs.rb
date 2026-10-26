@@ -25,7 +25,7 @@ module Lrama
           symbols.each do |sym|
             resolved_sym = bindings.resolve_symbol(sym)
             if resolved_sym != sym
-              var_to_arg[sym.s_value] = resolved_sym.s_value
+              var_to_arg[sym.name] = resolved_sym.name
             end
           end
 

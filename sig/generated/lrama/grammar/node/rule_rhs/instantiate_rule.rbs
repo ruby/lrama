@@ -5,7 +5,7 @@ module Lrama
     module Node
       module RuleRhs
         class InstantiateRule < Node::Base
-          attr_reader s_value: String
+          attr_reader name: String
 
           attr_reader args: Array[Node::RuleRhs::value]
 
@@ -13,8 +13,8 @@ module Lrama
 
           attr_reader lhs_tag: Lexer::Token::Tag?
 
-          # @rbs (s_value: String, args: Array[Node::RuleRhs::value], ?alias_name: String?, ?lhs_tag: Lexer::Token::Tag?, location: Lexer::Location) -> void
-          def initialize: (s_value: String, args: Array[Node::RuleRhs::value], location: Lexer::Location, ?alias_name: String?, ?lhs_tag: Lexer::Token::Tag?) -> void
+          # @rbs (name: String, args: Array[Node::RuleRhs::value], ?alias_name: String?, ?lhs_tag: Lexer::Token::Tag?, location: Lexer::Location) -> void
+          def initialize: (name: String, args: Array[Node::RuleRhs::value], location: Lexer::Location, ?alias_name: String?, ?lhs_tag: Lexer::Token::Tag?) -> void
         end
       end
     end

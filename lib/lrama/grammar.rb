@@ -647,7 +647,7 @@ module Lrama
       visiting[rule] = true
       rule.rhs.each do |rhs|
         rhs.symbols.each do |symbol|
-          next if rule.parameters.any? { |parameter| parameter.s_value == symbol.s_value }
+          next if rule.parameters.any? { |parameter| parameter.s_value == symbol.name }
 
           inline_rule = @parameterized_resolver.find_inline(symbol)
           validate_inline_rule!(inline_rule, visiting, visited) if inline_rule

@@ -1905,7 +1905,7 @@ module_eval(<<'.,.,', 'parser.y', 320)
             token: val[1], location: val[1].loc
           )
           node = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: parameterized_rule_name(val[2]), args: [argument],
+            name: parameterized_rule_name(val[2]), args: [argument],
             location: val[1].loc
           )
           result.append(node)
@@ -1918,7 +1918,7 @@ module_eval(<<'.,.,', 'parser.y', 332)
   def _reduce_77(val, _values, result)
               on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           node = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: val[1].s_value, args: val[3],
+            name: val[1].s_value, args: val[3],
             alias_name: val[5], lhs_tag: val[6],
             location: merge_locations(val[1].loc, val[4], val[6]&.loc)
           )
@@ -2215,7 +2215,7 @@ module_eval(<<'.,.,', 'parser.y', 503)
             token: val[1], location: val[1].loc
           )
           node = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: parameterized_rule_name(val[2]), args: [argument],
+            name: parameterized_rule_name(val[2]), args: [argument],
             alias_name: val[3], lhs_tag: val[4],
             location: merge_locations(val[1].loc, val[4]&.loc)
           )
@@ -2229,7 +2229,7 @@ module_eval(<<'.,.,', 'parser.y', 516)
   def _reduce_113(val, _values, result)
               on_action_error("intermediate %prec in a rule", val[1]) if @trailing_prec_seen
           node = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: val[1].s_value, args: val[3],
+            name: val[1].s_value, args: val[3],
             alias_name: val[5], lhs_tag: val[6],
             location: merge_locations(val[1].loc, val[6]&.loc)
           )
@@ -2306,7 +2306,7 @@ module_eval(<<'.,.,', 'parser.y', 566)
             token: val[0], location: val[0].loc
           )
           result = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: parameterized_rule_name(val[1]), args: [symbol],
+            name: parameterized_rule_name(val[1]), args: [symbol],
             location: merge_locations(val[0].loc, val[1].loc)
           )
 
@@ -2317,7 +2317,7 @@ module_eval(<<'.,.,', 'parser.y', 566)
 module_eval(<<'.,.,', 'parser.y', 576)
   def _reduce_123(val, _values, result)
               result = Grammar::Node::RuleRhs::InstantiateRule.new(
-            s_value: val[0].s_value, args: val[2],
+            name: val[0].s_value, args: val[2],
             location: merge_locations(val[0].loc, val[3].loc)
           )
 
