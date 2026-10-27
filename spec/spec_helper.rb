@@ -82,7 +82,7 @@ module LramaCustomMatchers
         return false
       end
 
-      symbol_ids_match? &&
+      @expected.id == @target.id &&
       @expected.alias_name == @target.alias_name &&
       @expected.number == @target.number &&
       @expected.tag == @target.tag &&
@@ -92,16 +92,6 @@ module LramaCustomMatchers
       @expected.precedence == @target.precedence &&
       @expected.printer == @target.printer &&
       @expected.error_token == @target.error_token
-    end
-
-    def symbol_ids_match?
-      expected_id = if @expected.id.is_a?(Lrama::Grammar::Symbol::Id)
-        @expected.id
-      else
-        Lrama::Grammar::Symbol::Id.from_token(@expected.id)
-      end
-
-      expected_id == @target.id
     end
 
     def failure_message
