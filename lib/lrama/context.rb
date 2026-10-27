@@ -25,10 +25,8 @@ module Lrama
 
     # enum yytokentype
     def yytokentype
-      @states.terms.reject do |term|
-        term.id.is_a?(Lexer::Token::Char) || term.id.s_value.start_with?('"')
-      end.map do |term|
-        [term.id.s_value, term.token_id, term.display_name]
+      @states.terms.reject { |term| term.character? || term.id.kind == :string }.map do |term|
+        [term.name, term.token_id, term.display_name]
       end.unshift(["YYEMPTY", -2, nil])
     end
 

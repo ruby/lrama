@@ -247,46 +247,46 @@ RSpec.describe Lrama::Grammar::Code do
 
     describe "#translated_code" do
       it "translates '$$' to '(yyval)' with member" do
-        code = grammar.rules.find {|r| r.lhs.id.s_value == "rule1" }
+        code = grammar.rules.find {|r| r.lhs.id.name == "rule1" }
         expect(code.translated_code(grammar)).to eq(" (yyval.rule1) = 0; ")
       end
 
       it "translates '@$' to '(yyloc)'" do
-        code = grammar.rules.find {|r| r.lhs.id.s_value == "rule2" }
+        code = grammar.rules.find {|r| r.lhs.id.name == "rule2" }
         expect(code.translated_code(grammar)).to eq(" (yyloc) = 0; ")
       end
 
       it "translates '$n' to '(yyvsp)' with index and member" do
-        code = grammar.rules.find {|r| r.lhs.id.s_value == "rule3" }
+        code = grammar.rules.find {|r| r.lhs.id.name == "rule3" }
         expect(code.translated_code(grammar)).to eq(" (yyvsp[-2].expr) + (yyvsp[0].expr); ")
       end
 
       it "translates '@n' to '(yylsp)' with index" do
-        code = grammar.rules.find {|r| r.lhs.id.s_value == "rule4" }
+        code = grammar.rules.find {|r| r.lhs.id.name == "rule4" }
         expect(code.translated_code(grammar)).to eq(" (yylsp[-2]) + (yylsp[0]); (yylsp[-3]); ")
       end
 
       it "respects explicit tag in a rule" do
-        code = grammar.rules.find {|r| r.lhs.id.s_value == "rule5" }
+        code = grammar.rules.find {|r| r.lhs.id.name == "rule5" }
         expect(code.translated_code(grammar)).to eq(" (yyvsp[-2].expr) + (yyvsp[0].integer); ")
       end
 
       context "midrule action exists" do
         it "uses index on the original rule (-1)" do
           # midrule action in rule6
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "$@1" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "$@1" }
           expect(code.translated_code(grammar)).to eq(" (yyval.integer) = (yyvsp[-1].expr); (yyloc) = (yylsp[-1]); ")
 
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule6" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "rule6" }
           expect(code.translated_code(grammar)).to eq(" (yyvsp[-3].expr) + (yyvsp[0].integer); ")
         end
 
         it "uses an explicit tag for type casting" do
           # midrule action in rule13
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "@5" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "@5" }
           expect(code.translated_code(grammar)).to eq(" (yyval.integer) = (yyvsp[-1].expr); (yyloc) = (yylsp[-1]); ")
 
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule13" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "rule13" }
           expect(code.translated_code(grammar)).to eq(" (yyvsp[-3].expr) + (yyvsp[-1].integer); ")
         end
       end
@@ -295,38 +295,38 @@ RSpec.describe Lrama::Grammar::Code do
         it "raises error" do
           # midrule action in rule7
           # rule7 has tag
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "@2" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "@2" }
           expect { code.translated_code(grammar) }.to raise_error("Tag is not specified for '$$' in '@2 -> ε'")
 
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule7" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "rule7" }
           expect { code.translated_code(grammar) }.to raise_error("Tag is not specified for '$2' in 'rule7 -> expr @2 '+' expr'")
 
           # midrule action in rule8
           # rule8 has no tag
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "@3" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "@3" }
           expect { code.translated_code(grammar) }.to raise_error("Tag is not specified for '$$' in '@3 -> ε'")
 
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule8" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "rule8" }
           expect { code.translated_code(grammar) }.to raise_error("Tag is not specified for '$2' in 'rule8 -> expr @3 '+' expr'")
         end
       end
 
       context "$: is used" do
         it "translates '$:$' to '-yylen' and '$:n' to index from the last of array" do
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule9" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "rule9" }
           expect(code.translated_code(grammar)).to eq(" (-2 - 1); (-1 - 1); (0 - 1); ")
 
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule10" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "rule10" }
           expect { code.translated_code(grammar) }.to raise_error("$:$ is not supported")
 
           # midrule action in rule11
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "@4" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "@4" }
           expect(code.translated_code(grammar)).to eq(" (0 - 1); ")
 
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule11" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "rule11" }
           expect(code.translated_code(grammar)).to eq(" (-3 - 1); (-2 - 1); (-1 - 1); (0 - 1); ")
 
-          code = grammar.rules.find {|r| r.lhs.id.s_value == "rule12" }
+          code = grammar.rules.find {|r| r.lhs.id.name == "rule12" }
           expect(code.translated_code(grammar)).to eq(" (-2 - 1); (-1 - 1); (0 - 1); ")
         end
       end

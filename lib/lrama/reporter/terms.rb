@@ -34,7 +34,7 @@ module Lrama
         unless unused_symbols.empty?
           io << "#{unused_symbols.count} Unused Terms\n\n"
           unused_symbols.each_with_index do |term, index|
-            io << sprintf("%5d %s", index, term.id.s_value) << "\n"
+            io << sprintf("%5d %s", index, term.name) << "\n"
           end
           io << "\n\n"
         end

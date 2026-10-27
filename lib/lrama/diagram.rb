@@ -41,7 +41,7 @@ module Lrama
     def linked_sections
       document = RailroadDiagrams::Document.new(title: "Lrama syntax diagrams", theme: :default)
       action_symbols = @grammar.rules.select(&:original_rule).map(&:lhs)
-      @grammar.rules.reject(&:original_rule).group_by { |rule| rule.lhs.id.s_value }.each do |name, rules|
+      @grammar.rules.reject(&:original_rule).group_by { |rule| rule.lhs.name }.each do |name, rules|
         alternatives = rules.map do |rule|
           diagram_rule = rule.dup
           diagram_rule.rhs = rule.rhs - action_symbols

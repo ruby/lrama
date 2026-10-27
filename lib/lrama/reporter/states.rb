@@ -67,9 +67,9 @@ module Lrama
           r = item.empty_rule? ? "ε •" : item.rhs.map(&:display_name).insert(item.position, "•").join(" ")
 
           l = if item.lhs == last_lhs
-            " " * item.lhs.id.s_value.length + "|"
+            " " * item.lhs.name.length + "|"
           else
-            item.lhs.id.s_value + ":"
+            item.lhs.name + ":"
           end
 
           la = ""
@@ -202,10 +202,10 @@ module Lrama
         end
 
         max_len = goto_transitions.map(&:next_sym).map do |nterm|
-          nterm.id.s_value.length
+          nterm.name.length
         end.max
         goto_transitions.each do |goto|
-          io << "    #{goto.next_sym.id.s_value.ljust(max_len)}  go to state #{goto.to_state.id}\n"
+          io << "    #{goto.next_sym.name.ljust(max_len)}  go to state #{goto.to_state.id}\n"
         end
 
         io << "\n"
@@ -232,7 +232,7 @@ module Lrama
           label1 = is_shift_reduce ? "Shift derivation" : "First Reduce derivation"
           label2 = is_shift_reduce ? "Reduce derivation" : "Second Reduce derivation"
 
-          io << "    #{label0} conflict on token #{example.conflict_symbol.id.s_value}:\n"
+          io << "    #{label0} conflict on token #{example.conflict_symbol.name}:\n"
           io << "        #{example.path1_item}\n"
           io << "        #{example.path2_item}\n"
           io << "      #{label1}\n"
@@ -269,8 +269,8 @@ module Lrama
           terms = direct_read_sets[goto]
           next unless terms && !terms.empty?
 
-          str = terms.map { |sym| sym.id.s_value }.join(", ")
-          io << "    read #{goto.next_sym.id.s_value}  shift #{str}\n"
+          str = terms.map(&:name).join(", ")
+          io << "    read #{goto.next_sym.name}  shift #{str}\n"
         end
 
         io << "\n"
@@ -285,7 +285,7 @@ module Lrama
           next unless goto2
 
           goto2.each do |goto2|
-            io << "    (State #{goto2.from_state.id}, #{goto2.next_sym.id.s_value})\n"
+            io << "    (State #{goto2.from_state.id}, #{goto2.next_sym.name})\n"
           end
         end
 
@@ -302,7 +302,7 @@ module Lrama
           next unless terms && !terms.empty?
 
           terms.each do |sym|
-            io << "    #{sym.id.s_value}\n"
+            io << "    #{sym.name}\n"
           end
         end
 
@@ -318,7 +318,7 @@ module Lrama
           next unless gotos
 
           gotos.each do |goto2|
-            io << "    (State #{state.id}, #{goto.next_sym.id.s_value}) -> (State #{goto2.from_state.id}, #{goto2.next_sym.id.s_value})\n"
+            io << "    (State #{state.id}, #{goto.next_sym.name}) -> (State #{goto2.from_state.id}, #{goto2.next_sym.name})\n"
           end
         end
 
@@ -334,7 +334,7 @@ module Lrama
           next unless gotos
 
           gotos.each do |goto2|
-            io << "    (Rule: #{rule.display_name}) -> (State #{goto2.from_state.id}, #{goto2.next_sym.id.s_value})\n"
+            io << "    (Rule: #{rule.display_name}) -> (State #{goto2.from_state.id}, #{goto2.next_sym.name})\n"
           end
         end
 
@@ -351,7 +351,7 @@ module Lrama
           next unless terms
 
           terms.each do |sym|
-            io << "    #{goto.next_sym.id.s_value} -> #{sym.id.s_value}\n"
+            io << "    #{goto.next_sym.name} -> #{sym.name}\n"
           end
         end
 
@@ -372,11 +372,11 @@ module Lrama
 
         return if look_ahead_rules.empty?
 
-        max_len = look_ahead_rules.flat_map { |_, syms| syms.map { |s| s.id.s_value.length } }.max
+        max_len = look_ahead_rules.flat_map { |_, syms| syms.map { |s| s.name.length } }.max
 
         look_ahead_rules.each do |rule, syms|
           syms.each do |sym|
-            io << "    #{sym.id.s_value.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.id.s_value})\n"
+            io << "    #{sym.name.ljust(max_len)}  reduce using rule #{rule.id} (#{rule.lhs.name})\n"
           end
         end
 

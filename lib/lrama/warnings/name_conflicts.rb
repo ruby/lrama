@@ -38,7 +38,7 @@ module Lrama
       # @rbs (Array[untyped] terms, Set[String] symbol_names) -> void
       def collect_term_names(terms, symbol_names)
         terms.each do |term|
-          symbol_names.add(term.id.s_value)
+          symbol_names.add(term.name)
           symbol_names.add(term.alias_name) if term.alias_name
         end
       end
@@ -46,7 +46,7 @@ module Lrama
       # @rbs (Array[untyped] nterms, Set[String] symbol_names) -> void
       def collect_nterm_names(nterms, symbol_names)
         nterms.each do |nterm|
-          symbol_names.add(nterm.id.s_value)
+          symbol_names.add(nterm.name)
         end
       end
 

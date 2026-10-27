@@ -1,12 +1,33 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Grammar::Symbol do
-  let(:token_class) { Lrama::Lexer::Token }
+  def symbol_id(name, kind: :ident)
+    Lrama::Grammar::Symbol::Id.new(name: name, kind: kind)
+  end
+
+  describe Lrama::Grammar::Symbol::Id do
+    describe ".from_token" do
+      it "raises an error for a token that cannot identify a symbol" do
+        token = Lrama::Lexer::Token::Token.new(s_value: "+")
+
+        expect { described_class.from_token(token) }
+          .to raise_error("Unexpected symbol token: Lrama::Lexer::Token::Token")
+      end
+    end
+
+    describe "#==" do
+      it "compares name and kind" do
+        expect(symbol_id("term")).to eq(symbol_id("term"))
+        expect(symbol_id("term")).not_to eq(symbol_id("term", kind: :char))
+        expect(symbol_id("term")).not_to eq(symbol_id("other"))
+      end
+    end
+  end
 
   describe "#enum_name" do
     describe "symbol is accept_symbol" do
       it "returns 'YYSYMBOL_YYACCEPT'" do
-        sym = described_class.new(id: token_class::Ident.new(s_value: "$accept"), term: false)
+        sym = described_class.new(id: symbol_id("$accept"), term: false)
         sym.accept_symbol = true
 
         expect(sym.enum_name).to eq("YYSYMBOL_YYACCEPT")
@@ -15,7 +36,7 @@ RSpec.describe Lrama::Grammar::Symbol do
 
     describe "symbol is eof_symbol" do
       it "returns 'YYSYMBOL_YYEOF'" do
-        sym = described_class.new(id: token_class::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0, term: true)
+        sym = described_class.new(id: symbol_id("YYEOF"), alias_name: "\"end of file\"", token_id: 0, term: true)
         sym.number = 0
         sym.eof_symbol = true
 
@@ -25,9 +46,9 @@ RSpec.describe Lrama::Grammar::Symbol do
 
     describe "symbol's token_id is less than 128" do
       it "returns 'YYSYMBOL_number_[alias_name_]'" do
-        sym1 = described_class.new(id: token_class::Char.new(s_value: "'\\\\'"), alias_name: "\"backslash\"", token_id: 92, number: 70, term: true)
-        sym2 = described_class.new(id: token_class::Char.new(s_value: "'.'"), alias_name: nil, token_id: 46, number: 69, term: true)
-        sym3 = described_class.new(id: token_class::Char.new(s_value: "'\\n'"), alias_name: nil, token_id: 10, number: 162, term: true)
+        sym1 = described_class.new(id: symbol_id("'\\\\'", kind: :char), alias_name: "\"backslash\"", token_id: 92, number: 70, term: true)
+        sym2 = described_class.new(id: symbol_id("'.'", kind: :char), alias_name: nil, token_id: 46, number: 69, term: true)
+        sym3 = described_class.new(id: symbol_id("'\\n'", kind: :char), alias_name: nil, token_id: 10, number: 162, term: true)
 
         expect(sym1.enum_name).to eq("YYSYMBOL_70_backslash_")
         expect(sym2.enum_name).to eq("YYSYMBOL_69_")
@@ -37,8 +58,8 @@ RSpec.describe Lrama::Grammar::Symbol do
 
     describe "symbol includes $ or @" do
       it "returns 'YYSYMBOL_number_ref" do
-        sym1 = described_class.new(id: token_class::Ident.new(s_value: "$@1"), token_id: -1, number: 165, term: false)
-        sym2 = described_class.new(id: token_class::Ident.new(s_value: "@2"), token_id: -1, number: 166, term: false)
+        sym1 = described_class.new(id: symbol_id("$@1"), token_id: -1, number: 165, term: false)
+        sym2 = described_class.new(id: symbol_id("@2"), token_id: -1, number: 166, term: false)
 
         expect(sym1.enum_name).to eq("YYSYMBOL_165_1")
         expect(sym2.enum_name).to eq("YYSYMBOL_166_2")
@@ -47,8 +68,8 @@ RSpec.describe Lrama::Grammar::Symbol do
 
     describe "symbol's token_id is greater than 127" do
       it "returns 'YYSYMBOL_number_ref" do
-        sym1 = described_class.new(id: token_class::Ident.new(s_value: "keyword_class"), alias_name: "\"`class'\"", token_id: 258, number: 3, term: true)
-        sym2 = described_class.new(id: token_class::Ident.new(s_value: "top_compstmt"), token_id: 166, number: -1, term: false)
+        sym1 = described_class.new(id: symbol_id("keyword_class"), alias_name: "\"`class'\"", token_id: 258, number: 3, term: true)
+        sym2 = described_class.new(id: symbol_id("top_compstmt"), token_id: 166, number: -1, term: false)
 
         expect(sym1.enum_name).to eq("YYSYMBOL_keyword_class")
         expect(sym2.enum_name).to eq("YYSYMBOL_top_compstmt")
@@ -58,8 +79,8 @@ RSpec.describe Lrama::Grammar::Symbol do
 
   describe "#comment" do
     describe "symbol is accept_symbol" do
-      it "returns s_value" do
-        sym = described_class.new(id: token_class::Ident.new(s_value: "$accept"), term: false)
+      it "returns name" do
+        sym = described_class.new(id: symbol_id("$accept"), term: false)
         sym.accept_symbol = true
 
         expect(sym.comment).to eq("$accept")
@@ -68,7 +89,7 @@ RSpec.describe Lrama::Grammar::Symbol do
 
     describe "symbol is eof_symbol" do
       it "returns alias_name" do
-        sym = described_class.new(id: token_class::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0, term: true)
+        sym = described_class.new(id: symbol_id("YYEOF"), alias_name: "\"end of file\"", token_id: 0, term: true)
         sym.number = 0
         sym.eof_symbol = true
 
@@ -77,10 +98,10 @@ RSpec.describe Lrama::Grammar::Symbol do
     end
 
     describe "symbol's token_id is less than 128" do
-      it "returns alias_name or s_value" do
-        sym1 = described_class.new(id: token_class::Char.new(s_value: "'\\\\'"), alias_name: "\"backslash\"", token_id: 92, number: 70, term: true)
-        sym2 = described_class.new(id: token_class::Char.new(s_value: "'.'"), alias_name: nil, token_id: 46, number: 69, term: true)
-        sym3 = described_class.new(id: token_class::Char.new(s_value: "'\\n'"), alias_name: nil, token_id: 10, number: 162, term: true)
+      it "returns alias_name or name" do
+        sym1 = described_class.new(id: symbol_id("'\\\\'", kind: :char), alias_name: "\"backslash\"", token_id: 92, number: 70, term: true)
+        sym2 = described_class.new(id: symbol_id("'.'", kind: :char), alias_name: nil, token_id: 46, number: 69, term: true)
+        sym3 = described_class.new(id: symbol_id("'\\n'", kind: :char), alias_name: nil, token_id: 10, number: 162, term: true)
 
         expect(sym1.comment).to eq("\"backslash\"")
         expect(sym2.comment).to eq("'.'")
@@ -89,9 +110,9 @@ RSpec.describe Lrama::Grammar::Symbol do
     end
 
     describe "symbol includes $ or @" do
-      it "returns s_value" do
-        sym1 = described_class.new(id: token_class::Ident.new(s_value: "$@1"), token_id: -1, number: 165, term: false)
-        sym2 = described_class.new(id: token_class::Ident.new(s_value: "@2"), token_id: -1, number: 166, term: false)
+      it "returns name" do
+        sym1 = described_class.new(id: symbol_id("$@1"), token_id: -1, number: 165, term: false)
+        sym2 = described_class.new(id: symbol_id("@2"), token_id: -1, number: 166, term: false)
 
         expect(sym1.comment).to eq("$@1")
         expect(sym2.comment).to eq("@2")
@@ -99,9 +120,9 @@ RSpec.describe Lrama::Grammar::Symbol do
     end
 
     describe "symbol's token_id is greater than 127" do
-      it "returns alias_name or s_value" do
-        sym1 = described_class.new(id: token_class::Ident.new(s_value: "keyword_class"), alias_name: "\"`class'\"", token_id: 258, number: 3, term: true)
-        sym2 = described_class.new(id: token_class::Ident.new(s_value: "top_compstmt"), token_id: 166, number: -1, term: false)
+      it "returns alias_name or name" do
+        sym1 = described_class.new(id: symbol_id("keyword_class"), alias_name: "\"`class'\"", token_id: 258, number: 3, term: true)
+        sym2 = described_class.new(id: symbol_id("top_compstmt"), token_id: 166, number: -1, term: false)
 
         expect(sym1.comment).to eq("\"`class'\"")
         expect(sym2.comment).to eq("top_compstmt")

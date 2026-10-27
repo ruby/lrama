@@ -3,6 +3,7 @@
 module Lrama
   class Grammar
     # _rhs holds original RHS element. Use rhs to refer to Symbol.
+    # _rhs_locations holds the source location of each corresponding _rhs ID.
     class Rule
       interface _DelegatedMethods
         def lhs: () -> Grammar::Symbol
@@ -12,13 +13,13 @@ module Lrama
 
       attr_accessor id: Integer
 
-      attr_accessor _lhs: Lexer::Token::Base
+      attr_accessor _lhs: Grammar::Symbol::Id
 
       attr_accessor lhs: Grammar::Symbol
 
       attr_accessor lhs_tag: Lexer::Token::Tag?
 
-      attr_accessor _rhs: Array[Lexer::Token::Base]
+      attr_accessor _rhs: Array[Grammar::Symbol::Id]
 
       attr_accessor rhs: Array[Grammar::Symbol]
 
@@ -32,7 +33,11 @@ module Lrama
 
       attr_accessor lineno: Integer?
 
-      def initialize: (?id: Integer, ?_lhs: Lexer::Token::Base?, ?lhs: Lexer::Token::Base, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Lexer::Token::Base], ?rhs: Array[Grammar::Symbol], ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool, ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?) -> void
+      attr_accessor _lhs_location: Lexer::Location?
+
+      attr_accessor _rhs_locations: Array[Lexer::Location?]?
+
+      def initialize: (?id: Integer, ?_lhs: Grammar::Symbol::Id?, ?lhs: Lexer::Token::Base, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Grammar::Symbol::Id], ?rhs: Array[Grammar::Symbol], ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool, ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?, ?_lhs_location: Lexer::Location?, ?_rhs_locations: Array[Lexer::Location?]?) -> void
 
       attr_accessor original_rule: Rule
 

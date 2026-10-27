@@ -99,7 +99,8 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     describe "@user_code" do
       let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
-      let(:sym) { Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: "tPLUS"), term: true) }
+      let(:sym_id) { Lrama::Grammar::Symbol::Id.new(name: "tPLUS", kind: :ident) }
+      let(:sym) { Lrama::Grammar::Symbol.new(id: sym_id, term: true) }
 
       context "@user_code is not nil" do
         it "sets @user_code to be nil and add previous user_code to rhs" do
@@ -473,15 +474,15 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.setup_rules
 
       rules = rule_builder.rules
-      midrule_1 = rules.find {|rule| rule._lhs.s_value == "@1"}
-      midrule_2 = rules.find {|rule| rule._lhs.s_value == "$@2"}
-      rule = rules.find {|rule| rule._lhs.s_value == "class"}
+      midrule_1 = rules.find {|rule| rule._lhs.name == "@1"}
+      midrule_2 = rules.find {|rule| rule._lhs.name == "$@2"}
+      rule = rules.find {|rule| rule._lhs.name == "class"}
 
       expect(rules.count).to eq 3
-      expect(midrule_1._lhs.s_value).to eq '@1'
+      expect(midrule_1._lhs.name).to eq '@1'
       expect(midrule_1.token_code.s_value).to eq '$1'
       expect(midrule_1.original_rule).to eq rule
-      expect(midrule_2._lhs.s_value).to eq '$@2'
+      expect(midrule_2._lhs.name).to eq '$@2'
       expect(midrule_2.token_code.s_value).to eq '$2 + $3'
       expect(midrule_2.original_rule).to eq rule
     end

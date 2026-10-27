@@ -118,7 +118,11 @@ module Lrama
         return if has_inline_rules?
 
         rule = Rule.new(
-          id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
+          id: @rule_counter.increment,
+          _lhs: lhs && Grammar::Symbol::Id.from_token(lhs),
+          _rhs: tokens.map { |token| Grammar::Symbol::Id.from_token(token) },
+          _lhs_location: lhs&.location, _rhs_locations: tokens.map(&:location),
+          lhs_tag: lhs_tag, token_code: user_code,
           position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
         )
         @rules = [rule]

@@ -1713,19 +1713,19 @@ yybackup:
       yychar = yylex <%= output.yylex_formals %>;
     }
 
-  if (yychar <= <%= output.eof_symbol.id.s_value %>)
+  if (yychar <= <%= output.eof_symbol.name %>)
     {
-      yychar = <%= output.eof_symbol.id.s_value %>;
+      yychar = <%= output.eof_symbol.name %>;
       yytoken = <%= output.eof_symbol.enum_name %>;
       YYDPRINTF ((stderr, "Now at end of input.\n"));
     }
-  else if (yychar == <%= output.error_symbol.id.s_value %>)
+  else if (yychar == <%= output.error_symbol.name %>)
     {
       /* The scanner already issued an error message, process directly
          to error recovery.  But do not keep the error token as
          lookahead, it is too special and may lead us to an endless
          loop in error recovery. */
-      yychar = <%= output.undef_symbol.id.s_value %>;
+      yychar = <%= output.undef_symbol.name %>;
       yytoken = <%= output.error_symbol.enum_name %>;
       yyerror_range[1] = yylloc;
       goto yyerrlab1;
@@ -1891,10 +1891,10 @@ yyerrlab:
       /* If just tried and failed to reuse lookahead token after an
          error, discard it.  */
 
-      if (yychar <= <%= output.eof_symbol.id.s_value %>)
+      if (yychar <= <%= output.eof_symbol.name %>)
         {
           /* Return failure if at end of input.  */
-          if (yychar == <%= output.eof_symbol.id.s_value %>)
+          if (yychar == <%= output.eof_symbol.name %>)
             YYABORT;
         }
       else

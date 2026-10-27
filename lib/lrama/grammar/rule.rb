@@ -4,7 +4,8 @@
 module Lrama
   class Grammar
     # _rhs holds original RHS element. Use rhs to refer to Symbol.
-    class Rule < Struct.new(:id, :_lhs, :lhs, :lhs_tag, :_rhs, :rhs, :token_code, :position_in_original_rule_rhs, :nullable, :precedence_sym, :lineno, keyword_init: true)
+    # _rhs_locations holds the source location of each corresponding _rhs ID.
+    class Rule < Struct.new(:id, :_lhs, :lhs, :lhs_tag, :_rhs, :rhs, :token_code, :position_in_original_rule_rhs, :nullable, :precedence_sym, :lineno, :_lhs_location, :_rhs_locations, keyword_init: true)
       # @rbs!
       #
       #   interface _DelegatedMethods
@@ -13,21 +14,23 @@ module Lrama
       #   end
       #
       #   attr_accessor id: Integer
-      #   attr_accessor _lhs: Lexer::Token::Base
+      #   attr_accessor _lhs: Grammar::Symbol::Id
       #   attr_accessor lhs: Grammar::Symbol
       #   attr_accessor lhs_tag: Lexer::Token::Tag?
-      #   attr_accessor _rhs: Array[Lexer::Token::Base]
+      #   attr_accessor _rhs: Array[Grammar::Symbol::Id]
       #   attr_accessor rhs: Array[Grammar::Symbol]
       #   attr_accessor token_code: Lexer::Token::UserCode?
       #   attr_accessor position_in_original_rule_rhs: Integer
       #   attr_accessor nullable: bool
       #   attr_accessor precedence_sym: Grammar::Symbol?
       #   attr_accessor lineno: Integer?
+      #   attr_accessor _lhs_location: Lexer::Location?
+      #   attr_accessor _rhs_locations: Array[Lexer::Location?]?
       #
       #   def initialize: (
-      #     ?id: Integer, ?_lhs: Lexer::Token::Base?, ?lhs: Lexer::Token::Base, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Lexer::Token::Base], ?rhs: Array[Grammar::Symbol],
+      #     ?id: Integer, ?_lhs: Grammar::Symbol::Id?, ?lhs: Lexer::Token::Base, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Grammar::Symbol::Id], ?rhs: Array[Grammar::Symbol],
       #     ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool,
-      #     ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?
+      #     ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?, ?_lhs_location: Lexer::Location?, ?_rhs_locations: Array[Lexer::Location?]?
       #   ) -> void
 
       attr_accessor :original_rule #: Rule
@@ -47,16 +50,16 @@ module Lrama
 
       # @rbs () -> String
       def display_name
-        l = lhs.id.s_value
-        r = empty_rule? ? "ε" : rhs.map {|r| r.id.s_value }.join(" ")
+        l = lhs.name
+        r = empty_rule? ? "ε" : rhs.map(&:name).join(" ")
         "#{l} -> #{r}"
       end
 
       # @rbs () -> String
       def display_name_without_action
-        l = lhs.id.s_value
+        l = lhs.name
         r = empty_rule? ? "ε" : rhs.map do |r|
-          r.id.s_value if r.first_set.any?
+          r.name if r.first_set.any?
         end.compact.join(" ")
 
         "#{l} -> #{r}"
@@ -75,7 +78,7 @@ module Lrama
       #
       # @rbs () -> String
       def as_comment
-        l = lhs.id.s_value
+        l = lhs.name
         r = empty_rule? ? "%empty" : rhs.map(&:display_name).join(" ")
 
         "#{l}: #{r}"
@@ -124,9 +127,9 @@ module Lrama
       def rhs_to_diagram
         rhs.map do |r|
           if r.term
-            RailroadDiagrams::Terminal.new(r.id.s_value)
+            RailroadDiagrams::Terminal.new(r.name)
           else
-            RailroadDiagrams::NonTerminal.new(r.id.s_value)
+            RailroadDiagrams::NonTerminal.new(r.name)
           end
         end
       end

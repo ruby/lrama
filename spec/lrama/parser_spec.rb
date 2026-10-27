@@ -160,6 +160,27 @@ RSpec.describe Lrama::Parser do
       expect(grammar.find_symbol_by_s_value!(%q('\x41')).token_id).to eq(300)
     end
 
+    it 'rejects a non-ASCII character literal at its source location' do
+      y = "%%\nstart: '🦙';\n"
+
+      expect { Lrama::Parser.new(y, "character.y").parse }
+        .to raise_error(ParseError, /character\.y:2:7: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
+    end
+
+    it 'rejects a non-ASCII character literal in a token declaration' do
+      y = "%token '🦙'\n%%\nstart: 'a';\n"
+
+      expect { Lrama::Parser.new(y, "character.y").parse }
+        .to raise_error(ParseError, /character\.y:1:7: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
+    end
+
+    it 'rejects a non-ASCII character literal in a parameterized rule argument' do
+      y = "%rule wrap(X): X;\n%%\nstart: wrap('🦙');\n"
+
+      expect { Lrama::Parser.new(y, "character.y").parse }
+        .to raise_error(ParseError, /character\.y:3:12: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
+    end
+
     [%q('\0'), %q('\00'), %q('\000'), %q('\x00'), %q('\u0000'),
      %q('\400'), %q('\777'), %q('\x100'), %q('\U00000100')].each do |literal|
       it "rejects an out-of-range character code in #{literal.inspect}" do
@@ -201,7 +222,7 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: T::Ident.new(s_value: "program"), alias_name: nil, number: 7, tag: nil, term: false, token_id: 1, nullable: false),
         Sym.new(id: T::Ident.new(s_value: "expr"), alias_name: nil, number: 8, tag: T::Tag.new(s_value: "<val>"), term: false, token_id: 2, nullable: false),
       ])
-      expect(grammar.terms.find {|t| t.id.s_value == "NUMBER" }.tag).to eq(T::Tag.new(s_value: "<val>"))
+      expect(grammar.terms.find {|t| t.id.name == "NUMBER" }.tag).to eq(T::Tag.new(s_value: "<val>"))
     end
 
     it "basic" do
@@ -271,7 +292,8 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: T::Ident.new(s_value: "string"),    alias_name: nil, number: 30, tag: nil,                                 term: false, token_id: 11, nullable: false, precedence: nil, printer: nil),
         Sym.new(id: T::Ident.new(s_value: "unused"),    alias_name: nil, number: 31, tag: nil,                                 term: false, token_id: 12, nullable: false, precedence: nil, printer: nil),
       ])
-      expect(grammar.types).to eq([Type.new(id: T::Ident.new(s_value: "class"), tag: T::Tag.new(s_value: "<i>"))])
+      id = Lrama::Grammar::Symbol::Id.new(name: "class", kind: :ident)
+      expect(grammar.types).to eq([Type.new(id: id, tag: T::Tag.new(s_value: "<i>"))])
       _rules = grammar.rule_builders.map {|b| [b.lhs, rule_builder_rhs_values(b), b.line] }
       expect(_rules).to eq([
         [
@@ -1115,7 +1137,7 @@ RSpec.describe Lrama::Parser do
 
             it "expands suffixes in every argument position and in rule definitions" do
               triple = "triple_#{name}_A_#{name}_B_#{name}_'c'"
-              expect(grammar.rules.map { |rule| [rule.lhs.id.s_value, rule.rhs.map { |sym| sym.id.s_value }] }).to include(
+              expect(grammar.rules.map { |rule| [rule.lhs.id.name, rule.rhs.map { |sym| sym.id.name }] }).to include(
                 [triple, ["#{name}_A", "#{name}_B", "#{name}_'c'"]],
                 ["wrapped_A", [triple]],
                 ["program", [triple, "wrapped_A"]]
@@ -1137,7 +1159,7 @@ RSpec.describe Lrama::Parser do
           let(:y) { "%token A\n%%\nprogram: list(A?);\n" }
 
           it "expands list(A?) as list(option(A))" do
-            expect(grammar.rules.map { |rule| [rule.lhs.id.s_value, rule.rhs.map { |sym| sym.id.s_value }] }).to eq([
+            expect(grammar.rules.map { |rule| [rule.lhs.id.name, rule.rhs.map { |sym| sym.id.name }] }).to eq([
               ["$accept", ["program", "YYEOF"]],
               ["list_option_A", []],
               ["option_A", []],
@@ -4935,7 +4957,7 @@ RSpec.describe Lrama::Parser do
       grammar.prepare
       grammar.validate!
       terms = grammar.terms.sort_by(&:number).map do |term|
-        [term.id.s_value, term.token_id]
+        [term.id.name, term.token_id]
       end
 
       expect(terms).to eq([

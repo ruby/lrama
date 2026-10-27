@@ -113,7 +113,7 @@ module Lrama
 
       # @rbs () -> String
       def to_s
-        "State: #{@state.id}, Token: #{@token.id.s_value}, Actions: #{actions_to_s}, Contributions: #{contribution_matrix_to_s}"
+        "State: #{@state.id}, Token: #{@token.name}, Actions: #{actions_to_s}, Contributions: #{contribution_matrix_to_s}"
       end
 
       private

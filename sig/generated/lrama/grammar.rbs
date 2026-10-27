@@ -236,6 +236,12 @@ module Lrama
 
     private
 
+    # @rbs (Node::Base node) -> void
+    def validate_character_literals_in: (Node::Base node) -> void
+
+    # @rbs (Lexer::Token::Base token) -> void
+    def validate_character_token!: (Lexer::Token::Base token) -> void
+
     # @rbs () -> void
     def _evaluate_nodes: () -> void
 

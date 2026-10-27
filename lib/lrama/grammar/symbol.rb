@@ -9,7 +9,51 @@
 module Lrama
   class Grammar
     class Symbol
-      attr_accessor :id #: Lexer::Token::Base
+      class Id
+        attr_reader :name #: String
+        attr_reader :kind #: :ident | :char | :string
+
+        # @rbs (name: String, kind: :ident | :char | :string) -> void
+        def initialize(name:, kind:)
+          @name = name
+          @kind = kind
+        end
+
+        # @rbs (Lexer::Token::Base token) -> Id
+        def self.from_token(token)
+          # @type var kind: :ident | :char | :string
+          kind =
+            case token
+            when Lexer::Token::Ident
+              :ident
+            when Lexer::Token::Char
+              :char
+            when Lexer::Token::Str
+              :string
+            else
+              raise "Unexpected symbol token: #{token.class}"
+            end
+
+          new(name: token.s_value, kind: kind)
+        end
+
+        # @rbs (Id other) -> bool
+        def ==(other)
+          self.class == other.class && kind == other.kind && name == other.name
+        end
+
+        # @rbs () -> bool
+        def char?
+          kind == :char
+        end
+
+        # @rbs () -> bool
+        def ident?
+          kind == :ident
+        end
+      end
+
+      attr_accessor :id #: Id
       attr_accessor :alias_name #: String?
       attr_reader :number #: Integer
       attr_accessor :number_bitmap #: Bitmap::bitmap
@@ -28,7 +72,7 @@ module Lrama
       attr_writer :undef_symbol #: bool
       attr_writer :accept_symbol #: bool
 
-      # @rbs (id: Lexer::Token::Base, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token::Tag?,
+      # @rbs (id: Id, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token::Tag?,
       #      ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
       def initialize(id:, term:, alias_name: nil, number: nil, tag: nil, token_id: nil, nullable: nil, precedence: nil, printer: nil, destructor: nil)
         @id = id
@@ -60,6 +104,11 @@ module Lrama
       end
 
       # @rbs () -> bool
+      def character?
+        term? && id.char?
+      end
+
+      # @rbs () -> bool
       def eof_symbol?
         !!@eof_symbol
       end
@@ -88,7 +137,7 @@ module Lrama
 
       # @rbs () -> String
       def name
-        id.s_value
+        id.name
       end
 
       # @rbs () -> String
@@ -107,9 +156,9 @@ module Lrama
           res = "YYACCEPT"
         when eof_symbol?
           res = "YYEOF"
-        when term? && (id.is_a?(Lrama::Lexer::Token::Char) || name.start_with?('"'))
+        when character? || (term? && id.kind == :string)
           res = number.to_s + display_name
-        when term? && id.is_a?(Lrama::Lexer::Token::Ident)
+        when term? && id.ident?
           res = name
         when midrule?
           res = number.to_s + name

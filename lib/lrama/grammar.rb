@@ -105,7 +105,7 @@ module Lrama
     attr_accessor :nodes #: Array[Node::Base]
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term, :find_term_by_s_value,
-                                        :find_symbol_by_number!, :find_symbol_by_id!, :token_to_symbol,
+                                        :find_symbol_by_number!, :find_symbol_by_id!,
                                         :find_symbol_by_s_value!, :fill_symbol_number, :fill_nterm_type,
                                         :fill_printer, :fill_destructor, :fill_error_token, :sort_by_number!
 
@@ -174,7 +174,7 @@ module Lrama
 
     # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag?) -> Array[Type]
     def add_type(id:, tag:)
-      @types << Type.new(id: id, tag: tag)
+      @types << Type.new(id: Grammar::Symbol::Id.from_token(id), tag: tag)
     end
 
     # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
@@ -301,12 +301,12 @@ module Lrama
 
     # @rbs (String s_value) -> Array[Rule]
     def select_rules_by_s_value(s_value)
-      @rules.select {|rule| rule.lhs.id.s_value == s_value }
+      @rules.select {|rule| rule.lhs.name == s_value }
     end
 
     # @rbs () -> Array[String]
     def unique_rule_s_values
-      @rules.map {|rule| rule.lhs.id.s_value }.uniq
+      @rules.map {|rule| rule.lhs.name }.uniq
     end
 
     # @rbs () -> bool
@@ -316,9 +316,43 @@ module Lrama
 
     private
 
+    # @rbs (Node::Base node) -> void
+    def validate_character_literals_in(node)
+      case node
+      when Node::TokenDecl, Node::PrecedenceDecl
+        node.tokens.each { |token| validate_character_literals_in(token) }
+      when Node::TypeDecl, Node::NtermDecl
+        node.symbols.each { |symbol| validate_character_literals_in(symbol) }
+      when Node::Rule
+        node.rhs.each { |rhs_node| validate_character_literals_in(rhs_node) }
+      when Node::ParameterizedRule
+        node.rhs_list.each do |rhs|
+          rhs.each { |rhs_node| validate_character_literals_in(rhs_node) }
+        end
+      when Node::Token, Node::Symbol
+        validate_character_token!(node.id)
+      when Node::RuleRhs::Symbol, Node::RuleRhs::Prec
+        validate_character_token!(node.token)
+      when Node::RuleRhs::InstantiateRule
+        node.args.each { |arg| validate_character_literals_in(arg) }
+      end
+    end
+
+    # @rbs (Lexer::Token::Base token) -> void
+    def validate_character_token!(token)
+      return unless token.is_a?(Lexer::Token::Char)
+
+      token.validate
+      return if token.errors.empty?
+
+      raise ParseError, token.location.generate_error_message(token.errors.join("\n"))
+    end
+
     # @rbs () -> void
     def _evaluate_nodes
       @nodes.each do |node|
+        validate_character_literals_in(node)
+
         case node
         when Node::DefineDecl
           self.define[node.variable] = node.value
@@ -385,7 +419,7 @@ module Lrama
           self.after_pop_stack = node.id
         when Node::TokenDecl
           node.tokens.each do |token|
-            add_term(id: token.id, alias_name: token.alias_name, token_id: token.token_id, tag: token.tag, replace: true)
+            add_term(id: Grammar::Symbol::Id.from_token(token.id), alias_name: token.alias_name, token_id: token.token_id, tag: token.tag, replace: true, location: token.id.location)
           end
         when Node::TypeDecl
           node.symbols.each do |sym|
@@ -401,7 +435,7 @@ module Lrama
           end
         when Node::PrecedenceDecl
           node.tokens.each do |token|
-            sym = add_term(id: token.id, tag: token.tag)
+            sym = add_term(id: Grammar::Symbol::Id.from_token(token.id), tag: token.tag, location: token.id.location)
 
             case node.type
             when :left
@@ -439,7 +473,7 @@ module Lrama
               user_code.tag = rhs_node.tag
               builder.user_code = user_code
             when Node::RuleRhs::Prec
-              sym = find_symbol_by_id!(rhs_node.token)
+              sym = find_symbol_by_id!(Grammar::Symbol::Id.from_token(rhs_node.token), location: rhs_node.location)
               builder.precedence_sym = sym
             else
               raise "Unknown Node: #{rhs_node}"
@@ -464,7 +498,7 @@ module Lrama
                 user_code.alias_name = rhs_node.alias_name
                 builder.user_code = user_code
               when Node::RuleRhs::Prec
-                sym = find_symbol_by_id!(rhs_node.token)
+                sym = find_symbol_by_id!(Grammar::Symbol::Id.from_token(rhs_node.token), location: rhs_node.location)
                 builder.precedence_sym = sym
               else
                 raise "Unknown Node: #{rhs_node}"
@@ -591,25 +625,25 @@ module Lrama
       # @empty_symbol = term
 
       # YYEOF
-      term = add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "YYEOF"), alias_name: "\"end of file\"", token_id: 0)
+      term = add_term(id: Grammar::Symbol::Id.new(name: "YYEOF", kind: :ident), alias_name: "\"end of file\"", token_id: 0)
       term.number = 0
       term.eof_symbol = true
       @eof_symbol = term
 
       # YYerror
-      term = add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "YYerror"), alias_name: "error")
+      term = add_term(id: Grammar::Symbol::Id.new(name: "YYerror", kind: :ident), alias_name: "error")
       term.number = 1
       term.error_symbol = true
       @error_symbol = term
 
       # YYUNDEF
-      term = add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "YYUNDEF"), alias_name: "\"invalid token\"")
+      term = add_term(id: Grammar::Symbol::Id.new(name: "YYUNDEF", kind: :ident), alias_name: "\"invalid token\"")
       term.number = 2
       term.undef_symbol = true
       @undef_symbol = term
 
       # $accept
-      term = add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "$accept"))
+      term = add_nterm(id: Grammar::Symbol::Id.new(name: "$accept", kind: :ident))
       term.accept_symbol = true
       @accept_symbol = term
     end
@@ -663,7 +697,7 @@ module Lrama
       setup_rules
       @rule_builders.each do |builder|
         builder.rules.each do |rule|
-          add_nterm(id: rule._lhs, tag: rule.lhs_tag)
+          add_nterm(id: rule._lhs, tag: rule.lhs_tag, location: rule._lhs_location)
           @rules << rule
         end
       end
@@ -676,12 +710,26 @@ module Lrama
     def add_accept_rule
       if @start_nterm
         start = @start_nterm #: Lrama::Lexer::Token::Base
-        @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [start, @eof_symbol.id], token_code: nil, lineno: start.line)
+        @rules << Rule.new(
+          id: @rule_counter.increment,
+          _lhs: @accept_symbol.id,
+          _rhs: [Grammar::Symbol::Id.from_token(start), @eof_symbol.id],
+          _rhs_locations: [start.location, nil],
+          token_code: nil,
+          lineno: start.line
+        )
       else
         rule_builder = @rule_builders.first #: RuleBuilder
         lineno = rule_builder ? rule_builder.line : 0
         lhs = rule_builder.lhs #: Lexer::Token::Base
-        @rules << Rule.new(id: @rule_counter.increment, _lhs: @accept_symbol.id, _rhs: [lhs, @eof_symbol.id], token_code: nil, lineno: lineno)
+        @rules << Rule.new(
+          id: @rule_counter.increment,
+          _lhs: @accept_symbol.id,
+          _rhs: [Grammar::Symbol::Id.from_token(lhs), @eof_symbol.id],
+          _rhs_locations: [lhs.location, nil],
+          token_code: nil,
+          lineno: lineno
+        )
       end
     end
 
@@ -691,10 +739,8 @@ module Lrama
     def collect_symbols
       @rules.flat_map(&:_rhs).each do |s|
         case s
-        when Lrama::Lexer::Token::Char
-          add_term(id: s)
-        when Lrama::Lexer::Token::Base
-          # skip
+        when Grammar::Symbol::Id
+          add_term(id: s) if s.char?
         else
           raise "Unknown class: #{s}"
         end
@@ -706,10 +752,10 @@ module Lrama
     # @rbs () -> void
     def set_lhs_and_rhs
       @rules.each do |rule|
-        rule.lhs = token_to_symbol(rule._lhs) if rule._lhs
+        rule.lhs = find_symbol_by_id!(rule._lhs, location: rule._lhs_location) if rule._lhs
 
-        rule.rhs = rule._rhs.map do |t|
-          token_to_symbol(t)
+        rule.rhs = rule._rhs.map.with_index do |t, index|
+          find_symbol_by_id!(t, location: rule._rhs_locations&.[](index))
         end
       end
     end
@@ -759,7 +805,7 @@ module Lrama
       nterms.each do |nterm|
         next if nterm.precedence.nil?
 
-        errors << "[BUG] Precedence #{nterm.name} (line: #{nterm.precedence.lineno}) is defined for nonterminal symbol (line: #{nterm.id.first_line}). Precedence can be defined for only terminal symbol."
+        errors << "[BUG] Precedence #{nterm.name} (line: #{nterm.precedence.lineno}) is defined for nonterminal symbol (line: #{@symbols_resolver.nterm_location(nterm)&.first_line}). Precedence can be defined for only terminal symbol."
       end
 
       return if errors.empty?
