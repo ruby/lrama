@@ -127,8 +127,8 @@ RSpec.describe Lrama::Parser do
       grammar.prepare
       grammar.validate!
 
-      expect(grammar.lex_param).to eq("struct context *ctx")
-      expect(grammar.parse_param).to eq("struct context *ctx")
+      expect(grammar.lex_params).to eq(["struct context *ctx"])
+      expect(grammar.parse_params).to eq(["struct context *ctx"])
     end
 
     it "no_union" do
@@ -191,8 +191,8 @@ RSpec.describe Lrama::Parser do
           lineno: 19
         ),
       ])
-      expect(grammar.lex_param).to eq("struct lex_params *p")
-      expect(grammar.parse_param).to eq("struct parse_params *p")
+      expect(grammar.lex_params).to eq(["struct lex_params *p"])
+      expect(grammar.parse_params).to eq(["struct parse_params *p"])
       expect(grammar.initial_action).to eq(Code::InitialActionCode.new(type: :initial_action, token_code: T::UserCode.new(s_value: "\n    initial_action_func(@$);\n")))
       expect(grammar.symbols.sort_by(&:number)).to match_symbols([
         Sym.new(id: T::Ident.new(s_value: "EOI"),            alias_name: "\"EOI\"",                  number:  0, tag: nil,                                   term: true, token_id:   0, nullable: false, precedence: nil,                                            printer: nil),

@@ -104,9 +104,9 @@ module Lrama
 
     attr_accessor error_tokens: Array[ErrorToken]
 
-    attr_accessor lex_param: String
+    attr_reader lex_params: Array[String]
 
-    attr_accessor parse_param: String
+    attr_reader parse_params: Array[String]
 
     attr_accessor initial_action: Grammar::Code::InitialActionCode
 
