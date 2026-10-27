@@ -29,6 +29,28 @@ RSpec.describe Lrama::Output do
   let(:grammar_file_path) { fixture_path("common/basic.y") }
   let(:header_file_path) { "y.tab.h" }
 
+  describe "#token_enums" do
+    let(:text) do
+      <<~GRAMMAR
+        %token A 300
+        %token B
+        %%
+        start: A B;
+      GRAMMAR
+    end
+
+    it "places commas between tokens even if their IDs are out of order" do
+      expect(output.token_enums.lines.map(&:strip)).to eq([
+        'YYEMPTY = -2,',
+        'YYEOF = 0,                     /* "end of file"  */',
+        'YYerror = 256,                 /* error  */',
+        'YYUNDEF = 257,                 /* "invalid token"  */',
+        'A = 300,                       /* A  */',
+        'B = 258                        /* B  */',
+      ])
+    end
+  end
+
   describe "#parse_param" do
     it "returns declaration of parse param without blanks" do
       allow(grammar).to receive(:parse_param).and_return("struct parser_params *p")
