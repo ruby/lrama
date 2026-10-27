@@ -294,17 +294,17 @@ RSpec.describe Lrama::Parser do
       ])
       id = Lrama::Grammar::Symbol::Id.new(name: "class", kind: :ident)
       expect(grammar.types).to eq([Type.new(id: id, tag: T::Tag.new(s_value: "<i>"))])
-      _rules = grammar.rule_builders.map {|b| [b.lhs, rule_builder_rhs_values(b), b.line] }
+      _rules = grammar.rule_builders.map {|b| [b.lhs.name, rule_builder_rhs_values(b), b.line] }
       expect(_rules).to eq([
         [
-          T::Ident.new(s_value: "program"),
+          "program",
           [
             T::Ident.new(s_value: "class"),
           ],
           58,
         ],
         [
-          T::Ident.new(s_value: "program"),
+          "program",
           [
             T::Char.new(s_value: "'+'"),
             T::Ident.new(s_value: "strings_1"),
@@ -312,7 +312,7 @@ RSpec.describe Lrama::Parser do
           59,
         ],
         [
-          T::Ident.new(s_value: "program"),
+          "program",
           [
             T::Char.new(s_value: "'-'"),
             T::Ident.new(s_value: "strings_2"),
@@ -320,7 +320,7 @@ RSpec.describe Lrama::Parser do
           60,
         ],
         [
-          T::Ident.new(s_value: "class"),
+          "class",
           [
             T::Ident.new(s_value: "keyword_class"),
             T::Ident.new(s_value: "tSTRING"),
@@ -331,7 +331,7 @@ RSpec.describe Lrama::Parser do
           63,
         ],
         [
-          T::Ident.new(s_value: "class"),
+          "class",
           [
             T::Ident.new(s_value: "keyword_class"),
             T::UserCode.new(s_value: " code 2 "),
@@ -344,7 +344,7 @@ RSpec.describe Lrama::Parser do
           65,
         ],
         [
-          T::Ident.new(s_value: "class"),
+          "class",
           [
             T::Ident.new(s_value: "keyword_class"),
             T::UserCode.new(s_value: " code 4 "),
@@ -357,35 +357,35 @@ RSpec.describe Lrama::Parser do
           66,
         ],
         [
-          T::Ident.new(s_value: "strings_1"),
+          "strings_1",
           [
             T::Ident.new(s_value: "string_1"),
           ],
           69,
         ],
         [
-          T::Ident.new(s_value: "strings_2"),
+          "strings_2",
           [
             T::Ident.new(s_value: "string_1"),
           ],
           72,
         ],
         [
-          T::Ident.new(s_value: "strings_2"),
+          "strings_2",
           [
             T::Ident.new(s_value: "string_2"),
           ],
           73,
         ],
         [
-          T::Ident.new(s_value: "string_1"),
+          "string_1",
           [
             T::Ident.new(s_value: "string"),
           ],
           76,
         ],
         [
-          T::Ident.new(s_value: "string_2"),
+          "string_2",
           [
             T::Ident.new(s_value: "string"),
             T::Char.new(s_value: "'+'"),
@@ -393,14 +393,14 @@ RSpec.describe Lrama::Parser do
           79,
         ],
         [
-          T::Ident.new(s_value: "string"),
+          "string",
           [
             T::Ident.new(s_value: "tSTRING")
           ],
           82,
         ],
         [
-          T::Ident.new(s_value: "unused"),
+          "unused",
           [
             T::Ident.new(s_value: "tNUMBER")
           ],
@@ -3757,17 +3757,17 @@ RSpec.describe Lrama::Parser do
       grammar.prepare
       grammar.validate!
 
-      _rules = grammar.rule_builders.map {|b| [b.lhs, rule_builder_rhs_values(b), b.line] }
+      _rules = grammar.rule_builders.map {|b| [b.lhs.name, rule_builder_rhs_values(b), b.line] }
       expect(_rules).to eq([
         [
-          T::Ident.new(s_value: "program"),
+          "program",
           [
             T::Ident.new(s_value: "class")
           ],
           29,
         ],
         [
-          T::Ident.new(s_value: "class"),
+          "class",
           [
             T::Ident.new(s_value: "keyword_class"),
             T::Ident.new(s_value: "tSTRING"),
@@ -3777,7 +3777,7 @@ RSpec.describe Lrama::Parser do
           31,
         ],
         [
-          T::Ident.new(s_value: "class"),
+          "class",
           [
             T::Ident.new(s_value: "error")
           ],
@@ -3816,17 +3816,17 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: T::Ident.new(s_value: "tEQ"),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2)),
         Sym.new(id: T::Ident.new(s_value: "tEQEQ"),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0)),
       ])
-      _rules = grammar.rule_builders.map {|b| [b.lhs, rule_builder_rhs_values(b), b.line] }
+      _rules = grammar.rule_builders.map {|b| [b.lhs.name, rule_builder_rhs_values(b), b.line] }
       expect(_rules).to eq([
         [
-          T::Ident.new(s_value: "program"),
+          "program",
           [
             T::Ident.new(s_value: "class")
           ],
           29,
         ],
         [
-          T::Ident.new(s_value: "class"),
+          "class",
           [
             T::Ident.new(s_value: "keyword_class"),
             T::Ident.new(s_value: "tSTRING"),
@@ -3836,7 +3836,7 @@ RSpec.describe Lrama::Parser do
           31,
         ],
         [
-          T::Ident.new(s_value: "class"),
+          "class",
           [
             T::Ident.new(s_value: "error")
           ],

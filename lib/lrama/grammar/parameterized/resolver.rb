@@ -6,7 +6,7 @@ module Lrama
     class Parameterized
       class Resolver
         attr_accessor :rules #: Array[Rule]
-        attr_accessor :created_lhs_list #: Array[Lexer::Token::Base]
+        attr_accessor :created_lhs_list #: Array[Grammar::Symbol::Id]
 
         # @rbs () -> void
         def initialize
@@ -29,9 +29,9 @@ module Lrama
           @rules.reverse.find { |rule| rule.name == node.name && rule.inline? }
         end
 
-        # @rbs (String lhs_s_value) -> Lexer::Token::Base?
+        # @rbs (String lhs_s_value) -> Grammar::Symbol::Id?
         def created_lhs(lhs_s_value)
-          @created_lhs_list.reverse.find { |created_lhs| created_lhs.s_value == lhs_s_value }
+          @created_lhs_list.reverse.find { |created_lhs| created_lhs.name == lhs_s_value }
         end
 
         # @rbs () -> Array[Rule]

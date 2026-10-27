@@ -454,8 +454,9 @@ module Lrama
           builder = create_rule_builder(@rule_counter, @midrule_action_counter)
           builder.line = (node.rhs.first || node).location.first_line
           lhs = node.id
-          lhs.alias_name = node.alias_name
-          builder.lhs = lhs
+          builder.lhs = Grammar::Symbol::Id.from_token(lhs)
+          builder.lhs_location = lhs.location
+          builder.lhs_alias_name = node.alias_name
 
           node.rhs.each do |rhs_node|
             case rhs_node
@@ -721,12 +722,12 @@ module Lrama
       else
         rule_builder = @rule_builders.first #: RuleBuilder
         lineno = rule_builder ? rule_builder.line : 0
-        lhs = rule_builder.lhs #: Lexer::Token::Base
+        lhs = rule_builder.lhs #: Grammar::Symbol::Id
         @rules << Rule.new(
           id: @rule_counter.increment,
           _lhs: @accept_symbol.id,
-          _rhs: [Grammar::Symbol::Id.from_token(lhs), @eof_symbol.id],
-          _rhs_locations: [lhs.location, nil],
+          _rhs: [lhs, @eof_symbol.id],
+          _rhs_locations: [rule_builder.lhs_location, nil],
           token_code: nil,
           lineno: lineno
         )

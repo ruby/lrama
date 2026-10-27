@@ -17,9 +17,15 @@ module Lrama
 
       @midrule_action_rules: Array[Rule]
 
-      @replaced_rhs: Array[Lexer::Token::Base]?
+      @replaced_rhs: Array[Grammar::Symbol::Id]?
 
-      attr_accessor lhs: Lexer::Token::Base?
+      @replaced_rhs_locations: Array[Lexer::Location?]?
+
+      attr_accessor lhs: Grammar::Symbol::Id?
+
+      attr_accessor lhs_location: Lexer::Location?
+
+      attr_accessor lhs_alias_name: String?
 
       attr_accessor line: Integer?
 
@@ -72,7 +78,7 @@ module Lrama
       # @rbs () -> void
       def build_rules: () -> void
 
-      # `#process_rhs` lowers RHS nodes to tokens so that all `@replaced_rhs` are `Ident` or `Char`.
+      # `#process_rhs` lowers RHS nodes to symbol IDs.
       #
       # @rbs () -> void
       def process_rhs: () -> void
@@ -83,8 +89,8 @@ module Lrama
       # @rbs () -> void
       def numberize_references: () -> void
 
-      # @rbs (Lexer::Token::Base? | Node::RuleRhs::rhs node, String name) -> bool
-      def rhs_node_referred_by?: (Lexer::Token::Base? | Node::RuleRhs::rhs node, String name) -> bool
+      # @rbs (Grammar::Symbol::Id? | Node::RuleRhs::rhs node, String name) -> bool
+      def rhs_node_referred_by?: (Grammar::Symbol::Id? | Node::RuleRhs::rhs node, String name) -> bool
 
       # @rbs (Node::RuleRhs::rhs node) -> void
       def mark_rhs_node_referred: (Node::RuleRhs::rhs node) -> void

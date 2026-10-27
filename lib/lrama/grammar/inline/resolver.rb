@@ -39,6 +39,8 @@ module Lrama
           )
           resolve_rhs(builder, rhs, index, node, rule)
           builder.lhs = @rule_builder.lhs
+          builder.lhs_location = @rule_builder.lhs_location
+          builder.lhs_alias_name = @rule_builder.lhs_alias_name
           builder.line = @rule_builder.line
           builder.precedence_sym = @rule_builder.precedence_sym
           builder.user_code = replace_user_code(rhs, index)
