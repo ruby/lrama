@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Grammar::Symbol do
-  def symbol_id(name, kind: :ident)
-    Lrama::Grammar::Symbol::Id.new(name: name, kind: kind)
-  end
-
   describe Lrama::Grammar::Symbol::Id do
     describe ".from_token" do
       it "raises an error for a token that cannot identify a symbol" do

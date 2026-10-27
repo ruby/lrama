@@ -3,10 +3,6 @@
 RSpec.describe Lrama::Grammar::Symbols::Resolver do
   let(:resolver) { Lrama::Grammar::Symbols::Resolver.new }
 
-  def symbol_id(name, kind: :ident)
-    Lrama::Grammar::Symbol::Id.new(name: name, kind: kind)
-  end
-
   describe "#symbols" do
     it "returns all symbols" do
       resolver.add_term(id: symbol_id("term"))

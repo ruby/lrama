@@ -4,10 +4,6 @@ RSpec.describe Lrama::Grammar do
   let(:rule_counter) { Lrama::Grammar::Counter.new(0) }
   let(:grammar) { described_class.new(rule_counter, false, {}) }
 
-  def symbol_id(name, kind: :ident)
-    Lrama::Grammar::Symbol::Id.new(name: name, kind: kind)
-  end
-
   describe '#set_start_nterm' do
     let(:grammar_file) { Lrama::Lexer::GrammarFile.new("test.y", "") }
 
