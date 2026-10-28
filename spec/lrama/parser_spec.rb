@@ -3696,6 +3696,25 @@ RSpec.describe Lrama::Parser do
         end
       end
 
+      it "preserves multibyte text when expanding and renumbering inline references" do
+        y = <<~'GRAMMAR'
+          %union { int i; }
+          %token <i> N
+          %type <i> expression
+          %rule %inline op : '+' '=' { /* 展開 */ 42 } ;
+          %%
+          expression : op N { /* 日本 */ $$ = f($1, $2, @2, $:2); } ;
+        GRAMMAR
+
+        grammar = Lrama::Parser.new(y, "parse.y").parse
+        grammar.prepare
+        grammar.validate!
+        rule = grammar.rules.last
+
+        expect(rule.token_code.s_value).to eq(" /* 日本 */ $$ = f( /* 展開 */ 42 , $3, @3, $:3); ")
+        expect(rule.translated_code(grammar)).to eq(" /* 日本 */ (yyval.i) = f( /* 展開 */ 42 , (yyvsp[0].i), (yylsp[0]), (0 - 1)); ")
+      end
+
       it "renumbers each positional reference once when expanding an inline rule" do
         y = <<~'GRAMMAR'
           %union { int i; }
@@ -4706,6 +4725,25 @@ RSpec.describe Lrama::Parser do
     end
 
     describe "error messages" do
+      it "locates invalid references after multibyte text on multiple lines" do
+        y = <<~'GRAMMAR'
+          %%
+          expr: 'a' {
+            /* 日本 */
+            puts("é🙂"); $missing;
+          };
+        GRAMMAR
+
+        expect do
+          grammar = Lrama::Parser.new(y, "parse.y").parse
+          grammar.prepare
+        end.to raise_error(<<~ERROR)
+          parse.y:4:14: Referring symbol `missing` is not found.
+             4 |   puts("é🙂"); $missing;
+               |               ^~~~~~~~
+        ERROR
+      end
+
       context "when the start symbol is not defined" do
         it "reports the symbol and its location" do
           y = <<~INPUT

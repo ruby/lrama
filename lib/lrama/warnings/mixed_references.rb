@@ -82,7 +82,7 @@ module Lrama
       def lhs_alias_reference?(ref, source)
         return false unless ref.name == "$"
 
-        lexeme = source.byteslice(ref.first_column...ref.last_column)
+        lexeme = source[ref.first_column...ref.last_column]
         return false if lexeme.nil?
 
         # Keep ignoring special LHS references ($$, $<tag>$), same as reference_to_c.
