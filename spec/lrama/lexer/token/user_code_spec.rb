@@ -59,6 +59,15 @@ RSpec.describe Lrama::Lexer::Token::UserCode do
       expect(references[0]).to eq Lrama::Grammar::Reference.new(type: :at, name: "expr.right", ex_tag: nil, first_column: 1, last_column: 14)
     end
 
+    it "uses character offsets after multibyte comments and literals" do
+      lexemes = %w[$$ $<long>$ $1 $<long>1 $foo $[expr.right] @$ @1 @foo @[expr.right] $:$ $:1 $:foo $:[expr.right]]
+      code = "/* 日本 */\nputs(\"é🙂\"); #{lexemes.join('; ')};"
+
+      references = described_class.new(s_value: code, location: location).references
+
+      expect(references.map { |ref| code[ref.first_column...ref.last_column] }).to eq(lexemes)
+    end
+
     it "ignores references in C literals and comments" do
       code = <<~'C'
         $1;

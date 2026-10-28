@@ -246,6 +246,23 @@ RSpec.describe Lrama::Grammar::Code do
     end
 
     describe "#translated_code" do
+      ["", " foo(); bar();"].each do |suffix|
+        it "preserves multibyte text when translating references with suffix #{suffix.inspect}" do
+          y = <<~GRAMMAR
+            %union { int i; }
+            %token <i> NUM
+            %type <i> expr
+            %%
+            expr: NUM { /* 日本語 */ $$ = $1;#{suffix} };
+          GRAMMAR
+          grammar = Lrama::Parser.new(y, "parse.y").parse
+          grammar.prepare
+          grammar.validate!
+
+          expect(grammar.rules.last.translated_code(grammar)).to eq(" /* 日本語 */ (yyval.i) = (yyvsp[0].i);#{suffix} ")
+        end
+      end
+
       it "translates '$$' to '(yyval)' with member" do
         code = grammar.rules.find {|r| r.lhs.id.s_value == "rule1" }
         expect(code.translated_code(grammar)).to eq(" (yyval.rule1) = 0; ")
