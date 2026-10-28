@@ -18,6 +18,35 @@ RSpec.describe Lrama::Context do
     expect(context.yytranslate[300]).to eq(grammar.find_symbol_by_s_value!(%q('\x41')).number)
   end
 
+  it 'keeps additional aliases as distinct anonymous tokens with valid enums' do
+    grammar = Lrama::Parser.new(<<~'GRAMMAR', "redeclared_alias.y").parse
+      %token <i> PLUS "+"
+      %token PLUS "-"
+      %token PLUS "*"
+      %%
+      start: PLUS "+" "-" "*";
+    GRAMMAR
+    grammar.prepare
+    grammar.validate!
+    states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+    states.compute
+    context = Lrama::Context.new(states)
+
+    plus, alias_plus, minus, star = grammar.rules.last.rhs
+    expect(plus.alias_name).to eq('"+"')
+    expect(plus.tag.s_value).to eq("<i>")
+    expect(alias_plus).to be(plus)
+    expect(minus).not_to be(plus)
+    expect(minus.tag).to be_nil
+    expect(minus.enum_name).to eq("YYSYMBOL_#{minus.number}_")
+    expect(context.yytranslate[minus.token_id]).to eq(minus.number)
+    expect(star).not_to be(minus)
+    expect(star.tag).to be_nil
+    expect(star.enum_name).to eq("YYSYMBOL_#{star.number}_")
+    expect(context.yytranslate[star.token_id]).to eq(star.number)
+    expect(context.yytokentype.map(&:first)).to eq(["YYEMPTY", "YYEOF", "YYerror", "YYUNDEF", "PLUS"])
+  end
+
   describe "basic" do
     it do
       path = "context/basic.y"
