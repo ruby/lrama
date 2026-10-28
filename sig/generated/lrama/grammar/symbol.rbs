@@ -73,6 +73,9 @@ module Lrama
       # @rbs () -> String
       def display_name: () -> String
 
+      # @rbs () -> bool
+      def c_identifier?: () -> bool
+
       # name for yysymbol_kind_t
       #
       # See: b4_symbol_kind_base

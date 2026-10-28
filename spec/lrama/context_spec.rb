@@ -18,6 +18,24 @@ RSpec.describe Lrama::Context do
     expect(context.yytranslate[300]).to eq(grammar.find_symbol_by_s_value!(%q('\x41')).number)
   end
 
+  it 'omits token names that are not C identifiers while preserving their translation' do
+    grammar = Lrama::Parser.new(<<~'GRAMMAR', "token_names.y").parse
+      %token my-tok 300 "hyphen" my_tok dot.tok .tok
+      %%
+      start: my-tok my_tok dot.tok .tok;
+    GRAMMAR
+    grammar.prepare
+    grammar.validate!
+    states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+    states.compute
+    context = Lrama::Context.new(states)
+
+    expect(context.yytokentype.map(&:first)).to eq(["YYEMPTY", "YYEOF", "YYerror", "YYUNDEF", "my_tok"])
+    grammar.rules.last.rhs.each do |symbol|
+      expect(context.yytranslate[symbol.token_id]).to eq(symbol.number)
+    end
+  end
+
   describe "basic" do
     it do
       path = "context/basic.y"

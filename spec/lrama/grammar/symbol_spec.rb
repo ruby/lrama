@@ -45,6 +45,27 @@ RSpec.describe Lrama::Grammar::Symbol do
       end
     end
 
+    describe "symbol name is not a C identifier" do
+      [true, false].each do |term|
+        it "distinguishes hyphens and periods from underscores for term=#{term}" do
+          names = ["foo-bar", "foo_bar", "foo.bar", ".foo"]
+          symbols = names.map.with_index do |name, index|
+            described_class.new(id: token_class::Ident.new(s_value: name), number: index + 3, term: term)
+          end
+
+          expect(symbols.map(&:enum_name)).to eq([
+            "YYSYMBOL_3_foo_bar", "YYSYMBOL_foo_bar", "YYSYMBOL_5_foo_bar", "YYSYMBOL_6_foo",
+          ])
+        end
+      end
+
+      it "uses the display name for an aliased token" do
+        sym = described_class.new(id: token_class::Ident.new(s_value: "my-tok"), alias_name: '"hyphen"', number: 3, term: true)
+
+        expect(sym.enum_name).to eq("YYSYMBOL_3_hyphen_")
+      end
+    end
+
     describe "symbol's token_id is greater than 127" do
       it "returns 'YYSYMBOL_number_ref" do
         sym1 = described_class.new(id: token_class::Ident.new(s_value: "keyword_class"), alias_name: "\"`class'\"", token_id: 258, number: 3, term: true)
