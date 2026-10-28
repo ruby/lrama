@@ -311,6 +311,59 @@ RSpec.describe Lrama::Grammar::Code do
         end
       end
 
+      context "$0 is used" do
+        [["STR", -1], ["%empty", 0]].each do |rhs, offset|
+          context "with #{rhs} on the right-hand side" do
+            let(:declarations) { "%union { int i; char *s; }\n%token <s> STR\n%type <i> expr" }
+            let(:action) { "$$ = $0;" }
+            let(:y) do
+              <<~GRAMMAR
+                #{declarations}
+                %%
+                expr: #{rhs} { #{action} };
+              GRAMMAR
+            end
+
+            it "requires an explicit tag when a union is defined" do
+              rule = grammar.rules.last
+              expect { rule.translated_code(grammar) }.to raise_error("Tag is not specified for '$0' in '#{rule.display_name}'")
+            end
+
+            context "with an explicit tag" do
+              let(:action) { "$$ = $<i>0;" }
+
+              it "uses the explicit tag" do
+                expect(grammar.rules.last.translated_code(grammar)).to eq(" (yyval.i) = (yyvsp[#{offset}].i); ")
+              end
+            end
+
+            context "without a union" do
+              let(:declarations) { "%token STR" }
+
+              it "uses the default semantic value type" do
+                expect(grammar.rules.last.translated_code(grammar)).to eq(" (yyval) = (yyvsp[#{offset}]); ")
+              end
+            end
+          end
+        end
+
+        context "in a midrule action" do
+          let(:y) do
+            <<~GRAMMAR
+              %union { int i; char *s; }
+              %token <s> STR
+              %%
+              expr: { $0; } STR;
+            GRAMMAR
+          end
+
+          it "does not infer the tag from a following symbol" do
+            rule = grammar.rules.find { |rule| rule.token_code }
+            expect { rule.translated_code(grammar) }.to raise_error("Tag is not specified for '$0' in '#{rule.display_name}'")
+          end
+        end
+      end
+
       context "$: is used" do
         it "translates '$:$' to '-yylen' and '$:n' to index from the last of array" do
           code = grammar.rules.find {|r| r.lhs.id.s_value == "rule9" }
