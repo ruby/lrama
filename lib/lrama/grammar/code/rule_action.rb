@@ -70,7 +70,7 @@ module Lrama
             raise "$:$ is not supported"
           when ref.type == :dollar # $n
             i = -position_in_rhs + ref.index
-            tag = ref.ex_tag || rhs[ref.index - 1].tag
+            tag = ref.ex_tag || (ref.index > 0 ? rhs[ref.index - 1].tag : nil)
             if tag
               # @type var tag: Lexer::Token::Tag
               "(yyvsp[#{i}].#{tag.member})"
