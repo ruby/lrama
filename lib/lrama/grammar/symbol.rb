@@ -96,6 +96,11 @@ module Lrama
         alias_name || name
       end
 
+      # @rbs () -> bool
+      def c_identifier?
+        name.match?(/\A[a-zA-Z_][a-zA-Z_0-9]*\z/)
+      end
+
       # name for yysymbol_kind_t
       #
       # See: b4_symbol_kind_base
@@ -107,16 +112,10 @@ module Lrama
           res = "YYACCEPT"
         when eof_symbol?
           res = "YYEOF"
-        when term? && id.is_a?(Lrama::Lexer::Token::Char)
-          res = number.to_s + display_name
-        when term? && id.is_a?(Lrama::Lexer::Token::Ident)
-          res = name
-        when midrule?
-          res = number.to_s + name
-        when nterm?
+        when c_identifier?
           res = name
         else
-          raise "Unexpected #{self}"
+          res = "#{number}-#{display_name}"
         end
 
         "YYSYMBOL_" + res.gsub(/\W+/, "_")
