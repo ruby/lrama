@@ -9,18 +9,33 @@ at_exit { FileUtils.rmtree(tmpdir) }
 require "simplecov"
 
 SimpleCov.start do
-  track_files "lib/**/*.rb"
+  if respond_to?(:cover)
+    cover "lib/**/*.rb"
+  else
+    track_files "lib/**/*.rb"
+  end
 
   # Created Groups based on the folder structures
-  add_group "Counterexamples", "lib/lrama/counterexamples"
-  add_group "Grammar",         "lib/lrama/grammar"
-  add_group "Lexer",           "lib/lrama/lexer"
-  add_group "Parser",          "lib/lrama/parser"
-  add_group "Report",          "lib/lrama/report"
-  add_group "State",           "lib/lrama/state/"
-  add_group "States",          "lib/lrama/states/"
+  coverage_groups = {
+    "Counterexamples" => "lib/lrama/counterexamples",
+    "Grammar" => "lib/lrama/grammar",
+    "Lexer" => "lib/lrama/lexer",
+    "Parser" => "lib/lrama/parser",
+    "Report" => "lib/lrama/report",
+    "State" => "lib/lrama/state/",
+    "States" => "lib/lrama/states/",
+  }
+  if respond_to?(:group)
+    coverage_groups.each { |name, path| group name, path }
+  else
+    coverage_groups.each { |name, path| add_group name, path }
+  end
 
-  add_filter "spec/"
+  if respond_to?(:skip)
+    skip "spec/"
+  else
+    add_filter "spec/"
+  end
 
   enable_coverage :branch
 end
