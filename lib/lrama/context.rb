@@ -25,7 +25,7 @@ module Lrama
 
     # enum yytokentype
     def yytokentype
-      @states.terms.reject { |term| term.character? || term.id.kind == :string }.map do |term|
+      @states.terms.select(&:c_identifier?).map do |term|
         [term.name, term.token_id, term.display_name]
       end.unshift(["YYEMPTY", -2, nil])
     end
