@@ -72,6 +72,15 @@ RSpec.describe Lrama::Lexer::Token::UserCode do
       end
     end
 
+    it "uses character offsets after multibyte comments and literals" do
+      lexemes = %w[$$ $<long>$ $1 $<long>1 $foo $[expr.right] @$ @1 @foo @[expr.right] $:$ $:1 $:foo $:[expr.right]]
+      code = "/* 日本 */\nputs(\"é🙂\"); #{lexemes.join('; ')};"
+
+      references = described_class.new(s_value: code, location: location).references
+
+      expect(references.map { |ref| code[ref.first_column...ref.last_column] }).to eq(lexemes)
+    end
+
     it "ignores references in C literals and comments" do
       code = <<~'C'
         $1;
