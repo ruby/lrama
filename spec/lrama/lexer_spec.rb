@@ -6,6 +6,54 @@ RSpec.describe Lrama::Lexer do
   let(:token_class) { Lrama::Lexer::Token }
 
   describe '#next_token' do
+    context 'identifier lookahead' do
+      it 'does not materialize the remaining input' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("large.y", "rule: TOKEN;\n" * 1_000)
+        lexer = Lrama::Lexer.new(grammar_file)
+
+        expect(lexer.instance_variable_get(:@scanner)).not_to receive(:rest)
+        expect(lexer.next_token).to eq([:IDENT_COLON, token_class::Ident.new(s_value: 'rule')])
+      end
+
+      it 'preserves token positions across comments and named references' do
+        grammar_file = Lrama::Lexer::GrammarFile.new("lookahead.y", <<~INPUT)
+          prefix
+          stmt /* 日本 */ [lhs]
+           // between
+           : VALUE[ref] next
+        INPUT
+        lexer = Lrama::Lexer.new(grammar_file)
+        tokens = []
+        while (token = lexer.next_token)
+          value = token[1]
+          tokens << [token[0], value.s_value, value.first_line, value.first_column, value.last_line, value.last_column]
+        end
+
+        expect(tokens).to eq([
+          [:IDENTIFIER, 'prefix', 1, 0, 1, 6],
+          [:IDENT_COLON, 'stmt', 2, 0, 2, 4],
+          ['[', '[', 2, 14, 2, 15],
+          [:IDENTIFIER, 'lhs', 2, 15, 2, 18],
+          [']', ']', 2, 18, 2, 19],
+          [':', ':', 4, 1, 4, 2],
+          [:IDENTIFIER, 'VALUE', 4, 3, 4, 8],
+          ['[', '[', 4, 8, 4, 9],
+          [:IDENTIFIER, 'ref', 4, 9, 4, 12],
+          [']', ']', 4, 12, 4, 13],
+          [:IDENTIFIER, 'next', 4, 14, 4, 18],
+        ])
+      end
+
+      it 'leaves incomplete named references for subsequent tokens' do
+        ['stmt [', 'stmt []:', 'stmt [lhs :', 'stmt [lhs] value'].each do |text|
+          lexer = Lrama::Lexer.new(Lrama::Lexer::GrammarFile.new("lookahead.y", text))
+
+          expect(lexer.next_token).to eq([:IDENTIFIER, token_class::Ident.new(s_value: 'stmt')])
+          expect(lexer.next_token).to eq(['[', token_class::Token.new(s_value: '[')])
+        end
+      end
+    end
+
     context 'directives' do
       %w(%tokens %token_extra %token.A %token-extra %expect0 %after-shift-error-tokens).each do |directive|
         it "rejects #{directive} instead of matching a directive prefix" do
