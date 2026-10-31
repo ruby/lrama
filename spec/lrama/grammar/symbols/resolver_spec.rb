@@ -207,6 +207,35 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
       resolver.fill_destructor([destructor])
       expect(term.destructor).to eq(destructor)
     end
+
+    [false, true].each do |tag_first|
+      it "prefers symbol destructors over tag destructors with tag_first=#{tag_first}" do
+        tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
+        term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"), tag: tag)
+        nterm = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"), tag: tag)
+        other = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "other"), tag: tag)
+        untyped = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "untyped"))
+        symbol_destructor = Lrama::Grammar::Destructor.new(
+          ident_or_tags: [term.id, nterm.id],
+          token_code: Lrama::Lexer::Token::UserCode.new(s_value: ""),
+          lineno: 1
+        )
+        tag_destructor = Lrama::Grammar::Destructor.new(
+          ident_or_tags: [tag],
+          token_code: Lrama::Lexer::Token::UserCode.new(s_value: "free($$);"),
+          lineno: 2
+        )
+        destructors = [symbol_destructor, tag_destructor]
+        destructors.reverse! if tag_first
+
+        resolver.fill_destructor(destructors)
+
+        expect(term.destructor).to eq(symbol_destructor)
+        expect(nterm.destructor).to eq(symbol_destructor)
+        expect(other.destructor).to eq(tag_destructor)
+        expect(untyped.destructor).to be_nil
+      end
+    end
   end
 
   describe "#fill_printer" do
