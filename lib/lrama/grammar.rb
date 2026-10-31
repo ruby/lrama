@@ -177,24 +177,24 @@ module Lrama
       @types << Type.new(id: Grammar::Symbol::Id.from_token(id), tag: tag)
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
-    def add_nonassoc(sym, precedence, s_value, lineno)
-      set_precedence(sym, Precedence.new(symbol: sym, s_value: s_value, type: :nonassoc, precedence: precedence, lineno: lineno))
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_nonassoc(sym, precedence, lineno)
+      set_precedence(sym, Precedence.new(symbol: sym, type: :nonassoc, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
-    def add_left(sym, precedence, s_value, lineno)
-      set_precedence(sym, Precedence.new(symbol: sym, s_value: s_value, type: :left, precedence: precedence, lineno: lineno))
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_left(sym, precedence, lineno)
+      set_precedence(sym, Precedence.new(symbol: sym, type: :left, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
-    def add_right(sym, precedence, s_value, lineno)
-      set_precedence(sym, Precedence.new(symbol: sym, s_value: s_value, type: :right, precedence: precedence, lineno: lineno))
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_right(sym, precedence, lineno)
+      set_precedence(sym, Precedence.new(symbol: sym, type: :right, precedence: precedence, lineno: lineno))
     end
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
-    def add_precedence(sym, precedence, s_value, lineno)
-      set_precedence(sym, Precedence.new(symbol: sym, s_value: s_value, type: :precedence, precedence: precedence, lineno: lineno))
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_precedence(sym, precedence, lineno)
+      set_precedence(sym, Precedence.new(symbol: sym, type: :precedence, precedence: precedence, lineno: lineno))
     end
 
     # @rbs (Lrama::Lexer::Token::Base id) -> Lrama::Lexer::Token::Base
@@ -439,13 +439,13 @@ module Lrama
 
             case node.type
             when :left
-              add_left(sym, node.number, token.id.s_value, token.loc.first_line)
+              add_left(sym, node.number, token.loc.first_line)
             when :right
-              add_right(sym, node.number, token.id.s_value, token.loc.first_line)
+              add_right(sym, node.number, token.loc.first_line)
             when :precedence
-              add_precedence(sym, node.number, token.id.s_value, token.loc.first_line)
+              add_precedence(sym, node.number, token.loc.first_line)
             when :nonassoc
-              add_nonassoc(sym, node.number, token.id.s_value, token.loc.first_line)
+              add_nonassoc(sym, node.number, token.loc.first_line)
             else
               raise "Unknown precedence type: #{node.type}, Node: #{node}"
             end
@@ -832,14 +832,14 @@ module Lrama
     # # @rbs () -> void
     def validate_duplicated_precedence!
       errors = [] #: Array[String]
-      seen = {} #: Hash[String, Precedence]
+      seen = {} #: Hash[Grammar::Symbol, Precedence]
 
       precedences.each do |prec|
-        s_value = prec.s_value
-        if first = seen[s_value]
-          errors << "%#{prec.type} redeclaration for #{s_value} (line: #{prec.lineno}) previous declaration was %#{first.type} (line: #{first.lineno})"
+        symbol = prec.symbol
+        if first = seen[symbol]
+          errors << "%#{prec.type} redeclaration for #{symbol.name} (line: #{prec.lineno}) previous declaration was %#{first.type} (line: #{first.lineno})"
         else
-          seen[s_value] = prec
+          seen[symbol] = prec
         end
       end
 

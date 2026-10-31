@@ -26,10 +26,10 @@ RSpec.describe Lrama::Grammar do
 
     context 'when all rules have valid precedence' do
       before do
-        term1 = grammar.add_term(id: symbol_id('expr'))
-        term2 = grammar.add_term(id: symbol_id('term'))
-        grammar.add_precedence(term1, 1, 'tNUMBER', 10)
-        grammar.add_precedence(term1, 1, 'tSTRING', 11)
+        number = grammar.add_term(id: symbol_id('tNUMBER'))
+        string = grammar.add_term(id: symbol_id('tSTRING'))
+        grammar.add_precedence(number, 1, 10)
+        grammar.add_precedence(string, 1, 11)
         grammar.fill_symbol_number
       end
 
@@ -42,7 +42,7 @@ RSpec.describe Lrama::Grammar do
       before do
         location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
         nterm = grammar.add_nterm(id: symbol_id('expression'), location: location)
-        grammar.add_precedence(nterm, 1, 'tNUMBER', 10)
+        grammar.add_precedence(nterm, 1, 10)
         grammar.fill_symbol_number
       end
 
@@ -58,8 +58,8 @@ RSpec.describe Lrama::Grammar do
         location2 = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 2, first_column: 0, last_line: 2, last_column: 9)
         nterm1 = grammar.add_nterm(id: symbol_id('expression'), location: location1)
         nterm2 = grammar.add_nterm(id: symbol_id('statement'), location: location2)
-        grammar.add_precedence(nterm1, 1, 'tNUMBER', 10)
-        grammar.add_precedence(nterm2, 2, 'tSTRING', 20)
+        grammar.add_precedence(nterm1, 1, 10)
+        grammar.add_precedence(nterm2, 2, 20)
         grammar.fill_symbol_number
       end
 
@@ -147,10 +147,12 @@ RSpec.describe Lrama::Grammar do
 
     context 'when there are no duplicates' do
       before do
-        term = grammar.add_term(id: symbol_id('expr'))
-        grammar.add_left(term, 0, "tSTRING", 7)
-        grammar.add_right(term, 1, "tNUMBER", 8)
-        grammar.add_nonassoc(term, 2, "tIDENT", 9)
+        string = grammar.add_term(id: symbol_id('tSTRING'))
+        number = grammar.add_term(id: symbol_id('tNUMBER'))
+        ident = grammar.add_term(id: symbol_id('tIDENT'))
+        grammar.add_left(string, 0, 7)
+        grammar.add_right(number, 1, 8)
+        grammar.add_nonassoc(ident, 2, 9)
         grammar.fill_symbol_number
       end
 
@@ -161,9 +163,9 @@ RSpec.describe Lrama::Grammar do
 
     context 'when there is one duplicate' do
       before do
-        term = grammar.add_term(id: symbol_id('expr'))
-        grammar.add_left(term, 0, "tSTRING", 7)
-        grammar.add_precedence(term, 1, "tSTRING", 8) # This is a duplicate
+        term = grammar.add_term(id: symbol_id('tSTRING'))
+        grammar.add_left(term, 0, 7)
+        grammar.add_precedence(term, 1, 8) # This is a duplicate
         grammar.fill_symbol_number
       end
 
@@ -177,10 +179,10 @@ RSpec.describe Lrama::Grammar do
 
     context 'when there are multiple duplicates of the same token' do
       before do
-        term = grammar.add_term(id: symbol_id('expr'))
-        grammar.add_left(term, 0, "tSTRING", 7)
-        grammar.add_precedence(term, 1, "tSTRING", 8)
-        grammar.add_nonassoc(term, 3, "tSTRING", 10)
+        term = grammar.add_term(id: symbol_id('tSTRING'))
+        grammar.add_left(term, 0, 7)
+        grammar.add_precedence(term, 1, 8)
+        grammar.add_nonassoc(term, 3, 10)
         grammar.fill_symbol_number
       end
 
@@ -197,11 +199,12 @@ RSpec.describe Lrama::Grammar do
 
     context 'when there are duplicates of different tokens' do
       before do
-        term = grammar.add_term(id: symbol_id('expr'))
-        grammar.add_left(term, 0, "tSTRING", 7)
-        grammar.add_precedence(term, 1, "tSTRING", 8)
-        grammar.add_left(term, 2, "tNUMBER", 9)
-        grammar.add_nonassoc(term, 3, "tNUMBER", 10)
+        string = grammar.add_term(id: symbol_id('tSTRING'))
+        number = grammar.add_term(id: symbol_id('tNUMBER'))
+        grammar.add_left(string, 0, 7)
+        grammar.add_precedence(string, 1, 8)
+        grammar.add_left(number, 2, 9)
+        grammar.add_nonassoc(number, 3, 10)
         grammar.fill_symbol_number
       end
 
@@ -217,13 +220,15 @@ RSpec.describe Lrama::Grammar do
 
     context 'when the same token appears multiple times with mixed duplicates and non-duplicates' do
       before do
-        term = grammar.add_term(id: symbol_id('expr'))
-        grammar.add_left(term, 0, "tSTRING", 7)
-        grammar.add_precedence(term, 1, "tSTRING", 8)
-        grammar.add_nonassoc(term, 2, "tSTRING", 10)
-        grammar.add_left(term, 3, "tNUMBER", 7)
-        grammar.add_nonassoc(term, 4, "tNUMBER", 10)
-        grammar.add_right(term, 5, "tIDENT", 9)
+        string = grammar.add_term(id: symbol_id('tSTRING'))
+        number = grammar.add_term(id: symbol_id('tNUMBER'))
+        ident = grammar.add_term(id: symbol_id('tIDENT'))
+        grammar.add_left(string, 0, 7)
+        grammar.add_precedence(string, 1, 8)
+        grammar.add_nonassoc(string, 2, 10)
+        grammar.add_left(number, 3, 7)
+        grammar.add_nonassoc(number, 4, 10)
+        grammar.add_right(ident, 5, 9)
         grammar.fill_symbol_number
       end
 
