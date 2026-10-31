@@ -16,9 +16,12 @@ module Lrama
       #   @rule_builders_for_derived_rules: Array[RuleBuilder]
       #   @parameterized_rules: Array[Rule]
       #   @midrule_action_rules: Array[Rule]
-      #   @replaced_rhs: Array[Lexer::Token::Base]?
+      #   @replaced_rhs: Array[Grammar::Symbol::Id]?
+      #   @replaced_rhs_locations: Array[Lexer::Location?]?
 
-      attr_accessor :lhs #: Lexer::Token::Base?
+      attr_accessor :lhs #: Grammar::Symbol::Id?
+      attr_accessor :lhs_location #: Lexer::Location?
+      attr_accessor :lhs_alias_name #: String?
       attr_accessor :line #: Integer?
       attr_reader :rule_counter #: Counter
       attr_reader :midrule_action_counter #: Counter
@@ -37,6 +40,8 @@ module Lrama
         @skip_preprocess_references = skip_preprocess_references
 
         @lhs = nil
+        @lhs_location = nil
+        @lhs_alias_name = nil
         @lhs_tag = lhs_tag
         @rhs = []
         @user_code = nil
@@ -114,11 +119,16 @@ module Lrama
 
       # @rbs () -> void
       def build_rules
-        tokens = @replaced_rhs #: Array[Lexer::Token::Base]
+        symbols = @replaced_rhs #: Array[Grammar::Symbol::Id]
+        locations = @replaced_rhs_locations #: Array[Lexer::Location?]
         return if has_inline_rules?
 
         rule = Rule.new(
-          id: @rule_counter.increment, _lhs: lhs, _rhs: tokens, lhs_tag: lhs_tag, token_code: user_code,
+          id: @rule_counter.increment,
+          _lhs: lhs,
+          _rhs: symbols,
+          _lhs_location: lhs_location, _rhs_locations: locations,
+          lhs_tag: lhs_tag, token_code: user_code,
           position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
         )
         @rules = [rule]
@@ -133,20 +143,22 @@ module Lrama
         end
       end
 
-      # `#process_rhs` lowers RHS nodes to tokens so that all `@replaced_rhs` are `Ident` or `Char`.
+      # `#process_rhs` lowers RHS nodes to symbol IDs.
       #
       # @rbs () -> void
       def process_rhs
         return if @replaced_rhs
 
-        replaced_rhs = [] #: Array[Lexer::Token::Base]
+        replaced_rhs = [] #: Array[Grammar::Symbol::Id]
+        replaced_rhs_locations = [] #: Array[Lexer::Location?]
 
         rhs.each_with_index do |node, i|
           case node
           when Node::RuleRhs::Symbol
             token = node.token
             token.alias_name = node.alias_name
-            replaced_rhs << token
+            replaced_rhs << Grammar::Symbol::Id.from_token(token)
+            replaced_rhs_locations << token.location
           when Node::RuleRhs::InstantiateRule
             parameterized_rule = @parameterized_resolver.find_rule(node)
             raise "Unexpected node. #{node}" unless parameterized_rule
@@ -156,12 +168,13 @@ module Lrama
             if (created_lhs = @parameterized_resolver.created_lhs(lhs_s_value))
               replaced_rhs << created_lhs
             else
-              lhs_token = Lrama::Lexer::Token::Ident.new(s_value: lhs_s_value, location: node.location)
-              replaced_rhs << lhs_token
-              @parameterized_resolver.created_lhs_list << lhs_token
+              lhs_id = Grammar::Symbol::Id.new(name: lhs_s_value, kind: :ident)
+              replaced_rhs << lhs_id
+              @parameterized_resolver.created_lhs_list << lhs_id
               parameterized_rule.rhs.each do |r|
                 rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: node.lhs_tag || parameterized_rule.tag)
-                rule_builder.lhs = lhs_token
+                rule_builder.lhs = lhs_id
+                rule_builder.lhs_location = node.location
                 r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
                 rule_builder.precedence_sym = r.precedence_sym
@@ -171,15 +184,17 @@ module Lrama
                 @rule_builders_for_parameterized << rule_builder
               end
             end
+            replaced_rhs_locations << node.location
           when Node::RuleRhs::Action
             token = node.code
             prefix = token.referred ? "@" : "$@"
             tag = node.tag || lhs_tag
-            new_token = Lrama::Lexer::Token::Ident.new(s_value: prefix + @midrule_action_counter.increment.to_s)
-            replaced_rhs << new_token
+            lhs_id = Grammar::Symbol::Id.new(name: prefix + @midrule_action_counter.increment.to_s, kind: :ident)
+            replaced_rhs << lhs_id
+            replaced_rhs_locations << nil
 
             rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, i, lhs_tag: tag, skip_preprocess_references: true)
-            rule_builder.lhs = new_token
+            rule_builder.lhs = lhs_id
             rule_builder.user_code = token
             rule_builder.complete_input
             rule_builder.setup_rules
@@ -193,6 +208,7 @@ module Lrama
         end
 
         @replaced_rhs = replaced_rhs
+        @replaced_rhs_locations = replaced_rhs_locations
       end
 
       # @rbs () -> void
@@ -261,11 +277,11 @@ module Lrama
         end
       end
 
-      # @rbs (Lexer::Token::Base? | Node::RuleRhs::rhs node, String name) -> bool
+      # @rbs (Grammar::Symbol::Id? | Node::RuleRhs::rhs node, String name) -> bool
       def rhs_node_referred_by?(node, name)
         case node
-        when Lexer::Token::Base
-          node.referred_by?(name)
+        when Grammar::Symbol::Id
+          [node.name, lhs_alias_name].compact.include?(name)
         when Node::RuleRhs::Symbol, Node::RuleRhs::InstantiateRule
           [node.name, node.alias_name].compact.include?(name)
         when Node::RuleRhs::Action

@@ -3,7 +3,28 @@
 module Lrama
   class Grammar
     class Symbol
-      attr_accessor id: Lexer::Token::Base
+      class Id
+        attr_reader name: String
+
+        attr_reader kind: :ident | :char | :string
+
+        # @rbs (name: String, kind: :ident | :char | :string) -> void
+        def initialize: (name: String, kind: :ident | :char | :string) -> void
+
+        # @rbs (Lexer::Token::Base token) -> Id
+        def self.from_token: (Lexer::Token::Base token) -> Id
+
+        # @rbs (Id other) -> bool
+        def ==: (Id other) -> bool
+
+        # @rbs () -> bool
+        def char?: () -> bool
+
+        # @rbs () -> bool
+        def ident?: () -> bool
+      end
+
+      attr_accessor id: Id
 
       attr_accessor alias_name: String?
 
@@ -39,9 +60,9 @@ module Lrama
 
       attr_writer accept_symbol: bool
 
-      # @rbs (id: Lexer::Token::Base, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token::Tag?,
+      # @rbs (id: Id, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token::Tag?,
       #      ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
-      def initialize: (id: Lexer::Token::Base, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
+      def initialize: (id: Id, term: bool, ?alias_name: String?, ?number: Integer?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?nullable: bool?, ?precedence: Precedence?, ?printer: Printer?) -> void
 
       # @rbs (Integer) -> void
       def number=: (Integer) -> void
@@ -51,6 +72,9 @@ module Lrama
 
       # @rbs () -> bool
       def nterm?: () -> bool
+
+      # @rbs () -> bool
+      def character?: () -> bool
 
       # @rbs () -> bool
       def eof_symbol?: () -> bool

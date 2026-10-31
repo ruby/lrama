@@ -94,7 +94,7 @@ module Lrama
 
       # @rbs () -> ::String
       def to_s
-        "#{lhs.id.s_value}: #{display_name}"
+        "#{lhs.name}: #{display_name}"
       end
 
       # @rbs () -> ::String

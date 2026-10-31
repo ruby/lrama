@@ -11,11 +11,10 @@ module Lrama
         #     def symbols: () -> Array[Grammar::Symbol]
         #     def nterms: () -> Array[Grammar::Symbol]
         #     def terms: () -> Array[Grammar::Symbol]
-        #     def add_nterm: (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
-        #     def add_term: (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
+        #     def add_nterm: (id: Grammar::Symbol::Id, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?location: Lexer::Location?) -> Grammar::Symbol
+        #     def add_term: (id: Grammar::Symbol::Id, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool, ?location: Lexer::Location?) -> Grammar::Symbol
         #     def find_symbol_by_number!: (Integer number) -> Grammar::Symbol
-        #     def find_symbol_by_id!: (Lexer::Token::Base id) -> Grammar::Symbol
-        #     def token_to_symbol: (Lexer::Token::Base token) -> Grammar::Symbol
+        #     def find_symbol_by_id!: (Grammar::Symbol::Id id, ?location: Lexer::Location?) -> Grammar::Symbol
         #     def find_term_by_s_value: (::String s_value) -> Grammar::Symbol?
         #     def find_symbol_by_s_value!: (::String s_value) -> Grammar::Symbol
         #     def fill_nterm_type: (Array[Grammar::Type] types) -> void
@@ -29,6 +28,7 @@ module Lrama
         #   @symbols: Array[Grammar::Symbol]?
         #   @number: Integer
         #   @used_numbers: Hash[Integer, bool]
+        #   @nterm_locations: Hash[Grammar::Symbol, Lexer::Location]
 
         attr_reader :terms #: Array[Grammar::Symbol]
         attr_reader :nterms #: Array[Grammar::Symbol]
@@ -37,6 +37,8 @@ module Lrama
         def initialize
           @terms = []
           @nterms = []
+          # A symbol's definition site is separate from its identity.
+          @nterm_locations = {}
         end
 
         # @rbs () -> Array[Grammar::Symbol]
@@ -49,8 +51,8 @@ module Lrama
           symbols.sort_by!(&:number)
         end
 
-        # @rbs (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool) -> Grammar::Symbol
-        def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false)
+        # @rbs (id: Grammar::Symbol::Id, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?token_id: Integer?, ?replace: bool, ?location: Lexer::Location?) -> Grammar::Symbol
+        def add_term(id:, alias_name: nil, tag: nil, token_id: nil, replace: false, location: nil)
           sym = find_symbol_by_id(id)
           if alias_name&.start_with?('"') && (!sym || !sym.alias_name) && (literal = find_term_by_s_value(alias_name))
             if sym || (token_id && find_symbol_by_token_id(token_id))
@@ -64,8 +66,8 @@ module Lrama
 
           if sym
             if tag && (previous_tag = sym.tag)
-              message = "%type redeclaration for #{id.s_value}"
-              message = id.location&.generate_error_message(message) || message
+              message = "%type redeclaration for #{id.name}"
+              message = location&.generate_error_message(message) || message
               if previous_tag.location
                 message += "\n" + previous_tag.location.generate_error_message("previous declaration")
               end
@@ -73,12 +75,12 @@ module Lrama
             end
 
             if token_id && sym.token_id && sym.token_id != token_id
-              message = "redefining code of token #{id.s_value}"
-              raise(id.location&.generate_error_message(message) || message)
+              message = "redefining code of token #{id.name}"
+              raise(location&.generate_error_message(message) || message)
             end
 
             if alias_name && sym.alias_name && sym.alias_name != alias_name
-              add_term(id: Lexer::Token::Str.new(s_value: alias_name, location: id.location))
+              add_term(id: Grammar::Symbol::Id.new(name: alias_name, kind: :string), location: location)
             end
             sym.alias_name ||= alias_name
             sym.tag ||= tag
@@ -105,9 +107,10 @@ module Lrama
           term
         end
 
-        # @rbs (id: Lexer::Token::Base, ?alias_name: String?, ?tag: Lexer::Token::Tag?) -> Grammar::Symbol
-        def add_nterm(id:, alias_name: nil, tag: nil)
+        # @rbs (id: Grammar::Symbol::Id, ?alias_name: String?, ?tag: Lexer::Token::Tag?, ?location: Lexer::Location?) -> Grammar::Symbol
+        def add_nterm(id:, alias_name: nil, tag: nil, location: nil)
           if (sym = find_symbol_by_id(id))
+            @nterm_locations[sym] ||= location if location
             return sym
           end
 
@@ -117,17 +120,23 @@ module Lrama
             term: false, token_id: nil, nullable: nil,
           )
           @nterms << nterm
+          @nterm_locations[nterm] = location if location
           nterm
+        end
+
+        # @rbs (Grammar::Symbol symbol) -> Lexer::Location?
+        def nterm_location(symbol)
+          @nterm_locations[symbol]
         end
 
         # @rbs (::String s_value) -> Grammar::Symbol?
         def find_term_by_s_value(s_value)
-          terms.find { |s| s.id.s_value == s_value }
+          terms.find { |s| s.name == s_value }
         end
 
         # @rbs (::String s_value) -> Grammar::Symbol?
         def find_symbol_by_s_value(s_value)
-          symbols.find { |s| s.id.s_value == s_value }
+          symbols.find { |s| s.name == s_value }
         end
 
         # @rbs (::String s_value) -> Grammar::Symbol
@@ -135,20 +144,20 @@ module Lrama
           find_symbol_by_s_value(s_value) || (raise "Symbol not found. value: `#{s_value}`")
         end
 
-        # @rbs (Lexer::Token::Base id) -> Grammar::Symbol?
+        # @rbs (Grammar::Symbol::Id id) -> Grammar::Symbol?
         def find_symbol_by_id(id)
           symbols.find do |s|
-            s.id == id || s.alias_name == id.s_value
+            s.id == id || s.alias_name == id.name
           end
         end
 
-        # @rbs (Lexer::Token::Base id) -> Grammar::Symbol
-        def find_symbol_by_id!(id)
+        # @rbs (Grammar::Symbol::Id id, ?location: Lexer::Location?) -> Grammar::Symbol
+        def find_symbol_by_id!(id, location: nil)
           symbol = find_symbol_by_id(id)
           return symbol if symbol
 
-          message = "symbol #{id.s_value} is used, but is not defined as a token and has no rules"
-          raise(id.location&.generate_error_message(message) || message)
+          message = "symbol #{id.name} is used, but is not defined as a token and has no rules"
+          raise(location&.generate_error_message(message) || message)
         end
 
         # @rbs (Integer token_id) -> Grammar::Symbol?
@@ -192,7 +201,7 @@ module Lrama
               printer.ident_or_tags.each do |ident_or_tag|
                 case ident_or_tag
                 when Lrama::Lexer::Token::Ident
-                  sym.printer = printer if sym.id == ident_or_tag
+                  sym.printer = printer if sym.id.ident? && sym.name == ident_or_tag.s_value
                 when Lrama::Lexer::Token::Tag
                   sym.printer = printer if sym.tag == ident_or_tag
                 else
@@ -210,7 +219,7 @@ module Lrama
               destructor.ident_or_tags.each do |ident_or_tag|
                 case ident_or_tag
                 when Lrama::Lexer::Token::Ident
-                  sym.destructor = destructor if sym.id == ident_or_tag
+                  sym.destructor = destructor if sym.id.ident? && sym.name == ident_or_tag.s_value
                 when Lrama::Lexer::Token::Tag
                   sym.destructor = destructor if sym.tag == ident_or_tag
                 else
@@ -228,7 +237,7 @@ module Lrama
               token.ident_or_tags.each do |ident_or_tag|
                 case ident_or_tag
                 when Lrama::Lexer::Token::Ident
-                  sym.error_token = token if sym.id == ident_or_tag
+                  sym.error_token = token if sym.id.ident? && sym.name == ident_or_tag.s_value
                 when Lrama::Lexer::Token::Tag
                   sym.error_token = token if sym.tag == ident_or_tag
                 else
@@ -239,26 +248,15 @@ module Lrama
           end
         end
 
-        # @rbs (Lexer::Token::Base token) -> Grammar::Symbol
-        def token_to_symbol(token)
-          case token
-          when Lrama::Lexer::Token::Base
-            find_symbol_by_id!(token)
-          else
-            raise "Unknown class: #{token}"
-          end
-        end
-
         # @rbs () -> void
         def validate!
           validate_number_uniqueness!
           validate_alias_name_uniqueness!
-          validate_symbols!
         end
 
         private
 
-        # @rbs (Lexer::Token::Base id) -> Grammar::Symbol
+        # @rbs (Grammar::Symbol::Id id) -> Grammar::Symbol
         def find_nterm_by_id!(id)
           @nterms.find do |s|
             s.id == id
@@ -283,10 +281,10 @@ module Lrama
               @number += 1
             end
 
-            if sym.id.is_a?(Lrama::Lexer::Token::Char)
+            if sym.character?
               # Ignore ' on both sides.
               code =
-                case sym.id.s_value[1..-2]
+                case sym.name[1..-2]
                 when "\\a"
                   7
                 when "\\b"
@@ -320,7 +318,7 @@ module Lrama
               raise "Unknown Char s_value #{sym}" unless code
 
               unless (1..255).cover?(code)
-                raise "Invalid character: `#{sym.id.s_value}`. Character code must be between 1 and 255."
+                raise "Invalid character: `#{sym.name}`. Character code must be between 1 and 255."
               end
 
               sym.token_id ||= code
@@ -384,15 +382,6 @@ module Lrama
           return if invalid.empty?
 
           raise "Symbol alias name is duplicated. #{invalid}"
-        end
-
-        # @rbs () -> void
-        def validate_symbols!
-          symbols.each { |sym| sym.id.validate }
-          errors = symbols.map { |sym| sym.id.errors }.flatten.compact
-          return if errors.empty?
-
-          raise errors.join("\n")
         end
       end
     end

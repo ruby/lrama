@@ -99,7 +99,8 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     describe "@user_code" do
       let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
       let(:token_1) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
-      let(:sym) { Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: "tPLUS"), term: true) }
+      let(:sym_id) { Lrama::Grammar::Symbol::Id.new(name: "tPLUS", kind: :ident) }
+      let(:sym) { Lrama::Grammar::Symbol.new(id: sym_id, term: true) }
 
       context "@user_code is not nil" do
         it "sets @user_code to be nil and add previous user_code to rhs" do
@@ -137,7 +138,8 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
       it "resolves index of references and fills its value with index" do
         # class : keyword_class tSTRING keyword_end { $class = $1 + $keyword_end; @class = @1 + @keyword_end; }
-        rule_builder.lhs = token_1
+        rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
+        rule_builder.lhs_location = token_1.location
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.add_rhs(symbol_node(token_3))
         rule_builder.add_rhs(symbol_node(token_4))
@@ -183,7 +185,8 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
       it "raises error" do
         # class : keyword_class tSTRING { $$ = $keyword_class + $2; @$ = @keyword_class + @2; } keyword_end
-        rule_builder.lhs = token_1
+        rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
+        rule_builder.lhs_location = token_1.location
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.add_rhs(symbol_node(token_3))
         rule_builder.user_code = token_4
@@ -235,7 +238,8 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: " $class = $10; ", location: location_5) }
 
       it "raises error" do
-        rule_builder.lhs = token_1
+        rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
+        rule_builder.lhs_location = token_1.location
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.add_rhs(symbol_node(token_3))
         rule_builder.add_rhs(symbol_node(token_4))
@@ -269,7 +273,8 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       let(:token_6) { Lrama::Lexer::Token::UserCode.new(s_value: " $class = $1; ", location: location_6) }
 
       it "raises error" do
-        rule_builder.lhs = token_1
+        rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
+        rule_builder.lhs_location = token_1.location
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.user_code = token_3
         rule_builder.add_rhs(symbol_node(token_4))
@@ -302,7 +307,8 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       let(:token_5) { Lrama::Lexer::Token::UserCode.new(s_value: " $classes = $1; ", location: location_5) }
 
       it "raises error" do
-        rule_builder.lhs = token_1
+        rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
+        rule_builder.lhs_location = token_1.location
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.add_rhs(symbol_node(token_3))
         rule_builder.add_rhs(symbol_node(token_4))
@@ -462,7 +468,8 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
 
     it "builds rules from midrule actions" do
       # class : keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
-      rule_builder.lhs = token_1
+      rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
+      rule_builder.lhs_location = token_1.location
       rule_builder.add_rhs(symbol_node(token_2))
       rule_builder.user_code = token_3
       rule_builder.add_rhs(symbol_node(token_4))
@@ -473,15 +480,15 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.setup_rules
 
       rules = rule_builder.rules
-      midrule_1 = rules.find {|rule| rule._lhs.s_value == "@1"}
-      midrule_2 = rules.find {|rule| rule._lhs.s_value == "$@2"}
-      rule = rules.find {|rule| rule._lhs.s_value == "class"}
+      midrule_1 = rules.find {|rule| rule._lhs.name == "@1"}
+      midrule_2 = rules.find {|rule| rule._lhs.name == "$@2"}
+      rule = rules.find {|rule| rule._lhs.name == "class"}
 
       expect(rules.count).to eq 3
-      expect(midrule_1._lhs.s_value).to eq '@1'
+      expect(midrule_1._lhs.name).to eq '@1'
       expect(midrule_1.token_code.s_value).to eq '$1'
       expect(midrule_1.original_rule).to eq rule
-      expect(midrule_2._lhs.s_value).to eq '$@2'
+      expect(midrule_2._lhs.name).to eq '$@2'
       expect(midrule_2.token_code.s_value).to eq '$2 + $3'
       expect(midrule_2.original_rule).to eq rule
     end
@@ -497,9 +504,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     let(:token_6) { Lrama::Lexer::Token::Ident.new(s_value: "keyword_end", location: location) }
     let(:token_7) { Lrama::Lexer::Token::UserCode.new(s_value: "$class = $1 + $keyword_end", location: location) }
 
-    it "is a token list whose user codes are replaced with @n token" do
+    it "is a symbol ID list whose user codes are replaced with @n symbols" do
       # class : keyword_class { $1 } tSTRING { $2 + $3 } keyword_end { $class = $1 + $keyword_end }
-      rule_builder.lhs = token_1
+      rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
+      rule_builder.lhs_location = token_1.location
       rule_builder.add_rhs(symbol_node(token_2))
       rule_builder.user_code = token_3
       rule_builder.add_rhs(symbol_node(token_4))
@@ -509,14 +517,9 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.complete_input
       rule_builder.setup_rules
 
-      tokens = rule_builder.instance_variable_get(:@replaced_rhs)
+      symbols = rule_builder.instance_variable_get(:@replaced_rhs)
 
-      expect(tokens.count).to eq 5
-      expect(tokens[0].s_value).to eq 'keyword_class'
-      expect(tokens[1].s_value).to eq '@1'
-      expect(tokens[2].s_value).to eq 'tSTRING'
-      expect(tokens[3].s_value).to eq '$@2'
-      expect(tokens[4].s_value).to eq 'keyword_end'
+      expect(symbols.map(&:name)).to eq %w[keyword_class @1 tSTRING $@2 keyword_end]
     end
   end
 end

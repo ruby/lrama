@@ -106,7 +106,7 @@ RSpec.describe Lrama::Diagram do
 
       it "omits action rules and references while preserving empty grammar rules" do
         original_rules = grammar.rules.map(&:display_name)
-        action_names = grammar.rules.select(&:original_rule).map { |rule| rule.lhs.id.s_value }
+        action_names = grammar.rules.select(&:original_rule).map { |rule| rule.lhs.id.name }
         expect(action_names).to include("$@1", "@3")
 
         sections = diagram.linked_sections
@@ -147,7 +147,8 @@ RSpec.describe Lrama::Diagram do
     it "escapes rule names and leaves undefined references unlinked" do
       name = '<rule & "name">'
       symbols = [name, "missing", "rule name"].map do |label|
-        Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: label), term: false)
+        id = Lrama::Grammar::Symbol::Id.new(name: label, kind: :ident)
+        Lrama::Grammar::Symbol.new(id: id, term: false)
       end
       rules = [
         Lrama::Grammar::Rule.new(lhs: symbols[0], rhs: symbols[0..1]),

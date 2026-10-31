@@ -527,7 +527,7 @@ RSpec.describe Lrama::Counterexamples do
         example = examples[0]
 
         expect(example.type).to eq :shift_reduce
-        expect(example.conflict_symbol.id.s_value).to eq "'\\n'"
+        expect(example.conflict_symbol.id.name).to eq "'\\n'"
         # Shift Conflict
         expect(example.path1.map {|path| format_example_path(path)}).to eq([
           "  0. $accept: • stmt \"end of file\"  (rule 0)",
@@ -570,7 +570,7 @@ RSpec.describe Lrama::Counterexamples do
         example = examples[1]
 
         expect(example.type).to eq :reduce_reduce
-        expect(example.conflict_symbol.id.s_value).to eq "'+'"
+        expect(example.conflict_symbol.id.name).to eq "'+'"
         # Reduce Conflict
         expect(example.path1.map {|path| format_example_path(path)}).to eq([
           "  0. $accept: • stmt \"end of file\"  (rule 0)",

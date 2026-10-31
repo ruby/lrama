@@ -6,7 +6,7 @@ module Lrama
       class Resolver
         attr_accessor rules: Array[Rule]
 
-        attr_accessor created_lhs_list: Array[Lexer::Token::Base]
+        attr_accessor created_lhs_list: Array[Grammar::Symbol::Id]
 
         # @rbs () -> void
         def initialize: () -> void
@@ -20,8 +20,8 @@ module Lrama
         # @rbs (Node::RuleRhs::value node) -> Rule?
         def find_inline: (Node::RuleRhs::value node) -> Rule?
 
-        # @rbs (String lhs_s_value) -> Lexer::Token::Base?
-        def created_lhs: (String lhs_s_value) -> Lexer::Token::Base?
+        # @rbs (String lhs_s_value) -> Grammar::Symbol::Id?
+        def created_lhs: (String lhs_s_value) -> Grammar::Symbol::Id?
 
         # @rbs () -> Array[Rule]
         def redefined_rules: () -> Array[Rule]

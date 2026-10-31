@@ -43,6 +43,10 @@ end
 require "lrama"
 
 module RSpecHelper
+  def symbol_id(name, kind: :ident)
+    Lrama::Grammar::Symbol::Id.new(name: name, kind: kind)
+  end
+
   def fixture_path(file_name)
     File.expand_path("../fixtures/#{file_name}", __FILE__)
   end

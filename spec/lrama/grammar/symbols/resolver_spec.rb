@@ -5,8 +5,8 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#symbols" do
     it "returns all symbols" do
-      resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
-      resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"), alias_name: "alias")
+      resolver.add_term(id: symbol_id("term"))
+      resolver.add_nterm(id: symbol_id("nterm"), alias_name: "alias")
       expect(resolver.symbols).to eq([
         resolver.terms[0], resolver.nterms[0]
       ])
@@ -15,8 +15,8 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#sort_by_number!" do
     it "sorts symbols by number" do
-      resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
-      resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
+      resolver.add_term(id: symbol_id("term"))
+      resolver.add_nterm(id: symbol_id("nterm"))
       resolver.terms[0].number = 1
       resolver.nterms[0].number = 2
       resolver.sort_by_number!
@@ -34,61 +34,61 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#add_term" do
     it "adds term" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       expect(term).to be_a(Lrama::Grammar::Symbol)
       expect(resolver.terms).to eq([term])
     end
 
     it "adds term with alias_name and tag" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"), alias_name: "alias", tag: "tag")
+      term = resolver.add_term(id: symbol_id("term"), alias_name: "alias", tag: "tag")
       expect(term).to be_a(Lrama::Grammar::Symbol)
       expect(term.alias_name).to eq("alias")
       expect(term.tag).to eq("tag")
     end
 
     it "adds term with token_id" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"), token_id: 1)
+      term = resolver.add_term(id: symbol_id("term"), token_id: 1)
       expect(term).to be_a(Lrama::Grammar::Symbol)
       expect(term.token_id).to eq(1)
     end
 
     it "returns existing term" do
-      term1 = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
-      term2 = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term1 = resolver.add_term(id: symbol_id("term"))
+      term2 = resolver.add_term(id: symbol_id("term"))
       expect(term1).to eq(term2)
     end
 
     it "replaces existing term" do
-      term1 = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
-      term2 = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"), replace: true)
+      term1 = resolver.add_term(id: symbol_id("term"))
+      term2 = resolver.add_term(id: symbol_id("term"), replace: true)
       expect(term1).to eq(term2)
     end
   end
 
   describe "#add_nterm" do
     it "adds nterm" do
-      nterm = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
+      nterm = resolver.add_nterm(id: symbol_id("nterm"))
       expect(nterm).to be_a(Lrama::Grammar::Symbol)
       expect(resolver.nterms).to eq([nterm])
     end
 
     it "adds nterm with alias_name and tag" do
-      nterm = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"), alias_name: "alias", tag: "tag")
+      nterm = resolver.add_nterm(id: symbol_id("nterm"), alias_name: "alias", tag: "tag")
       expect(nterm).to be_a(Lrama::Grammar::Symbol)
       expect(nterm.alias_name).to eq("alias")
       expect(nterm.tag).to eq("tag")
     end
 
     it "returns existing nterm if nterm exists" do
-      nterm1 = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
-      nterm2 = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
+      nterm1 = resolver.add_nterm(id: symbol_id("nterm"))
+      nterm2 = resolver.add_nterm(id: symbol_id("nterm"))
       expect(nterm2).to eq(nterm1)
     end
   end
 
   describe "#find_symbol_by_s_value" do
     it "finds symbol by s_value" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       expect(resolver.find_symbol_by_s_value("term")).to eq(term)
     end
 
@@ -99,7 +99,7 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#find_symbol_by_s_value!" do
     it "finds symbol by s_value" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       expect(resolver.find_symbol_by_s_value!("term")).to eq(term)
     end
 
@@ -110,14 +110,20 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#find_symbol_by_id" do
     it "finds symbol by id" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       expect(resolver.find_symbol_by_id(term.id)).to eq(term)
     end
 
     it "finds symbol by alias_name" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"), alias_name: "alias")
-      symbol = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: "alias"), alias_name: "alias", term: true)
+      term = resolver.add_term(id: symbol_id("term"), alias_name: "alias")
+      symbol = Lrama::Grammar::Symbol.new(id: symbol_id("alias"), alias_name: "alias", term: true)
       expect(resolver.find_symbol_by_id(symbol.id)).to eq(term)
+    end
+
+    it "does not find a symbol with a different kind" do
+      resolver.add_term(id: symbol_id("term"))
+
+      expect(resolver.find_symbol_by_id(symbol_id("term", kind: :char))).to be_nil
     end
 
     it "returns nil if symbol not found" do
@@ -127,15 +133,14 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#find_symbol_by_id!" do
     it "finds symbol by id" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       expect(resolver.find_symbol_by_id!(term.id)).to eq(term)
     end
 
     it "raises error if symbol not found" do
       grammar_file = Lrama::Lexer::GrammarFile.new("foo/basic.y", "  alias")
       location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 2, last_line: 1, last_column: 7)
-      symbol = Lrama::Grammar::Symbol.new(id: Lrama::Lexer::Token::Ident.new(s_value: "alias", location: location), alias_name: "alias", term: true)
-      expect { resolver.find_symbol_by_id!(symbol.id) }.to raise_error(<<~ERROR)
+      expect { resolver.find_symbol_by_id!(symbol_id("alias"), location: location) }.to raise_error(<<~ERROR)
         foo/basic.y:1:2: symbol alias is used, but is not defined as a token and has no rules
            1 |   alias
              |   ^~~~~
@@ -143,7 +148,7 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
     end
 
     it "raises error if symbol has no location" do
-      id = Lrama::Lexer::Token::Ident.new(s_value: "alias")
+      id = symbol_id("alias")
 
       expect { resolver.find_symbol_by_id!(id) }
         .to raise_error("symbol alias is used, but is not defined as a token and has no rules")
@@ -152,7 +157,7 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#find_symbol_by_token_id" do
     it "finds symbol by token_id" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"), token_id: 1)
+      term = resolver.add_term(id: symbol_id("term"), token_id: 1)
       expect(resolver.find_symbol_by_token_id(1)).to eq(term)
     end
 
@@ -163,7 +168,7 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#find_symbol_by_number!" do
     it "finds symbol by number" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       term.number = 0
       expect(resolver.find_symbol_by_number!(0)).to eq(term)
     end
@@ -175,8 +180,8 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#fill_symbol_number" do
     it "fills symbol number" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
-      nterm = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
+      term = resolver.add_term(id: symbol_id("term"))
+      nterm = resolver.add_nterm(id: symbol_id("nterm"))
       resolver.fill_symbol_number
       expect(term.number).to eq(3)
       expect(nterm.number).to eq(4)
@@ -185,9 +190,9 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#fill_nterm_type" do
     it "fills nterm type" do
-      nterm = resolver.add_nterm(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"))
+      nterm = resolver.add_nterm(id: symbol_id("nterm"))
       resolver.fill_nterm_type([
-        Lrama::Grammar::Type.new(id: Lrama::Lexer::Token::Ident.new(s_value: "nterm"), tag: "tag")
+        Lrama::Grammar::Type.new(id: symbol_id("nterm"), tag: "tag")
       ])
       expect(nterm.tag).to eq("tag")
     end
@@ -195,7 +200,7 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#fill_destructor" do
     it "fills destructor" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       grammar_file = Lrama::Lexer::GrammarFile.new("foo/basic.y", "")
       location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
       token_code = Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location)
@@ -211,7 +216,7 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#fill_printer" do
     it "fills printer" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       printer = Lrama::Grammar::Printer.new(
         ident_or_tags: [Lrama::Lexer::Token::Ident.new(s_value: "term")]
       )
@@ -222,7 +227,7 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
 
   describe "#fill_error_token" do
     it "fills error token" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
+      term = resolver.add_term(id: symbol_id("term"))
       token = Lrama::Lexer::Token::Ident.new(s_value: "term")
       grammar_file = Lrama::Lexer::GrammarFile.new("foo/basic.y", "")
       location = Lrama::Lexer::Location.new(grammar_file: grammar_file, first_line: 1, first_column: 0, last_line: 1, last_column: 4)
@@ -233,33 +238,21 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
     end
   end
 
-  describe "#token_to_symbol" do
-    it "returns symbol" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
-      expect(resolver.token_to_symbol(term.id)).to eq(term)
-    end
-  end
-
   describe "#validate!" do
     it "validates number uniqueness" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"))
-      term2 = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term2"))
+      term = resolver.add_term(id: symbol_id("term"))
+      term2 = resolver.add_term(id: symbol_id("term2"))
       term.number = 1
       term2.number = 1
       expect { resolver.validate! }.to raise_error(/Symbol number is duplicated./)
     end
 
     it "validates alias_name uniqueness" do
-      term = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term"), alias_name: "alias")
-      term2 = resolver.add_term(id: Lrama::Lexer::Token::Ident.new(s_value: "term2"), alias_name: "alias")
+      term = resolver.add_term(id: symbol_id("term"), alias_name: "alias")
+      term2 = resolver.add_term(id: symbol_id("term2"), alias_name: "alias")
       term.number = 1
       term2.number = 2
       expect { resolver.validate! }.to raise_error(/Symbol alias name is duplicated./)
-    end
-
-    it "validates symbols" do
-      resolver.add_term(id: Lrama::Lexer::Token::Char.new(s_value: "🦙"))
-      expect { resolver.validate! }.to raise_error(/Invalid character: `🦙`. Only ASCII characters are allowed./)
     end
   end
 end
