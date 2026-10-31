@@ -5,35 +5,50 @@ module Lrama
   class Grammar
     # _rhs holds original RHS element. Use rhs to refer to Symbol.
     # _rhs_locations holds the source location of each corresponding _rhs ID.
-    class Rule < Struct.new(:id, :_lhs, :lhs, :lhs_tag, :_rhs, :rhs, :token_code, :position_in_original_rule_rhs, :nullable, :precedence_sym, :lineno, :_lhs_location, :_rhs_locations, keyword_init: true)
+    class Rule
       # @rbs!
       #
       #   interface _DelegatedMethods
       #     def lhs: -> Grammar::Symbol
       #     def rhs: -> Array[Grammar::Symbol]
       #   end
-      #
-      #   attr_accessor id: Integer
-      #   attr_accessor _lhs: Grammar::Symbol::Id
-      #   attr_accessor lhs: Grammar::Symbol
-      #   attr_accessor lhs_tag: Lexer::Token::Tag?
-      #   attr_accessor _rhs: Array[Grammar::Symbol::Id]
-      #   attr_accessor rhs: Array[Grammar::Symbol]
-      #   attr_accessor token_code: Lexer::Token::UserCode?
-      #   attr_accessor position_in_original_rule_rhs: Integer
-      #   attr_accessor nullable: bool
-      #   attr_accessor precedence_sym: Grammar::Symbol?
-      #   attr_accessor lineno: Integer?
-      #   attr_accessor _lhs_location: Lexer::Location?
-      #   attr_accessor _rhs_locations: Array[Lexer::Location?]?
-      #
-      #   def initialize: (
-      #     ?id: Integer, ?_lhs: Grammar::Symbol::Id?, ?lhs: Lexer::Token::Base, ?lhs_tag: Lexer::Token::Tag?, ?_rhs: Array[Grammar::Symbol::Id], ?rhs: Array[Grammar::Symbol],
-      #     ?token_code: Lexer::Token::UserCode?, ?position_in_original_rule_rhs: Integer?, ?nullable: bool,
-      #     ?precedence_sym: Grammar::Symbol?, ?lineno: Integer?, ?_lhs_location: Lexer::Location?, ?_rhs_locations: Array[Lexer::Location?]?
-      #   ) -> void
 
+      attr_accessor :id #: Integer
+      attr_accessor :_lhs #: Grammar::Symbol::Id
+      attr_accessor :lhs #: Grammar::Symbol
+      attr_accessor :lhs_tag #: Lexer::Token::Tag?
+      attr_accessor :_rhs #: Array[Grammar::Symbol::Id]
+      attr_accessor :rhs #: Array[Grammar::Symbol]
+      attr_accessor :token_code #: Lexer::Token::UserCode?
+      attr_accessor :position_in_original_rule_rhs #: Integer
+      attr_accessor :nullable #: bool
+      attr_accessor :precedence_sym #: Grammar::Symbol?
+      attr_accessor :lineno #: Integer?
+      attr_accessor :_lhs_location #: Lexer::Location?
+      attr_accessor :_rhs_locations #: Array[Lexer::Location?]?
       attr_accessor :original_rule #: Rule
+
+      # @rbs (?id: Integer?, ?_lhs: Grammar::Symbol::Id?, ?lhs: Grammar::Symbol?, ?lhs_tag: Lexer::Token::Tag?,
+      #      ?_rhs: Array[Grammar::Symbol::Id]?, ?rhs: Array[Grammar::Symbol]?, ?token_code: Lexer::Token::UserCode?,
+      #      ?position_in_original_rule_rhs: Integer?, ?nullable: bool?, ?precedence_sym: Grammar::Symbol?,
+      #      ?lineno: Integer?, ?_lhs_location: Lexer::Location?, ?_rhs_locations: Array[Lexer::Location?]?) -> void
+      def initialize(id: nil, _lhs: nil, lhs: nil, lhs_tag: nil, _rhs: nil, rhs: nil, token_code: nil,
+                     position_in_original_rule_rhs: nil, nullable: nil, precedence_sym: nil, lineno: nil,
+                     _lhs_location: nil, _rhs_locations: nil)
+        @id = id
+        @_lhs = _lhs
+        @lhs = lhs
+        @lhs_tag = lhs_tag
+        @_rhs = _rhs
+        @rhs = rhs
+        @token_code = token_code
+        @position_in_original_rule_rhs = position_in_original_rule_rhs
+        @nullable = nullable
+        @precedence_sym = precedence_sym
+        @lineno = lineno
+        @_lhs_location = _lhs_location
+        @_rhs_locations = _rhs_locations
+      end
 
       # @rbs (Rule other) -> bool
       def ==(other)
