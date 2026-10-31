@@ -160,25 +160,27 @@ RSpec.describe Lrama::Parser do
       expect(grammar.find_symbol_by_s_value!(%q('\x41')).token_id).to eq(300)
     end
 
-    it 'rejects a non-ASCII character literal at its source location' do
-      y = "%%\nstart: '🦙';\n"
+    describe 'rejects a non-ASCII character literal' do
+      it 'at its source location' do
+        y = "%%\nstart: '🦙';\n"
 
-      expect { Lrama::Parser.new(y, "character.y").parse }
-        .to raise_error(ParseError, /character\.y:2:7: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
-    end
+        expect { Lrama::Parser.new(y, "character.y").parse }
+          .to raise_error(ParseError, /character\.y:2:7: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
+      end
 
-    it 'rejects a non-ASCII character literal in a token declaration' do
-      y = "%token '🦙'\n%%\nstart: 'a';\n"
+      it 'in a token declaration' do
+        y = "%token '🦙'\n%%\nstart: 'a';\n"
 
-      expect { Lrama::Parser.new(y, "character.y").parse }
-        .to raise_error(ParseError, /character\.y:1:7: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
-    end
+        expect { Lrama::Parser.new(y, "character.y").parse }
+          .to raise_error(ParseError, /character\.y:1:7: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
+      end
 
-    it 'rejects a non-ASCII character literal in a parameterized rule argument' do
-      y = "%rule wrap(X): X;\n%%\nstart: wrap('🦙');\n"
+      it 'in a parameterized rule argument' do
+        y = "%rule wrap(X): X;\n%%\nstart: wrap('🦙');\n"
 
-      expect { Lrama::Parser.new(y, "character.y").parse }
-        .to raise_error(ParseError, /character\.y:3:12: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
+        expect { Lrama::Parser.new(y, "character.y").parse }
+          .to raise_error(ParseError, /character\.y:3:12: Invalid character: `'🦙'`\. Only ASCII characters are allowed\./)
+      end
     end
 
     [%q('\0'), %q('\00'), %q('\000'), %q('\x00'), %q('\u0000'),
