@@ -178,9 +178,12 @@ module Lrama
         when @scanner.scan(/\n/)
           code << @scanner.matched
           newline
-        when @scanner.scan(/".*?"/)
+        when @scanner.scan(/"(?:\\.|[^"\\])*"/m)
           code << %Q(#{@scanner.matched})
           @line += @scanner.matched.count("\n")
+          if (last_newline = @scanner.matched.b.rindex("\n"))
+            @head = @scanner.pos - @scanner.matched.bytesize + last_newline + 1
+          end
         when @scanner.scan(/'.*?'/)
           code << %Q(#{@scanner.matched})
         when @scanner.scan(/[^\"'\{\}\n]+/)
