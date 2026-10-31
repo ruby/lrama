@@ -16,7 +16,7 @@ module Lrama
 
         grammar.precedences.each do |precedence|
           unless precedence.used_by?
-            @logger.warn("Precedence #{precedence.s_value} (line: #{precedence.lineno}) is defined but not used in any rule.")
+            @logger.warn("Precedence #{precedence.symbol.name} (line: #{precedence.lineno}) is defined but not used in any rule.")
           end
         end
       end

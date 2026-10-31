@@ -164,17 +164,17 @@ module Lrama
     # @rbs (id: Lexer::Token::Base, tag: Lexer::Token::Tag?) -> Array[Type]
     def add_type: (id: Lexer::Token::Base, tag: Lexer::Token::Tag?) -> Array[Type]
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
-    def add_nonassoc: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_nonassoc: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
-    def add_left: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_left: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
-    def add_right: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_right: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
 
-    # @rbs (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
-    def add_precedence: (Grammar::Symbol sym, Integer precedence, String s_value, Integer lineno) -> Precedence
+    # @rbs (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
+    def add_precedence: (Grammar::Symbol sym, Integer precedence, Integer lineno) -> Precedence
 
     # @rbs (Lrama::Lexer::Token::Base id) -> Lrama::Lexer::Token::Base
     def set_start_nterm: (Lrama::Lexer::Token::Base id) -> Lrama::Lexer::Token::Base

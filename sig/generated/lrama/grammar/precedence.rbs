@@ -13,11 +13,9 @@ module Lrama
 
       attr_accessor precedence: Integer
 
-      attr_accessor s_value: String
-
       attr_accessor lineno: Integer
 
-      def initialize: (?type: type_enum, ?symbol: Grammar::Symbol, ?precedence: Integer, ?s_value: ::String, ?lineno: Integer) -> void
+      def initialize: (?type: type_enum, ?symbol: Grammar::Symbol, ?precedence: Integer, ?lineno: Integer) -> void
 
       attr_reader used_by_lalr: Array[State::ResolvedConflict]
 
