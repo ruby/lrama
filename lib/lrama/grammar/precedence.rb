@@ -3,20 +3,27 @@
 
 module Lrama
   class Grammar
-    class Precedence < Struct.new(:type, :symbol, :precedence, :lineno, keyword_init: true)
+    class Precedence
       include Comparable
+
       # @rbs!
       #   type type_enum = :left | :right | :nonassoc | :precedence
-      #
-      #   attr_accessor type: type_enum
-      #   attr_accessor symbol: Grammar::Symbol
-      #   attr_accessor precedence: Integer
-      #   attr_accessor lineno: Integer
-      #
-      #   def initialize: (?type: type_enum, ?symbol: Grammar::Symbol, ?precedence: Integer, ?lineno: Integer) -> void
+
+      attr_accessor :type #: type_enum
+      attr_accessor :symbol #: Grammar::Symbol
+      attr_accessor :precedence #: Integer
+      attr_accessor :lineno #: Integer
 
       attr_reader :used_by_lalr #: Array[State::ResolvedConflict]
       attr_reader :used_by_ielr #: Array[State::ResolvedConflict]
+
+      # @rbs (type: type_enum, symbol: Grammar::Symbol, precedence: Integer, lineno: Integer) -> void
+      def initialize(type:, symbol:, precedence:, lineno:)
+        @type = type
+        @symbol = symbol
+        @precedence = precedence
+        @lineno = lineno
+      end
 
       # @rbs (Precedence other) -> Integer
       def <=>(other)
