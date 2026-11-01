@@ -15,11 +15,12 @@ module Lrama
 
       attr_accessor lineno: Integer
 
-      def initialize: (?type: type_enum, ?symbol: Grammar::Symbol, ?precedence: Integer, ?lineno: Integer) -> void
-
       attr_reader used_by_lalr: Array[State::ResolvedConflict]
 
       attr_reader used_by_ielr: Array[State::ResolvedConflict]
+
+      # @rbs (type: type_enum, symbol: Grammar::Symbol, precedence: Integer, lineno: Integer) -> void
+      def initialize: (type: type_enum, symbol: Grammar::Symbol, precedence: Integer, lineno: Integer) -> void
 
       # @rbs (Precedence other) -> Integer
       def <=>: (Precedence other) -> Integer

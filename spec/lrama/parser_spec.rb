@@ -270,11 +270,11 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: Sym::Id.new(name: "tNUMBER", kind: :ident),        alias_name: nil,                        number:  7, tag: T::Tag.new(s_value: "<l>"),   term: true, token_id: 260, nullable: false, precedence: nil,                                            printer: grammar.printers[1]),
         Sym.new(id: Sym::Id.new(name: "tSTRING", kind: :ident),        alias_name: nil,                        number:  8, tag: T::Tag.new(s_value: "<str>"), term: true, token_id: 261, nullable: false, precedence: nil,                                            printer: grammar.printers[1]),
         Sym.new(id: Sym::Id.new(name: "keyword_end", kind: :ident),    alias_name: "\"end\"",                  number:  9, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 262, nullable: false, precedence: nil,                                            printer: nil),
-        Sym.new(id: Sym::Id.new(name: "tPLUS", kind: :ident),          alias_name: "\"+\"",                    number: 10, tag: nil,                                   term: true, token_id: 263, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
-        Sym.new(id: Sym::Id.new(name: "tMINUS", kind: :ident),         alias_name: "\"-\"",                    number: 11, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
-        Sym.new(id: Sym::Id.new(name: "tEQ", kind: :ident),            alias_name: "\"=\"",                    number: 12, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2), printer: nil),
-        Sym.new(id: Sym::Id.new(name: "tEQEQ", kind: :ident),          alias_name: "\"==\"",                   number: 13, tag: nil,                                   term: true, token_id: 266, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0), printer: nil),
-        Sym.new(id: Sym::Id.new(name: "'>'", kind: :char),            alias_name: nil,                        number: 14, tag: nil,                                   term: true, token_id:  62, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1), printer: nil),
+        Sym.new(id: Sym::Id.new(name: "tPLUS", kind: :ident),          alias_name: "\"+\"",                    number: 10, tag: nil,                                   term: true, token_id: 263, nullable: false, precedence: Precedence.new(type: :left,     symbol: nil, precedence: 1, lineno: nil), printer: nil),
+        Sym.new(id: Sym::Id.new(name: "tMINUS", kind: :ident),         alias_name: "\"-\"",                    number: 11, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :left,     symbol: nil, precedence: 1, lineno: nil), printer: nil),
+        Sym.new(id: Sym::Id.new(name: "tEQ", kind: :ident),            alias_name: "\"=\"",                    number: 12, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :right,    symbol: nil, precedence: 2, lineno: nil), printer: nil),
+        Sym.new(id: Sym::Id.new(name: "tEQEQ", kind: :ident),          alias_name: "\"==\"",                   number: 13, tag: nil,                                   term: true, token_id: 266, nullable: false, precedence: Precedence.new(type: :nonassoc, symbol: nil, precedence: 0, lineno: nil), printer: nil),
+        Sym.new(id: Sym::Id.new(name: "'>'", kind: :char),            alias_name: nil,                        number: 14, tag: nil,                                   term: true, token_id:  62, nullable: false, precedence: Precedence.new(type: :left,     symbol: nil, precedence: 1, lineno: nil), printer: nil),
         Sym.new(id: Sym::Id.new(name: "'+'", kind: :char),            alias_name: nil,                        number: 15, tag: nil,                                   term: true, token_id:  43, nullable: false, precedence: nil,                                            printer: nil),
         Sym.new(id: Sym::Id.new(name: "'-'", kind: :char),            alias_name: nil,                        number: 16, tag: nil,                                   term: true, token_id:  45, nullable: false, precedence: nil,                                            printer: nil),
         Sym.new(id: Sym::Id.new(name: "'!'", kind: :char),            alias_name: nil,                        number: 17, tag: nil,                                   term: true, token_id:  33, nullable: false, precedence: nil,                                            printer: nil),
@@ -845,7 +845,7 @@ RSpec.describe Lrama::Parser do
         rule = grammar.rules.last
         expect(token.alias_name).to eq('"+"')
         expect(token.tag).to eq(T::Tag.new(s_value: "<i>"))
-        expect(token.precedence).to eq(Precedence.new(type: :left, precedence: 0))
+        expect(token.precedence).to eq(Precedence.new(type: :left, symbol: nil, precedence: 0, lineno: nil))
         expect(rule.rhs).to eq([token, token])
         expect(rule.translated_code(grammar)).to eq(" (yyval.i) = (yyvsp[-1].i) + (yyvsp[0].i); ")
       end
@@ -3813,10 +3813,10 @@ RSpec.describe Lrama::Parser do
         Sym.new(id: Sym::Id.new(name: "tNUMBER", kind: :ident),       alias_name: nil,                 number:  4, tag: T::Tag.new(s_value: "<l>"),   term: true, token_id: 259, nullable: false, precedence: nil),
         Sym.new(id: Sym::Id.new(name: "tSTRING", kind: :ident),       alias_name: nil,                 number:  5, tag: T::Tag.new(s_value: "<str>"), term: true, token_id: 260, nullable: false, precedence: nil),
         Sym.new(id: Sym::Id.new(name: "keyword_end", kind: :ident),   alias_name: "\"end\"",           number:  6, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 261, nullable: false, precedence: nil),
-        Sym.new(id: Sym::Id.new(name: "tPLUS", kind: :ident),         alias_name: "\"+\"",             number:  7, tag: nil,                                   term: true, token_id: 262, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1)),
-        Sym.new(id: Sym::Id.new(name: "tMINUS", kind: :ident),        alias_name: "\"-\"",             number:  8, tag: nil,                                   term: true, token_id: 263, nullable: false, precedence: Precedence.new(type: :left,     precedence: 1)),
-        Sym.new(id: Sym::Id.new(name: "tEQ", kind: :ident),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :right,    precedence: 2)),
-        Sym.new(id: Sym::Id.new(name: "tEQEQ", kind: :ident),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :nonassoc, precedence: 0)),
+        Sym.new(id: Sym::Id.new(name: "tPLUS", kind: :ident),         alias_name: "\"+\"",             number:  7, tag: nil,                                   term: true, token_id: 262, nullable: false, precedence: Precedence.new(type: :left,     symbol: nil, precedence: 1, lineno: nil)),
+        Sym.new(id: Sym::Id.new(name: "tMINUS", kind: :ident),        alias_name: "\"-\"",             number:  8, tag: nil,                                   term: true, token_id: 263, nullable: false, precedence: Precedence.new(type: :left,     symbol: nil, precedence: 1, lineno: nil)),
+        Sym.new(id: Sym::Id.new(name: "tEQ", kind: :ident),           alias_name: "\"=\"",             number:  9, tag: nil,                                   term: true, token_id: 264, nullable: false, precedence: Precedence.new(type: :right,    symbol: nil, precedence: 2, lineno: nil)),
+        Sym.new(id: Sym::Id.new(name: "tEQEQ", kind: :ident),         alias_name: "\"==\"",            number: 10, tag: nil,                                   term: true, token_id: 265, nullable: false, precedence: Precedence.new(type: :nonassoc, symbol: nil, precedence: 0, lineno: nil)),
       ])
       _rules = grammar.rule_builders.map {|b| [b.lhs.name, rule_builder_rhs_values(b), b.line] }
       expect(_rules).to eq([
@@ -4311,7 +4311,7 @@ RSpec.describe Lrama::Parser do
           Sym.new(id: Sym::Id.new(name: "tSTRING", kind: :ident),       alias_name: nil,                 number: 4, tag: T::Tag.new(s_value: "<str>"), term: true, token_id: 259, nullable: false, precedence: nil),
           Sym.new(id: Sym::Id.new(name: "keyword_end", kind: :ident),   alias_name: "\"end\"",           number: 5, tag: T::Tag.new(s_value: "<i>"),   term: true, token_id: 260, nullable: false, precedence: nil),
           Sym.new(id: Sym::Id.new(name: "tEQ", kind: :ident),           alias_name: "\"=\"",             number: 6, tag: nil,                                   term: true, token_id: 261, nullable: false, precedence: nil),
-          Sym.new(id: Sym::Id.new(name: "'&'", kind: :char),           alias_name: nil,                 number: 7, tag: nil,                                   term: true, token_id:  38, nullable: false, precedence: Precedence.new(type: :left, precedence: 0)),
+          Sym.new(id: Sym::Id.new(name: "'&'", kind: :char),           alias_name: nil,                 number: 7, tag: nil,                                   term: true, token_id:  38, nullable: false, precedence: Precedence.new(type: :left, symbol: nil, precedence: 0, lineno: nil)),
           Sym.new(id: Sym::Id.new(name: "tEQEQ", kind: :ident),         alias_name: "\"==\"",            number: 8, tag: nil,                                   term: true, token_id: 262, nullable: false, precedence: nil),
         ])
       end
