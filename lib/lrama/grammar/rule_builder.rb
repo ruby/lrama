@@ -156,7 +156,6 @@ module Lrama
           case node
           when Node::RuleRhs::Symbol
             token = node.token
-            token.alias_name = node.alias_name
             replaced_rhs << Grammar::Symbol::Id.from_token(token)
             replaced_rhs_locations << token.location
           when Node::RuleRhs::InstantiateRule
@@ -293,10 +292,7 @@ module Lrama
 
       # @rbs (Node::RuleRhs::rhs node) -> void
       def mark_rhs_node_referred(node)
-        case node
-        when Node::RuleRhs::Symbol
-          node.token.referred = true
-        when Node::RuleRhs::Action
+        if node.is_a?(Node::RuleRhs::Action)
           node.code.referred = true
         end
       end
