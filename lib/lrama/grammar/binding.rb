@@ -62,7 +62,7 @@ module Lrama
             )
           when Node::RuleRhs::Symbol
             Node::RuleRhs::Symbol.new(
-              token: arg.token.dup,
+              token: arg.token,
               alias_name: sym.alias_name,
               location: arg.location
             )
