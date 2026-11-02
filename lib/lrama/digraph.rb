@@ -81,22 +81,40 @@ module Lrama
 
     # @rbs (X x) -> void
     def traverse(x)
-      @stack.push(x)
-      d = @stack.count
-      @h[x] = d
-      @result[x] = @base_function[x] # F x = F' x
+      # Keep traversal frames separate from the stack of unfinished SCCs.
+      frames = [[x, 0, 0]] #: Array[[X, Integer, Integer]]
 
-      @relation[x]&.each do |y|
-        traverse(y) if @h[y] == 0
-        @h[x] = [@h[x], @h[y]].min
-        @result[x] |= @result[y] # F x = F x + F y
-      end
+      while (frame = frames.last)
+        # @type var index: Integer
+        x, d, index = frame
+        if d == 0
+          @stack.push(x)
+          frame[1] = d = @stack.count
+          @h[x] = d
+          @result[x] = @base_function[x] # F x = F' x
+        end
 
-      if @h[x] == d
-        while (z = @stack.pop) do
-          @h[z] = Float::INFINITY
-          break if z == x
-          @result[z] = @result[x] # F (Top of S) = F x
+        successors = @relation[x]
+        if successors && index < successors.length
+          y = successors[index]
+          if @h[y] == 0
+            frames << [y, 0, 0]
+            next
+          end
+
+          @h[x] = [@h[x], @h[y]].min
+          @result[x] |= @result[y] # F x = F x + F y
+          frame[2] = index + 1
+        else
+          if @h[x] == d
+            while (z = @stack.pop) do
+              @h[z] = Float::INFINITY
+              break if z == x
+              @result[z] = @result[x] # F (Top of S) = F x
+            end
+          end
+
+          frames.pop
         end
       end
     end
