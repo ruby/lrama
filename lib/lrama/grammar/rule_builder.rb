@@ -292,10 +292,7 @@ module Lrama
 
       # @rbs (Node::RuleRhs::rhs node) -> void
       def mark_rhs_node_referred(node)
-        case node
-        when Node::RuleRhs::Symbol
-          node.token.referred = true
-        when Node::RuleRhs::Action
+        if node.is_a?(Node::RuleRhs::Action)
           node.code.referred = true
         end
       end
