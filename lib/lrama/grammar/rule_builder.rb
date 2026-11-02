@@ -156,7 +156,6 @@ module Lrama
           case node
           when Node::RuleRhs::Symbol
             token = node.token
-            token.alias_name = node.alias_name
             replaced_rhs << Grammar::Symbol::Id.from_token(token)
             replaced_rhs_locations << token.location
           when Node::RuleRhs::InstantiateRule
