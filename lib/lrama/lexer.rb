@@ -203,7 +203,7 @@ module Lrama
 
     # @rbs () -> bool
     def identifier_colon?
-      scanner = StringScanner.new(@scanner.rest)
+      scanner = @scanner.dup
       skip_trivia(scanner)
 
       if scanner.scan(/\[/)
