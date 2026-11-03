@@ -75,7 +75,7 @@ module Lrama
           code = user_code.s_value.dup
 
           user_code.references.reverse_each do |ref|
-            next if ref.index.nil? || ref.index < inline_index # nil は $$ の場合
+            next if ref.index.nil? || ref.index < inline_index # The index is nil for $$.
 
             reference = code[ref.first_column...ref.last_column]
             replacement =
