@@ -175,6 +175,41 @@ RSpec.describe Lrama::Parser do
       expect(grammar.find_symbol_by_s_value!(%q('\x41')).token_id).to eq(300)
     end
 
+    [%q('A'), %q('\101'), %q('\x41')].each do |literal|
+      it "rejects an explicit token code that conflicts with #{literal.inspect}" do
+        grammar = Lrama::Parser.new("%token A 65\n%%\nstart: #{literal};\n", "character.y").parse
+
+        expect { grammar.prepare }.to raise_error("code 65 reassigned to token #{literal}")
+      end
+    end
+
+    ["%token 'A'\n%token A 65", "%token A 65\n%token 'A'"].each do |declarations|
+      it "rejects conflicting character token codes with #{declarations.inspect}" do
+        grammar = Lrama::Parser.new("#{declarations}\n%%\nstart: A 'A';\n", "character.y").parse
+
+        expect { grammar.prepare }.to raise_error("code 65 reassigned to token 'A'")
+      end
+    end
+
+    ["", "%token 'A' 65\n"].each do |declaration|
+      it "accepts equivalent character spellings with #{declaration.inspect}" do
+        literals = [%q('A'), %q('\101'), %q('\x41')]
+        grammar = Lrama::Parser.new("#{declaration}%%\nstart: #{literals.join(' ')};\n", "character.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.rules.last.rhs.map(&:token_id)).to eq([65, 65, 65])
+      end
+    end
+
+    it 'accepts an explicit token code distinct from a character code' do
+      grammar = Lrama::Parser.new("%token A 65\n%%\nstart: A 'B';\n", "character.y").parse
+      grammar.prepare
+      grammar.validate!
+
+      expect(grammar.rules.last.rhs.map(&:token_id)).to eq([65, 66])
+    end
+
     describe 'rejects a non-ASCII character literal' do
       it 'at its source location' do
         y = "%%\nstart: '🦙';\n"
