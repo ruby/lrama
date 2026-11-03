@@ -110,9 +110,13 @@ RSpec.describe "integration" do
     test_parser("contains_at_reference", "", "")
   end
 
-  describe "YYDEBUG, %lex-param, %parse-param option are enabled" do
+  describe "YYDEBUG and multiple parameters are enabled" do
     it "returns 9 for '(1+2)*3'" do
       test_parser("params", "(1+2)*3", "=> 9")
+    end
+
+    it "passes all parser parameters to yyerror" do
+      test_parser("params", "(1+)", "errors: 1", expect_success: false)
     end
   end
 

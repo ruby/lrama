@@ -63,6 +63,12 @@ rule
           )
         }
     | "%param" param+
+        {
+          result = Grammar::Node::ParamDecl.new(
+            params: val[1],
+            location: merge_locations(val[0].loc, val[1].last.loc)
+          )
+        }
     | "%lex-param" param+
         {
           result = Grammar::Node::LexParamDecl.new(

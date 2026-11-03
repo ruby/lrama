@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "params.h"
 
-#define YY_DECL int yylex (YYSTYPE *yylval, YYLTYPE *yylloc, int parser_params)
+#define YY_DECL int yylex (YYSTYPE *yylval, YYLTYPE *yylloc, int lexer_value, int shared, int offset, int *errors)
 
 int yycolumn = 0;
 
@@ -23,6 +23,8 @@ NUMBER [0-9]+
 %%
 
 {NUMBER} {
+    if (lexer_value != 7 || shared != 5 || offset != 11 || *errors)
+        return YYUNDEF;
     yylval->val = atoi(yytext);
     return NUM;
 }
