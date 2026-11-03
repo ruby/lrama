@@ -1,6 +1,39 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::Context do
+  describe 'duplicate alternatives on the same line' do
+    {
+      'ordinary rules' => "%token NUM\n%%\nprogram: NUM | NUM;\n",
+      'empty rules' => "%%\nprogram: %empty | %empty;\n",
+      'parameterized rules' => "%token NUM\n%rule choice(X, Y): X | Y;\n%%\nprogram: choice(NUM, NUM);\n",
+    }.each do |name, source|
+      ['lalr', 'ielr'].each do |lr_type|
+        it "reports a reduce/reduce conflict and selects the first rule for #{name} with #{lr_type}" do
+          grammar = Lrama::Parser.new("%define lr.type #{lr_type}\n#{source}", "duplicate.y").parse
+          grammar.prepare
+          grammar.validate!
+          states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+          states.compute
+          states.compute_ielr if grammar.ielr_defined?
+          context = Lrama::Context.new(states)
+
+          expect(states.rr_conflicts_count).to eq(1)
+          state = states.states.find { |s| s.rr_conflicts.any? }
+          first, second = state.reduces
+          expect(first.rule.id).to be < second.rule.id
+          expect(state.reduces.map(&:look_ahead)).to eq([[grammar.eof_symbol], [grammar.eof_symbol]])
+          action_index = context.yypact[state.id] + grammar.eof_symbol.number
+          expect(context.yycheck[action_index]).to eq(grammar.eof_symbol.number)
+          expect(context.yytable[action_index]).to eq(-(first.rule.id + 1))
+
+          report = StringIO.new
+          Lrama::Reporter.new(states: true).report(report, states)
+          expect(report.string).to include("State #{state.id} conflicts: 1 reduce/reduce")
+        end
+      end
+    end
+  end
+
   it 'omits character literals from token enums regardless of their token number' do
     grammar = Lrama::Parser.new(<<~'GRAMMAR', "character.y").parse
       %token '\x41' 300
