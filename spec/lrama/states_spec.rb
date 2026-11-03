@@ -1876,6 +1876,24 @@ RSpec.describe Lrama::States do
   end
 
   describe '#compute_ielr' do
+    it 'stores a boolean for each follow kernel item' do
+      path = "integration/ielr.y"
+      y = File.read(fixture_path(path))
+      grammar = Lrama::Parser.new(y, path).parse
+      grammar.prepare
+      grammar.validate!
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_ielr
+
+      values = states.states.flat_map do |state|
+        state.follow_kernel_items.values.compact.flat_map(&:values)
+      end
+
+      expect(values).to include(false)
+      expect(values).to all(satisfy("be a boolean") { |value| value == true || value == false })
+    end
+
     it 'recompute states' do
       path = "integration/ielr.y"
       y = File.read(fixture_path(path))
