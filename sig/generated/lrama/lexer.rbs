@@ -28,6 +28,8 @@ module Lrama
 
     PERCENT_TOKEN_PATTERN: Regexp
 
+    TAG_PATTERN: Regexp
+
     # @rbs (GrammarFile grammar_file) -> void
     def initialize: (GrammarFile grammar_file) -> void
 
