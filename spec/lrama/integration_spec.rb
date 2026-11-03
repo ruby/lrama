@@ -85,6 +85,16 @@ RSpec.describe "integration" do
     expect(output).to eq("result 12\n")
   end
 
+  it "parses tokens with mixed explicit and automatic token numbers" do
+    c_path = Dir.tmpdir + "/token_numbers#{file_extension}"
+    obj_path = Dir.tmpdir + "/token_numbers"
+    generate_object(fixture_path("integration/token_numbers.y"), c_path, obj_path)
+
+    output, error, status = Open3.capture3(obj_path)
+    expect(status.success?).to be(true), error
+    expect(output).to eq("accepted\n")
+  end
+
   # Clear cache after all tests to save memory
   after(:all) do
     IntegrationHelper.compiled_parsers.clear

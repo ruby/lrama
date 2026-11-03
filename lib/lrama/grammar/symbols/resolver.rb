@@ -267,10 +267,9 @@ module Lrama
 
         # @rbs () -> void
         def fill_terms_number
-          # Character literal in grammar file has
-          # token id corresponding to ASCII code by default,
-          # so start token_id from 256.
-          token_id = 256
+          # Like Bison, allocate above explicit token codes and the character range.
+          token_ids = @terms.map(&:token_id).compact
+          token_id = [256, token_ids.max || 0].max + 1
 
           @terms.each do |sym|
             while used_numbers[@number] do
@@ -325,8 +324,12 @@ module Lrama
 
               sym.token_id ||= code
             elsif sym.token_id.nil?
-              sym.token_id = token_id
-              token_id += 1
+              if sym.error_symbol? && !token_ids.include?(256)
+                sym.token_id = 256
+              else
+                sym.token_id = token_id
+                token_id += 1
+              end
             end
           end
         end
