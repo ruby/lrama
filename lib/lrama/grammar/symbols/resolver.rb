@@ -215,11 +215,12 @@ module Lrama
         # @rbs (Array[Destructor] destructors) -> (Array[Grammar::Symbol] | bot)
         def fill_destructor(destructors)
           symbols.each do |sym|
+            symbol_destructor = nil
             destructors.each do |destructor|
               destructor.ident_or_tags.each do |ident_or_tag|
                 case ident_or_tag
                 when Lrama::Lexer::Token::Ident
-                  sym.destructor = destructor if sym.id.ident? && sym.name == ident_or_tag.s_value
+                  symbol_destructor = destructor if sym.id.ident? && sym.name == ident_or_tag.s_value
                 when Lrama::Lexer::Token::Tag
                   sym.destructor = destructor if sym.tag == ident_or_tag
                 else
@@ -227,6 +228,7 @@ module Lrama
                 end
               end
             end
+            sym.destructor = symbol_destructor if symbol_destructor
           end
         end
 
