@@ -4849,6 +4849,21 @@ RSpec.describe Lrama::Parser do
     end
 
     describe "error messages" do
+      context "when the grammar has no rules" do
+        {
+          "only token declarations" => "%%\n%token NUMBER;\n",
+          "an explicit start symbol" => "%start start\n%%\n%token NUMBER;\n",
+          "only parameterized rules" => "%%\n%rule wrap(X): X;\n",
+          "only inline rules" => "%%\n%rule %inline op: '+';\n",
+        }.each do |description, y|
+          it "rejects #{description}" do
+            grammar = Lrama::Parser.new(y, "parse.y").parse
+
+            expect { grammar.prepare }.to raise_error(RuntimeError, "no rules in the input grammar")
+          end
+        end
+      end
+
       it "locates invalid references after multibyte text on multiple lines" do
         y = <<~'GRAMMAR'
           %%

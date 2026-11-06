@@ -717,6 +717,8 @@ module Lrama
 
     # Add $accept rule to the top of rules
     def add_accept_rule
+      raise "no rules in the input grammar" if @rule_builders.empty?
+
       if @start_nterm
         start = @start_nterm #: Lrama::Lexer::Token::Base
         @rules << Rule.new(
@@ -729,7 +731,7 @@ module Lrama
         )
       else
         rule_builder = @rule_builders.first #: RuleBuilder
-        lineno = rule_builder ? rule_builder.line : 0
+        lineno = rule_builder.line
         lhs = rule_builder.lhs #: Grammar::Symbol::Id
         @rules << Rule.new(
           id: @rule_counter.increment,
