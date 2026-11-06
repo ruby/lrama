@@ -276,6 +276,12 @@ module Lrama
           token_ids = @terms.map(&:token_id).compact
           token_id = [256, token_ids.max || 0].max + 1
 
+          # Equivalent character spellings may share a code.
+          named_token_ids = {} #: Hash[Integer, bool]
+          @terms.each do |sym|
+            named_token_ids[sym.token_id] = true if sym.token_id && !sym.character?
+          end
+
           @terms.each do |sym|
             while used_numbers[@number] do
               @number += 1
@@ -325,6 +331,10 @@ module Lrama
 
               unless (1..255).cover?(code)
                 raise "Invalid character: `#{sym.name}`. Character code must be between 1 and 255."
+              end
+
+              if sym.token_id.nil? && named_token_ids[code]
+                raise "code #{code} reassigned to token #{sym.name}"
               end
 
               sym.token_id ||= code
