@@ -64,6 +64,11 @@ module Lrama
             end
           end
 
+          if token_id && token_id != 0 && (sym.nil? || sym.token_id.nil?) && find_symbol_by_token_id(token_id)
+            message = "code #{token_id} reassigned to token #{id.name}"
+            raise(location&.generate_error_message(message) || message)
+          end
+
           if sym
             if tag && (previous_tag = sym.tag)
               message = "%type redeclaration for #{id.name}"

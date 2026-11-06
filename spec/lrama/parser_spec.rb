@@ -923,6 +923,43 @@ RSpec.describe Lrama::Parser do
         .to raise_error(/redeclared_token.y:2:7: redefining code of token PLUS/)
     end
 
+    ["A B", "B"].each do |rhs|
+      it "rejects a duplicate token code when the rule uses #{rhs.inspect}" do
+        y = "%token A 300\n%token B 300\n%%\nstart: #{rhs};\n"
+
+        expect { Lrama::Parser.new(y, "duplicate_token.y").parse }
+          .to raise_error(/duplicate_token.y:2:7: code 300 reassigned to token B/)
+      end
+    end
+
+    ["%token B", "%left B"].each do |declaration|
+      it "rejects assigning an occupied code to an existing token: #{declaration}" do
+        y = "%token A 300\n#{declaration}\n%token B 300\n%%\nstart: A B;\n"
+
+        expect { Lrama::Parser.new(y, "duplicate_token.y").parse }
+          .to raise_error(/duplicate_token.y:3:7: code 300 reassigned to token B/)
+      end
+    end
+
+    it "rejects duplicate token codes with distinct string aliases" do
+      y = "%token A 300 \"a\"\n%token B 300 \"b\"\n%%\nstart: B;\n"
+
+      expect { Lrama::Parser.new(y, "duplicate_token.y").parse }
+        .to raise_error(/duplicate_token.y:2:7: code 300 reassigned to token B/)
+    end
+
+    ["", ' "end"'].each do |alias_name|
+      it "preserves the EOF symbol when naming token zero#{alias_name}" do
+        grammar = Lrama::Parser.new("%token END 0#{alias_name}\n%%\nstart: %empty;\n", "eof.y").parse
+        grammar.prepare
+        grammar.validate!
+
+        expect(grammar.eof_symbol.name).to eq("END")
+        expect(grammar.eof_symbol.token_id).to eq(0)
+        expect(grammar.terms.select { |token| token.token_id == 0 }).to eq([grammar.eof_symbol])
+      end
+    end
+
     ["", "%token B\n"].each do |declaration|
       it "attaches an additional literal to a later named token: #{declaration.inspect}" do
         y = "%token A \"a\"\n%token A \"b\"\n#{declaration}%token B \"b\"\n%%\nstart: B \"b\";\n"

@@ -63,6 +63,18 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
       term2 = resolver.add_term(id: symbol_id("term"), replace: true)
       expect(term1).to eq(term2)
     end
+
+    [false, true].each do |replace|
+      it "rejects a duplicate token code without changing the original term with replace=#{replace}" do
+        original = resolver.add_term(id: symbol_id("A"), token_id: 300)
+
+        expect { resolver.add_term(id: symbol_id("B"), token_id: 300, replace: replace) }
+          .to raise_error("code 300 reassigned to token B")
+        expect(original.name).to eq("A")
+        expect(original.token_id).to eq(300)
+        expect(resolver.terms).to eq([original])
+      end
+    end
   end
 
   describe "#add_nterm" do
