@@ -33,7 +33,7 @@ RSpec.describe Lrama::Output do
     let(:text) do
       <<~GRAMMAR
         %token A 300
-        %token B
+        %token B 258
         %%
         start: A B;
       GRAMMAR
@@ -44,7 +44,7 @@ RSpec.describe Lrama::Output do
         'YYEMPTY = -2,',
         'YYEOF = 0,                     /* "end of file"  */',
         'YYerror = 256,                 /* error  */',
-        'YYUNDEF = 257,                 /* "invalid token"  */',
+        'YYUNDEF = 301,                 /* "invalid token"  */',
         'A = 300,                       /* A  */',
         'B = 258                        /* B  */',
       ])

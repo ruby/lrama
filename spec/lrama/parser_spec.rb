@@ -4992,6 +4992,28 @@ RSpec.describe Lrama::Parser do
   end
 
   describe "#fill_symbol_number" do
+    {
+      "%token A 259\n%token B C" => [256, 260, 259, 261, 262],
+      "%token B C\n%token A 259" => [256, 260, 259, 261, 262],
+      "%token A 256\n%token B C" => [257, 258, 256, 259, 260],
+      "%token A 257\n%token B C" => [256, 258, 257, 259, 260],
+      "%token A 300\n%token B C" => [256, 301, 300, 302, 303],
+      "%token A 255\n%token B C" => [256, 257, 255, 258, 259],
+      "%token error 300\n%token A B C" => [300, 301, 302, 303, 304],
+      "%token YYUNDEF 300\n%token A B C" => [256, 300, 301, 302, 303],
+    }.each do |declarations, expected_ids|
+      it "assigns unused token codes like Bison for #{declarations.inspect}" do
+        grammar = Lrama::Parser.new("#{declarations}\n%%\nstart: A B C 'a';\n", "token_numbers.y").parse
+        grammar.prepare
+        grammar.validate!
+        token_ids = grammar.terms.map { |term| [term.name, term.token_id] }.to_h
+
+        expect(token_ids.values_at("YYerror", "YYUNDEF", "A", "B", "C")).to eq(expected_ids)
+        expect(token_ids["'a'"]).to eq(97)
+        expect(token_ids.values.uniq.size).to eq(token_ids.size)
+      end
+    end
+
     it "fills token_id of Token::Char" do
       y = <<~INPUT
         %{
