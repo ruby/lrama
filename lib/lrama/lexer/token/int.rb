@@ -6,7 +6,7 @@ module Lrama
     module Token
       class Int < Base
         # @rbs!
-        #   def initialize: (s_value: Integer, ?alias_name: String, ?location: Location) -> void
+        #   def initialize: (s_value: Integer, ?location: Location) -> void
         #   def s_value: () -> Integer
       end
     end
