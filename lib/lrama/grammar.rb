@@ -477,10 +477,7 @@ module Lrama
               builder.add_rhs(rhs_node)
               builder.line = rhs_node.location.first_line
             when Node::RuleRhs::Action
-              user_code = rhs_node.code
-              user_code.alias_name = rhs_node.alias_name
-              user_code.tag = rhs_node.tag
-              builder.user_code = user_code
+              builder.action = rhs_node
             when Node::RuleRhs::Prec
               sym = find_symbol_by_id!(Grammar::Symbol::Id.from_token(rhs_node.token), location: rhs_node.location)
               builder.precedence_sym = sym
@@ -503,9 +500,7 @@ module Lrama
               when Node::RuleRhs::InstantiateRule
                 builder.symbols << rhs_node
               when Node::RuleRhs::Action
-                user_code = rhs_node.code
-                user_code.alias_name = rhs_node.alias_name
-                builder.user_code = user_code
+                builder.action = rhs_node
               when Node::RuleRhs::Prec
                 sym = find_symbol_by_id!(Grammar::Symbol::Id.from_token(rhs_node.token), location: rhs_node.location)
                 builder.precedence_sym = sym

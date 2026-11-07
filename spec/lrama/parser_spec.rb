@@ -22,7 +22,7 @@ RSpec.describe Lrama::Parser do
       else
         node
       end
-    end + [builder.precedence_sym, builder.user_code].compact
+    end + [builder.precedence_sym, builder.action&.code].compact
   end
 
   let(:header) do

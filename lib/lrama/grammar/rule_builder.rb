@@ -28,7 +28,7 @@ module Lrama
       attr_reader :parameterized_resolver #: Grammar::Parameterized::Resolver
       attr_reader :lhs_tag #: Lexer::Token::Tag?
       attr_reader :rhs #: Array[Node::RuleRhs::rhs]
-      attr_reader :user_code #: Lexer::Token::UserCode?
+      attr_reader :action #: Node::RuleRhs::Action?
       attr_reader :precedence_sym #: Grammar::Symbol?
 
       # @rbs (Counter rule_counter, Counter midrule_action_counter, Grammar::Parameterized::Resolver parameterized_resolver, ?Integer position_in_original_rule_rhs, ?lhs_tag: Lexer::Token::Tag?, ?skip_preprocess_references: bool) -> void
@@ -44,7 +44,7 @@ module Lrama
         @lhs_alias_name = nil
         @lhs_tag = lhs_tag
         @rhs = []
-        @user_code = nil
+        @action = nil
         @precedence_sym = nil
         @line = nil
         @rules = []
@@ -58,23 +58,23 @@ module Lrama
       def add_rhs(rhs)
         @line ||= rhs.location.first_line
 
-        flush_user_code
+        flush_action
 
         @rhs << rhs
       end
 
-      # @rbs (Lexer::Token::UserCode? user_code) -> void
-      def user_code=(user_code)
-        @line ||= user_code&.line
+      # @rbs (Node::RuleRhs::Action? action) -> void
+      def action=(action)
+        @line ||= action&.location&.first_line
 
-        flush_user_code
+        flush_action
 
-        @user_code = user_code
+        @action = action
       end
 
       # @rbs (Grammar::Symbol? precedence_sym) -> void
       def precedence_sym=(precedence_sym)
-        flush_user_code
+        flush_action
 
         @precedence_sym = precedence_sym
       end
@@ -128,7 +128,7 @@ module Lrama
           _lhs: lhs,
           _rhs: symbols,
           _lhs_location: lhs_location, _rhs_locations: locations,
-          lhs_tag: lhs_tag, token_code: user_code,
+          lhs_tag: lhs_tag, token_code: action&.code,
           position_in_original_rule_rhs: @position_in_original_rule_rhs, precedence_sym: precedence_sym, lineno: line
         )
         @rules = [rule]
@@ -177,7 +177,7 @@ module Lrama
                 r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
                 rule_builder.precedence_sym = r.precedence_sym
-                rule_builder.user_code = r.resolve_user_code(bindings)
+                rule_builder.action = r.resolve_action(bindings)
                 rule_builder.complete_input
                 rule_builder.setup_rules
                 @rule_builders_for_parameterized << rule_builder
@@ -185,8 +185,7 @@ module Lrama
             end
             replaced_rhs_locations << node.location
           when Node::RuleRhs::Action
-            token = node.code
-            prefix = token.referred ? "@" : "$@"
+            prefix = node.code.referred ? "@" : "$@"
             tag = node.tag || lhs_tag
             lhs_id = Grammar::Symbol::Id.new(name: prefix + @midrule_action_counter.increment.to_s, kind: :ident)
             replaced_rhs << lhs_id
@@ -194,7 +193,7 @@ module Lrama
 
             rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, i, lhs_tag: tag, skip_preprocess_references: true)
             rule_builder.lhs = lhs_id
-            rule_builder.user_code = token
+            rule_builder.action = node
             rule_builder.complete_input
             rule_builder.setup_rules
 
@@ -228,9 +227,10 @@ module Lrama
       # @rbs () -> void
       def numberize_references
         # Bison n'th component is 1-origin
-        (rhs + [user_code]).compact.each.with_index(1) do |node, i|
-          token = node.is_a?(Node::RuleRhs::Action) ? node.code : node
-          next unless token.is_a?(Lrama::Lexer::Token::UserCode)
+        (rhs + [action]).compact.each.with_index(1) do |node, i|
+          next unless node.is_a?(Node::RuleRhs::Action)
+
+          token = node.code
 
           token.references.each do |ref|
             ref_name = ref.name
@@ -298,15 +298,10 @@ module Lrama
       end
 
       # @rbs () -> void
-      def flush_user_code
-        if (c = @user_code)
-          @rhs << Node::RuleRhs::Action.new(
-            code: c,
-            alias_name: c.alias_name,
-            tag: c.tag,
-            location: c.location
-          )
-          @user_code = nil
+      def flush_action
+        if (action = @action)
+          @rhs << action
+          @action = nil
         end
       end
     end

@@ -6,15 +6,15 @@ module Lrama
       class Rhs
         attr_accessor symbols: Array[Node::RuleRhs::value]
 
-        attr_accessor user_code: Lexer::Token::UserCode?
+        attr_accessor action: Node::RuleRhs::Action?
 
         attr_accessor precedence_sym: Grammar::Symbol?
 
         # @rbs () -> void
         def initialize: () -> void
 
-        # @rbs (Grammar::Binding bindings) -> Lexer::Token::UserCode?
-        def resolve_user_code: (Grammar::Binding bindings) -> Lexer::Token::UserCode?
+        # @rbs (Grammar::Binding bindings) -> Node::RuleRhs::Action?
+        def resolve_action: (Grammar::Binding bindings) -> Node::RuleRhs::Action?
       end
     end
   end
