@@ -22,9 +22,6 @@ module Lrama
         # @rbs () -> String
         def to_s: () -> String
 
-        # @rbs (String string) -> bool
-        def referred_by?: (String string) -> bool
-
         # @rbs (Lexer::Token::Base other) -> bool
         def ==: (Lexer::Token::Base other) -> bool
 

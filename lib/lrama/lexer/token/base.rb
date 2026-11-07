@@ -27,11 +27,6 @@ module Lrama
           "value: `#{s_value}`, location: #{location}"
         end
 
-        # @rbs (String string) -> bool
-        def referred_by?(string)
-          [self.s_value, self.alias_name].compact.include?(string)
-        end
-
         # @rbs (Lexer::Token::Base other) -> bool
         def ==(other)
           self.class == other.class && self.s_value == other.s_value
