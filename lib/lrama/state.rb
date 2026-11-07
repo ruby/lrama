@@ -410,13 +410,19 @@ module Lrama
 
     # @rbs (Array[InadequacyAnnotation] propagating_list) -> void
     def append_annotation_list(propagating_list)
+      propagating_by_key = propagating_list.group_by {|annotation|
+        [annotation.state.id, annotation.token, annotation.actions]
+      }
+
       annotation_list.each do |annotation|
-        merging_list = propagating_list.select {|a| a.state == annotation.state && a.token == annotation.token && a.actions == annotation.actions }
-        annotation.merge_matrix(merging_list.map(&:contribution_matrix))
-        propagating_list -= merging_list
+        merging_list = propagating_by_key.delete([annotation.state.id, annotation.token, annotation.actions])
+        annotation.merge_matrix(merging_list.map(&:contribution_matrix)) if merging_list
       end
 
-      @annotation_list += propagating_list
+      # Preserve propagation order even when unmatched keys are interleaved.
+      @annotation_list += propagating_list.select {|annotation|
+        propagating_by_key.key?([annotation.state.id, annotation.token, annotation.actions])
+      }
     end
 
     # Definition 3.31 (compute_lhs_contributions)
