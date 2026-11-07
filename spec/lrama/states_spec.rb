@@ -1875,6 +1875,30 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe '#compute_state' do
+    it "initializes empty filtered lookaheads once for a state without annotations" do
+      grammar = Lrama::Parser.new("%%\nstart: 'a' 'b';\n", "state.y").parse
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      predecessor = states.states.find { |state| state.accessing_symbol == grammar.rules.last.rhs.first }
+      transition = predecessor.transitions.first
+      successor = transition.to_state
+      successor.item_lookahead_set = { successor.kernels.first => [grammar.rules.last.rhs.last] }
+      expect(predecessor).not_to receive(:propagate_lookaheads)
+      expect(predecessor).not_to receive(:update_transition)
+
+      states.send(:compute_state, predecessor, transition, successor)
+      lookaheads = successor.item_lookahead_set
+      states.send(:compute_state, predecessor, transition, successor)
+
+      expect(successor.lookaheads_recomputed).to be(true)
+      expect(lookaheads).to eq({ successor.kernels.first => [] })
+      expect(successor.item_lookahead_set).to equal(lookaheads)
+      expect(successor.ielr_isocores).to eq([successor])
+    end
+  end
+
   describe '#compute_ielr' do
     it 'stores a boolean for each follow kernel item' do
       path = "integration/ielr.y"

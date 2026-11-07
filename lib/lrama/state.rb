@@ -295,7 +295,11 @@ module Lrama
     #
     # @rbs (State next_state) -> lookahead_set
     def propagate_lookaheads(next_state)
+      filters = next_state.lookahead_set_filters
       next_state.kernels.map {|next_kernel|
+        filter = filters[next_kernel]
+        next [next_kernel, []] if filter.empty?
+
         lookahead_sets =
           if next_kernel.position > 1
             kernel = kernels.find {|k| k.predecessor_item_of?(next_kernel) }
@@ -304,7 +308,7 @@ module Lrama
             goto_follow_set(next_kernel.lhs)
           end
 
-        [next_kernel, lookahead_sets & next_state.lookahead_set_filters[next_kernel]]
+        [next_kernel, lookahead_sets & filter]
       }.to_h
     end
 
@@ -324,9 +328,26 @@ module Lrama
     #
     # @rbs () -> lookahead_set
     def lookahead_set_filters
-      @lookahead_set_filters ||= kernels.map {|kernel|
-        [kernel, @lalr_isocore.annotation_list.select {|annotation| annotation.contributed?(kernel) }.map(&:token)]
-      }.to_h
+      return @lalr_isocore.lookahead_set_filters if split_state?
+
+      @lookahead_set_filters ||= begin
+        # @type var filters: lookahead_set
+        filters = kernels.map {|kernel| [kernel, []] }.to_h
+        annotation_list.each do |annotation|
+          # @type var contributing_kernels: Hash[Item, bool]
+          contributing_kernels = {}
+          annotation.contribution_matrix.each_value do |contributions|
+            next if contributions.nil?
+            contributions.each do |kernel, contributed|
+              contributing_kernels[kernel] = true if contributed
+            end
+          end
+          contributing_kernels.each_key do |kernel|
+            filters[kernel] << annotation.token if filters.key?(kernel)
+          end
+        end
+        filters
+      end
     end
 
     # Definition 3.27 (inadequacy_lists)
