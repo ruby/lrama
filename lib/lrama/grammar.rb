@@ -477,7 +477,7 @@ module Lrama
               builder.add_rhs(rhs_node)
               builder.line = rhs_node.location.first_line
             when Node::RuleRhs::Action
-              builder.action = rhs_node
+              builder.add_rhs(rhs_node)
             when Node::RuleRhs::Prec
               sym = find_symbol_by_id!(Grammar::Symbol::Id.from_token(rhs_node.token), location: rhs_node.location)
               builder.precedence_sym = sym

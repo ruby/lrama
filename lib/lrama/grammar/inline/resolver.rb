@@ -43,7 +43,10 @@ module Lrama
           builder.lhs_alias_name = @rule_builder.lhs_alias_name
           builder.line = @rule_builder.line
           builder.precedence_sym = @rule_builder.precedence_sym
-          builder.action = replace_action(rhs, index)
+          if (action = replace_action(rhs, index))
+            builder.add_rhs(action)
+          end
+          builder.complete_input
           builder
         end
 

@@ -11,6 +11,7 @@ module Lrama
       # @rbs!
       #   @position_in_original_rule_rhs: Integer?
       #   @skip_preprocess_references: bool
+      #   @trailing_precedence: bool
       #   @rules: Array[Rule]
       #   @rule_builders_for_parameterized: Array[RuleBuilder]
       #   @rule_builders_for_derived_rules: Array[RuleBuilder]
@@ -38,6 +39,7 @@ module Lrama
         @parameterized_resolver = parameterized_resolver
         @position_in_original_rule_rhs = position_in_original_rule_rhs
         @skip_preprocess_references = skip_preprocess_references
+        @trailing_precedence = false
 
         @lhs = nil
         @lhs_location = nil
@@ -58,29 +60,23 @@ module Lrama
       def add_rhs(rhs)
         @line ||= rhs.location.first_line
 
-        flush_action
-
         @rhs << rhs
-      end
-
-      # @rbs (Node::RuleRhs::Action? action) -> void
-      def action=(action)
-        @line ||= action&.location&.first_line
-
-        flush_action
-
-        @action = action
+        @trailing_precedence = false
       end
 
       # @rbs (Grammar::Symbol? precedence_sym) -> void
       def precedence_sym=(precedence_sym)
-        flush_action
-
         @precedence_sym = precedence_sym
+        @trailing_precedence = !precedence_sym.nil?
       end
 
       # @rbs () -> void
       def complete_input
+        if (action = final_action)
+          @action = action
+          @rhs.pop
+        end
+
         freeze_rhs
       end
 
@@ -110,6 +106,14 @@ module Lrama
       # @rbs () -> void
       def freeze_rhs
         @rhs.freeze
+      end
+
+      # @rbs () -> Node::RuleRhs::Action?
+      def final_action
+        return if @trailing_precedence
+
+        action = @rhs.last
+        action if action.is_a?(Node::RuleRhs::Action)
       end
 
       # @rbs () -> void
@@ -177,7 +181,9 @@ module Lrama
                 r.symbols.each { |sym| rule_builder.add_rhs(bindings.resolve_symbol(sym)) }
                 rule_builder.line = line
                 rule_builder.precedence_sym = r.precedence_sym
-                rule_builder.action = r.resolve_action(bindings)
+                if (action = r.resolve_action(bindings))
+                  rule_builder.add_rhs(action)
+                end
                 rule_builder.complete_input
                 rule_builder.setup_rules
                 @rule_builders_for_parameterized << rule_builder
@@ -193,7 +199,7 @@ module Lrama
 
             rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, i, lhs_tag: tag, skip_preprocess_references: true)
             rule_builder.lhs = lhs_id
-            rule_builder.action = node
+            rule_builder.add_rhs(node)
             rule_builder.complete_input
             rule_builder.setup_rules
 
@@ -294,14 +300,6 @@ module Lrama
       def mark_rhs_node_referred(node)
         if node.is_a?(Node::RuleRhs::Action)
           node.code.referred = true
-        end
-      end
-
-      # @rbs () -> void
-      def flush_action
-        if (action = @action)
-          @rhs << action
-          @action = nil
         end
       end
     end

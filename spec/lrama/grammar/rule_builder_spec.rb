@@ -42,87 +42,6 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
   end
 
-  describe "#action=" do
-    describe "@action" do
-      let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
-      let(:token_1) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
-      let(:token_2) { Lrama::Lexer::Token::UserCode.new(s_value: "code 2", location: location) }
-
-      context "@action is nil" do
-        it "sets @action and doesn't add the action to rhs" do
-          # Assertion
-          expect(rule_builder.rhs).to eq([])
-
-          action = action_node(token_1)
-          rule_builder.action = action
-          expect(rule_builder.action).to equal action
-          expect(rule_builder.rhs).to eq([])
-        end
-      end
-
-      context "@action is not nil" do
-        it "sets @action and adds the previous action to rhs" do
-          # Assertion
-          action_1 = action_node(token_1)
-          rule_builder.action = action_1
-          expect(rule_builder.rhs).to eq([])
-
-          action_2 = action_node(token_2)
-          rule_builder.action = action_2
-          expect(rule_builder.action).to equal action_2
-          expect(rule_builder.rhs).to eq([action_1])
-        end
-      end
-    end
-
-    describe "@line" do
-      let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
-      let(:token) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
-
-      context "@line is nil" do
-        it "sets rhs.line to @line" do
-          # Assertion
-          expect(rule_builder.line).to be nil
-
-          rule_builder.action = action_node(token)
-          expect(rule_builder.line).to eq 1
-        end
-      end
-
-      context "@line is not nil" do
-        it "doesn't change @line" do
-          rule_builder.line = 0
-          # Assertion
-          expect(rule_builder.line).to eq 0
-
-          rule_builder.action = action_node(token)
-          expect(rule_builder.line).to eq 0
-        end
-      end
-    end
-  end
-
-  describe "#precedence_sym=" do
-    describe "@action" do
-      let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
-      let(:token_1) { Lrama::Lexer::Token::UserCode.new(s_value: "code 1", location: location) }
-      let(:sym_id) { Lrama::Grammar::Symbol::Id.new(name: "tPLUS", kind: :ident) }
-      let(:sym) { Lrama::Grammar::Symbol.new(id: sym_id, term: true) }
-
-      context "@action is not nil" do
-        it "sets @action to nil and adds the previous action to rhs" do
-          # Assertion
-          rule_builder.action = action_node(token_1)
-          expect(rule_builder.rhs).to eq([])
-
-          rule_builder.precedence_sym = sym
-          expect(rule_builder.action).to be nil
-          expect(rule_builder.rhs.map(&:code)).to eq([token_1])
-        end
-      end
-    end
-  end
-
   describe "#freeze_rhs" do
     let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
     let(:token) { Lrama::Lexer::Token::Ident.new(s_value: "class", location: location) }
@@ -131,6 +50,40 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.add_rhs(symbol_node(token))
       rule_builder.send(:freeze_rhs)
       expect { rule_builder.add_rhs(symbol_node(token)) }.to raise_error(FrozenError)
+    end
+  end
+
+  describe "#complete_input" do
+    let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
+    let(:token) { Lrama::Lexer::Token::UserCode.new(s_value: "code", location: location) }
+    let(:action) { action_node(token) }
+    let(:sym_id) { Lrama::Grammar::Symbol::Id.new(name: "tPLUS", kind: :ident) }
+    let(:sym) { Lrama::Grammar::Symbol.new(id: sym_id, term: true) }
+
+    it "extracts a trailing action from rhs" do
+      rule_builder.add_rhs(action)
+      rule_builder.complete_input
+
+      expect(rule_builder.rhs).to eq([])
+      expect(rule_builder.action).to equal(action)
+    end
+
+    it "keeps an action before %prec in rhs" do
+      rule_builder.add_rhs(action)
+      rule_builder.precedence_sym = sym
+      rule_builder.complete_input
+
+      expect(rule_builder.rhs).to eq([action])
+      expect(rule_builder.action).to be_nil
+    end
+
+    it "extracts an action after %prec from rhs" do
+      rule_builder.precedence_sym = sym
+      rule_builder.add_rhs(action)
+      rule_builder.complete_input
+
+      expect(rule_builder.rhs).to eq([])
+      expect(rule_builder.action).to equal(action)
     end
   end
 
@@ -150,7 +103,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.add_rhs(symbol_node(token_3))
         rule_builder.add_rhs(symbol_node(token_4))
-        rule_builder.action = action_node(token_5)
+        rule_builder.add_rhs(action_node(token_5))
         rule_builder.complete_input
 
         rule_builder.send(:preprocess_references)
@@ -196,7 +149,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.lhs_location = token_1.location
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.add_rhs(symbol_node(token_3))
-        rule_builder.action = action_node(token_4)
+        rule_builder.add_rhs(action_node(token_4))
         rule_builder.add_rhs(symbol_node(token_5))
         rule_builder.complete_input
 
@@ -250,7 +203,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.add_rhs(symbol_node(token_3))
         rule_builder.add_rhs(symbol_node(token_4))
-        rule_builder.action = action_node(token_5)
+        rule_builder.add_rhs(action_node(token_5))
         rule_builder.complete_input
 
         expected = <<~TEXT
@@ -283,10 +236,10 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
         rule_builder.lhs_location = token_1.location
         rule_builder.add_rhs(symbol_node(token_2))
-        rule_builder.action = action_node(token_3)
+        rule_builder.add_rhs(action_node(token_3))
         rule_builder.add_rhs(symbol_node(token_4))
         rule_builder.add_rhs(symbol_node(token_5))
-        rule_builder.action = action_node(token_6)
+        rule_builder.add_rhs(action_node(token_6))
         rule_builder.complete_input
 
         expected = <<~TEXT
@@ -319,7 +272,7 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
         rule_builder.add_rhs(symbol_node(token_2))
         rule_builder.add_rhs(symbol_node(token_3))
         rule_builder.add_rhs(symbol_node(token_4))
-        rule_builder.action = action_node(token_5)
+        rule_builder.add_rhs(action_node(token_5))
         rule_builder.complete_input
 
         expected = <<~TEXT
@@ -478,11 +431,11 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
       rule_builder.lhs_location = token_1.location
       rule_builder.add_rhs(symbol_node(token_2))
-      rule_builder.action = action_node(token_3)
+      rule_builder.add_rhs(action_node(token_3))
       rule_builder.add_rhs(symbol_node(token_4))
-      rule_builder.action = action_node(token_5)
+      rule_builder.add_rhs(action_node(token_5))
       rule_builder.add_rhs(symbol_node(token_6))
-      rule_builder.action = action_node(token_7)
+      rule_builder.add_rhs(action_node(token_7))
       rule_builder.complete_input
       rule_builder.setup_rules
 
@@ -516,11 +469,11 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
       rule_builder.lhs = Lrama::Grammar::Symbol::Id.from_token(token_1)
       rule_builder.lhs_location = token_1.location
       rule_builder.add_rhs(symbol_node(token_2))
-      rule_builder.action = action_node(token_3)
+      rule_builder.add_rhs(action_node(token_3))
       rule_builder.add_rhs(symbol_node(token_4))
-      rule_builder.action = action_node(token_5)
+      rule_builder.add_rhs(action_node(token_5))
       rule_builder.add_rhs(symbol_node(token_6))
-      rule_builder.action = action_node(token_7)
+      rule_builder.add_rhs(action_node(token_7))
       rule_builder.complete_input
       rule_builder.setup_rules
 
