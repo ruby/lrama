@@ -6,21 +6,21 @@ module Lrama
     class Parameterized
       class Rhs
         attr_accessor :symbols #: Array[Node::RuleRhs::value]
-        attr_accessor :user_code #: Lexer::Token::UserCode?
+        attr_accessor :action #: Node::RuleRhs::Action?
         attr_accessor :precedence_sym #: Grammar::Symbol?
 
         # @rbs () -> void
         def initialize
           @symbols = []
-          @user_code = nil
+          @action = nil
           @precedence_sym = nil
         end
 
-        # @rbs (Grammar::Binding bindings) -> Lexer::Token::UserCode?
-        def resolve_user_code(bindings)
-          return unless user_code
+        # @rbs (Grammar::Binding bindings) -> Node::RuleRhs::Action?
+        def resolve_action(bindings)
+          return unless action
 
-          resolved = Lexer::Token::UserCode.new(s_value: user_code.s_value, location: user_code.location)
+          resolved_code = Lexer::Token::UserCode.new(s_value: action.code.s_value, location: action.code.location)
           var_to_arg = {} #: Hash[String, String]
           symbols.each do |sym|
             resolved_sym = bindings.resolve_symbol(sym)
@@ -30,14 +30,19 @@ module Lrama
           end
 
           var_to_arg.each do |var, arg|
-            resolved.references.each do |ref|
+            resolved_code.references.each do |ref|
               if ref.name == var
                 ref.name = arg
               end
             end
           end
 
-          return resolved
+          Node::RuleRhs::Action.new(
+            code: resolved_code,
+            alias_name: action.alias_name,
+            tag: action.tag,
+            location: action.location
+          )
         end
       end
     end

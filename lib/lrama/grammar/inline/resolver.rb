@@ -43,7 +43,7 @@ module Lrama
           builder.lhs_alias_name = @rule_builder.lhs_alias_name
           builder.line = @rule_builder.line
           builder.precedence_sym = @rule_builder.precedence_sym
-          builder.user_code = replace_user_code(rhs, index)
+          builder.action = replace_action(rhs, index)
           builder
         end
 
@@ -65,28 +65,34 @@ module Lrama
           end
         end
 
-        # @rbs (Lrama::Grammar::Parameterized::Rhs rhs, Integer index) -> Lrama::Lexer::Token::UserCode
-        def replace_user_code(rhs, index)
-          user_code = @rule_builder.user_code
-          return user_code if rhs.user_code.nil? || user_code.nil?
+        # @rbs (Lrama::Grammar::Parameterized::Rhs rhs, Integer index) -> Node::RuleRhs::Action?
+        def replace_action(rhs, index)
+          action = @rule_builder.action
+          return action if rhs.action.nil? || action.nil?
 
           inline_index = index + 1
           index_offset = rhs.symbols.count - 1
-          code = user_code.s_value.dup
+          code = action.code.s_value.dup
 
-          user_code.references.reverse_each do |ref|
+          action.code.references.reverse_each do |ref|
             next if ref.index.nil? || ref.index < inline_index # The index is nil for $$.
 
             reference = code[ref.first_column...ref.last_column]
             replacement =
               if ref.type == :dollar && ref.index == inline_index
-                rhs.user_code.s_value
+                rhs.action.code.s_value
               else
                 reference.sub(/\d+\z/, (ref.index + index_offset).to_s)
               end
             code[ref.first_column...ref.last_column] = replacement
           end
-          Lrama::Lexer::Token::UserCode.new(s_value: code, location: user_code.location)
+          resolved_code = Lrama::Lexer::Token::UserCode.new(s_value: code, location: action.code.location)
+          Node::RuleRhs::Action.new(
+            code: resolved_code,
+            alias_name: action.alias_name,
+            tag: action.tag,
+            location: action.location
+          )
         end
       end
     end

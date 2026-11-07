@@ -39,7 +39,7 @@ module Lrama
 
       attr_reader rhs: Array[Node::RuleRhs::rhs]
 
-      attr_reader user_code: Lexer::Token::UserCode?
+      attr_reader action: Node::RuleRhs::Action?
 
       attr_reader precedence_sym: Grammar::Symbol?
 
@@ -49,8 +49,8 @@ module Lrama
       # @rbs (Node::RuleRhs::rhs rhs) -> void
       def add_rhs: (Node::RuleRhs::rhs rhs) -> void
 
-      # @rbs (Lexer::Token::UserCode? user_code) -> void
-      def user_code=: (Lexer::Token::UserCode? user_code) -> void
+      # @rbs (Node::RuleRhs::Action? action) -> void
+      def action=: (Node::RuleRhs::Action? action) -> void
 
       # @rbs (Grammar::Symbol? precedence_sym) -> void
       def precedence_sym=: (Grammar::Symbol? precedence_sym) -> void
@@ -96,7 +96,7 @@ module Lrama
       def mark_rhs_node_referred: (Node::RuleRhs::rhs node) -> void
 
       # @rbs () -> void
-      def flush_user_code: () -> void
+      def flush_action: () -> void
     end
   end
 end
