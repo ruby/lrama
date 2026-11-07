@@ -7,6 +7,8 @@ module Lrama
 
       @skip_preprocess_references: bool
 
+      @trailing_precedence: bool
+
       @rules: Array[Rule]
 
       @rule_builders_for_parameterized: Array[RuleBuilder]
@@ -49,9 +51,6 @@ module Lrama
       # @rbs (Node::RuleRhs::rhs rhs) -> void
       def add_rhs: (Node::RuleRhs::rhs rhs) -> void
 
-      # @rbs (Node::RuleRhs::Action? action) -> void
-      def action=: (Node::RuleRhs::Action? action) -> void
-
       # @rbs (Grammar::Symbol? precedence_sym) -> void
       def precedence_sym=: (Grammar::Symbol? precedence_sym) -> void
 
@@ -71,6 +70,9 @@ module Lrama
 
       # @rbs () -> void
       def freeze_rhs: () -> void
+
+      # @rbs () -> Node::RuleRhs::Action?
+      def final_action: () -> Node::RuleRhs::Action?
 
       # @rbs () -> void
       def preprocess_references: () -> void
@@ -94,9 +96,6 @@ module Lrama
 
       # @rbs (Node::RuleRhs::rhs node) -> void
       def mark_rhs_node_referred: (Node::RuleRhs::rhs node) -> void
-
-      # @rbs () -> void
-      def flush_action: () -> void
     end
   end
 end
