@@ -7,15 +7,13 @@ module Lrama
       class Base
         attr_reader :s_value #: String
         attr_reader :location #: Location
-        attr_accessor :alias_name #: String?
         attr_accessor :referred #: bool
         attr_reader :errors #: Array[String]
 
-        # @rbs (s_value: String, ?alias_name: String?, ?location: Location) -> void
-        def initialize(s_value:, alias_name: nil, location: nil)
+        # @rbs (s_value: String, ?location: Location) -> void
+        def initialize(s_value:, location: nil)
           s_value.freeze
           @s_value = s_value
-          @alias_name = alias_name
           @location = location
           @errors = []
         end
@@ -25,11 +23,6 @@ module Lrama
         # @rbs () -> String
         def to_s
           "value: `#{s_value}`, location: #{location}"
-        end
-
-        # @rbs (String string) -> bool
-        def referred_by?(string)
-          [self.s_value, self.alias_name].compact.include?(string)
         end
 
         # @rbs (Lexer::Token::Base other) -> bool
