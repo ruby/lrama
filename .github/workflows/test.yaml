@@ -38,30 +38,16 @@ jobs:
       fail-fast: false
       matrix:
         ruby: ['head']
-    defaults:
-      run:
-        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Clean up existing MSYS2
-        run: |
-          if (Test-Path "$env:RUNNER_TEMP\msys64") {
-            Write-Host "Removing existing MSYS2 at $env:RUNNER_TEMP\msys64"
-            Remove-Item -Recurse -Force "$env:RUNNER_TEMP\msys64"
-          }
-        shell: powershell
-      - uses: msys2/setup-msys2@v2
-        id: setup-msys2
-        with:
-          update: true
-          install: >-
-            flex
+      # Replacing RubyInstaller's MSYS2 removes Ruby's runtime DLLs.
+      - run: ridk exec pacman -S --needed --noconfirm flex
+      - run: ruby -rzlib -e "puts Zlib::ZLIB_VERSION"
       - run: flex --help
-      - run: bundle install
       - run: bundle exec rspec
   test-c:
     needs: ruby-versions
