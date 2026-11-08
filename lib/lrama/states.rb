@@ -744,10 +744,12 @@ module Lrama
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_internal_or_predecessor_dependencies
       relations = {}
+      # Scope origins to this construction, before state splitting changes predecessors.
+      cache = {} #: State::item_origins_cache
 
       @states.each do |state|
         state.nterm_transitions.each do |goto|
-          relations[goto] = state.internal_dependencies(goto) + state.predecessor_dependencies(goto)
+          relations[goto] = state.internal_dependencies(goto) + state.predecessor_dependencies(goto, cache)
         end
       end
 

@@ -10,6 +10,10 @@ module Lrama
 
     type dominant_contributions = Hash[InadequacyAnnotation, Array[InadequacyAnnotation::action]?]
 
+    type item_pair = [ State, Item ]
+
+    type item_origins_cache = Hash[item_pair, Array[item_pair]]
+
     @id: Integer
 
     @accessing_symbol: Grammar::Symbol
@@ -41,6 +45,12 @@ module Lrama
     @successor_dependencies: Hash[Action::Goto, Array[Action::Goto]]
 
     @dominant_contributions: dominant_contributions?
+
+    @predecessor_set: Hash[State, bool]?
+
+    @item_index: Hash[[ Grammar::Symbol, Integer?, Integer ], Array[Item]]?
+
+    @internal_dependency_symbols: Hash[Grammar::Symbol, Hash[Grammar::Symbol, bool]]?
 
     attr_reader id: Integer
 
@@ -214,6 +224,9 @@ module Lrama
     # @rbs (Item item) -> Array[[State, Item]]
     def predecessors_with_item: (Item item) -> Array[[ State, Item ]]
 
+    # @rbs (Grammar::Rule rule, Integer position) -> Array[Item]
+    def items_for_rule: (Grammar::Rule rule, Integer position) -> Array[Item]
+
     # @rbs (State prev_state) -> void
     def append_predecessor: (State prev_state) -> void
 
@@ -234,7 +247,10 @@ module Lrama
 
     # Definition 3.9 (Goto Follows Predecessor Relation)
     #
-    # @rbs (Action::Goto goto) -> Array[Action::Goto]
-    def predecessor_dependencies: (Action::Goto goto) -> Array[Action::Goto]
+    # @rbs (Action::Goto goto, ?item_origins_cache cache) -> Array[Action::Goto]
+    def predecessor_dependencies: (Action::Goto goto, ?item_origins_cache cache) -> Array[Action::Goto]
+
+    # @rbs (Item item, item_origins_cache cache) -> Array[item_pair]
+    def item_origins: (Item item, item_origins_cache cache) -> Array[item_pair]
   end
 end

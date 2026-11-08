@@ -17,6 +17,153 @@ RSpec.describe Lrama::State do
     Lrama::State::InadequacyAnnotation.new(from, on, with, { with.first => contributions })
   end
 
+  describe "#append_predecessor" do
+    it "retains distinct objects with the same ID and preserves insertion order" do
+      other = described_class.new(origin.id, token, [])
+
+      [origin, other, origin, other].each { |predecessor| state.append_predecessor(predecessor) }
+
+      expect(state.predecessors.map(&:object_id)).to eq([origin.object_id, other.object_id])
+    end
+  end
+
+  describe "#predecessors_with_item" do
+    it "retains matching rules with different IDs and excludes unequal rules at the same location" do
+      equivalent_rule = rule.dup
+      equivalent_rule.id += 100
+      equivalent = Lrama::State::Item.new(rule: equivalent_rule, position: item.position)
+      different_rule = rule.dup
+      different_rule.rhs = rule.rhs.reverse
+      different = Lrama::State::Item.new(rule: different_rule, position: item.position)
+      predecessor = described_class.new(1, token, [item, equivalent, different])
+      state.append_predecessor(predecessor)
+
+      expect(state.predecessors_with_item(next_item)).to eq([[predecessor, item], [predecessor, equivalent]])
+    end
+
+    it "rebuilds the item index when the closure is assigned" do
+      state.append_predecessor(origin)
+      expect(state.predecessors_with_item(next_item)).to eq([])
+
+      origin.closure = [item]
+
+      expect(state.predecessors_with_item(next_item)).to eq([[origin, item]])
+    end
+
+    it "does not compare items from unrelated source locations" do
+      unrelated_rule = rule.dup
+      unrelated_rule.lineno += 1
+      unrelated = Lrama::State::Item.new(rule: unrelated_rule, position: item.position)
+      predecessor = described_class.new(1, token, [unrelated, item])
+      state.append_predecessor(predecessor)
+      expect(unrelated_rule).not_to receive(:==)
+
+      expect(state.predecessors_with_item(next_item)).to eq([[predecessor, item]])
+    end
+  end
+
+  describe "#predecessor_dependencies" do
+    let(:rule) do
+      grammar = Lrama::Parser.new("%%\nstart: 'a' 'b' target;\ntarget: 'c';\n", "origins.y").parse
+      grammar.prepare
+      grammar.rules[1]
+    end
+    let(:first) { described_class.new(1, token, [item]) }
+    let(:second) { described_class.new(2, token, [item]) }
+    let(:left) { described_class.new(3, token, [next_item]) }
+    let(:right) { described_class.new(4, token, [next_item]) }
+    let(:tail_item) { next_item.new_by_next_position }
+    let(:tail) { described_class.new(5, rule.rhs[1], [tail_item]) }
+    let(:first_goto) { Lrama::State::Action::Goto.new(first, rule.lhs, [], tail) }
+    let(:second_goto) { Lrama::State::Action::Goto.new(second, rule.lhs, [], tail) }
+    let(:target_goto) { Lrama::State::Action::Goto.new(tail, rule.rhs.last, [], tail) }
+
+    before do
+      [left, right].each do |middle|
+        middle.append_predecessor(first)
+        middle.append_predecessor(second)
+      end
+      tail.append_predecessor(left)
+      tail.append_predecessor(right)
+      allow(first).to receive(:nterm_transitions).and_return([first_goto])
+      allow(second).to receive(:nterm_transitions).and_return([second_goto])
+    end
+
+    it "visits converging origins once in the existing depth-first order" do
+      expect(tail.predecessor_dependencies(target_goto)).to eq([second_goto, first_goto])
+    end
+
+    it "shares intermediate origins across dependency queries" do
+      cache = {}
+      tail.predecessor_dependencies(target_goto, cache)
+      expect(left).not_to receive(:predecessors_with_item)
+      expect(right).not_to receive(:predecessors_with_item)
+
+      expect(tail.predecessor_dependencies(target_goto, cache)).to eq([second_goto, first_goto])
+    end
+
+    it "uses fresh origins for a new relation construction after predecessors change" do
+      tail.predecessor_dependencies(target_goto)
+      third = described_class.new(6, token, [item])
+      third_goto = Lrama::State::Action::Goto.new(third, rule.lhs, [], tail)
+      allow(third).to receive(:nterm_transitions).and_return([third_goto])
+      right.append_predecessor(third)
+
+      expect(tail.predecessor_dependencies(target_goto)).to eq([third_goto, second_goto, first_goto])
+    end
+
+    it "does not use a position-zero kernel as an origin" do
+      initial = described_class.new(0, token, [item])
+      transition = Lrama::State::Action::Goto.new(initial, item.next_sym, [], tail)
+      allow(item).to receive(:symbols_after_transition).and_return([])
+
+      expect(initial.predecessor_dependencies(transition)).to eq([])
+    end
+
+    it "finds origins along a long predecessor chain without recursion" do
+      grammar = Lrama::Parser.new("%%\nstart: #{Array.new(2000, "'a'").join(' ')};\n", "long.y").parse
+      grammar.prepare
+      long_rule = grammar.rules[1]
+      chain = (0..2000).map do |position|
+        kernel = Lrama::State::Item.new(rule: long_rule, position: position)
+        described_class.new(position, token, [kernel])
+      end
+      chain.each_cons(2) { |previous, following| following.append_predecessor(previous) }
+
+      expect(chain.last.item_origins(chain.last.kernels.first, {})).to eq([[chain.first, chain.first.kernels.first]])
+    end
+  end
+
+  describe "#internal_dependencies" do
+    let(:initial) do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "internal.y").parse
+        %%
+        start: x | y;
+        x: target optional | target | %empty;
+        y: target 'z';
+        target: 't';
+        optional: %empty;
+      GRAMMAR
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.states.first
+    end
+
+    it "includes only position-zero items with a nullable suffix and removes duplicate symbols" do
+      target_goto = initial.nterm_transitions.find { |transition| transition.next_sym.name == "target" }
+      x_goto = initial.nterm_transitions.find { |transition| transition.next_sym.name == "x" }
+
+      expect(initial.internal_dependencies(target_goto)).to eq([x_goto])
+    end
+
+    it "indexes items once across all goto symbols" do
+      initial.items.each { |entry| expect(entry).to receive(:next_sym).at_most(1).times.and_call_original }
+
+      initial.nterm_transitions.each { |transition| initial.internal_dependencies(transition) }
+    end
+  end
+
   describe "#is_compatible?" do
     let(:other_action) { Lrama::State::Action::Reduce.new(item) }
     let(:entry) do

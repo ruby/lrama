@@ -19,6 +19,8 @@ module Lrama
     #   type transition = Action::Shift | Action::Goto
     #   type lookahead_set = Hash[Item, Array[Grammar::Symbol]]
     #   type dominant_contributions = Hash[InadequacyAnnotation, Array[InadequacyAnnotation::action]?]
+    #   type item_pair = [State, Item]
+    #   type item_origins_cache = Hash[item_pair, Array[item_pair]]
     #
     #   @id: Integer
     #   @accessing_symbol: Grammar::Symbol
@@ -36,6 +38,9 @@ module Lrama
     #   @internal_dependencies: Hash[Action::Goto, Array[Action::Goto]]
     #   @successor_dependencies: Hash[Action::Goto, Array[Action::Goto]]
     #   @dominant_contributions: dominant_contributions?
+    #   @predecessor_set: Hash[State, bool]?
+    #   @item_index: Hash[[Grammar::Symbol, Integer?, Integer], Array[Item]]?
+    #   @internal_dependency_symbols: Hash[Grammar::Symbol, Hash[Grammar::Symbol, bool]]?
 
     attr_reader :id #: Integer
     attr_reader :accessing_symbol #: Grammar::Symbol
@@ -94,6 +99,9 @@ module Lrama
     def closure=(closure)
       @closure = closure
       @items = @kernels + @closure
+      @item_index = nil
+      @internal_dependency_symbols = nil
+      @internal_dependencies.clear
     end
 
     # @rbs () -> Array[Action::Reduce]
@@ -506,17 +514,27 @@ module Lrama
     def predecessors_with_item(item)
       result = []
       @predecessors.each do |pre|
-        pre.items.each do |i|
-          result << [pre, i] if i.predecessor_item_of?(item)
+        pre.items_for_rule(item.rule, item.position - 1).each do |i|
+          result << [pre, i]
         end
       end
       result
     end
 
+    # @rbs (Grammar::Rule rule, Integer position) -> Array[Item]
+    def items_for_rule(rule, position)
+      # Rule equality ignores IDs, so retain all matching rules at a source location.
+      index = (@item_index ||= @items.group_by {|item| [item.lhs, item.rule.lineno, item.position] })
+      candidates = index[[rule.lhs, rule.lineno, position]] || []
+      candidates.select {|item| item.rule == rule }
+    end
+
     # @rbs (State prev_state) -> void
     def append_predecessor(prev_state)
+      seen = (@predecessor_set ||= {}.compare_by_identity)
+      return if seen[prev_state]
+      seen[prev_state] = true
       @predecessors << prev_state
-      @predecessors.uniq!
     end
 
     # Definition 3.39 (compute_goto_follow_set)
@@ -538,10 +556,19 @@ module Lrama
     def internal_dependencies(goto)
       return @internal_dependencies[goto] if @internal_dependencies[goto]
 
-      syms = @items.select {|i|
-        i.next_sym == goto.next_sym && i.symbols_after_transition.all?(&:nullable) && i.position == 0
-      }.map(&:lhs).uniq
-      @internal_dependencies[goto] = nterm_transitions.select {|goto2| syms.include?(goto2.next_sym) }
+      dependency_symbols = (@internal_dependency_symbols ||= begin
+        # @type var symbols: Hash[Grammar::Symbol, Hash[Grammar::Symbol, bool]]
+        symbols = {}
+        @items.each do |item|
+          next unless item.position == 0
+          next_sym = item.next_sym
+          next unless next_sym && item.symbols_after_transition.all?(&:nullable)
+          (symbols[next_sym] ||= {})[item.lhs] = true
+        end
+        symbols
+      end)
+      syms = dependency_symbols[goto.next_sym]
+      @internal_dependencies[goto] = nterm_transitions.select {|goto2| syms && syms[goto2.next_sym] }
     end
 
     # Definition 3.5 (Goto Follows Successor Relation)
@@ -555,26 +582,43 @@ module Lrama
 
     # Definition 3.9 (Goto Follows Predecessor Relation)
     #
-    # @rbs (Action::Goto goto) -> Array[Action::Goto]
-    def predecessor_dependencies(goto)
+    # @rbs (Action::Goto goto, ?item_origins_cache cache) -> Array[Action::Goto]
+    def predecessor_dependencies(goto, cache = {})
       state_items = []
       @kernels.select {|kernel|
-        kernel.next_sym == goto.next_sym && kernel.symbols_after_transition.all?(&:nullable)
+        kernel.position > 0 && kernel.next_sym == goto.next_sym && kernel.symbols_after_transition.all?(&:nullable)
       }.each do |item|
-        queue = predecessors_with_item(item)
-        until queue.empty?
-          st, i = queue.pop
-          if i.position == 0
-            state_items << [st, i]
-          else
-            st.predecessors_with_item(i).each {|v| queue << v }
-          end
-        end
+        state_items.concat(item_origins(item, cache))
       end
 
       state_items.map {|state, item|
         state.nterm_transitions.find {|goto2| goto2.next_sym == item.lhs }
-      }
+      }.uniq
+    end
+
+    # @rbs (Item item, item_origins_cache cache) -> Array[item_pair]
+    def item_origins(item, cache)
+      stack = [[self, item]] #: Array[item_pair]
+      while (key = stack.last)
+        state, current = key
+        if cache.key?(key)
+          stack.pop
+        elsif current.position == 0
+          cache[key] = [key]
+          stack.pop
+        else
+          predecessors = state.predecessors_with_item(current)
+          pending = predecessors.reject {|pair| cache.key?(pair) }
+          if pending.empty?
+            cache[key] = predecessors.reverse.flat_map {|pair| cache.fetch(pair) }.uniq
+            stack.pop
+          else
+            stack.concat(pending)
+          end
+        end
+      end
+
+      cache.fetch([self, item])
     end
   end
 end
