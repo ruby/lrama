@@ -398,13 +398,18 @@ module Lrama
     # @rbs () -> void
     def annotate_manifestation
       inadequacy_list.each {|token, actions|
-        contribution_matrix = actions.map {|action|
+        contribution_matrix = {}
+        actions.each {|action|
           if action.is_a?(Action::Shift)
-            [action, nil]
+            contribution_matrix[action] = nil
+          elsif action.rule.empty_rule?
+            contribution_matrix[action] = lhs_contributions(action.rule.lhs, token)
           else
-            [action, action.rule.empty_rule? ? lhs_contributions(action.rule.lhs, token) : kernels.map {|k| [k, k.rule == action.item.rule && k.end_of_rule?] }.to_h]
+            contributions = {}
+            kernels.each {|kernel| contributions[kernel] = true if kernel.rule == action.item.rule && kernel.end_of_rule? }
+            contribution_matrix[action] = contributions
           end
-        }.to_h
+        }
         @annotation_list << InadequacyAnnotation.new(self, token, actions, contribution_matrix)
       }
     end
@@ -413,39 +418,48 @@ module Lrama
     #
     # @rbs (State predecessor) -> void
     def annotate_predecessor(predecessor)
-      propagating_list = annotation_list.map {|annotation|
-        contribution_matrix = annotation.contribution_matrix.map {|action, contributions|
+      # Merging annotations can mutate shared lhs contributions after this call.
+      always_contributions = {} #: Hash[Grammar::Symbol, Hash[Item, bool]]
+      propagating_list = []
+      annotation_list.each {|annotation|
+        always_by_kernel = always_contributions[annotation.token] ||= {}
+        contribution_matrix = {}
+        propagates = false
+        annotation.contribution_matrix.each {|action, contributions|
           if contributions.nil?
-            [action, nil]
-          elsif first_kernels.any? {|kernel| contributions[kernel] && predecessor.lhs_contributions(kernel.lhs, annotation.token).empty? }
-            [action, nil]
+            contribution_matrix[action] = nil
+          elsif contributions.any? {|kernel, contributed|
+            contributed && kernel.position == 1 && always_by_kernel.fetch(kernel) {
+              always_by_kernel[kernel] = predecessor.lhs_contributions(kernel.lhs, annotation.token).empty?
+            }
+          }
+            contribution_matrix[action] = nil
           else
-            cs = predecessor.lane_items[self].map {|pred_kernel, kernel|
+            cs = {}
+            # Empty-rule matrices share the lhs cache, where an empty hash means always.
+            keep_false = action.is_a?(Action::Reduce) && action.rule.empty_rule?
+            predecessor.lane_items[self].each {|pred_kernel, kernel|
               c = contributions[kernel] && (
                 (kernel.position > 1 && predecessor.item_lookahead_set[pred_kernel].include?(annotation.token)) ||
                 (kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, annotation.token)[pred_kernel])
               )
-              [pred_kernel, c]
-            }.to_h
-            [action, cs]
+              cs[pred_kernel] = c if c || keep_false
+              propagates = true if c
+            }
+            contribution_matrix[action] = cs
           end
-        }.to_h
+        }
 
         # Observation 3.33 (Simple Split-Stable Dominance)
         #
         # If all of contributions in the contribution_matrix are
         # always contribution or never contribution, we can stop annotate propagations
         # to the predecessor state.
-        next nil if contribution_matrix.all? {|_, contributions| contributions.nil? || contributions.all? {|_, contributed| !contributed } }
+        next unless propagates
 
-        InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
-      }.compact
+        propagating_list << InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
+      }
       predecessor.append_annotation_list(propagating_list)
-    end
-
-    # @rbs () -> Array[Item]
-    def first_kernels
-      @first_kernels ||= kernels.select {|kernel| kernel.position == 1 }
     end
 
     # @rbs (Array[InadequacyAnnotation] propagating_list) -> void

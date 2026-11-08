@@ -301,6 +301,132 @@ RSpec.describe Lrama::State do
     end
   end
 
+  describe "#annotate_manifestation" do
+    it "keeps shifts unconditional and stores only completed matching kernels for nonempty reductions" do
+      completed = next_item.new_by_next_position
+      equivalent_rule = rule.dup
+      equivalent_rule.id += 100
+      equivalent = Lrama::State::Item.new(rule: equivalent_rule, position: completed.position)
+      current = described_class.new(0, token, [next_item, completed, equivalent])
+      shift = Lrama::State::Action::Shift.new(current, token, [], origin)
+      reduce = Lrama::State::Action::Reduce.new(completed)
+      allow(current).to receive(:inadequacy_list).and_return({ token => [shift, reduce] })
+
+      current.annotate_manifestation
+
+      expect(current.annotation_list.first.contribution_matrix).to eq({
+        shift => nil, reduce => { completed => true, equivalent => true },
+      })
+    end
+
+    it "retains shared lhs contributions for empty reductions, including false entries" do
+      empty_rule = rule.dup
+      empty_rule.rhs = []
+      reduce = Lrama::State::Action::Reduce.new(Lrama::State::Item.new(rule: empty_rule, position: 0))
+      contributions = { item => false }
+      allow(state).to receive(:inadequacy_list).and_return({ token => [reduce] })
+      allow(state).to receive(:lhs_contributions).with(rule.lhs, token).and_return(contributions)
+
+      state.annotate_manifestation
+
+      expect(state.annotation_list.first.contribution_matrix[reduce]).to equal(contributions)
+      expect(contributions).to eq({ item => false })
+    end
+  end
+
+  describe "#annotate_predecessor" do
+    let(:last_item) { next_item.new_by_next_position }
+    let(:state) { described_class.new(2, token, [next_item, last_item]) }
+    let(:predecessor) { described_class.new(0, token, [item, next_item]) }
+    let(:other_action) { Lrama::State::Action::Reduce.new(last_item) }
+
+    before do
+      predecessor.lane_items[state] = [[item, next_item], [next_item, last_item]]
+      predecessor.item_lookahead_set = { item => [], next_item => [token] }
+    end
+
+    it "propagates first-position lhs and later-position lookahead contributions, omitting false entries" do
+      allow(predecessor).to receive(:lhs_contributions).with(rule.lhs, token).and_return({ item => true })
+      state.annotation_list << annotation({ next_item => true, last_item => true })
+      state.annotation_list << annotation({ next_item => false, last_item => true }, from: state)
+
+      state.annotate_predecessor(predecessor)
+
+      expect(predecessor.annotation_list.map(&:contribution_matrix)).to eq([
+        { actions.first => { item => true, next_item => true } },
+        { actions.first => { next_item => true } },
+      ])
+      expect(predecessor.annotation_list.map(&:state)).to eq([origin, state])
+    end
+
+    it "shares the unconditional contribution check across actions" do
+      state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
+        actions.first => { next_item => true }, other_action => { next_item => true },
+      })
+      expect(predecessor).to receive(:lhs_contributions).with(rule.lhs, token).once.and_return({})
+
+      state.annotate_predecessor(predecessor)
+
+      expect(predecessor.annotation_list).to eq([])
+    end
+
+    it "uses separate checks for each token and refreshes them after a propagation call" do
+      contributions = {}
+      allow(predecessor).to receive(:lhs_contributions).with(rule.lhs, token).and_return(contributions)
+      allow(predecessor).to receive(:lhs_contributions).with(rule.lhs, rule.rhs.last).and_return({ item => true })
+      state.annotation_list << annotation({ next_item => true })
+      state.annotation_list << annotation({ next_item => true }, on: rule.rhs.last)
+
+      state.annotate_predecessor(predecessor)
+
+      expect(predecessor.annotation_list.map(&:token)).to eq([rule.rhs.last])
+      contributions[item] = true
+      state.annotate_predecessor(predecessor)
+      expect(predecessor.annotation_list.map(&:token)).to eq([rule.rhs.last, token])
+    end
+
+    it "does not treat noncontributing first-position kernels as unconditional" do
+      state.annotation_list << annotation({ next_item => false, last_item => true })
+      expect(predecessor).not_to receive(:lhs_contributions)
+
+      state.annotate_predecessor(predecessor)
+
+      expect(predecessor.annotation_list.first.contribution_matrix).to eq({ actions.first => { next_item => true } })
+    end
+
+    it "stops annotations with only always or never contributions" do
+      state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
+        actions.first => nil, other_action => { last_item => true },
+      })
+      predecessor.item_lookahead_set = { item => [], next_item => [] }
+
+      state.annotate_predecessor(predecessor)
+
+      expect(predecessor.annotation_list).to eq([])
+    end
+
+    it "preserves false entries when merging into a shared empty-rule lhs contribution hash" do
+      empty_rule = rule.dup
+      empty_rule.rhs = []
+      reduce = Lrama::State::Action::Reduce.new(Lrama::State::Item.new(rule: empty_rule, position: 0))
+      contributions = {}
+      existing = Lrama::State::InadequacyAnnotation.new(origin, token, [reduce, other_action], {
+        reduce => contributions, other_action => {},
+      })
+      predecessor.annotation_list << existing
+      state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, [reduce, other_action], {
+        reduce => {}, other_action => { last_item => true },
+      })
+
+      state.annotate_predecessor(predecessor)
+
+      expect(predecessor.annotation_list).to eq([existing])
+      expect(existing.contribution_matrix[reduce]).to equal(contributions)
+      expect(contributions).to eq({ item => nil, next_item => nil })
+      expect(existing.contribution_matrix[other_action]).to eq({ next_item => true })
+    end
+  end
+
   describe "#append_annotation_list" do
     it "matches state IDs and equal action arrays while retaining the existing annotation" do
       existing = annotation({ item => false, next_item => true })
