@@ -376,7 +376,7 @@ RSpec.describe Lrama::State do
       state.annotation_list << annotation({ next_item => true, last_item => true })
       state.annotation_list << annotation({ next_item => false, last_item => true }, from: state)
 
-      state.annotate_predecessor(predecessor)
+      expect(state.annotate_predecessor(predecessor)).to be(true)
 
       expect(predecessor.annotation_list.map(&:contribution_matrix)).to eq([
         { actions.first => { item => true, next_item => true } },
@@ -426,7 +426,7 @@ RSpec.describe Lrama::State do
       })
       predecessor.item_lookahead_set = { item => [], next_item => [] }
 
-      state.annotate_predecessor(predecessor)
+      expect(state.annotate_predecessor(predecessor)).to be(false)
 
       expect(predecessor.annotation_list).to eq([])
     end
@@ -461,7 +461,7 @@ RSpec.describe Lrama::State do
                             from: described_class.new(origin.id, token, []), with: actions.dup)
       propagating = [incoming]
 
-      state.append_annotation_list(propagating)
+      expect(state.append_annotation_list(propagating)).to be(true)
 
       expect(state.annotation_list).to eq([existing])
       expect(existing.contribution_matrix).to eq({ actions.first => { item => true, next_item => true } })
@@ -477,7 +477,7 @@ RSpec.describe Lrama::State do
         annotation({ item => true }, with: [Lrama::State::Action::Reduce.new(next_item)]),
       ]
 
-      state.append_annotation_list(incoming)
+      expect(state.append_annotation_list(incoming)).to be(true)
 
       expect(state.annotation_list).to eq([existing] + incoming)
       expect(existing.contribution_matrix[actions.first][item]).to be(false)
@@ -514,10 +514,26 @@ RSpec.describe Lrama::State do
       state.annotation_list << existing
       contributions = { item => false }
 
-      state.append_annotation_list([annotation(contributions), annotation({ item => true }), annotation(nil)])
+      expect(state.append_annotation_list([annotation(contributions), annotation({ item => true }), annotation(nil)])).to be(true)
 
       expect(existing.contribution_matrix[actions.first]).to equal(contributions)
       expect(contributions).to eq({ item => true })
+    end
+
+    it "reports no change when no contributions are added" do
+      state.annotation_list << annotation({ item => true })
+
+      expect(state.append_annotation_list([annotation({ item => true }), annotation(nil)])).to be(false)
+      expect(state.append_annotation_list([])).to be(false)
+    end
+
+    it "does not treat false, nil, or missing item contributions as changes" do
+      existing = annotation({ item => false })
+      state.annotation_list << existing
+
+      expect(state.append_annotation_list([annotation({ item => nil, next_item => false })])).to be(false)
+      expect(state.append_annotation_list([annotation({ item => false, next_item => nil })])).to be(false)
+      expect(existing.contribution_matrix[actions.first]).to eq({ item => false, next_item => nil })
     end
 
     it "does not rescan incoming annotation keys for every existing annotation" do

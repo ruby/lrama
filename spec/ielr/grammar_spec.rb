@@ -49,6 +49,21 @@ RSpec.describe IELRGrammar do
     end
   end
 
+  it "propagates merged annotations through a cycle without unnecessary state splitting" do
+    path = fixture_path("ielr/annotation_cycle.y")
+    grammar = Lrama::Parser.new(File.read(path), path).parse
+    grammar.prepare
+    states = Lrama::States.new(grammar, Lrama::Tracer.new(StringIO.new))
+    states.compute
+    expect(states.states.length).to eq(7)
+
+    states.compute_ielr
+
+    expect(states.states.length).to eq(7)
+    expect(states.sr_conflicts_count).to eq(1)
+    expect(states.rr_conflicts_count).to eq(0)
+  end
+
   it "builds parser tables for seed 22" do
     grammar = Lrama::Parser.new(File.read(fixture_path("ielr/seed_22.y")), "seed_22.y").parse
     grammar.prepare

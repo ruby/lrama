@@ -19,8 +19,8 @@ module Lrama
       # @rbs (Item item) -> bool
       def contributed?: (Item item) -> bool
 
-      # @rbs (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> void
-      def merge_matrix: (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> void
+      # @rbs (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> bool
+      def merge_matrix: (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> bool
 
       # Definition 3.42 (dominant_contribution)
       #

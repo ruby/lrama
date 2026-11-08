@@ -199,11 +199,11 @@ module Lrama
 
     # Definition 3.32 (annotate_predecessor)
     #
-    # @rbs (State predecessor) -> void
-    def annotate_predecessor: (State predecessor) -> void
+    # @rbs (State predecessor) -> bool
+    def annotate_predecessor: (State predecessor) -> bool
 
-    # @rbs (Array[InadequacyAnnotation] propagating_list) -> void
-    def append_annotation_list: (Array[InadequacyAnnotation] propagating_list) -> void
+    # @rbs (Array[InadequacyAnnotation] propagating_list) -> bool
+    def append_annotation_list: (Array[InadequacyAnnotation] propagating_list) -> bool
 
     # Definition 3.31 (compute_lhs_contributions)
     #
