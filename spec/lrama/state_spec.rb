@@ -17,6 +17,71 @@ RSpec.describe Lrama::State do
     Lrama::State::InadequacyAnnotation.new(from, on, with, { with.first => contributions })
   end
 
+  describe "#lookahead_set_filters" do
+    let(:state) { described_class.new(0, token, [item, next_item]) }
+
+    it "retains annotation order and duplicates without repeating a token for multiple actions" do
+      first = annotation({ item => false, next_item => true })
+      first.contribution_matrix[Lrama::State::Action::Reduce.new(item)] = { item => true, next_item => true }
+      state.annotation_list.concat([
+        first,
+        annotation(nil),
+        annotation({ item => true, next_item => false }, on: rule.rhs.last),
+        annotation({ item => true }),
+      ])
+
+      expect(state.lookahead_set_filters).to eq({ item => [token, rule.rhs.last, token], next_item => [token] })
+    end
+
+    it "includes empty filters for kernels without contributions" do
+      state.annotation_list << annotation({ item => false, next_item.new_by_next_position => true })
+
+      expect(state.lookahead_set_filters).to eq({ item => [], next_item => [] })
+    end
+
+    it "shares the LALR isocore's filters with split states" do
+      state.annotation_list << annotation({ next_item => true })
+      split = described_class.new(2, token, state.kernels)
+      split.lalr_isocore = state
+
+      expect(split.lookahead_set_filters).to equal(state.lookahead_set_filters)
+      expect(split.lookahead_set_filters).to eq({ item => [], next_item => [token] })
+    end
+  end
+
+  describe "#propagate_lookaheads" do
+    it "skips goto follow sets when a first-position kernel has an empty filter" do
+      successor = described_class.new(1, token, [next_item])
+      expect(state).not_to receive(:goto_follow_set)
+
+      expect(state.propagate_lookaheads(successor)).to eq({ next_item => [] })
+    end
+
+    it "skips predecessor lookaheads when a later kernel has an empty filter" do
+      successor = described_class.new(1, token, [next_item.new_by_next_position])
+      expect(state).not_to receive(:item_lookahead_set)
+
+      expect(state.propagate_lookaheads(successor)).to eq({ successor.kernels.first => [] })
+    end
+
+    it "filters both kinds of lookaheads while preserving their token order" do
+      last_item = next_item.new_by_next_position
+      predecessor = described_class.new(0, token, [next_item])
+      successor = described_class.new(1, token, [next_item, last_item])
+      successor.annotation_list.concat([
+        annotation({ next_item => true, last_item => true }),
+        annotation({ next_item => true, last_item => true }, on: rule.rhs.last),
+      ])
+      predecessor.item_lookahead_set = { next_item => [rule.rhs.last, token, token.dup] }
+      allow(predecessor).to receive(:goto_follow_set).with(rule.lhs).and_return([rule.rhs.last, token, token])
+
+      expect(predecessor.propagate_lookaheads(successor)).to eq({
+        next_item => [rule.rhs.last, token], last_item => [rule.rhs.last, token],
+      })
+      expect(successor.lookahead_set_filters.values).to all(eq([token, rule.rhs.last]))
+    end
+  end
+
   describe "#append_annotation_list" do
     it "matches state IDs and equal action arrays while retaining the existing annotation" do
       existing = annotation({ item => false, next_item => true })

@@ -800,6 +800,14 @@ module Lrama
 
     # @rbs (State state, State::Action::Shift | State::Action::Goto transition, State next_state) -> void
     def compute_state(state, transition, next_state)
+      if next_state.lalr_isocore.annotation_list.empty?
+        unless next_state.lookaheads_recomputed
+          next_state.lookaheads_recomputed = true
+          next_state.item_lookahead_set = next_state.kernels.map {|kernel| [kernel, []] }.to_h
+        end
+        return
+      end
+
       propagating_lookaheads = state.propagate_lookaheads(next_state)
       s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
 
