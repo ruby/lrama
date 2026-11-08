@@ -80,6 +80,21 @@ RSpec.describe IELRGrammar do
     expect { Lrama::Context.new(states) }.not_to raise_error
   end
 
+  it "retains merged lookaheads when deciding whether to split a later incoming state" do
+    path = fixture_path("ielr/merged_lookaheads.y")
+    grammar = Lrama::Parser.new(File.read(path), path).parse
+    grammar.prepare
+    states = Lrama::States.new(grammar, Lrama::Tracer.new(StringIO.new))
+    states.compute
+    expect(states.states.length).to eq(19)
+
+    states.compute_ielr
+
+    expect(states.states.length).to eq(20)
+    expect(states.sr_conflicts_count).to eq(0)
+    expect(states.rr_conflicts_count).to eq(0)
+  end
+
   it "builds parser tables for seed 22" do
     grammar = Lrama::Parser.new(File.read(fixture_path("ielr/seed_22.y")), "seed_22.y").parse
     grammar.prepare

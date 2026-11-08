@@ -1982,6 +1982,79 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe '#merge_lookaheads' do
+    let(:grammar) do
+      grammar = Lrama::Parser.new("%%\nstart: 'a' 'b' | 'a' 'c' | 'a' 'd';\n", "merge.y").parse
+      grammar.prepare
+      grammar
+    end
+    let(:states) do
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states
+    end
+    let(:state) { states.states.first.term_transitions.first.to_state }
+    let(:token) { state.kernels.first.rule.rhs.last }
+    let(:another_token) { state.kernels.last.rule.rhs.last }
+    let(:incoming) { state.kernels.map {|item| [item, [another_token, token]] }.to_h }
+
+    before do
+      state.lookaheads_recomputed = true
+      state.item_lookahead_set = state.kernels.map {|item| [item, [token]] }.to_h
+    end
+
+    it "merges incoming lookaheads without mutating either input" do
+      original = state.item_lookahead_set
+      allow(state).to receive(:transitions).and_return([])
+
+      states.send(:merge_lookaheads, state, incoming)
+
+      expect(state.item_lookahead_set.values).to all(eq([token, another_token]))
+      expect(original.values).to all(eq([token]))
+      expect(incoming.values).to all(eq([another_token, token]))
+    end
+
+    it "repropagates to processed successors and stops at the first unprocessed successor" do
+      first, second, third = state.transitions.map(&:to_state)
+      first.lookaheads_recomputed = true
+      second.lookaheads_recomputed = false
+      third.lookaheads_recomputed = true
+      visited = []
+      allow(states).to receive(:compute_state) {|_, _, successor| visited << successor.id }
+
+      states.send(:merge_lookaheads, state, incoming)
+
+      expect(visited).to eq([first.id])
+      expect(second.lookaheads_recomputed).to be(false)
+    end
+
+    it "does not revisit successors when there are no new lookaheads" do
+      original = state.item_lookahead_set
+      visited = []
+      allow(states).to receive(:compute_state) {|_, _, successor| visited << successor.id }
+
+      states.send(:merge_lookaheads, state, original.transform_values(&:dup))
+
+      expect(state.item_lookahead_set).to equal(original)
+      expect(visited).to eq([])
+    end
+
+    it "stores new lookaheads before propagating through a self-loop" do
+      transition = Lrama::State::Action::Shift.new(state, token, [], state)
+      allow(state).to receive(:transitions).and_return([transition])
+      calls = 0
+      allow(states).to receive(:compute_state) do |_, _, successor|
+        calls += 1
+        raise "Lookahead propagation did not converge" if calls > 2
+        states.send(:merge_lookaheads, successor, incoming)
+      end
+
+      states.send(:merge_lookaheads, state, incoming)
+
+      expect(calls).to eq(1)
+    end
+  end
+
   describe '#compute_state' do
     it "computes incoming contributions once while choosing an existing isocore" do
       grammar = Lrama::Parser.new("%%\nstart: left 'c' | right 'd';\nleft: 'a';\nright: 'a';\n", "state.y").parse
@@ -2037,6 +2110,26 @@ RSpec.describe Lrama::States do
       expect(lookaheads).to eq({ successor.kernels.first => [] })
       expect(successor.item_lookahead_set).to equal(lookaheads)
       expect(successor.ielr_isocores).to eq([successor])
+    end
+  end
+
+  describe '#clear_look_ahead_sets' do
+    it "clears reduction lookaheads and their sources before recomputing them" do
+      grammar = Lrama::Parser.new("%%\nstart: left 'a' | left 'b' | right 'a';\nleft: 'x';\nright: 'x';\n", "lookaheads.y").parse
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_la_sources_for_conflicted_states
+      reductions = states.states.flat_map(&:reduces)
+      original = reductions.map(&:look_ahead).compact
+      expect(original).not_to be_empty
+      expect(reductions.map(&:look_ahead_sources).compact).not_to be_empty
+
+      states.send(:clear_look_ahead_sets)
+
+      expect(reductions.map(&:look_ahead)).to all(eq([]))
+      expect(reductions.map(&:look_ahead_sources)).to all(eq({}))
+      expect(original.flatten).not_to be_empty
     end
   end
 

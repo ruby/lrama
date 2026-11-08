@@ -215,14 +215,16 @@ module Lrama
           Action::Goto.new(self, transition.next_sym, transition.to_items, @items_to_state[transition.to_items])
         end
 
-      @transitions.delete(transition)
-      @transitions << new_transition
+      @transitions.map! do |current_transition|
+        next current_transition unless current_transition.next_sym == transition.next_sym
+
+        @follow_kernel_items[new_transition] = @follow_kernel_items.delete(current_transition)
+        @always_follows[new_transition] = @always_follows.delete(current_transition)
+        new_transition
+      end
       @nterm_transitions = nil
       @term_transitions = nil
       @transitions_by_symbol_number = nil
-
-      @follow_kernel_items[new_transition] = @follow_kernel_items.delete(transition)
-      @always_follows[new_transition] = @always_follows.delete(transition)
     end
 
     # @rbs () -> Array[Action::Shift]
