@@ -95,14 +95,15 @@ RSpec.describe IELRGrammar do
     expect(states.rr_conflicts_count).to eq(0)
   end
 
-  it "builds parser tables for seed 22" do
-    grammar = Lrama::Parser.new(File.read(fixture_path("ielr/seed_22.y")), "seed_22.y").parse
-    grammar.prepare
-    states = Lrama::States.new(grammar, Lrama::Tracer.new(StringIO.new))
-    states.compute
-    states.compute_ielr
+  [22, 169].each do |seed|
+    it "builds parser tables for seed #{seed}" do
+      grammar = Lrama::Parser.new(described_class.generate(seed), "seed_#{seed}.y").parse
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(StringIO.new))
+      states.compute
+      states.compute_ielr
 
-    pending "Context#compute_yydefact calls each on a nil reduce lookahead"
-    expect { Lrama::Context.new(states) }.not_to raise_error
+      expect { Lrama::Context.new(states) }.not_to raise_error
+    end
   end
 end

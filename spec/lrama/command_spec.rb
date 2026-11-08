@@ -127,6 +127,19 @@ RSpec.describe Lrama::Command do
       end
     end
 
+    it "generates a parser and all reports for duplicate rules on the same line" do
+      Dir.mktmpdir do |dir|
+        outfile = File.join(dir, "parse.c")
+        report = File.join(dir, "parse.output")
+        command = Lrama::Command.new(["-o", outfile, "--report=all", "--report-file=#{report}",
+                                      fixture_path("ielr/duplicate_rules.y")])
+
+        expect { command.run }.not_to raise_error
+        expect(File).to exist(outfile)
+        expect(File.read(report)).to include("First Reduce derivation", "Second Reduce derivation")
+      end
+    end
+
     context "when conflicts do not match %expect" do
       it "does not create the parser output" do
         grammar = <<~Y

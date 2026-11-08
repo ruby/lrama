@@ -152,7 +152,7 @@ module Lrama
     # @rbs (Grammar::Rule rule, Array[Grammar::Symbol] look_ahead) -> void
     def set_look_ahead(rule, look_ahead)
       reduce = reduces.find do |r|
-        r.rule == rule
+        r.rule.id == rule.id
       end
 
       reduce.look_ahead = look_ahead
@@ -161,7 +161,7 @@ module Lrama
     # @rbs (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
     def set_look_ahead_sources(rule, sources)
       reduce = reduces.find do |r|
-        r.rule == rule
+        r.rule.id == rule.id
       end
 
       reduce.look_ahead_sources = sources
