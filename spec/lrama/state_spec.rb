@@ -43,6 +43,54 @@ RSpec.describe Lrama::State do
     end
   end
 
+  describe "#update_transition" do
+    it "preserves transition order while the transitions are being visited" do
+      grammar = Lrama::Parser.new("%%\nstart: 'a' 'b' | 'a' 'c' | 'a' 'd';\n", "transitions.y").parse
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      current = states.states.first.term_transitions.first.to_state
+      first = current.transitions.first
+      original_order = current.transitions.map(&:next_sym)
+      replacement = described_class.new(states.states_count, first.next_sym, first.to_state.kernels)
+      visited = []
+
+      current.transitions.each do |transition|
+        visited << transition.next_sym
+        current.update_transition(transition, replacement) if transition.equal?(first)
+      end
+
+      expect(visited).to eq(original_order)
+      expect(current.transitions.map(&:next_sym)).to eq(original_order)
+      expect(current.transitions.first.to_state).to equal(replacement)
+    end
+
+    it "replaces the current transition and transfers its caches when given an earlier transition object" do
+      grammar = Lrama::Parser.new("%%\nstart: 'a';\n", "transitions.y").parse
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      current = states.states.first
+      transition = current.nterm_transitions.first
+      original_count = current.transitions.length
+      kernels = { current.kernels.first => true }
+      tokens = [grammar.rules.last.rhs.first]
+      current.follow_kernel_items[transition] = kernels
+      current.always_follows[transition] = tokens
+      first = described_class.new(states.states_count, transition.next_sym, transition.to_state.kernels)
+      second = described_class.new(states.states_count + 1, transition.next_sym, transition.to_state.kernels)
+
+      current.update_transition(transition, first)
+      current.update_transition(transition, second)
+
+      updated = current.transitions_by_symbol_number.fetch(transition.next_sym.number)
+      expect(current.transitions.length).to eq(original_count)
+      expect(updated.to_state).to equal(second)
+      expect(current.follow_kernel_items[updated]).to equal(kernels)
+      expect(current.always_follows[updated]).to equal(tokens)
+    end
+  end
+
   describe "#append_predecessor" do
     it "retains distinct objects with the same ID and preserves insertion order" do
       other = described_class.new(origin.id, token, [])

@@ -117,6 +117,16 @@ RSpec.describe Lrama::Command do
       end
     end
 
+    it "generates a conflict-free IELR parser after merging lookaheads" do
+      Dir.mktmpdir do |dir|
+        outfile = File.join(dir, "parse.c")
+        command = Lrama::Command.new(["-o", outfile, fixture_path("ielr/merged_lookaheads.y")])
+
+        expect { command.run }.not_to raise_error
+        expect(File).to exist(outfile)
+      end
+    end
+
     context "when conflicts do not match %expect" do
       it "does not create the parser output" do
         grammar = <<~Y

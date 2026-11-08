@@ -785,9 +785,10 @@ module Lrama
     def merge_lookaheads(state, filtered_lookaheads)
       return if state.kernels.all? {|item| (filtered_lookaheads[item] - state.item_lookahead_set[item]).empty? }
 
-      state.item_lookahead_set = state.item_lookahead_set.merge {|_, v1, v2| v1 | v2 }
+      state.item_lookahead_set = state.item_lookahead_set.merge(filtered_lookaheads) {|_, v1, v2| v1 | v2 }
       state.transitions.each do |transition|
-        next if transition.to_state.lookaheads_recomputed
+        # The main splitting loop will initialize the remaining successors.
+        break unless transition.to_state.lookaheads_recomputed
         compute_state(state, transition, transition.to_state)
       end
     end
@@ -863,6 +864,12 @@ module Lrama
 
     # @rbs () -> void
     def clear_look_ahead_sets
+      @states.each do |state|
+        state.reduces.each do |reduce|
+          reduce.look_ahead = []
+          reduce.look_ahead_sources = {}
+        end
+      end
       @direct_read_sets.clear
       @reads_relation.clear
       @read_sets.clear
