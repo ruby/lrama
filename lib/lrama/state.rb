@@ -418,7 +418,6 @@ module Lrama
     #
     # @rbs (State predecessor) -> bool
     def annotate_predecessor(predecessor)
-      # Merging annotations can mutate shared lhs contributions after this call.
       always_contributions = {} #: Hash[Grammar::Symbol, Hash[Item, bool]]
       propagating_list = []
       annotation_list.each {|annotation|

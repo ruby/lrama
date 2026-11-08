@@ -10,9 +10,9 @@ module Lrama
       attr_accessor :state #: State
       attr_accessor :token #: Grammar::Symbol
       attr_accessor :actions #: Array[action]
-      attr_accessor :contribution_matrix #: Hash[action, Hash[Item, bool]]
+      attr_accessor :contribution_matrix #: Hash[action, Hash[Item, bool?]?]
 
-      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[Item, bool]] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[Item, bool?]?] contribution_matrix) -> void
       def initialize(state, token, actions, contribution_matrix)
         @state = state
         @token = token
@@ -25,7 +25,7 @@ module Lrama
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
       end
 
-      # @rbs (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> bool
+      # @rbs (Array[Hash[action, Hash[Item, bool?]?]] another_matrixes) -> bool
       def merge_matrix(another_matrixes)
         changed = false
         another_matrixes.each do |another_matrix|
@@ -35,18 +35,21 @@ module Lrama
               changed = true
               next
             end
-            next if another_contributions.nil?
-
             contributions = @contribution_matrix[action]
-            if contributions.nil?
-              @contribution_matrix[action] = another_contributions
+            next if contributions.nil?
+
+            if another_contributions.nil?
+              @contribution_matrix[action] = nil
               changed = true
             else
+              # Merging must not mutate shared lhs contribution caches or other annotations.
+              contributions = contributions.dup
               another_contributions.each do |item, another_contributed|
                 contributed = contributions[item]
                 changed = true if another_contributed && !contributed
                 contributions[item] = contributed || another_contributed
               end
+              @contribution_matrix[action] = contributions
             end
           end
         end
@@ -58,7 +61,8 @@ module Lrama
       # @rbs (State::lookahead_set lookaheads) -> Array[action]?
       def dominant_contribution(lookaheads)
         actions = @actions.select {|action|
-          contribution_matrix[action].nil? || contribution_matrix[action].any? {|item, contributed| contributed && lookaheads[item].include?(@token) }
+          contributions = contribution_matrix[action]
+          contributions.nil? || contributions.any? {|item, contributed| contributed && lookaheads[item].include?(@token) }
         }
         return nil if actions.empty?
 

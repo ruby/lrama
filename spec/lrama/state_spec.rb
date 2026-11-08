@@ -345,7 +345,7 @@ RSpec.describe Lrama::State do
       })
     end
 
-    it "retains shared lhs contributions for empty reductions, including false entries" do
+    it "does not mutate cached lhs contributions when merging annotations for empty reductions" do
       empty_rule = rule.dup
       empty_rule.rhs = []
       reduce = Lrama::State::Action::Reduce.new(Lrama::State::Item.new(rule: empty_rule, position: 0))
@@ -354,8 +354,10 @@ RSpec.describe Lrama::State do
       allow(state).to receive(:lhs_contributions).with(rule.lhs, token).and_return(contributions)
 
       state.annotate_manifestation
+      entry = state.annotation_list.first
+      entry.merge_matrix([{ reduce => { item => true } }])
 
-      expect(state.annotation_list.first.contribution_matrix[reduce]).to equal(contributions)
+      expect(entry.contribution_matrix[reduce]).to eq({ item => true })
       expect(contributions).to eq({ item => false })
     end
   end
@@ -431,7 +433,7 @@ RSpec.describe Lrama::State do
       expect(predecessor.annotation_list).to eq([])
     end
 
-    it "preserves false entries when merging into a shared empty-rule lhs contribution hash" do
+    it "does not populate a shared empty-rule lhs contribution hash during propagation" do
       empty_rule = rule.dup
       empty_rule.rhs = []
       reduce = Lrama::State::Action::Reduce.new(Lrama::State::Item.new(rule: empty_rule, position: 0))
@@ -447,8 +449,8 @@ RSpec.describe Lrama::State do
       state.annotate_predecessor(predecessor)
 
       expect(predecessor.annotation_list).to eq([existing])
-      expect(existing.contribution_matrix[reduce]).to equal(contributions)
-      expect(contributions).to eq({ item => nil, next_item => nil })
+      expect(existing.contribution_matrix[reduce]).to eq({ item => nil, next_item => nil })
+      expect(contributions).to eq({})
       expect(existing.contribution_matrix[other_action]).to eq({ next_item => true })
     end
   end
@@ -509,21 +511,44 @@ RSpec.describe Lrama::State do
       expect(existing.contribution_matrix[actions.first][item]).to be(true)
     end
 
-    it "retains the current merge order and sharing of contribution hashes" do
+    it "retains always contributions when conditional contributions arrive" do
       existing = annotation(nil)
       state.annotation_list << existing
+
+      expect(state.append_annotation_list([annotation({ item => true }), annotation(nil)])).to be(false)
+
+      expect(existing.contribution_matrix[actions.first]).to be_nil
+      expect(existing.dominant_contribution({ item => [] })).to eq(actions)
+    end
+
+    it "replaces conditional contributions with always contributions and reports the change once" do
+      existing = annotation({ item => true })
+      state.annotation_list << existing
+
+      expect(state.append_annotation_list([annotation(nil), annotation({ item => true })])).to be(true)
+      expect(state.append_annotation_list([annotation(nil)])).to be(false)
+
+      expect(existing.contribution_matrix[actions.first]).to be_nil
+      expect(existing.dominant_contribution({ item => [] })).to eq(actions)
+    end
+
+    it "does not mutate contributions shared with another annotation" do
       contributions = { item => false }
+      first = annotation(contributions)
+      second = annotation(contributions, on: rule.rhs.last)
+      state.annotation_list.concat([first, second])
 
-      expect(state.append_annotation_list([annotation(contributions), annotation({ item => true }), annotation(nil)])).to be(true)
+      expect(state.append_annotation_list([annotation({ item => true })])).to be(true)
 
-      expect(existing.contribution_matrix[actions.first]).to equal(contributions)
-      expect(contributions).to eq({ item => true })
+      expect(first.contribution_matrix[actions.first]).to eq({ item => true })
+      expect(second.contribution_matrix[actions.first]).to eq({ item => false })
+      expect(contributions).to eq({ item => false })
     end
 
     it "reports no change when no contributions are added" do
       state.annotation_list << annotation({ item => true })
 
-      expect(state.append_annotation_list([annotation({ item => true }), annotation(nil)])).to be(false)
+      expect(state.append_annotation_list([annotation({ item => true })])).to be(false)
       expect(state.append_annotation_list([])).to be(false)
     end
 
