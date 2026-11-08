@@ -18,6 +18,7 @@ module Lrama
     #   type conflict = State::ShiftReduceConflict | State::ReduceReduceConflict
     #   type transition = Action::Shift | Action::Goto
     #   type lookahead_set = Hash[Item, Array[Grammar::Symbol]]
+    #   type dominant_contributions = Hash[InadequacyAnnotation, Array[InadequacyAnnotation::action]?]
     #
     #   @id: Integer
     #   @accessing_symbol: Grammar::Symbol
@@ -34,6 +35,7 @@ module Lrama
     #   @transitions_by_symbol_number: Hash[Integer, transition]
     #   @internal_dependencies: Hash[Action::Goto, Array[Action::Goto]]
     #   @successor_dependencies: Hash[Action::Goto, Array[Action::Goto]]
+    #   @dominant_contributions: dominant_contributions?
 
     attr_reader :id #: Integer
     attr_reader :accessing_symbol #: Grammar::Symbol
@@ -314,14 +316,23 @@ module Lrama
 
     # Definition 3.43 (is_compatible)
     #
-    # @rbs (lookahead_set filtered_lookahead) -> bool
-    def is_compatible?(filtered_lookahead)
-      !lookaheads_recomputed ||
-        @lalr_isocore.annotation_list.all? {|annotation|
-          a = annotation.dominant_contribution(item_lookahead_set)
-          b = annotation.dominant_contribution(filtered_lookahead)
-          a.nil? || b.nil? || a == b
+    # @rbs (lookahead_set filtered_lookahead, ?dominant_contributions incoming_contributions) -> bool
+    def is_compatible?(filtered_lookahead, incoming_contributions = {})
+      return true if !lookaheads_recomputed || filtered_lookahead == item_lookahead_set
+
+      # Annotations are fixed during state splitting.
+      stored_contributions = (@dominant_contributions ||= {})
+      @lalr_isocore.annotation_list.all? {|annotation|
+        a = stored_contributions.fetch(annotation) {
+          stored_contributions[annotation] = annotation.dominant_contribution(item_lookahead_set)
         }
+        next true if a.nil?
+
+        b = incoming_contributions.fetch(annotation) {
+          incoming_contributions[annotation] = annotation.dominant_contribution(filtered_lookahead)
+        }
+        b.nil? || a == b
+      }
     end
 
     # Definition 3.38 (lookahead_set_filters)
@@ -488,6 +499,7 @@ module Lrama
     # @rbs (lookahead_set k) -> void
     def item_lookahead_set=(k)
       @item_lookahead_set = k
+      @dominant_contributions = nil
     end
 
     # @rbs (Item item) -> Array[[State, Item]]

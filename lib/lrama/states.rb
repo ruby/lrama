@@ -809,7 +809,9 @@ module Lrama
       end
 
       propagating_lookaheads = state.propagate_lookaheads(next_state)
-      s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads) }
+      # @type var incoming_contributions: State::dominant_contributions
+      incoming_contributions = {}
+      s = next_state.ielr_isocores.find {|st| st.is_compatible?(propagating_lookaheads, incoming_contributions) }
 
       if s.nil?
         s = next_state.lalr_isocore
