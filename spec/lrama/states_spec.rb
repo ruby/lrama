@@ -1,6 +1,47 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::States do
+  describe '#nterm_transitions' do
+    let(:states) do
+      path = "integration/ielr.y"
+      grammar = Lrama::Parser.new(File.read(fixture_path(path)), path).parse
+      grammar.prepare
+      described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+    end
+
+    it 'reuses the list in state and transition order while the graph is unchanged' do
+      states.compute
+      transitions = states.send(:nterm_transitions)
+
+      expect(transitions.map(&:object_id)).to eq(states.states.flat_map(&:nterm_transitions).map(&:object_id))
+      expect(states.send(:nterm_transitions).object_id).to eq(transitions.object_id)
+    end
+
+    it 'replaces an empty list queried before LR0 construction' do
+      expect(states.send(:nterm_transitions)).to eq([])
+
+      states.compute
+
+      transitions = states.send(:nterm_transitions)
+      expect(transitions).not_to be_empty
+      expect(transitions.map(&:object_id)).to eq(states.states.flat_map(&:nterm_transitions).map(&:object_id))
+    end
+
+    it 'rebuilds the list after splitting adds states and redirects transitions' do
+      states.compute
+      original_count = states.states_count
+      original = states.send(:nterm_transitions)
+
+      states.compute_ielr
+
+      transitions = states.send(:nterm_transitions)
+      expect(states.states_count).to be > original_count
+      expect(transitions.object_id).not_to eq(original.object_id)
+      expect(transitions.map(&:object_id)).to eq(states.states.flat_map(&:nterm_transitions).map(&:object_id))
+      expect(states.send(:nterm_transitions).object_id).to eq(transitions.object_id)
+    end
+  end
+
   describe '#bitmap_to_terms' do
     let(:grammar) do
       grammar = Lrama::Parser.new("%%\nstart: 'a' 'b';\n", "bitmap.y").parse

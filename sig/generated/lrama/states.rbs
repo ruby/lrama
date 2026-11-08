@@ -18,6 +18,8 @@ module Lrama
 
     @states: Array[State]
 
+    @nterm_transitions: Array[State::Action::Goto]?
+
     @direct_read_sets: Hash[State::Action::Goto, Bitmap::bitmap]
 
     @reads_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
