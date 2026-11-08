@@ -31,6 +31,17 @@ RSpec.describe Lrama::Bitmap do
       expect(Lrama::Bitmap.to_array(0b1100)).to eq([2, 3])
       expect(Lrama::Bitmap.to_array(0b1010000)).to eq([4, 6])
     end
+
+    it "returns sparse bits in ascending order across integer word boundaries" do
+      positions = [4096, 127, 64, 63, 62, 1, 0]
+      bitmap = Lrama::Bitmap.from_array(positions)
+
+      expect(Lrama::Bitmap.to_array(bitmap)).to eq(positions.sort)
+    end
+
+    it "returns every bit in a dense bitmap" do
+      expect(Lrama::Bitmap.to_array((1 << 256) - 1)).to eq((0...256).to_a)
+    end
   end
 
   describe '.to_bool_array' do

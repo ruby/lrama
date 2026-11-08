@@ -32,6 +32,8 @@ module Lrama
 
     @la: Hash[state_id, Hash[rule_id, Bitmap::bitmap]]
 
+    @bitmap_to_terms_cache: Hash[Bitmap::bitmap, Array[Grammar::Symbol]]
+
     extend Forwardable
 
     include Lrama::Tracer::Duration
@@ -165,8 +167,8 @@ module Lrama
 
     # Definition 3.20 (always_follows, one closure)
     #
-    # @rbs () -> void
-    def compute_always_follows: () -> void
+    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
+    def compute_always_follows: () -> Hash[State::Action::Goto, Bitmap::bitmap]
 
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_successor_or_internal_relation: () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
@@ -176,14 +178,11 @@ module Lrama
 
     # Definition 3.24 (goto_follows, via always_follows)
     #
-    # @rbs () -> void
-    def compute_goto_follows: () -> void
+    # @rbs (Hash[State::Action::Goto, Bitmap::bitmap] always_follows) -> void
+    def compute_goto_follows: (Hash[State::Action::Goto, Bitmap::bitmap] always_follows) -> void
 
     # @rbs () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
     def compute_goto_internal_or_predecessor_dependencies: () -> Hash[State::Action::Goto, Array[State::Action::Goto]]
-
-    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
-    def compute_always_follows_bitmaps: () -> Hash[State::Action::Goto, Bitmap::bitmap]
 
     # @rbs () -> void
     def split_states: () -> void
