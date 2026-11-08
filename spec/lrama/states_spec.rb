@@ -1876,6 +1876,40 @@ RSpec.describe Lrama::States do
   end
 
   describe '#compute_state' do
+    it "computes incoming contributions once while choosing an existing isocore" do
+      grammar = Lrama::Parser.new("%%\nstart: left 'c' | right 'd';\nleft: 'a';\nright: 'a';\n", "state.y").parse
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      predecessor = states.states.first
+      transition = predecessor.term_transitions.first
+      successor = transition.to_state
+      first, second = successor.kernels
+      token = grammar.rules.first.rhs.last
+      actions = successor.reduces
+      annotation = Lrama::State::InadequacyAnnotation.new(successor, token, actions, {
+        actions[0] => { first => true }, actions[1] => { second => true },
+      })
+      successor.annotation_list << annotation
+      successor.item_lookahead_set = { first => [token], second => [] }
+      successor.lookaheads_recomputed = true
+      split = Lrama::State.new(states.states.length, successor.accessing_symbol, successor.kernels)
+      split.lalr_isocore = successor
+      split.item_lookahead_set = { first => [], second => [token, token] }
+      split.lookaheads_recomputed = true
+      successor.ielr_isocores << split
+      split.ielr_isocores = successor.ielr_isocores
+      incoming = { first => [], second => [token] }
+      allow(predecessor).to receive(:propagate_lookaheads).with(successor).and_return(incoming)
+      expect(annotation).to receive(:dominant_contribution).with(successor.item_lookahead_set).once.and_call_original
+      expect(annotation).to receive(:dominant_contribution).with(split.item_lookahead_set).once.and_call_original
+      expect(annotation).to receive(:dominant_contribution).with(incoming).once.and_call_original
+
+      states.send(:compute_state, predecessor, transition, successor)
+
+      expect(predecessor.items_to_state[transition.to_items]).to equal(split)
+    end
+
     it "initializes empty filtered lookaheads once for a state without annotations" do
       grammar = Lrama::Parser.new("%%\nstart: 'a' 'b';\n", "state.y").parse
       grammar.prepare

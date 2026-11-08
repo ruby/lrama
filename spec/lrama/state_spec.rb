@@ -17,6 +17,78 @@ RSpec.describe Lrama::State do
     Lrama::State::InadequacyAnnotation.new(from, on, with, { with.first => contributions })
   end
 
+  describe "#is_compatible?" do
+    let(:other_action) { Lrama::State::Action::Reduce.new(item) }
+    let(:entry) do
+      Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
+        actions.first => { item => true }, other_action => { next_item => true },
+      })
+    end
+    let(:current) { { item => [token], next_item => [] } }
+    let(:incoming) { { item => [], next_item => [token] } }
+
+    before do
+      state.annotation_list << entry
+      state.item_lookahead_set = current
+      state.lookaheads_recomputed = true
+    end
+
+    it "accepts unrecomputed states without computing contributions" do
+      state.lookaheads_recomputed = false
+      expect(entry).not_to receive(:dominant_contribution)
+
+      expect(state.is_compatible?(incoming)).to be(true)
+    end
+
+    it "accepts equal lookahead sets without computing contributions" do
+      expect(entry).not_to receive(:dominant_contribution)
+
+      expect(state.is_compatible?(current.transform_values(&:dup))).to be(true)
+    end
+
+    it "reuses stored contributions and invalidates them when lookaheads are assigned" do
+      expect(entry).to receive(:dominant_contribution).with(current).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(incoming).exactly(3).times.and_call_original
+      replacement = { item => [], next_item => [token, token] }
+      expect(entry).to receive(:dominant_contribution).with(replacement).once.and_call_original
+
+      2.times { expect(state.is_compatible?(incoming)).to be(false) }
+      state.item_lookahead_set = replacement
+
+      expect(state.is_compatible?(incoming)).to be(true)
+    end
+
+    it "caches nil stored contributions as compatible" do
+      empty = { item => [], next_item => [] }
+      state.item_lookahead_set = empty
+      expect(entry).to receive(:dominant_contribution).with(empty).once.and_call_original
+
+      2.times { expect(state.is_compatible?(incoming)).to be(true) }
+    end
+
+    it "shares incoming contributions across isocores, including nil results" do
+      split = described_class.new(2, token, state.kernels)
+      split.lalr_isocore = state
+      split.item_lookahead_set = incoming
+      split.lookaheads_recomputed = true
+      empty = { item => [], next_item => [] }
+      cache = {}
+      expect(entry).to receive(:dominant_contribution).with(current).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(incoming).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(empty).once.and_call_original
+
+      expect(state.is_compatible?(empty, cache)).to be(true)
+      expect(split.is_compatible?(empty, cache)).to be(true)
+    end
+
+    it "does not treat an empty dominant contribution as nil" do
+      allow(entry).to receive(:dominant_contribution).with(current).and_return([])
+      allow(entry).to receive(:dominant_contribution).with(incoming).and_return(actions)
+
+      2.times { expect(state.is_compatible?(incoming)).to be(false) }
+    end
+  end
+
   describe "#lookahead_set_filters" do
     let(:state) { described_class.new(0, token, [item, next_item]) }
 

@@ -8,6 +8,8 @@ module Lrama
 
     type lookahead_set = Hash[Item, Array[Grammar::Symbol]]
 
+    type dominant_contributions = Hash[InadequacyAnnotation, Array[InadequacyAnnotation::action]?]
+
     @id: Integer
 
     @accessing_symbol: Grammar::Symbol
@@ -37,6 +39,8 @@ module Lrama
     @internal_dependencies: Hash[Action::Goto, Array[Action::Goto]]
 
     @successor_dependencies: Hash[Action::Goto, Array[Action::Goto]]
+
+    @dominant_contributions: dominant_contributions?
 
     attr_reader id: Integer
 
@@ -165,8 +169,8 @@ module Lrama
 
     # Definition 3.43 (is_compatible)
     #
-    # @rbs (lookahead_set filtered_lookahead) -> bool
-    def is_compatible?: (lookahead_set filtered_lookahead) -> bool
+    # @rbs (lookahead_set filtered_lookahead, ?dominant_contributions incoming_contributions) -> bool
+    def is_compatible?: (lookahead_set filtered_lookahead, ?dominant_contributions incoming_contributions) -> bool
 
     # Definition 3.38 (lookahead_set_filters)
     #
