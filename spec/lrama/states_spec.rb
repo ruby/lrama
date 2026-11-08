@@ -2000,6 +2000,65 @@ RSpec.describe Lrama::States do
   end
 
   describe '#compute_ielr' do
+    {
+      'nullable rules' => "%%\nstart: value;\nvalue: 'n' | %empty;\n",
+      'resolved and unresolved conflicts' => <<~GRAMMAR,
+        %left '+'
+        %nonassoc '<'
+        %%
+        expr: expr '+' expr | expr '<' expr | expr '?' expr | 'n';
+      GRAMMAR
+    }.each do |description, source|
+      it "reuses lookahead sets without changing transitions or tables for #{description} when no states split" do
+        grammar = Lrama::Parser.new(source, "unchanged.y").parse
+        grammar.prepare
+        states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        original_states = states.states.map(&:object_id)
+        transitions = states.states.flat_map(&:transitions).map { |transition| [transition.object_id, transition.to_state.object_id] }
+        lookaheads = states.la
+        conflicts = states.states.map { |state| [state.sr_conflicts.count, state.rr_conflicts.count, state.resolved_conflicts.map(&:report_message)] }
+        table_names = [:yypact, :yydefact, :yytable, :yycheck, :yypgoto, :yydefgoto]
+        context = Lrama::Context.new(states)
+        tables = table_names.map { |name| context.public_send(name) }
+        recomputed = []
+        [:clear_look_ahead_sets, :compute_look_ahead_sets].each do |name|
+          allow(states).to receive(name).and_wrap_original do |method|
+            recomputed << name
+            method.call
+          end
+        end
+
+        states.compute_ielr
+
+        expect(recomputed).to be_empty
+        expect(states.states.map(&:object_id)).to eq(original_states)
+        expect(states.states.flat_map(&:transitions).map { |transition| [transition.object_id, transition.to_state.object_id] }).to eq(transitions)
+        expect(states.la).to equal(lookaheads)
+        expect(states.states.map { |state| [state.sr_conflicts.count, state.rr_conflicts.count, state.resolved_conflicts.map(&:report_message)] }).to eq(conflicts)
+        context = Lrama::Context.new(states)
+        expect(table_names.map { |name| context.public_send(name) }).to eq(tables)
+      end
+    end
+
+    it 'rebuilds lookahead sets when state splitting changes transitions' do
+      path = "integration/ielr.y"
+      grammar = Lrama::Parser.new(File.read(fixture_path(path)), path).parse
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      original_count = states.states_count
+      expect(states).to receive(:clear_look_ahead_sets).once.ordered.and_call_original
+      expect(states).to receive(:compute_look_ahead_sets).once.ordered.and_call_original
+
+      states.compute_ielr
+
+      expect(states.states_count).to be > original_count
+      split_states = states.states.drop(original_count)
+      expect(split_states.flat_map(&:reduces).map(&:look_ahead)).to include(be_an(Array))
+      expect { Lrama::Context.new(states) }.not_to raise_error
+    end
+
     it 'stores a boolean for each follow kernel item' do
       path = "integration/ielr.y"
       y = File.read(fixture_path(path))

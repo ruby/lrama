@@ -134,10 +134,13 @@ module Lrama
       # Phase 2
       report_duration(:compute_inadequacy_annotations) { compute_inadequacy_annotations }
       # Phase 3
+      states_count_before_split = @states.count
       report_duration(:split_states) { split_states }
       # Phase 4
-      report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
-      report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
+      if @states.count != states_count_before_split
+        report_duration(:clear_look_ahead_sets) { clear_look_ahead_sets }
+        report_duration(:compute_look_ahead_sets) { compute_look_ahead_sets }
+      end
       # Phase 5
       report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
       report_duration(:compute_default_reduction) { compute_default_reduction }
