@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "forwardable"
+require "set"
 require_relative "tracer/duration"
 require_relative "state/item"
 
@@ -769,12 +770,13 @@ module Lrama
       end
 
       queue = @states.reject {|state| state.annotation_list.empty? }
+      queued = Set.new(queue.map(&:id))
 
       while (curr = queue.shift) do
+        queued.delete(curr.id)
         curr.predecessors.each do |pred|
-          cache = pred.annotation_list.dup
-          curr.annotate_predecessor(pred)
-          queue << pred if cache != pred.annotation_list && !queue.include?(pred)
+          changed = curr.annotate_predecessor(pred)
+          queue << pred if changed && queued.add?(pred.id)
         end
       end
     end

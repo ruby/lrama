@@ -416,7 +416,7 @@ module Lrama
 
     # Definition 3.32 (annotate_predecessor)
     #
-    # @rbs (State predecessor) -> void
+    # @rbs (State predecessor) -> bool
     def annotate_predecessor(predecessor)
       # Merging annotations can mutate shared lhs contributions after this call.
       always_contributions = {} #: Hash[Grammar::Symbol, Hash[Item, bool]]
@@ -462,21 +462,24 @@ module Lrama
       predecessor.append_annotation_list(propagating_list)
     end
 
-    # @rbs (Array[InadequacyAnnotation] propagating_list) -> void
+    # @rbs (Array[InadequacyAnnotation] propagating_list) -> bool
     def append_annotation_list(propagating_list)
+      changed = false
       propagating_by_key = propagating_list.group_by {|annotation|
         [annotation.state.id, annotation.token, annotation.actions]
       }
 
       annotation_list.each do |annotation|
         merging_list = propagating_by_key.delete([annotation.state.id, annotation.token, annotation.actions])
-        annotation.merge_matrix(merging_list.map(&:contribution_matrix)) if merging_list
+        changed = annotation.merge_matrix(merging_list.map(&:contribution_matrix)) || changed if merging_list
       end
 
       # Preserve propagation order even when unmatched keys are interleaved.
-      @annotation_list += propagating_list.select {|annotation|
+      appending = propagating_list.select {|annotation|
         propagating_by_key.key?([annotation.state.id, annotation.token, annotation.actions])
       }
+      @annotation_list += appending
+      changed || !appending.empty?
     end
 
     # Definition 3.31 (compute_lhs_contributions)

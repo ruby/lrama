@@ -25,16 +25,32 @@ module Lrama
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
       end
 
-      # @rbs (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> void
+      # @rbs (Array[Hash[action, Hash[Item, bool]]] another_matrixes) -> bool
       def merge_matrix(another_matrixes)
+        changed = false
         another_matrixes.each do |another_matrix|
-          @contribution_matrix.merge!(another_matrix) {|action, contributions, another_contributions|
-            next contributions if another_contributions.nil?
-            next another_contributions if contributions.nil?
+          another_matrix.each do |action, another_contributions|
+            unless @contribution_matrix.key?(action)
+              @contribution_matrix[action] = another_contributions
+              changed = true
+              next
+            end
+            next if another_contributions.nil?
 
-            contributions.merge!(another_contributions) {|_, contributed, another_contributed| contributed || another_contributed }
-          }
+            contributions = @contribution_matrix[action]
+            if contributions.nil?
+              @contribution_matrix[action] = another_contributions
+              changed = true
+            else
+              another_contributions.each do |item, another_contributed|
+                contributed = contributions[item]
+                changed = true if another_contributed && !contributed
+                contributions[item] = contributed || another_contributed
+              end
+            end
+          end
         end
+        changed
       end
 
       # Definition 3.42 (dominant_contribution)
