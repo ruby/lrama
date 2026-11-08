@@ -703,7 +703,7 @@ module Lrama
       relation = compute_goto_successor_or_internal_relation
       base_function = compute_transition_bitmaps
       Digraph.new(set, relation, base_function).compute.each do |goto, always_follows_bitmap|
-        goto.from_state.always_follows[goto] = bitmap_to_terms(always_follows_bitmap)
+        goto.from_state.always_follows[goto] = always_follows_bitmap
       end
     end
 
@@ -734,7 +734,7 @@ module Lrama
       set = nterm_transitions
       relation = compute_goto_internal_or_predecessor_dependencies
       Digraph.new(set, relation, always_follows).compute.each do |goto, goto_follows_bitmap|
-        goto.from_state.goto_follows[goto] = bitmap_to_terms(goto_follows_bitmap)
+        goto.from_state.goto_follows[goto] = goto_follows_bitmap
       end
     end
 
@@ -783,7 +783,7 @@ module Lrama
 
     # @rbs (State state, State::lookahead_set filtered_lookaheads) -> void
     def merge_lookaheads(state, filtered_lookaheads)
-      return if state.kernels.all? {|item| (filtered_lookaheads[item] - state.item_lookahead_set[item]).empty? }
+      return if state.kernels.all? {|item| (filtered_lookaheads[item] & ~state.item_lookahead_set[item]) == 0 }
 
       state.item_lookahead_set = state.item_lookahead_set.merge(filtered_lookaheads) {|_, v1, v2| v1 | v2 }
       state.transitions.each do |transition|
@@ -798,7 +798,7 @@ module Lrama
       if next_state.lalr_isocore.annotation_list.empty?
         unless next_state.lookaheads_recomputed
           next_state.lookaheads_recomputed = true
-          next_state.item_lookahead_set = next_state.kernels.map {|kernel| [kernel, []] }.to_h
+          next_state.item_lookahead_set = next_state.kernels.map {|kernel| [kernel, 0] }.to_h
         end
         return
       end

@@ -7,6 +7,7 @@ RSpec.describe Lrama::State do
     grammar.rules.last
   end
   let(:token) { rule.rhs.first }
+  let(:token_bitmap) { Lrama::Bitmap.from_integer(token.number) }
   let(:state) { described_class.new(0, token, []) }
   let(:origin) { described_class.new(1, token, []) }
   let(:item) { Lrama::State::Item.new(rule: rule, position: 0) }
@@ -104,7 +105,7 @@ RSpec.describe Lrama::State do
       transition = current.nterm_transitions.first
       original_count = current.transitions.length
       kernels = { current.kernels.first => true }
-      tokens = [grammar.rules.last.rhs.first]
+      tokens = Lrama::Bitmap.from_integer(grammar.rules.last.rhs.first.number)
       current.follow_kernel_items[transition] = kernels
       current.always_follows[transition] = tokens
       first = described_class.new(states.states_count, transition.next_sym, transition.to_state.kernels)
@@ -275,8 +276,8 @@ RSpec.describe Lrama::State do
         actions.first => { item => true }, other_action => { next_item => true },
       })
     end
-    let(:current) { { item => [token], next_item => [] } }
-    let(:incoming) { { item => [], next_item => [token] } }
+    let(:current) { { item => token_bitmap, next_item => 0 } }
+    let(:incoming) { { item => 0, next_item => token_bitmap } }
 
     before do
       state.annotation_list << entry
@@ -294,13 +295,13 @@ RSpec.describe Lrama::State do
     it "accepts equal lookahead sets without computing contributions" do
       expect(entry).not_to receive(:dominant_contribution)
 
-      expect(state.is_compatible?(current.transform_values(&:dup))).to be(true)
+      expect(state.is_compatible?(current.dup)).to be(true)
     end
 
     it "reuses stored contributions and invalidates them when lookaheads are assigned" do
       expect(entry).to receive(:dominant_contribution).with(current).once.and_call_original
       expect(entry).to receive(:dominant_contribution).with(incoming).exactly(3).times.and_call_original
-      replacement = { item => [], next_item => [token, token] }
+      replacement = { item => 0, next_item => token_bitmap | Lrama::Bitmap.from_integer(rule.rhs.last.number) }
       expect(entry).to receive(:dominant_contribution).with(replacement).once.and_call_original
 
       2.times { expect(state.is_compatible?(incoming)).to be(false) }
@@ -310,7 +311,7 @@ RSpec.describe Lrama::State do
     end
 
     it "caches nil stored contributions as compatible" do
-      empty = { item => [], next_item => [] }
+      empty = { item => 0, next_item => 0 }
       state.item_lookahead_set = empty
       expect(entry).to receive(:dominant_contribution).with(empty).once.and_call_original
 
@@ -322,7 +323,7 @@ RSpec.describe Lrama::State do
       split.lalr_isocore = state
       split.item_lookahead_set = incoming
       split.lookaheads_recomputed = true
-      empty = { item => [], next_item => [] }
+      empty = { item => 0, next_item => 0 }
       cache = {}
       expect(entry).to receive(:dominant_contribution).with(current).once.and_call_original
       expect(entry).to receive(:dominant_contribution).with(incoming).once.and_call_original
@@ -343,7 +344,7 @@ RSpec.describe Lrama::State do
   describe "#lookahead_set_filters" do
     let(:state) { described_class.new(0, token, [item, next_item]) }
 
-    it "retains annotation order and duplicates without repeating a token for multiple actions" do
+    it "unions contributing tokens across annotations and actions" do
       first = annotation({ item => false, next_item => true })
       first.contribution_matrix[Lrama::State::Action::Reduce.new(item)] = { item => true, next_item => true }
       state.annotation_list.concat([
@@ -353,13 +354,13 @@ RSpec.describe Lrama::State do
         annotation({ item => true }),
       ])
 
-      expect(state.lookahead_set_filters).to eq({ item => [token, rule.rhs.last, token], next_item => [token] })
+      expect(state.lookahead_set_filters).to eq({ item => token_bitmap | Lrama::Bitmap.from_integer(rule.rhs.last.number), next_item => token_bitmap })
     end
 
     it "includes empty filters for kernels without contributions" do
       state.annotation_list << annotation({ item => false, next_item.new_by_next_position => true })
 
-      expect(state.lookahead_set_filters).to eq({ item => [], next_item => [] })
+      expect(state.lookahead_set_filters).to eq({ item => 0, next_item => 0 })
     end
 
     it "shares the LALR isocore's filters with split states" do
@@ -368,7 +369,19 @@ RSpec.describe Lrama::State do
       split.lalr_isocore = state
 
       expect(split.lookahead_set_filters).to equal(state.lookahead_set_filters)
-      expect(split.lookahead_set_filters).to eq({ item => [], next_item => [token] })
+      expect(split.lookahead_set_filters).to eq({ item => 0, next_item => token_bitmap })
+    end
+  end
+
+  describe "bitmap contributions" do
+    it "tests membership above the machine word size without including adjacent tokens" do
+      token.number = 130
+      entry = annotation({ item => true })
+
+      expect(entry.dominant_contribution({ item => 1 << 130 })).to eq(actions)
+      expect(entry.dominant_contribution({ item => 1 << 129 })).to be_nil
+      expect(entry.dominant_contribution({ item => 0 })).to be_nil
+      expect(annotation(nil).dominant_contribution({ item => 0 })).to eq(actions)
     end
   end
 
@@ -377,17 +390,17 @@ RSpec.describe Lrama::State do
       successor = described_class.new(1, token, [next_item])
       expect(state).not_to receive(:goto_follow_set)
 
-      expect(state.propagate_lookaheads(successor)).to eq({ next_item => [] })
+      expect(state.propagate_lookaheads(successor)).to eq({ next_item => 0 })
     end
 
     it "skips predecessor lookaheads when a later kernel has an empty filter" do
       successor = described_class.new(1, token, [next_item.new_by_next_position])
       expect(state).not_to receive(:item_lookahead_set)
 
-      expect(state.propagate_lookaheads(successor)).to eq({ successor.kernels.first => [] })
+      expect(state.propagate_lookaheads(successor)).to eq({ successor.kernels.first => 0 })
     end
 
-    it "filters both kinds of lookaheads while preserving their token order" do
+    it "intersects both kinds of lookaheads with their filters" do
       last_item = next_item.new_by_next_position
       predecessor = described_class.new(0, token, [next_item])
       successor = described_class.new(1, token, [next_item, last_item])
@@ -395,13 +408,14 @@ RSpec.describe Lrama::State do
         annotation({ next_item => true, last_item => true }),
         annotation({ next_item => true, last_item => true }, on: rule.rhs.last),
       ])
-      predecessor.item_lookahead_set = { next_item => [rule.rhs.last, token, token.dup] }
-      allow(predecessor).to receive(:goto_follow_set).with(rule.lhs).and_return([rule.rhs.last, token, token])
+      lookaheads = token_bitmap | Lrama::Bitmap.from_integer(rule.rhs.last.number)
+      predecessor.item_lookahead_set = { next_item => lookaheads | 1 }
+      allow(predecessor).to receive(:goto_follow_set).with(rule.lhs).and_return(lookaheads | 1)
 
       expect(predecessor.propagate_lookaheads(successor)).to eq({
-        next_item => [rule.rhs.last, token], last_item => [rule.rhs.last, token],
+        next_item => lookaheads, last_item => lookaheads,
       })
-      expect(successor.lookahead_set_filters.values).to all(eq([token, rule.rhs.last]))
+      expect(successor.lookahead_set_filters.values).to all(eq(lookaheads))
     end
   end
 
@@ -448,7 +462,7 @@ RSpec.describe Lrama::State do
 
     before do
       predecessor.lane_items[state] = [[item, next_item], [next_item, last_item]]
-      predecessor.item_lookahead_set = { item => [], next_item => [token] }
+      predecessor.item_lookahead_set = { item => 0, next_item => token_bitmap }
     end
 
     it "propagates first-position lhs and later-position lookahead contributions, omitting false entries" do
@@ -504,7 +518,7 @@ RSpec.describe Lrama::State do
       state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
         actions.first => nil, other_action => { last_item => true },
       })
-      predecessor.item_lookahead_set = { item => [], next_item => [] }
+      predecessor.item_lookahead_set = { item => 0, next_item => 0 }
 
       expect(state.annotate_predecessor(predecessor)).to be(false)
 
@@ -596,7 +610,7 @@ RSpec.describe Lrama::State do
       expect(state.append_annotation_list([annotation({ item => true }), annotation(nil)])).to be(false)
 
       expect(existing.contribution_matrix[actions.first]).to be_nil
-      expect(existing.dominant_contribution({ item => [] })).to eq(actions)
+      expect(existing.dominant_contribution({ item => 0 })).to eq(actions)
     end
 
     it "replaces conditional contributions with always contributions and reports the change once" do
@@ -607,7 +621,7 @@ RSpec.describe Lrama::State do
       expect(state.append_annotation_list([annotation(nil)])).to be(false)
 
       expect(existing.contribution_matrix[actions.first]).to be_nil
-      expect(existing.dominant_contribution({ item => [] })).to eq(actions)
+      expect(existing.dominant_contribution({ item => 0 })).to eq(actions)
     end
 
     it "does not mutate contributions shared with another annotation" do

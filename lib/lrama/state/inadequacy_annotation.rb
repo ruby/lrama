@@ -62,7 +62,7 @@ module Lrama
       def dominant_contribution(lookaheads)
         actions = @actions.select {|action|
           contributions = contribution_matrix[action]
-          contributions.nil? || contributions.any? {|item, contributed| contributed && lookaheads[item].include?(@token) }
+          contributions.nil? || contributions.any? {|item, contributed| contributed && lookaheads[item][@token.number] == 1 }
         }
         return nil if actions.empty?
 
