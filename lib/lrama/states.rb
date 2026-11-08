@@ -31,6 +31,7 @@ module Lrama
     #   @lookback_relation: Hash[state_id, Hash[rule_id, Array[State::Action::Goto]]]
     #   @follow_sets: Hash[State::Action::Goto, Bitmap::bitmap]
     #   @la: Hash[state_id, Hash[rule_id, Bitmap::bitmap]]
+    #   @bitmap_to_terms_cache: Hash[Bitmap::bitmap, Array[Grammar::Symbol]]
 
     extend Forwardable
     include Lrama::Tracer::Duration
@@ -105,6 +106,7 @@ module Lrama
       # second key is rule_id,
       # value is bitmap of term.
       @la = {}
+      @bitmap_to_terms_cache = {}
     end
 
     # @rbs () -> void
@@ -127,8 +129,8 @@ module Lrama
       # Phase 1
       report_duration(:compute_predecessors) { compute_predecessors }
       report_duration(:compute_follow_kernel_items) { compute_follow_kernel_items }
-      report_duration(:compute_always_follows) { compute_always_follows }
-      report_duration(:compute_goto_follows) { compute_goto_follows }
+      always_follows = report_duration(:compute_always_follows) { compute_always_follows }
+      report_duration(:compute_goto_follows) { compute_goto_follows(always_follows) }
       # Phase 2
       report_duration(:compute_inadequacy_annotations) { compute_inadequacy_annotations }
       # Phase 3
@@ -508,10 +510,9 @@ module Lrama
 
     # @rbs (Bitmap::bitmap bit) -> Array[Grammar::Symbol]
     def bitmap_to_terms(bit)
-      ary = Bitmap.to_array(bit)
-      ary.map do |i|
+      @bitmap_to_terms_cache[bit] ||= Bitmap.to_array(bit).map do |i|
         @grammar.find_symbol_by_number!(i)
-      end
+      end.freeze
     end
 
     # @rbs () -> void
@@ -699,7 +700,7 @@ module Lrama
 
     # Definition 3.20 (always_follows, one closure)
     #
-    # @rbs () -> void
+    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
     def compute_always_follows
       set = nterm_transitions
       relation = compute_goto_successor_or_internal_relation
@@ -731,12 +732,11 @@ module Lrama
 
     # Definition 3.24 (goto_follows, via always_follows)
     #
-    # @rbs () -> void
-    def compute_goto_follows
+    # @rbs (Hash[State::Action::Goto, Bitmap::bitmap] always_follows) -> void
+    def compute_goto_follows(always_follows)
       set = nterm_transitions
       relation = compute_goto_internal_or_predecessor_dependencies
-      base_function = compute_always_follows_bitmaps
-      Digraph.new(set, relation, base_function).compute.each do |goto, goto_follows_bitmap|
+      Digraph.new(set, relation, always_follows).compute.each do |goto, goto_follows_bitmap|
         goto.from_state.goto_follows[goto] = bitmap_to_terms(goto_follows_bitmap)
       end
     end
@@ -754,13 +754,6 @@ module Lrama
       end
 
       relations
-    end
-
-    # @rbs () -> Hash[State::Action::Goto, Bitmap::bitmap]
-    def compute_always_follows_bitmaps
-      nterm_transitions.map {|goto|
-        [goto, Bitmap.from_array(goto.from_state.always_follows[goto].map(&:number))]
-      }.to_h
     end
 
     # @rbs () -> void

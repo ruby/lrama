@@ -1,6 +1,72 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::States do
+  describe '#bitmap_to_terms' do
+    let(:grammar) do
+      grammar = Lrama::Parser.new("%%\nstart: 'a' 'b';\n", "bitmap.y").parse
+      grammar.prepare
+      grammar
+    end
+    let(:states) { described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new)) }
+    let(:terms) { grammar.terms.last(2) }
+    let(:bitmap) { Lrama::Bitmap.from_array(terms.map(&:number).reverse) }
+
+    it 'shares a frozen array for the same bitmap in symbol number order' do
+      converted = states.send(:bitmap_to_terms, bitmap)
+
+      expect(converted).to eq(terms)
+      expect(states.send(:bitmap_to_terms, bitmap)).to equal(converted)
+      expect(converted).to be_frozen
+      expect { converted << grammar.eof_symbol }.to raise_error(FrozenError)
+    end
+
+    it 'shares a frozen empty array for an empty bitmap' do
+      converted = states.send(:bitmap_to_terms, 0)
+
+      expect(converted).to eq([])
+      expect(states.send(:bitmap_to_terms, 0)).to equal(converted)
+      expect(converted).to be_frozen
+    end
+
+    it 'keeps symbols from separate grammars isolated' do
+      other_grammar = Lrama::Parser.new("%%\nstart: 'x' 'y';\n", "other.y").parse
+      other_grammar.prepare
+      other_states = described_class.new(other_grammar, Lrama::Tracer.new(Lrama::Logger.new))
+
+      expect(states.send(:bitmap_to_terms, bitmap)).to eq(terms)
+      expect(other_states.send(:bitmap_to_terms, bitmap)).to eq(other_grammar.terms.last(2))
+      expect(other_states.send(:bitmap_to_terms, bitmap).first).not_to equal(terms.first)
+    end
+
+    it 'retains conversions when lookahead sets are rebuilt for the same grammar' do
+      converted = states.send(:bitmap_to_terms, bitmap)
+      states.send(:clear_look_ahead_sets)
+
+      expect(states.send(:bitmap_to_terms, bitmap)).to equal(converted)
+    end
+  end
+
+  describe '#compute_goto_follows' do
+    it 'reuses always-follow bitmaps without converting symbol arrays back to bitmaps' do
+      path = "integration/ielr.y"
+      grammar = Lrama::Parser.new(File.read(fixture_path(path)), path).parse
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.send(:compute_predecessors)
+      bitmaps = states.send(:compute_always_follows).freeze
+      expect(Lrama::Bitmap).not_to receive(:from_array)
+
+      states.send(:compute_goto_follows, bitmaps)
+
+      bitmaps.each do |goto, bitmap|
+        always_follows = goto.from_state.always_follows.fetch(goto)
+        expect(always_follows.map(&:number)).to eq(Lrama::Bitmap.to_array(bitmap))
+        expect(always_follows - goto.from_state.goto_follows.fetch(goto)).to eq([])
+      end
+    end
+  end
+
   describe '#compute' do
     it "basic" do
       path = "common/basic.y"

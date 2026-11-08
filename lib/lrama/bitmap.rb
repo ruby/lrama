@@ -25,15 +25,10 @@ module Lrama
     # @rbs (bitmap int) -> Array[Integer]
     def self.to_array(int)
       a = [] #: Array[Integer]
-      i = 0
-
-      len = int.bit_length
-      while i < len do
-        if int[i] == 1
-          a << i
-        end
-
-        i += 1
+      while int > 0
+        bit = int & -int
+        a << bit.bit_length - 1
+        int ^= bit
       end
 
       a
