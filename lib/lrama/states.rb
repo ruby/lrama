@@ -24,6 +24,7 @@ module Lrama
     #   @grammar: Grammar
     #   @tracer: Tracer
     #   @states: Array[State]
+    #   @nterm_transitions: Array[State::Action::Goto]?
     #   @direct_read_sets: Hash[State::Action::Goto, Bitmap::bitmap]
     #   @reads_relation: Hash[State::Action::Goto, Array[State::Action::Goto]]
     #   @read_sets: Hash[State::Action::Goto, Bitmap::bitmap]
@@ -328,6 +329,7 @@ module Lrama
 
     # @rbs () -> void
     def compute_lr0_states
+      @nterm_transitions = nil
       # State queue
       states = []
       states_created = {}
@@ -354,15 +356,7 @@ module Lrama
 
     # @rbs () -> Array[State::Action::Goto]
     def nterm_transitions
-      a = []
-
-      @states.each do |state|
-        state.nterm_transitions.each do |goto|
-          a << goto
-        end
-      end
-
-      a
+      @nterm_transitions ||= @states.flat_map(&:nterm_transitions)
     end
 
     # @rbs () -> void
@@ -435,9 +429,8 @@ module Lrama
               break if sym.term?
               state2 = transition(state, rule.rhs[0...i])
               # p' = state, B = nterm, p = state2, A = sym
-              key = state2.nterm_transitions.find do |goto2|
-                goto2.next_sym.token_id == sym.token_id
-              end || (raise "Goto by #{sym.name} on state #{state2.id} is not found")
+              key = state2.transitions_by_symbol_number[sym.number] #: State::Action::Goto?
+              raise "Goto by #{sym.name} on state #{state2.id} is not found" unless key
               # TODO: need to omit if state == state2 ?
               @includes_relation[key] ||= []
               @includes_relation[key] << goto
@@ -766,6 +759,7 @@ module Lrama
           compute_state(state, transition, transition.to_state)
         end
       end
+      @nterm_transitions = nil
     end
 
     # @rbs () -> void

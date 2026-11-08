@@ -17,6 +17,32 @@ RSpec.describe Lrama::State do
     Lrama::State::InadequacyAnnotation.new(from, on, with, { with.first => contributions })
   end
 
+  describe "#transitions_by_symbol_number" do
+    it "distinguishes terminal and nonterminal token IDs and refreshes redirected gotos" do
+      grammar = Lrama::Parser.new("%token A 1\n%%\nstart: A;\n", "transitions.y").parse
+      grammar.prepare
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      initial = states.states.first
+      terminal = grammar.find_symbol_by_s_value!("A")
+      nonterminal = grammar.find_symbol_by_s_value!("start")
+      expect(terminal.token_id).to eq(nonterminal.token_id)
+      index = initial.transitions_by_symbol_number
+      shift = index.fetch(terminal.number)
+      goto = index.fetch(nonterminal.number)
+      expect(shift).to be_a(Lrama::State::Action::Shift)
+      expect(goto).to be_a(Lrama::State::Action::Goto)
+      replacement = described_class.new(states.states_count, nonterminal, goto.to_state.kernels)
+
+      initial.update_transition(goto, replacement)
+
+      updated = initial.transitions_by_symbol_number
+      expect(updated.fetch(terminal.number)).to equal(shift)
+      expect(updated.fetch(nonterminal.number).to_state).to equal(replacement)
+      expect(updated.fetch(nonterminal.number)).not_to equal(goto)
+    end
+  end
+
   describe "#append_predecessor" do
     it "retains distinct objects with the same ID and preserves insertion order" do
       other = described_class.new(origin.id, token, [])
@@ -85,8 +111,8 @@ RSpec.describe Lrama::State do
       end
       tail.append_predecessor(left)
       tail.append_predecessor(right)
-      allow(first).to receive(:nterm_transitions).and_return([first_goto])
-      allow(second).to receive(:nterm_transitions).and_return([second_goto])
+      allow(first).to receive(:transitions).and_return([first_goto])
+      allow(second).to receive(:transitions).and_return([second_goto])
     end
 
     it "visits converging origins once in the existing depth-first order" do
@@ -106,7 +132,7 @@ RSpec.describe Lrama::State do
       tail.predecessor_dependencies(target_goto)
       third = described_class.new(6, token, [item])
       third_goto = Lrama::State::Action::Goto.new(third, rule.lhs, [], tail)
-      allow(third).to receive(:nterm_transitions).and_return([third_goto])
+      allow(third).to receive(:transitions).and_return([third_goto])
       right.append_predecessor(third)
 
       expect(tail.predecessor_dependencies(target_goto)).to eq([third_goto, second_goto, first_goto])
