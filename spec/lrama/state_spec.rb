@@ -17,6 +17,36 @@ RSpec.describe Lrama::State do
     Lrama::State::InadequacyAnnotation.new(from, on, with, { with.first => contributions })
   end
 
+  describe "lookaheads for duplicate rules" do
+    let(:grammar) do
+      grammar = Lrama::Parser.new("%%\nstart: 'a' | 'a';\n", "duplicate.y").parse
+      grammar.prepare
+      grammar
+    end
+    let(:rules) { grammar.rules.last(2) }
+    let(:state) do
+      items = rules.map { |rule| Lrama::State::Item.new(rule: rule, position: rule.rhs.length) }
+      state = described_class.new(0, rules.first.rhs.first, items)
+      state.compute_transitions_and_reduces
+      state
+    end
+
+    it "assigns lookaheads to the specified rule ID" do
+      state.set_look_ahead(rules.first, [grammar.eof_symbol])
+      state.set_look_ahead(rules.last, [])
+
+      expect(state.reduces.map(&:look_ahead)).to eq([[grammar.eof_symbol], []])
+    end
+
+    it "assigns lookahead sources to the specified rule ID" do
+      sources = { grammar.eof_symbol => [] }
+      state.set_look_ahead_sources(rules.first, sources)
+      state.set_look_ahead_sources(rules.last, {})
+
+      expect(state.reduces.map(&:look_ahead_sources)).to eq([sources, {}])
+    end
+  end
+
   describe "#transitions_by_symbol_number" do
     it "distinguishes terminal and nonterminal token IDs and refreshes redirected gotos" do
       grammar = Lrama::Parser.new("%token A 1\n%%\nstart: A;\n", "transitions.y").parse

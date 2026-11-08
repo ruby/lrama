@@ -119,7 +119,7 @@ module Lrama
           dest_state = trans[sym]
 
           dest_state.kernels.each do |dest_item|
-            next unless (src_item.rule == dest_item.rule) && (src_item.position + 1 == dest_item.position)
+            next unless (src_item.rule_id == dest_item.rule_id) && (src_item.position + 1 == dest_item.position)
             src_state_item = get_state_item(src_state, src_item)
             dest_state_item = get_state_item(dest_state, dest_item)
 

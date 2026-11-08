@@ -6,6 +6,23 @@ RSpec.describe Lrama::Counterexamples do
       sprintf("%3d. %s", path.state.id, path.item)
     end
 
+    ["'a' | 'a'", "|"].each do |alternatives|
+      it "finds both derivations for duplicate alternatives #{alternatives.inspect}" do
+        grammar = Lrama::Parser.new("%%\nstart: item;\nitem: #{alternatives};\n", "duplicate.y").parse
+        grammar.prepare
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        conflict_state = states.states.find(&:has_conflicts?)
+        examples = described_class.new(states).compute(conflict_state)
+
+        expect(examples.length).to eq(1)
+        example = examples.first
+        expect([example.path1_item.rule_id, example.path2_item.rule_id]).to eq(grammar.rules.last(2).map(&:id))
+        expect(example.derivations1.render_for_report).to include("2:")
+        expect(example.derivations2.render_for_report).to include("3:")
+      end
+    end
+
     # Example comes from https://www.cs.cornell.edu/andru/papers/cupex/cupex.pdf
     # "4. Constructing Nonunifying Counterexamples"
     describe "Example of 'Finding Counterexamples from Parsing Conflicts'" do

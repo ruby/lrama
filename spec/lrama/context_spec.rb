@@ -215,6 +215,34 @@ RSpec.describe Lrama::Context do
   end
 
   describe "compute_yydefact" do
+    [:lalr, :ielr].each do |lr_type|
+      ["'a' | 'a'", "|"].each do |alternatives|
+        it "builds #{lr_type} tables for duplicate alternatives #{alternatives.inspect}" do
+          grammar = Lrama::Parser.new(<<~GRAMMAR, "duplicate.y").parse
+            %define lr.type #{lr_type}
+            %%
+            start: item;
+            item: #{alternatives};
+          GRAMMAR
+          grammar.prepare
+          states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+          states.compute
+          states.compute_ielr if lr_type == :ielr
+          context = Lrama::Context.new(states)
+
+          expect(states.rr_conflicts_count).to eq(1)
+          state = states.states.find { |s| s.reduces.length == 2 }
+          expect(state.reduces.map(&:look_ahead)).to eq([[grammar.eof_symbol], [grammar.eof_symbol]])
+          action = context.yytable[context.yypact[state.id] + grammar.eof_symbol.number]
+          expect(action).to eq(-(grammar.rules[-2].id + 1))
+
+          states.compute_la_sources_for_conflicted_states
+          sources = state.reduces.map { |reduce| reduce.look_ahead_sources.fetch(grammar.eof_symbol) }
+          expect(sources.map(&:length)).to eq([1, 1])
+        end
+      end
+    end
+
     describe "S/R conflicts are resolved to reduce" do
       it "does not include shift into actions" do
         y = <<~INPUT
