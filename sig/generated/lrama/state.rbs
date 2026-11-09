@@ -52,6 +52,8 @@ module Lrama
 
     @internal_dependency_symbols: Hash[Grammar::Symbol, Hash[Grammar::Symbol, bool]]?
 
+    @kernel_indices: Hash[Item, Integer]?
+
     attr_reader id: Integer
 
     attr_reader accessing_symbol: Grammar::Symbol
@@ -172,6 +174,9 @@ module Lrama
     # @rbs () -> bool
     def split_state?: () -> bool
 
+    # @rbs () -> Hash[Item, Integer]
+    def kernel_indices: () -> Hash[Item, Integer]
+
     # Definition 3.40 (propagate_lookaheads)
     #
     # @rbs (State next_state) -> lookahead_set
@@ -207,8 +212,8 @@ module Lrama
 
     # Definition 3.31 (compute_lhs_contributions)
     #
-    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[Item, bool])
-    def lhs_contributions: (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[Item, bool])
+    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> Hash[Item, bool]
+    def lhs_contributions: (Grammar::Symbol sym, Grammar::Symbol token) -> Hash[Item, bool]
 
     # Definition 3.26 (item_lookahead_sets)
     #

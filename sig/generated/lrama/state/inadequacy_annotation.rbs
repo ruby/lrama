@@ -11,21 +11,22 @@ module Lrama
 
       attr_accessor actions: Array[action]
 
-      attr_accessor contribution_matrix: Hash[action, Hash[Item, bool?]?]
+      # Bit positions refer to the containing state's kernels, which may differ from @state's.
+      attr_accessor contribution_matrix: Hash[action, Bitmap::bitmap?]
 
-      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[Item, bool?]?] contribution_matrix) -> void
-      def initialize: (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[Item, bool?]?] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Bitmap::bitmap?] contribution_matrix) -> void
+      def initialize: (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Bitmap::bitmap?] contribution_matrix) -> void
 
-      # @rbs (Item item) -> bool
-      def contributed?: (Item item) -> bool
+      # @rbs (Integer kernel_index) -> bool
+      def contributed?: (Integer kernel_index) -> bool
 
-      # @rbs (Array[Hash[action, Hash[Item, bool?]?]] another_matrixes) -> bool
-      def merge_matrix: (Array[Hash[action, Hash[Item, bool?]?]] another_matrixes) -> bool
+      # @rbs (Array[Hash[action, Bitmap::bitmap?]] another_matrixes) -> bool
+      def merge_matrix: (Array[Hash[action, Bitmap::bitmap?]] another_matrixes) -> bool
 
       # Definition 3.42 (dominant_contribution)
       #
-      # @rbs (State::lookahead_set lookaheads) -> Array[action]?
-      def dominant_contribution: (State::lookahead_set lookaheads) -> Array[action]?
+      # @rbs (State::lookahead_set lookaheads, Array[Item] kernels) -> Array[action]?
+      def dominant_contribution: (State::lookahead_set lookaheads, Array[Item] kernels) -> Array[action]?
 
       # @rbs (Array[action] actions) -> Array[action]
       def resolve_conflict: (Array[action] actions) -> Array[action]

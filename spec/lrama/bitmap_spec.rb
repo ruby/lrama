@@ -44,6 +44,34 @@ RSpec.describe Lrama::Bitmap do
     end
   end
 
+  describe '.any?' do
+    it 'returns false without yielding for an empty bitmap' do
+      expect(described_class.any?(0) { raise 'unexpected bit' }).to be(false)
+    end
+
+    it 'stops at the first matching bit across integer word boundaries' do
+      visited = []
+      result = described_class.any?((1 << 130) | (1 << 64) | 1) do |index|
+        visited << index
+        index == 64
+      end
+
+      expect(result).to be(true)
+      expect(visited).to eq([0, 64])
+    end
+
+    it 'returns false after testing every set bit when none match' do
+      visited = []
+      result = described_class.any?((1 << 130) | 1) do |index|
+        visited << index
+        index == 129
+      end
+
+      expect(result).to be(false)
+      expect(visited).to eq([0, 130])
+    end
+  end
+
   describe '.to_bool_array' do
     it 'converts bitmap integer into array of boolean' do
       expect(Lrama::Bitmap.to_bool_array(0b0, 1)).to eq([false])

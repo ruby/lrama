@@ -34,6 +34,16 @@ module Lrama
       a
     end
 
+    # @rbs (bitmap int) { (Integer) -> bool } -> bool
+    def self.any?(int)
+      while int > 0
+        bit = int & -int
+        return true if yield(bit.bit_length - 1)
+        int ^= bit
+      end
+      false
+    end
+
     # @rbs (bitmap int, Integer size) -> Array[bool]
     def self.to_bool_array(int, size)
       Array.new(size) { |i| int[i] == 1 }

@@ -34,6 +34,7 @@ module Lrama
     #   @follow_sets: Hash[State::Action::Goto, Bitmap::bitmap]
     #   @la: Hash[state_id, Hash[rule_id, Bitmap::bitmap]]
     #   @bitmap_to_terms_cache: Hash[Bitmap::bitmap, Array[Grammar::Symbol]]
+    #   @initial_items: Hash[Grammar::Rule, State::Item]
 
     extend Forwardable
     include Lrama::Tracer::Duration
@@ -303,7 +304,7 @@ module Lrama
         if (sym = item.next_sym) && sym.nterm?
           @grammar.find_rules_by_symbol!(sym).each do |rule|
             next if queued[rule.id]
-            i = State::Item.new(rule: rule, position: 0)
+            i = @initial_items[rule]
             closure << i
             items << i
             queued[i.rule_id] = true
@@ -334,8 +335,13 @@ module Lrama
       # State queue
       states = []
       states_created = {}
+      @initial_items = {} #: Hash[Grammar::Rule, State::Item]
+      @initial_items.compare_by_identity
+      @grammar.rules.each do |rule|
+        @initial_items[rule] = State::Item.new(rule: rule, position: 0)
+      end
 
-      state, _ = create_state(symbols.first, [State::Item.new(rule: @grammar.rules.first, position: 0)], states_created)
+      state, _ = create_state(symbols.first, [@initial_items[@grammar.rules.first]], states_created)
       enqueue_state(states, state)
 
       while (state = states.shift) do
@@ -670,7 +676,7 @@ module Lrama
       Digraph.new(set, relation, base_function).compute.each do |goto, follow_kernel_items|
         state = goto.from_state
         bools = Bitmap.to_bool_array(follow_kernel_items, state.kernels.count)
-        state.follow_kernel_items[goto] = state.kernels.zip(bools).to_h
+        state.follow_kernel_items[goto] = state.kernels.zip(bools).to_h.compare_by_identity
       end
     end
 
@@ -798,7 +804,10 @@ module Lrama
       if next_state.lalr_isocore.annotation_list.empty?
         unless next_state.lookaheads_recomputed
           next_state.lookaheads_recomputed = true
-          next_state.item_lookahead_set = next_state.kernels.map {|kernel| [kernel, 0] }.to_h
+          sets = {} #: State::lookahead_set
+          sets.compare_by_identity
+          next_state.kernels.each {|kernel| sets[kernel] = 0 }
+          next_state.item_lookahead_set = sets
         end
         return
       end

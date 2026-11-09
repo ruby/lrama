@@ -74,7 +74,7 @@ module Lrama
 
       # @rbs () -> State::Item
       def new_by_next_position
-        Item.new(rule: rule, position: position + 1)
+        @next_item ||= Item.new(rule: rule, position: position + 1)
       end
 
       # @rbs () -> Array[Grammar::Symbol]
