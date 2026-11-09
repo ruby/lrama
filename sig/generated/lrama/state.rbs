@@ -6,7 +6,7 @@ module Lrama
 
     type transition = Action::Shift | Action::Goto
 
-    type lookahead_set = Hash[Item, Array[Grammar::Symbol]]
+    type lookahead_set = Hash[Item, Bitmap::bitmap]
 
     type dominant_contributions = Hash[InadequacyAnnotation, Array[InadequacyAnnotation::action]?]
 
@@ -88,9 +88,9 @@ module Lrama
 
     attr_accessor follow_kernel_items: Hash[Action::Goto, Hash[Item, bool]]
 
-    attr_accessor always_follows: Hash[Action::Goto, Array[Grammar::Symbol]]
+    attr_accessor always_follows: Hash[Action::Goto, Bitmap::bitmap]
 
-    attr_accessor goto_follows: Hash[Action::Goto, Array[Grammar::Symbol]]
+    attr_accessor goto_follows: Hash[Action::Goto, Bitmap::bitmap]
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
     def initialize: (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
@@ -229,8 +229,8 @@ module Lrama
 
     # Definition 3.39 (compute_goto_follow_set)
     #
-    # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
-    def goto_follow_set: (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
+    # @rbs (Grammar::Symbol nterm_token) -> Bitmap::bitmap
+    def goto_follow_set: (Grammar::Symbol nterm_token) -> Bitmap::bitmap
 
     # Definition 3.8 (Goto Follows Internal Relation)
     #

@@ -17,7 +17,7 @@ module Lrama
     # @rbs!
     #   type conflict = State::ShiftReduceConflict | State::ReduceReduceConflict
     #   type transition = Action::Shift | Action::Goto
-    #   type lookahead_set = Hash[Item, Array[Grammar::Symbol]]
+    #   type lookahead_set = Hash[Item, Bitmap::bitmap]
     #   type dominant_contributions = Hash[InadequacyAnnotation, Array[InadequacyAnnotation::action]?]
     #   type item_pair = [State, Item]
     #   type item_origins_cache = Hash[item_pair, Array[item_pair]]
@@ -61,8 +61,8 @@ module Lrama
     attr_accessor :lalr_isocore #: State
     attr_accessor :lookaheads_recomputed #: bool
     attr_accessor :follow_kernel_items #: Hash[Action::Goto, Hash[Item, bool]]
-    attr_accessor :always_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
-    attr_accessor :goto_follows #: Hash[Action::Goto, Array[Grammar::Symbol]]
+    attr_accessor :always_follows #: Hash[Action::Goto, Bitmap::bitmap]
+    attr_accessor :goto_follows #: Hash[Action::Goto, Bitmap::bitmap]
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
@@ -310,7 +310,7 @@ module Lrama
       filters = next_state.lookahead_set_filters
       next_state.kernels.map {|next_kernel|
         filter = filters[next_kernel]
-        next [next_kernel, []] if filter.empty?
+        next [next_kernel, 0] if filter == 0
 
         lookahead_sets =
           if next_kernel.position > 1
@@ -353,18 +353,14 @@ module Lrama
 
       @lookahead_set_filters ||= begin
         # @type var filters: lookahead_set
-        filters = kernels.map {|kernel| [kernel, []] }.to_h
+        filters = kernels.map {|kernel| [kernel, 0] }.to_h
         annotation_list.each do |annotation|
-          # @type var contributing_kernels: Hash[Item, bool]
-          contributing_kernels = {}
+          token = Bitmap.from_integer(annotation.token.number)
           annotation.contribution_matrix.each_value do |contributions|
             next if contributions.nil?
             contributions.each do |kernel, contributed|
-              contributing_kernels[kernel] = true if contributed
+              filters[kernel] |= token if contributed && filters.key?(kernel)
             end
-          end
-          contributing_kernels.each_key do |kernel|
-            filters[kernel] << annotation.token if filters.key?(kernel)
           end
         end
         filters
@@ -441,7 +437,7 @@ module Lrama
             keep_false = action.is_a?(Action::Reduce) && action.rule.empty_rule?
             predecessor.lane_items[self].each {|pred_kernel, kernel|
               c = contributions[kernel] && (
-                (kernel.position > 1 && predecessor.item_lookahead_set[pred_kernel].include?(annotation.token)) ||
+                (kernel.position > 1 && predecessor.item_lookahead_set[pred_kernel][annotation.token.number] == 1) ||
                 (kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, annotation.token)[pred_kernel])
               )
               cs[pred_kernel] = c if c || keep_false
@@ -492,10 +488,10 @@ module Lrama
       transition = transitions_by_symbol_number[sym.number] #: Action::Goto?
       @lhs_contributions[sym] ||= {}
       @lhs_contributions[sym][token] =
-        if always_follows[transition].include?(token)
+        if always_follows[transition][token.number] == 1
           {}
         else
-          kernels.map {|kernel| [kernel, follow_kernel_items[transition][kernel] && item_lookahead_set[kernel].include?(token)] }.to_h
+          kernels.map {|kernel| [kernel, follow_kernel_items[transition][kernel] && item_lookahead_set[kernel][token.number] == 1] }.to_h
         end
     end
 
@@ -505,14 +501,14 @@ module Lrama
     def item_lookahead_set
       return @item_lookahead_set if @item_lookahead_set
 
-      @item_lookahead_set = kernels.map {|k| [k, []] }.to_h
+      @item_lookahead_set = kernels.map {|k| [k, 0] }.to_h
       @item_lookahead_set = kernels.map {|kernel|
         value =
           if kernel.lhs.accept_symbol?
-            []
+            0
           elsif kernel.position > 1
             prev_items = predecessors_with_item(kernel)
-            prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce([]) {|acc, syms| acc |= syms }
+            prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce(0) {|acc, bitmap| acc | bitmap }
           elsif kernel.position == 1
             prev_state = @predecessors.find {|p| p.transitions_by_symbol_number.key?(kernel.lhs.number) }
             goto = prev_state.transitions_by_symbol_number[kernel.lhs.number] #: Action::Goto?
@@ -557,15 +553,15 @@ module Lrama
 
     # Definition 3.39 (compute_goto_follow_set)
     #
-    # @rbs (Grammar::Symbol nterm_token) -> Array[Grammar::Symbol]
+    # @rbs (Grammar::Symbol nterm_token) -> Bitmap::bitmap
     def goto_follow_set(nterm_token)
-      return [] if nterm_token.accept_symbol?
+      return 0 if nterm_token.accept_symbol?
       goto = @lalr_isocore.transitions_by_symbol_number[nterm_token.number] #: Action::Goto?
 
       @kernels
         .select {|kernel| @lalr_isocore.follow_kernel_items[goto][kernel] }
         .map {|kernel| item_lookahead_set[kernel] }
-        .reduce(@lalr_isocore.always_follows[goto]) {|result, terms| result |= terms }
+        .reduce(@lalr_isocore.always_follows[goto]) {|result, bitmap| result | bitmap }
     end
 
     # Definition 3.8 (Goto Follows Internal Relation)

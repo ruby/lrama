@@ -102,9 +102,29 @@ RSpec.describe Lrama::States do
 
       bitmaps.each do |goto, bitmap|
         always_follows = goto.from_state.always_follows.fetch(goto)
-        expect(always_follows.map(&:number)).to eq(Lrama::Bitmap.to_array(bitmap))
-        expect(always_follows - goto.from_state.goto_follows.fetch(goto)).to eq([])
+        expect(always_follows).to eq(bitmap)
+        expect(always_follows & ~goto.from_state.goto_follows.fetch(goto)).to eq(0)
       end
+    end
+  end
+
+  describe 'IELR lookahead bitmaps' do
+    it 'splits states with token numbers above the machine word size' do
+      padding = 128.times.map { |i| "PADDING_#{i}" }.join(' ')
+      source = File.read(fixture_path("integration/ielr.y")).sub("%token a", "%token #{padding}\n%token a")
+      grammar = Lrama::Parser.new(source, "bitmap.y").parse
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_ielr
+
+      expect(states.states_count).to eq(22)
+      expect(states.sr_conflicts_count).to eq(0)
+      expect(states.rr_conflicts_count).to eq(0)
+      lookaheads = states.states.flat_map { |state| state.item_lookahead_set.values }
+      expect(lookaheads.all? { |lookahead| lookahead.is_a?(Integer) }).to be(true)
+      expect(lookaheads.max.bit_length).to be > 128
+      expect { Lrama::Context.new(states) }.not_to raise_error
     end
   end
 
@@ -1996,11 +2016,13 @@ RSpec.describe Lrama::States do
     let(:state) { states.states.first.term_transitions.first.to_state }
     let(:token) { state.kernels.first.rule.rhs.last }
     let(:another_token) { state.kernels.last.rule.rhs.last }
-    let(:incoming) { state.kernels.map {|item| [item, [another_token, token]] }.to_h }
+    let(:token_bitmap) { Lrama::Bitmap.from_integer(token.number) }
+    let(:incoming_bitmap) { token_bitmap | Lrama::Bitmap.from_integer(another_token.number) }
+    let(:incoming) { state.kernels.map {|item| [item, incoming_bitmap] }.to_h }
 
     before do
       state.lookaheads_recomputed = true
-      state.item_lookahead_set = state.kernels.map {|item| [item, [token]] }.to_h
+      state.item_lookahead_set = state.kernels.map {|item| [item, token_bitmap] }.to_h
     end
 
     it "merges incoming lookaheads without mutating either input" do
@@ -2009,9 +2031,9 @@ RSpec.describe Lrama::States do
 
       states.send(:merge_lookaheads, state, incoming)
 
-      expect(state.item_lookahead_set.values).to all(eq([token, another_token]))
-      expect(original.values).to all(eq([token]))
-      expect(incoming.values).to all(eq([another_token, token]))
+      expect(state.item_lookahead_set.values).to all(eq(incoming_bitmap))
+      expect(original.values).to all(eq(token_bitmap))
+      expect(incoming.values).to all(eq(incoming_bitmap))
     end
 
     it "repropagates to processed successors and stops at the first unprocessed successor" do
@@ -2033,7 +2055,7 @@ RSpec.describe Lrama::States do
       visited = []
       allow(states).to receive(:compute_state) {|_, _, successor| visited << successor.id }
 
-      states.send(:merge_lookaheads, state, original.transform_values(&:dup))
+      states.send(:merge_lookaheads, state, original.dup)
 
       expect(state.item_lookahead_set).to equal(original)
       expect(visited).to eq([])
@@ -2071,15 +2093,16 @@ RSpec.describe Lrama::States do
         actions[0] => { first => true }, actions[1] => { second => true },
       })
       successor.annotation_list << annotation
-      successor.item_lookahead_set = { first => [token], second => [] }
+      token_bitmap = Lrama::Bitmap.from_integer(token.number)
+      successor.item_lookahead_set = { first => token_bitmap, second => 0 }
       successor.lookaheads_recomputed = true
       split = Lrama::State.new(states.states.length, successor.accessing_symbol, successor.kernels)
       split.lalr_isocore = successor
-      split.item_lookahead_set = { first => [], second => [token, token] }
+      split.item_lookahead_set = { first => 0, second => token_bitmap | Lrama::Bitmap.from_integer(grammar.rules.last.rhs.first.number) }
       split.lookaheads_recomputed = true
       successor.ielr_isocores << split
       split.ielr_isocores = successor.ielr_isocores
-      incoming = { first => [], second => [token] }
+      incoming = { first => 0, second => token_bitmap }
       allow(predecessor).to receive(:propagate_lookaheads).with(successor).and_return(incoming)
       expect(annotation).to receive(:dominant_contribution).with(successor.item_lookahead_set).once.and_call_original
       expect(annotation).to receive(:dominant_contribution).with(split.item_lookahead_set).once.and_call_original
@@ -2098,7 +2121,7 @@ RSpec.describe Lrama::States do
       predecessor = states.states.find { |state| state.accessing_symbol == grammar.rules.last.rhs.first }
       transition = predecessor.transitions.first
       successor = transition.to_state
-      successor.item_lookahead_set = { successor.kernels.first => [grammar.rules.last.rhs.last] }
+      successor.item_lookahead_set = { successor.kernels.first => Lrama::Bitmap.from_integer(grammar.rules.last.rhs.last.number) }
       expect(predecessor).not_to receive(:propagate_lookaheads)
       expect(predecessor).not_to receive(:update_transition)
 
@@ -2107,7 +2130,7 @@ RSpec.describe Lrama::States do
       states.send(:compute_state, predecessor, transition, successor)
 
       expect(successor.lookaheads_recomputed).to be(true)
-      expect(lookaheads).to eq({ successor.kernels.first => [] })
+      expect(lookaheads).to eq({ successor.kernels.first => 0 })
       expect(successor.item_lookahead_set).to equal(lookaheads)
       expect(successor.ielr_isocores).to eq([successor])
     end
