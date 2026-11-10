@@ -114,17 +114,8 @@ module Lrama
     # @rbs () -> void
     def compute_read_sets: () -> void
 
-    # Execute transition of state by symbols
-    # then return final state.
-    #
-    # @rbs (State state, Array[Grammar::Symbol] symbols) -> State
-    def transition: (State state, Array[Grammar::Symbol] symbols) -> State
-
     # @rbs () -> void
-    def compute_includes_relation: () -> void
-
-    # @rbs () -> void
-    def compute_lookback_relation: () -> void
+    def compute_includes_and_lookback_relations: () -> void
 
     # @rbs () -> void
     def compute_follow_sets: () -> void

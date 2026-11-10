@@ -833,6 +833,63 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe 'includes and lookback relations' do
+    it 'preserves nullable suffix order, empty lookbacks, and shared reduction targets' do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "relations.y").parse
+        %%
+        start: maybe required maybe;
+        maybe: %empty | 'a';
+        required: 'b';
+      GRAMMAR
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      rule = grammar.rules[1]
+      initial = states.states.first
+      middle = initial.transition(rule.rhs[0])
+      last = middle.transition(rule.rhs[1])
+      target = last.transition(rule.rhs[2])
+      includes = states.includes_relation.map do |key, gotos|
+        [[key.from_state.id, key.next_sym.name], gotos.map { |goto| [goto.from_state.id, goto.next_sym.name] }]
+      end
+
+      expect(includes).to eq([
+        [[last.id, "maybe"], [[initial.id, "start"]]],
+        [[middle.id, "required"], [[initial.id, "start"]]],
+      ])
+      expect(states.lookback_relation[target.id][rule.id].map { |goto| [goto.from_state.id, goto.next_sym.name] }).to eq([[initial.id, "start"]])
+
+      empty = grammar.rules.find { |entry| entry.lhs.name == "maybe" && entry.empty_rule? }
+      [initial, last].each do |origin|
+        expect(states.lookback_relation[origin.id][empty.id].map { |goto| [goto.from_state.id, goto.next_sym.name] }).to eq([[origin.id, "maybe"]])
+      end
+      reduction = grammar.rules.find { |entry| entry.lhs.name == "maybe" && !entry.empty_rule? }
+      reduced = initial.transition(reduction.rhs.first)
+      expect(states.lookback_relation[reduced.id][reduction.id].map(&:from_state).map(&:id)).to eq([initial.id, last.id])
+    end
+
+    it 'looks up each rule step once for a long nullable suffix' do
+      names = 20.times.map { |index| "n#{index}" }
+      source = "%%\nstart: #{names.join(' ')};\n" + names.map { |name| "#{name}: %empty | 'a';" }.join("\n")
+      grammar = Lrama::Parser.new(source, "nullable.y").parse
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.send(:compute_lr0_states)
+      lookups = 0
+      states.states.each do |state|
+        allow(state).to receive(:transitions_by_symbol_number).and_wrap_original do |method|
+          lookups += 1
+          method.call
+        end
+      end
+
+      states.send(:compute_look_ahead_sets)
+
+      expect(lookups).to eq(40)
+      expect(states.includes_relation.size).to eq(20)
+    end
+  end
+
   describe '#includes_relation' do
     it do
       path = "states/includes_relation.y"

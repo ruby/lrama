@@ -371,8 +371,7 @@ module Lrama
       report_duration(:compute_direct_read_sets) { compute_direct_read_sets }
       report_duration(:compute_reads_relation) { compute_reads_relation }
       report_duration(:compute_read_sets) { compute_read_sets }
-      report_duration(:compute_includes_relation) { compute_includes_relation }
-      report_duration(:compute_lookback_relation) { compute_lookback_relation }
+      report_duration(:compute_includes_and_lookback_relations) { compute_includes_and_lookback_relations }
       report_duration(:compute_follow_sets) { compute_follow_sets }
       report_duration(:compute_la) { compute_la }
     end
@@ -410,56 +409,31 @@ module Lrama
       @read_sets = Digraph.new(nterm_transitions, @reads_relation, @direct_read_sets).compute
     end
 
-    # Execute transition of state by symbols
-    # then return final state.
-    #
-    # @rbs (State state, Array[Grammar::Symbol] symbols) -> State
-    def transition(state, symbols)
-      symbols.each do |sym|
-        state = state.transition(sym)
-      end
-
-      state
-    end
-
     # @rbs () -> void
-    def compute_includes_relation
+    def compute_includes_and_lookback_relations
       @states.each do |state|
         state.nterm_transitions.each do |goto|
-          nterm = goto.next_sym
-          @grammar.find_rules_by_symbol!(nterm).each do |rule|
-            i = rule.rhs.count - 1
+          @grammar.find_rules_by_symbol!(goto.next_sym).each do |rule|
+            includes = [] #: Array[State::Action::Goto]
+            state2 = state
+            rule.rhs.each do |sym|
+              step = state2.transitions_by_symbol_number[sym.number]
+              raise "Can not transit by #{sym} #{state2}" unless step
 
-            while (i > -1) do
-              sym = rule.rhs[i]
-
-              break if sym.term?
-              state2 = transition(state, rule.rhs[0...i])
-              # p' = state, B = nterm, p = state2, A = sym
-              key = state2.transitions_by_symbol_number[sym.number] #: State::Action::Goto?
-              raise "Goto by #{sym.name} on state #{state2.id} is not found" unless key
-              # TODO: need to omit if state == state2 ?
-              @includes_relation[key] ||= []
-              @includes_relation[key] << goto
-              break unless sym.nullable
-              i -= 1
+              # A nonnullable symbol prevents earlier steps from contributing includes edges.
+              includes.clear unless sym.nullable
+              includes << step if step.is_a?(State::Action::Goto)
+              state2 = step.to_state
             end
-          end
-        end
-      end
-    end
 
-    # @rbs () -> void
-    def compute_lookback_relation
-      @states.each do |state|
-        state.nterm_transitions.each do |goto|
-          nterm = goto.next_sym
-          @grammar.find_rules_by_symbol!(nterm).each do |rule|
-            state2 = transition(state, rule.rhs)
-            # p = state, A = nterm, q = state2, A -> ω = rule
             @lookback_relation[state2.id] ||= {}
             @lookback_relation[state2.id][rule.id] ||= []
             @lookback_relation[state2.id][rule.id] << goto
+
+            includes.reverse_each do |key|
+              @includes_relation[key] ||= []
+              @includes_relation[key] << goto
+            end
           end
         end
       end
