@@ -10,9 +10,10 @@ module Lrama
       attr_accessor :state #: State
       attr_accessor :token #: Grammar::Symbol
       attr_accessor :actions #: Array[action]
-      attr_accessor :contribution_matrix #: Hash[action, Hash[Item, bool?]?]
+      # Bit positions refer to the containing state's kernels, which may differ from @state's.
+      attr_accessor :contribution_matrix #: Hash[action, Bitmap::bitmap?]
 
-      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Hash[Item, bool?]?] contribution_matrix) -> void
+      # @rbs (State state, Grammar::Symbol token, Array[action] actions, Hash[action, Bitmap::bitmap?] contribution_matrix) -> void
       def initialize(state, token, actions, contribution_matrix)
         @state = state
         @token = token
@@ -20,12 +21,12 @@ module Lrama
         @contribution_matrix = contribution_matrix
       end
 
-      # @rbs (Item item) -> bool
-      def contributed?(item)
-        @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[item] }
+      # @rbs (Integer kernel_index) -> bool
+      def contributed?(kernel_index)
+        @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[kernel_index] == 1 }
       end
 
-      # @rbs (Array[Hash[action, Hash[Item, bool?]?]] another_matrixes) -> bool
+      # @rbs (Array[Hash[action, Bitmap::bitmap?]] another_matrixes) -> bool
       def merge_matrix(another_matrixes)
         changed = false
         another_matrixes.each do |another_matrix|
@@ -42,14 +43,9 @@ module Lrama
               @contribution_matrix[action] = nil
               changed = true
             else
-              # Merging must not mutate shared lhs contribution caches or other annotations.
-              contributions = contributions.dup
-              another_contributions.each do |item, another_contributed|
-                contributed = contributions[item]
-                changed = true if another_contributed && !contributed
-                contributions[item] = contributed || another_contributed
-              end
-              @contribution_matrix[action] = contributions
+              merged = contributions | another_contributions
+              changed = true if merged != contributions
+              @contribution_matrix[action] = merged
             end
           end
         end
@@ -58,11 +54,11 @@ module Lrama
 
       # Definition 3.42 (dominant_contribution)
       #
-      # @rbs (State::lookahead_set lookaheads) -> Array[action]?
-      def dominant_contribution(lookaheads)
+      # @rbs (State::lookahead_set lookaheads, Array[Item] kernels) -> Array[action]?
+      def dominant_contribution(lookaheads, kernels)
         actions = @actions.select {|action|
           contributions = contribution_matrix[action]
-          contributions.nil? || contributions.any? {|item, contributed| contributed && lookaheads[item][@token.number] == 1 }
+          contributions.nil? || Bitmap.any?(contributions) {|index| lookaheads[kernels[index]][@token.number] == 1 }
         }
         return nil if actions.empty?
 
@@ -152,7 +148,7 @@ module Lrama
       # @rbs () -> String
       def contribution_matrix_to_s
         '[' + @contribution_matrix.map {|action, contributions|
-          "#{(action.is_a?(Action::Shift) || action.is_a?(Action::Goto)) ? action.class.name : "#{action.class.name}: (#{action.item})"}: " + contributions&.transform_keys(&:to_s).to_s
+          "#{(action.is_a?(Action::Shift) || action.is_a?(Action::Goto)) ? action.class.name : "#{action.class.name}: (#{action.item})"}: #{contributions.nil? ? 'always' : Bitmap.to_array(contributions)}"
         }.join(', ') + ']'
       end
     end

@@ -1,6 +1,37 @@
 # frozen_string_literal: true
 
 RSpec.describe Lrama::States do
+  describe 'shared items' do
+    it 'reuses each rule and position across closures, transitions, and split states' do
+      path = "integration/ielr.y"
+      grammar = Lrama::Parser.new(File.read(fixture_path(path)), path).parse
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_ielr
+
+      items = states.states.flat_map do |state|
+        state.items + state.transitions.flat_map(&:to_items) + state.lane_items.values.flatten
+      end
+      groups = items.group_by { |item| [item.rule.object_id, item.position] }
+      expect(groups.values.map { |group| group.map(&:object_id).uniq.length }.uniq).to eq([1])
+      expect(states.states_count).to eq(22)
+    end
+
+    it 'keeps equal rules and separate grammar instances distinct' do
+      items = 2.times.map do
+        grammar = Lrama::Parser.new("%%\nstart: 'a' | 'a';\n", "duplicate.y").parse
+        grammar.prepare
+        states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        states.states.first.closure
+      end
+
+      expect(items.map { |group| group.map(&:rule_id) }).to eq([[1, 2], [1, 2]])
+      expect(items.flatten.map(&:object_id).uniq.length).to eq(4)
+    end
+  end
+
   describe '#nterm_transitions' do
     let(:states) do
       path = "integration/ielr.y"
@@ -2090,7 +2121,7 @@ RSpec.describe Lrama::States do
       token = grammar.rules.first.rhs.last
       actions = successor.reduces
       annotation = Lrama::State::InadequacyAnnotation.new(successor, token, actions, {
-        actions[0] => { first => true }, actions[1] => { second => true },
+        actions[0] => 0b01, actions[1] => 0b10,
       })
       successor.annotation_list << annotation
       token_bitmap = Lrama::Bitmap.from_integer(token.number)
@@ -2104,9 +2135,9 @@ RSpec.describe Lrama::States do
       split.ielr_isocores = successor.ielr_isocores
       incoming = { first => 0, second => token_bitmap }
       allow(predecessor).to receive(:propagate_lookaheads).with(successor).and_return(incoming)
-      expect(annotation).to receive(:dominant_contribution).with(successor.item_lookahead_set).once.and_call_original
-      expect(annotation).to receive(:dominant_contribution).with(split.item_lookahead_set).once.and_call_original
-      expect(annotation).to receive(:dominant_contribution).with(incoming).once.and_call_original
+      expect(annotation).to receive(:dominant_contribution).with(successor.item_lookahead_set, successor.kernels).once.and_call_original
+      expect(annotation).to receive(:dominant_contribution).with(split.item_lookahead_set, successor.kernels).once.and_call_original
+      expect(annotation).to receive(:dominant_contribution).with(incoming, successor.kernels).once.and_call_original
 
       states.send(:compute_state, predecessor, transition, successor)
 
@@ -2130,7 +2161,7 @@ RSpec.describe Lrama::States do
       states.send(:compute_state, predecessor, transition, successor)
 
       expect(successor.lookaheads_recomputed).to be(true)
-      expect(lookaheads).to eq({ successor.kernels.first => 0 })
+      expect(lookaheads).to eq({ successor.kernels.first => 0 }.compare_by_identity)
       expect(successor.item_lookahead_set).to equal(lookaheads)
       expect(successor.ielr_isocores).to eq([successor])
     end

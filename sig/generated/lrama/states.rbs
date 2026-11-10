@@ -36,6 +36,8 @@ module Lrama
 
     @bitmap_to_terms_cache: Hash[Bitmap::bitmap, Array[Grammar::Symbol]]
 
+    @initial_items: Hash[Grammar::Rule, State::Item]
+
     extend Forwardable
 
     include Lrama::Tracer::Duration

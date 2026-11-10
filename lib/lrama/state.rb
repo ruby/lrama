@@ -41,6 +41,7 @@ module Lrama
     #   @predecessor_set: Hash[State, bool]?
     #   @item_index: Hash[[Grammar::Symbol, Integer?, Integer], Array[Item]]?
     #   @internal_dependency_symbols: Hash[Grammar::Symbol, Hash[Grammar::Symbol, bool]]?
+    #   @kernel_indices: Hash[Item, Integer]?
 
     attr_reader :id #: Integer
     attr_reader :accessing_symbol #: Grammar::Symbol
@@ -303,14 +304,29 @@ module Lrama
       @lalr_isocore != self
     end
 
+    # @rbs () -> Hash[Item, Integer]
+    def kernel_indices
+      @kernel_indices ||= begin
+        indices = {} #: Hash[Item, Integer]
+        indices.compare_by_identity
+        kernels.each_with_index {|kernel, index| indices[kernel] = index }
+        indices
+      end
+    end
+
     # Definition 3.40 (propagate_lookaheads)
     #
     # @rbs (State next_state) -> lookahead_set
     def propagate_lookaheads(next_state)
       filters = next_state.lookahead_set_filters
-      next_state.kernels.map {|next_kernel|
+      sets = {} #: lookahead_set
+      sets.compare_by_identity
+      next_state.kernels.each {|next_kernel|
         filter = filters[next_kernel]
-        next [next_kernel, 0] if filter == 0
+        if filter == 0
+          sets[next_kernel] = 0
+          next
+        end
 
         lookahead_sets =
           if next_kernel.position > 1
@@ -320,8 +336,9 @@ module Lrama
             goto_follow_set(next_kernel.lhs)
           end
 
-        [next_kernel, lookahead_sets & filter]
-      }.to_h
+        sets[next_kernel] = lookahead_sets & filter
+      }
+      sets
     end
 
     # Definition 3.43 (is_compatible)
@@ -334,12 +351,12 @@ module Lrama
       stored_contributions = (@dominant_contributions ||= {})
       @lalr_isocore.annotation_list.all? {|annotation|
         a = stored_contributions.fetch(annotation) {
-          stored_contributions[annotation] = annotation.dominant_contribution(item_lookahead_set)
+          stored_contributions[annotation] = annotation.dominant_contribution(item_lookahead_set, kernels)
         }
         next true if a.nil?
 
         b = incoming_contributions.fetch(annotation) {
-          incoming_contributions[annotation] = annotation.dominant_contribution(filtered_lookahead)
+          incoming_contributions[annotation] = annotation.dominant_contribution(filtered_lookahead, kernels)
         }
         b.nil? || a == b
       }
@@ -353,15 +370,13 @@ module Lrama
 
       @lookahead_set_filters ||= begin
         # @type var filters: lookahead_set
-        filters = kernels.map {|kernel| [kernel, 0] }.to_h
+        filters = {}
+        filters.compare_by_identity
+        kernels.each {|kernel| filters[kernel] = 0 }
         annotation_list.each do |annotation|
           token = Bitmap.from_integer(annotation.token.number)
-          annotation.contribution_matrix.each_value do |contributions|
-            next if contributions.nil?
-            contributions.each do |kernel, contributed|
-              filters[kernel] |= token if contributed && filters.key?(kernel)
-            end
-          end
+          contributions = annotation.contribution_matrix.each_value.reduce(0) {|bits, cs| bits | (cs || 0) }
+          Bitmap.to_array(contributions).each {|index| filters[kernels[index]] |= token }
         end
         filters
       end
@@ -401,10 +416,13 @@ module Lrama
           if action.is_a?(Action::Shift)
             contribution_matrix[action] = nil
           elsif action.rule.empty_rule?
-            contribution_matrix[action] = lhs_contributions(action.rule.lhs, token)
+            lhs = lhs_contributions(action.rule.lhs, token)
+            contributions = 0
+            kernels.each_with_index {|kernel, index| contributions |= (1 << index) if lhs[kernel] }
+            contribution_matrix[action] = contributions
           else
-            contributions = {}
-            kernels.each {|kernel| contributions[kernel] = true if kernel.rule == action.item.rule && kernel.end_of_rule? }
+            contributions = 0
+            kernels.each_with_index {|kernel, index| contributions |= (1 << index) if kernel.rule == action.item.rule && kernel.end_of_rule? }
             contribution_matrix[action] = contributions
           end
         }
@@ -419,28 +437,29 @@ module Lrama
       always_contributions = {} #: Hash[Grammar::Symbol, Hash[Item, bool]]
       propagating_list = []
       annotation_list.each {|annotation|
-        always_by_kernel = always_contributions[annotation.token] ||= {}
+        always_by_kernel = always_contributions[annotation.token] ||= {}.compare_by_identity
         contribution_matrix = {}
         propagates = false
         annotation.contribution_matrix.each {|action, contributions|
           if contributions.nil?
             contribution_matrix[action] = nil
-          elsif contributions.any? {|kernel, contributed|
-            contributed && kernel.position == 1 && always_by_kernel.fetch(kernel) {
+          elsif Bitmap.any?(contributions) {|index|
+            kernel = kernels[index]
+            kernel.position == 1 && always_by_kernel.fetch(kernel) {
               always_by_kernel[kernel] = predecessor.lhs_contributions(kernel.lhs, annotation.token).empty?
             }
           }
             contribution_matrix[action] = nil
           else
-            cs = {}
-            # Empty-rule matrices share the lhs cache, where an empty hash means always.
-            keep_false = action.is_a?(Action::Reduce) && action.rule.empty_rule?
+            cs = 0
             predecessor.lane_items[self].each {|pred_kernel, kernel|
-              c = contributions[kernel] && (
+              next unless contributions[kernel_indices.fetch(kernel)] == 1
+              pred_index = predecessor.kernel_indices[pred_kernel]
+              next unless pred_index
+              c =
                 (kernel.position > 1 && predecessor.item_lookahead_set[pred_kernel][annotation.token.number] == 1) ||
                 (kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, annotation.token)[pred_kernel])
-              )
-              cs[pred_kernel] = c if c || keep_false
+              cs |= (1 << pred_index) if c
               propagates = true if c
             }
             contribution_matrix[action] = cs
@@ -481,7 +500,7 @@ module Lrama
 
     # Definition 3.31 (compute_lhs_contributions)
     #
-    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> (nil | Hash[Item, bool])
+    # @rbs (Grammar::Symbol sym, Grammar::Symbol token) -> Hash[Item, bool]
     def lhs_contributions(sym, token)
       return @lhs_contributions[sym][token] unless @lhs_contributions.dig(sym, token).nil?
 
@@ -491,7 +510,10 @@ module Lrama
         if always_follows[transition][token.number] == 1
           {}
         else
-          kernels.map {|kernel| [kernel, follow_kernel_items[transition][kernel] && item_lookahead_set[kernel][token.number] == 1] }.to_h
+          contributions = {} #: Hash[Item, bool]
+          contributions.compare_by_identity
+          kernels.each {|kernel| contributions[kernel] = follow_kernel_items[transition][kernel] && item_lookahead_set[kernel][token.number] == 1 }
+          contributions
         end
     end
 
@@ -501,7 +523,7 @@ module Lrama
     def item_lookahead_set
       return @item_lookahead_set if @item_lookahead_set
 
-      @item_lookahead_set = kernels.map {|k| [k, 0] }.to_h
+      @item_lookahead_set = kernels.map {|k| [k, 0] }.to_h.compare_by_identity
       @item_lookahead_set = kernels.map {|kernel|
         value =
           if kernel.lhs.accept_symbol?
@@ -515,7 +537,7 @@ module Lrama
             prev_state.goto_follows[goto]
           end
         [kernel, value]
-      }.to_h
+      }.to_h.compare_by_identity
     end
 
     # @rbs (lookahead_set k) -> void

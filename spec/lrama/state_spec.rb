@@ -270,10 +270,11 @@ RSpec.describe Lrama::State do
   end
 
   describe "#is_compatible?" do
+    let(:state) { described_class.new(0, token, [item, next_item]) }
     let(:other_action) { Lrama::State::Action::Reduce.new(item) }
     let(:entry) do
       Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
-        actions.first => { item => true }, other_action => { next_item => true },
+        actions.first => 0b01, other_action => 0b10,
       })
     end
     let(:current) { { item => token_bitmap, next_item => 0 } }
@@ -299,10 +300,10 @@ RSpec.describe Lrama::State do
     end
 
     it "reuses stored contributions and invalidates them when lookaheads are assigned" do
-      expect(entry).to receive(:dominant_contribution).with(current).once.and_call_original
-      expect(entry).to receive(:dominant_contribution).with(incoming).exactly(3).times.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(current, state.kernels).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(incoming, state.kernels).exactly(3).times.and_call_original
       replacement = { item => 0, next_item => token_bitmap | Lrama::Bitmap.from_integer(rule.rhs.last.number) }
-      expect(entry).to receive(:dominant_contribution).with(replacement).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(replacement, state.kernels).once.and_call_original
 
       2.times { expect(state.is_compatible?(incoming)).to be(false) }
       state.item_lookahead_set = replacement
@@ -313,7 +314,7 @@ RSpec.describe Lrama::State do
     it "caches nil stored contributions as compatible" do
       empty = { item => 0, next_item => 0 }
       state.item_lookahead_set = empty
-      expect(entry).to receive(:dominant_contribution).with(empty).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(empty, state.kernels).once.and_call_original
 
       2.times { expect(state.is_compatible?(incoming)).to be(true) }
     end
@@ -325,17 +326,17 @@ RSpec.describe Lrama::State do
       split.lookaheads_recomputed = true
       empty = { item => 0, next_item => 0 }
       cache = {}
-      expect(entry).to receive(:dominant_contribution).with(current).once.and_call_original
-      expect(entry).to receive(:dominant_contribution).with(incoming).once.and_call_original
-      expect(entry).to receive(:dominant_contribution).with(empty).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(current, state.kernels).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(incoming, state.kernels).once.and_call_original
+      expect(entry).to receive(:dominant_contribution).with(empty, state.kernels).once.and_call_original
 
       expect(state.is_compatible?(empty, cache)).to be(true)
       expect(split.is_compatible?(empty, cache)).to be(true)
     end
 
     it "does not treat an empty dominant contribution as nil" do
-      allow(entry).to receive(:dominant_contribution).with(current).and_return([])
-      allow(entry).to receive(:dominant_contribution).with(incoming).and_return(actions)
+      allow(entry).to receive(:dominant_contribution).with(current, state.kernels).and_return([])
+      allow(entry).to receive(:dominant_contribution).with(incoming, state.kernels).and_return(actions)
 
       2.times { expect(state.is_compatible?(incoming)).to be(false) }
     end
@@ -345,43 +346,60 @@ RSpec.describe Lrama::State do
     let(:state) { described_class.new(0, token, [item, next_item]) }
 
     it "unions contributing tokens across annotations and actions" do
-      first = annotation({ item => false, next_item => true })
-      first.contribution_matrix[Lrama::State::Action::Reduce.new(item)] = { item => true, next_item => true }
+      first = annotation(0b10)
+      first.contribution_matrix[Lrama::State::Action::Reduce.new(item)] = 0b11
       state.annotation_list.concat([
         first,
         annotation(nil),
-        annotation({ item => true, next_item => false }, on: rule.rhs.last),
-        annotation({ item => true }),
+        annotation(0b01, on: rule.rhs.last),
+        annotation(0b01),
       ])
 
-      expect(state.lookahead_set_filters).to eq({ item => token_bitmap | Lrama::Bitmap.from_integer(rule.rhs.last.number), next_item => token_bitmap })
+      expect(state.lookahead_set_filters).to eq({ item => token_bitmap | Lrama::Bitmap.from_integer(rule.rhs.last.number), next_item => token_bitmap }.compare_by_identity)
     end
 
     it "includes empty filters for kernels without contributions" do
-      state.annotation_list << annotation({ item => false, next_item.new_by_next_position => true })
+      state.annotation_list << annotation(0)
 
-      expect(state.lookahead_set_filters).to eq({ item => 0, next_item => 0 })
+      expect(state.lookahead_set_filters).to eq({ item => 0, next_item => 0 }.compare_by_identity)
     end
 
     it "shares the LALR isocore's filters with split states" do
-      state.annotation_list << annotation({ next_item => true })
+      state.annotation_list << annotation(0b10)
       split = described_class.new(2, token, state.kernels)
       split.lalr_isocore = state
 
       expect(split.lookahead_set_filters).to equal(state.lookahead_set_filters)
-      expect(split.lookahead_set_filters).to eq({ item => 0, next_item => token_bitmap })
+      expect(split.lookahead_set_filters).to eq({ item => 0, next_item => token_bitmap }.compare_by_identity)
     end
   end
 
   describe "bitmap contributions" do
+    it "uses local kernel indices above the machine word size regardless of lookahead hash order" do
+      kernels = 131.times.map do |index|
+        other_rule = rule.dup
+        other_rule.id += index
+        Lrama::State::Item.new(rule: other_rule, position: 1)
+      end
+      entry = annotation(1 << 130)
+      lookaheads = kernels.reverse.map { |kernel| [kernel, 0] }.to_h
+      lookaheads[kernels[130]] = token_bitmap
+
+      expect(entry.dominant_contribution(lookaheads, kernels)).to eq(actions)
+      lookaheads[kernels[130]] = 0
+      lookaheads[kernels[129]] = token_bitmap
+      expect(entry.dominant_contribution(lookaheads, kernels)).to be_nil
+      expect(annotation(0).dominant_contribution(lookaheads, kernels)).to be_nil
+    end
+
     it "tests membership above the machine word size without including adjacent tokens" do
       token.number = 130
-      entry = annotation({ item => true })
+      entry = annotation(0b01)
 
-      expect(entry.dominant_contribution({ item => 1 << 130 })).to eq(actions)
-      expect(entry.dominant_contribution({ item => 1 << 129 })).to be_nil
-      expect(entry.dominant_contribution({ item => 0 })).to be_nil
-      expect(annotation(nil).dominant_contribution({ item => 0 })).to eq(actions)
+      expect(entry.dominant_contribution({ item => 1 << 130 }, [item])).to eq(actions)
+      expect(entry.dominant_contribution({ item => 1 << 129 }, [item])).to be_nil
+      expect(entry.dominant_contribution({ item => 0 }, [item])).to be_nil
+      expect(annotation(nil).dominant_contribution({ item => 0 }, [item])).to eq(actions)
     end
   end
 
@@ -390,14 +408,14 @@ RSpec.describe Lrama::State do
       successor = described_class.new(1, token, [next_item])
       expect(state).not_to receive(:goto_follow_set)
 
-      expect(state.propagate_lookaheads(successor)).to eq({ next_item => 0 })
+      expect(state.propagate_lookaheads(successor)).to eq({ next_item => 0 }.compare_by_identity)
     end
 
     it "skips predecessor lookaheads when a later kernel has an empty filter" do
       successor = described_class.new(1, token, [next_item.new_by_next_position])
       expect(state).not_to receive(:item_lookahead_set)
 
-      expect(state.propagate_lookaheads(successor)).to eq({ successor.kernels.first => 0 })
+      expect(state.propagate_lookaheads(successor)).to eq({ successor.kernels.first => 0 }.compare_by_identity)
     end
 
     it "intersects both kinds of lookaheads with their filters" do
@@ -405,8 +423,8 @@ RSpec.describe Lrama::State do
       predecessor = described_class.new(0, token, [next_item])
       successor = described_class.new(1, token, [next_item, last_item])
       successor.annotation_list.concat([
-        annotation({ next_item => true, last_item => true }),
-        annotation({ next_item => true, last_item => true }, on: rule.rhs.last),
+        annotation(0b11),
+        annotation(0b11, on: rule.rhs.last),
       ])
       lookaheads = token_bitmap | Lrama::Bitmap.from_integer(rule.rhs.last.number)
       predecessor.item_lookahead_set = { next_item => lookaheads | 1 }
@@ -414,7 +432,7 @@ RSpec.describe Lrama::State do
 
       expect(predecessor.propagate_lookaheads(successor)).to eq({
         next_item => lookaheads, last_item => lookaheads,
-      })
+      }.compare_by_identity)
       expect(successor.lookahead_set_filters.values).to all(eq(lookaheads))
     end
   end
@@ -433,11 +451,12 @@ RSpec.describe Lrama::State do
       current.annotate_manifestation
 
       expect(current.annotation_list.first.contribution_matrix).to eq({
-        shift => nil, reduce => { completed => true, equivalent => true },
+        shift => nil, reduce => 0b110,
       })
     end
 
     it "does not mutate cached lhs contributions when merging annotations for empty reductions" do
+      state = described_class.new(0, token, [item])
       empty_rule = rule.dup
       empty_rule.rhs = []
       reduce = Lrama::State::Action::Reduce.new(Lrama::State::Item.new(rule: empty_rule, position: 0))
@@ -447,9 +466,9 @@ RSpec.describe Lrama::State do
 
       state.annotate_manifestation
       entry = state.annotation_list.first
-      entry.merge_matrix([{ reduce => { item => true } }])
+      entry.merge_matrix([{ reduce => 0b01 }])
 
-      expect(entry.contribution_matrix[reduce]).to eq({ item => true })
+      expect(entry.contribution_matrix[reduce]).to eq(0b01)
       expect(contributions).to eq({ item => false })
     end
   end
@@ -465,23 +484,34 @@ RSpec.describe Lrama::State do
       predecessor.item_lookahead_set = { item => 0, next_item => token_bitmap }
     end
 
+    it "translates contributions to the predecessor's kernel order" do
+      predecessor = described_class.new(0, token, [next_item, item])
+      predecessor.lane_items[state] = [[item, next_item], [next_item, last_item]]
+      predecessor.item_lookahead_set = { next_item => token_bitmap, item => 0 }
+      state.annotation_list << annotation(0b10)
+
+      expect(state.annotate_predecessor(predecessor)).to be(true)
+
+      expect(predecessor.annotation_list.first.contribution_matrix[actions.first]).to eq(0b01)
+    end
+
     it "propagates first-position lhs and later-position lookahead contributions, omitting false entries" do
       allow(predecessor).to receive(:lhs_contributions).with(rule.lhs, token).and_return({ item => true })
-      state.annotation_list << annotation({ next_item => true, last_item => true })
-      state.annotation_list << annotation({ next_item => false, last_item => true }, from: state)
+      state.annotation_list << annotation(0b11)
+      state.annotation_list << annotation(0b10, from: state)
 
       expect(state.annotate_predecessor(predecessor)).to be(true)
 
       expect(predecessor.annotation_list.map(&:contribution_matrix)).to eq([
-        { actions.first => { item => true, next_item => true } },
-        { actions.first => { next_item => true } },
+        { actions.first => 0b11 },
+        { actions.first => 0b10 },
       ])
       expect(predecessor.annotation_list.map(&:state)).to eq([origin, state])
     end
 
     it "shares the unconditional contribution check across actions" do
       state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
-        actions.first => { next_item => true }, other_action => { next_item => true },
+        actions.first => 0b01, other_action => 0b01,
       })
       expect(predecessor).to receive(:lhs_contributions).with(rule.lhs, token).once.and_return({})
 
@@ -494,8 +524,8 @@ RSpec.describe Lrama::State do
       contributions = {}
       allow(predecessor).to receive(:lhs_contributions).with(rule.lhs, token).and_return(contributions)
       allow(predecessor).to receive(:lhs_contributions).with(rule.lhs, rule.rhs.last).and_return({ item => true })
-      state.annotation_list << annotation({ next_item => true })
-      state.annotation_list << annotation({ next_item => true }, on: rule.rhs.last)
+      state.annotation_list << annotation(0b01)
+      state.annotation_list << annotation(0b01, on: rule.rhs.last)
 
       state.annotate_predecessor(predecessor)
 
@@ -506,17 +536,17 @@ RSpec.describe Lrama::State do
     end
 
     it "does not treat noncontributing first-position kernels as unconditional" do
-      state.annotation_list << annotation({ next_item => false, last_item => true })
+      state.annotation_list << annotation(0b10)
       expect(predecessor).not_to receive(:lhs_contributions)
 
       state.annotate_predecessor(predecessor)
 
-      expect(predecessor.annotation_list.first.contribution_matrix).to eq({ actions.first => { next_item => true } })
+      expect(predecessor.annotation_list.first.contribution_matrix).to eq({ actions.first => 0b10 })
     end
 
     it "stops annotations with only always or never contributions" do
       state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
-        actions.first => nil, other_action => { last_item => true },
+        actions.first => nil, other_action => 0b10,
       })
       predecessor.item_lookahead_set = { item => 0, next_item => 0 }
 
@@ -525,146 +555,143 @@ RSpec.describe Lrama::State do
       expect(predecessor.annotation_list).to eq([])
     end
 
-    it "does not populate a shared empty-rule lhs contribution hash during propagation" do
+    it "keeps empty-rule contributions empty when another action propagates" do
       empty_rule = rule.dup
       empty_rule.rhs = []
       reduce = Lrama::State::Action::Reduce.new(Lrama::State::Item.new(rule: empty_rule, position: 0))
-      contributions = {}
       existing = Lrama::State::InadequacyAnnotation.new(origin, token, [reduce, other_action], {
-        reduce => contributions, other_action => {},
+        reduce => 0, other_action => 0,
       })
       predecessor.annotation_list << existing
       state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, [reduce, other_action], {
-        reduce => {}, other_action => { last_item => true },
+        reduce => 0, other_action => 0b10,
       })
 
       state.annotate_predecessor(predecessor)
 
       expect(predecessor.annotation_list).to eq([existing])
-      expect(existing.contribution_matrix[reduce]).to eq({ item => nil, next_item => nil })
-      expect(contributions).to eq({})
-      expect(existing.contribution_matrix[other_action]).to eq({ next_item => true })
+      expect(existing.contribution_matrix[reduce]).to eq(0)
+      expect(existing.contribution_matrix[other_action]).to eq(0b10)
     end
   end
 
   describe "#append_annotation_list" do
     it "matches state IDs and equal action arrays while retaining the existing annotation" do
-      existing = annotation({ item => false, next_item => true })
+      existing = annotation(0b10)
       state.annotation_list << existing
-      incoming = annotation({ item => true, next_item => false },
+      incoming = annotation(0b01,
                             from: described_class.new(origin.id, token, []), with: actions.dup)
       propagating = [incoming]
 
       expect(state.append_annotation_list(propagating)).to be(true)
 
       expect(state.annotation_list).to eq([existing])
-      expect(existing.contribution_matrix).to eq({ actions.first => { item => true, next_item => true } })
+      expect(existing.contribution_matrix).to eq({ actions.first => 0b11 })
       expect(propagating).to eq([incoming])
     end
 
     it "keeps annotations for different states, token objects, or actions separate" do
-      existing = annotation({ item => false })
+      existing = annotation(0)
       state.annotation_list << existing
       incoming = [
-        annotation({ item => true }, from: described_class.new(2, token, [])),
-        annotation({ item => true }, on: token.dup),
-        annotation({ item => true }, with: [Lrama::State::Action::Reduce.new(next_item)]),
+        annotation(0b01, from: described_class.new(2, token, [])),
+        annotation(0b01, on: token.dup),
+        annotation(0b01, with: [Lrama::State::Action::Reduce.new(next_item)]),
       ]
 
       expect(state.append_annotation_list(incoming)).to be(true)
 
       expect(state.annotation_list).to eq([existing] + incoming)
-      expect(existing.contribution_matrix[actions.first][item]).to be(false)
+      expect(existing.contribution_matrix[actions.first]).to eq(0)
     end
 
     it "merges all matching incoming annotations into only the first existing match" do
-      first = annotation({ item => false, next_item => false })
-      duplicate = annotation({ item => false, next_item => false })
+      first = annotation(0)
+      duplicate = annotation(0)
       state.annotation_list.concat([first, duplicate])
 
-      state.append_annotation_list([annotation({ item => true }), annotation({ next_item => true })])
+      state.append_annotation_list([annotation(0b01), annotation(0b10)])
 
       expect(state.annotation_list).to eq([first, duplicate])
-      expect(first.contribution_matrix[actions.first]).to eq({ item => true, next_item => true })
-      expect(duplicate.contribution_matrix[actions.first]).to eq({ item => false, next_item => false })
+      expect(first.contribution_matrix[actions.first]).to eq(0b11)
+      expect(duplicate.contribution_matrix[actions.first]).to eq(0)
     end
 
     it "appends unmatched annotations in their original order, including duplicate keys" do
-      existing = annotation({ item => false })
+      existing = annotation(0)
       state.annotation_list << existing
-      first = annotation({ item => false }, from: described_class.new(2, token, []))
-      second = annotation({ next_item => true }, on: rule.rhs.last)
-      third = annotation({ item => true }, from: first.state)
+      first = annotation(0, from: described_class.new(2, token, []))
+      second = annotation(0b10, on: rule.rhs.last)
+      third = annotation(0b01, from: first.state)
 
-      state.append_annotation_list([first, annotation({ item => true }), second, third])
+      state.append_annotation_list([first, annotation(0b01), second, third])
 
       expect(state.annotation_list).to eq([existing, first, second, third])
-      expect(first.contribution_matrix[actions.first][item]).to be(false)
-      expect(existing.contribution_matrix[actions.first][item]).to be(true)
+      expect(first.contribution_matrix[actions.first]).to eq(0)
+      expect(existing.contribution_matrix[actions.first]).to eq(0b01)
     end
 
     it "retains always contributions when conditional contributions arrive" do
       existing = annotation(nil)
       state.annotation_list << existing
 
-      expect(state.append_annotation_list([annotation({ item => true }), annotation(nil)])).to be(false)
+      expect(state.append_annotation_list([annotation(0b01), annotation(nil)])).to be(false)
 
       expect(existing.contribution_matrix[actions.first]).to be_nil
-      expect(existing.dominant_contribution({ item => 0 })).to eq(actions)
+      expect(existing.dominant_contribution({ item => 0 }, [item])).to eq(actions)
     end
 
     it "replaces conditional contributions with always contributions and reports the change once" do
-      existing = annotation({ item => true })
+      existing = annotation(0b01)
       state.annotation_list << existing
 
-      expect(state.append_annotation_list([annotation(nil), annotation({ item => true })])).to be(true)
+      expect(state.append_annotation_list([annotation(nil), annotation(0b01)])).to be(true)
       expect(state.append_annotation_list([annotation(nil)])).to be(false)
 
       expect(existing.contribution_matrix[actions.first]).to be_nil
-      expect(existing.dominant_contribution({ item => 0 })).to eq(actions)
+      expect(existing.dominant_contribution({ item => 0 }, [item])).to eq(actions)
     end
 
     it "does not mutate contributions shared with another annotation" do
-      contributions = { item => false }
+      contributions = 0
       first = annotation(contributions)
       second = annotation(contributions, on: rule.rhs.last)
       state.annotation_list.concat([first, second])
 
-      expect(state.append_annotation_list([annotation({ item => true })])).to be(true)
+      expect(state.append_annotation_list([annotation(0b01)])).to be(true)
 
-      expect(first.contribution_matrix[actions.first]).to eq({ item => true })
-      expect(second.contribution_matrix[actions.first]).to eq({ item => false })
-      expect(contributions).to eq({ item => false })
+      expect(first.contribution_matrix[actions.first]).to eq(0b01)
+      expect(second.contribution_matrix[actions.first]).to eq(0)
+      expect(contributions).to eq(0)
     end
 
     it "reports no change when no contributions are added" do
-      state.annotation_list << annotation({ item => true })
+      state.annotation_list << annotation(0b01)
 
-      expect(state.append_annotation_list([annotation({ item => true })])).to be(false)
+      expect(state.append_annotation_list([annotation(0b01)])).to be(false)
       expect(state.append_annotation_list([])).to be(false)
     end
 
-    it "does not treat false, nil, or missing item contributions as changes" do
-      existing = annotation({ item => false })
+    it "does not treat empty conditional contributions as changes" do
+      existing = annotation(0)
       state.annotation_list << existing
 
-      expect(state.append_annotation_list([annotation({ item => nil, next_item => false })])).to be(false)
-      expect(state.append_annotation_list([annotation({ item => false, next_item => nil })])).to be(false)
-      expect(existing.contribution_matrix[actions.first]).to eq({ item => false, next_item => nil })
+      expect(state.append_annotation_list([annotation(0)])).to be(false)
+      expect(existing.contribution_matrix[actions.first]).to eq(0)
     end
 
     it "does not rescan incoming annotation keys for every existing annotation" do
       incoming = 8.times.map do |index|
         from = described_class.new(index + 1, token, [])
-        state.annotation_list << annotation({ item => false }, from: from)
-        annotation({ item => true }, from: from)
+        state.annotation_list << annotation(0, from: from)
+        annotation(0b01, from: from)
       end
       incoming.each { |entry| expect(entry).to receive(:state).at_most(2).times.and_call_original }
 
       state.append_annotation_list(incoming)
 
       expect(state.annotation_list.length).to eq(8)
-      expect(state.annotation_list).to all(have_attributes(contribution_matrix: { actions.first => { item => true } }))
+      expect(state.annotation_list).to all(have_attributes(contribution_matrix: { actions.first => 0b01 }))
     end
   end
 end
