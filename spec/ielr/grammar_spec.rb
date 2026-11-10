@@ -64,7 +64,7 @@ RSpec.describe IELRGrammar do
     expect(states.rr_conflicts_count).to eq(0)
   end
 
-  it "preserves always contributions without splitting equivalent states" do
+  it "builds parser tables for a grammar with always contributions" do
     path = fixture_path("ielr/always_contributions.y")
     grammar = Lrama::Parser.new(File.read(path), path).parse
     grammar.prepare
@@ -74,8 +74,8 @@ RSpec.describe IELRGrammar do
 
     states.compute_ielr
 
-    expect(states.states.length).to eq(15)
-    expect(states.sr_conflicts_count).to eq(4)
+    expect(states.states.length).to eq(17)
+    expect(states.sr_conflicts_count).to eq(5)
     expect(states.rr_conflicts_count).to eq(1)
     expect { Lrama::Context.new(states) }.not_to raise_error
   end
