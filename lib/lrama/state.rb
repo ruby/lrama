@@ -523,7 +523,31 @@ module Lrama
     def item_lookahead_set
       return @item_lookahead_set if @item_lookahead_set
 
-      @item_lookahead_set = kernels.map {|k| [k, 0] }.to_h.compare_by_identity
+      pending = [[self, false]] #: Array[[State, bool]]
+      while (entry = pending.pop)
+        state, dependencies_computed = entry
+        state.compute_item_lookahead_set(pending, dependencies_computed)
+      end
+      @item_lookahead_set
+    end
+
+    # @rbs (Array[[State, bool]] pending, bool dependencies_computed) -> void
+    def compute_item_lookahead_set(pending, dependencies_computed)
+      unless dependencies_computed
+        return if @item_lookahead_set
+
+        @item_lookahead_set = kernels.map {|k| [k, 0] }.to_h.compare_by_identity
+        pending << [self, true]
+        # Depth-first order matters when a predecessor refers to an unfinished state.
+        kernels.reverse_each do |kernel|
+          next if kernel.lhs.accept_symbol? || kernel.position <= 1
+          predecessors_with_item(kernel).reverse_each do |state, _|
+            pending << [state, false]
+          end
+        end
+        return
+      end
+
       @item_lookahead_set = kernels.map {|kernel|
         value =
           if kernel.lhs.accept_symbol?
