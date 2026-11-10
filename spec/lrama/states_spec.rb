@@ -159,6 +159,46 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe 'IELR lookaheads from multiple predecessors' do
+    let(:source) { File.read(fixture_path("ielr/multiple_predecessor_lookaheads.y")) }
+
+    [false, true].each do |reverse|
+      it "unions every predecessor's goto follows with reverse order #{reverse}" do
+        grammar = Lrama::Parser.new(source, "lookaheads.y").parse
+        grammar.prepare
+        states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        states.send(:compute_predecessors)
+        states.send(:compute_follow_kernel_items)
+        always_follows = states.send(:compute_always_follows)
+        states.send(:compute_goto_follows, always_follows)
+        target = states.states.find { |state| state.kernels.any? { |item| item.lhs.name == "left" && item.position == 1 } }
+        target.predecessors.reverse! if reverse
+
+        lookaheads = target.kernels.map do |item|
+          Lrama::Bitmap.to_array(target.item_lookahead_set.fetch(item)).map { |number| grammar.find_symbol_by_number!(number).name }
+        end
+
+        expect(lookaheads).to eq([["'d'", "'e'"], ["'d'", "'e'"]])
+      end
+    end
+
+    ["'x'", "'x' 'y'", "'x' 'y' 'z'"].each do |rhs|
+      it "splits reductions with the shared RHS #{rhs} without conflicts" do
+        grammar = Lrama::Parser.new(source.gsub("'x' 'y'", rhs), "lookaheads.y").parse
+        grammar.prepare
+        states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+
+        states.compute_ielr
+
+        expect(states.sr_conflicts_count).to eq(0)
+        expect(states.rr_conflicts_count).to eq(0)
+        expect { Lrama::Context.new(states) }.not_to raise_error
+      end
+    end
+  end
+
   describe '#compute' do
     it "basic" do
       path = "common/basic.y"

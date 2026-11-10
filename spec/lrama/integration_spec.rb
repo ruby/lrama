@@ -75,6 +75,23 @@ RSpec.describe "integration" do
 
   include IntegrationHelper
 
+  it "accepts all paths through shared multi-symbol IELR reductions" do
+    Dir.mktmpdir do |directory|
+      c_path = File.join(directory, "multiple_predecessors#{file_extension}")
+      obj_path = File.join(directory, "multiple_predecessors")
+      generate_object(fixture_path("ielr/multiple_predecessor_lookaheads.y"), c_path, obj_path)
+
+      %w[axyd axye bxyd bxye].each do |input|
+        _, error, status = Open3.capture3(obj_path, input)
+        expect(status.success?).to be(true), "#{input}: #{error}"
+      end
+      ["", "axy", "axyde", "cxyd", "axxd", "xyde"].each do |input|
+        _, _, status = Open3.capture3(obj_path, input)
+        expect(status.success?).to be(false), input
+      end
+    end
+  end
+
   it "uses structured tags in declarations and explicit references" do
     c_path = Dir.tmpdir + "/structured_tags#{file_extension}"
     obj_path = Dir.tmpdir + "/structured_tags"

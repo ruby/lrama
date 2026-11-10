@@ -532,9 +532,10 @@ module Lrama
             prev_items = predecessors_with_item(kernel)
             prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce(0) {|acc, bitmap| acc | bitmap }
           elsif kernel.position == 1
-            prev_state = @predecessors.find {|p| p.transitions_by_symbol_number.key?(kernel.lhs.number) }
-            goto = prev_state.transitions_by_symbol_number[kernel.lhs.number] #: Action::Goto?
-            prev_state.goto_follows[goto]
+            @predecessors.reduce(0) do |lookaheads, prev_state|
+              goto = prev_state.transitions_by_symbol_number.fetch(kernel.lhs.number) #: Action::Goto
+              lookaheads | prev_state.goto_follows.fetch(goto)
+            end
           end
         [kernel, value]
       }.to_h.compare_by_identity
