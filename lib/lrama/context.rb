@@ -220,8 +220,8 @@ module Lrama
         actions = Array.new(@states.terms.count, 0)
 
         if state.reduces.map(&:selected_look_ahead).any? {|la| !la.empty? }
-          # Iterate reduces with reverse order so that first rule is used.
-          state.reduces.reverse_each do |reduce|
+          # Visit later rules first so earlier rules win reduce/reduce conflicts.
+          state.reduces.sort_by {|reduce| reduce.rule.id }.reverse_each do |reduce|
             reduce.look_ahead.each do |term|
               actions[term.number] = rule_id_to_action_number(reduce.rule.id)
             end

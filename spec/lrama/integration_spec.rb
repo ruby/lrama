@@ -75,6 +75,22 @@ RSpec.describe "integration" do
 
   include IntegrationHelper
 
+  [:lalr, :ielr].each do |lr_type|
+    it "prefers the earlier empty rule in #{lr_type} R/R conflicts" do
+      Dir.mktmpdir do |directory|
+        c_path = File.join(directory, "reduce_order#{file_extension}")
+        obj_path = File.join(directory, "reduce_order")
+        generate_object(fixture_path("ielr/reduce_reduce_rule_order.y"), c_path, obj_path,
+                        command_args: ["-Dlr.type=#{lr_type}"])
+
+        {"abx" => true, "aby" => false}.each do |input, accepted|
+          _, error, status = Open3.capture3(obj_path, input)
+          expect(status.success?).to be(accepted), "#{input}: #{error}"
+        end
+      end
+    end
+  end
+
   it "accepts all paths through shared multi-symbol IELR reductions" do
     Dir.mktmpdir do |directory|
       c_path = File.join(directory, "multiple_predecessors#{file_extension}")
