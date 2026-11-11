@@ -76,6 +76,20 @@ RSpec.describe "integration" do
   include IntegrationHelper
 
   [:lalr, :ielr].each do |lr_type|
+    it "honors discarded reduction lookaheads in #{lr_type} parsers" do
+      Dir.mktmpdir do |directory|
+        c_path = File.join(directory, "selected_lookaheads#{file_extension}")
+        obj_path = File.join(directory, "selected_lookaheads")
+        generate_object(fixture_path("ielr/selected_reduction_lookaheads.y"), c_path, obj_path,
+                        command_args: ["-Dlr.type=#{lr_type}"])
+
+        {"aby" => true, "ac" => true, "abx" => false, "abz" => false}.each do |input, accepted|
+          _, error, status = Open3.capture3(obj_path, input)
+          expect(status.success?).to be(accepted), "#{input}: #{error}"
+        end
+      end
+    end
+
     it "prefers the earlier empty rule in #{lr_type} R/R conflicts" do
       Dir.mktmpdir do |directory|
         c_path = File.join(directory, "reduce_order#{file_extension}")
