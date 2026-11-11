@@ -162,6 +162,20 @@ RSpec.describe Lrama::States do
   describe 'IELR lookaheads from multiple predecessors' do
     let(:source) { File.read(fixture_path("ielr/multiple_predecessor_lookaheads.y")) }
 
+    it 'splits long rules without exhausting the Ruby stack' do
+      rhs = Array.new(3_000, "'x'").join(' ')
+      grammar = Lrama::Parser.new(source.gsub("'x' 'y'", rhs), "long.y").parse
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+
+      states.compute_ielr
+
+      expect(states.sr_conflicts_count).to eq(0)
+      expect(states.rr_conflicts_count).to eq(0)
+      expect { Lrama::Context.new(states) }.not_to raise_error
+    end
+
     [false, true].each do |reverse|
       it "unions every predecessor's goto follows with reverse order #{reverse}" do
         grammar = Lrama::Parser.new(source, "lookaheads.y").parse
