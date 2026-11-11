@@ -216,6 +216,29 @@ RSpec.describe Lrama::Context do
 
   describe "compute_yydefact" do
     [:lalr, :ielr].each do |lr_type|
+      ["empty: %empty;\ndirect: 'a';", "direct: 'a';\nempty: %empty;"].each do |rules|
+        it "resolves #{lr_type} R/R conflicts by rule order with #{rules.lines.first.strip} first" do
+          grammar = Lrama::Parser.new(<<~GRAMMAR, "reduce_order.y").parse
+            %define lr.type #{lr_type}
+            %%
+            start: 'a' empty 'b' 'x' | direct 'b' 'y';
+            #{rules}
+          GRAMMAR
+          grammar.prepare
+          states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+          states.compute
+          states.compute_ielr if lr_type == :ielr
+          context = Lrama::Context.new(states)
+
+          expect(states.rr_conflicts_count).to eq(1)
+          state = states.states.find { |s| s.reduces.length == 2 }
+          token = grammar.find_symbol_by_s_value!("'b'")
+          index = context.yypact[state.id] + token.number
+          expect(context.yycheck[index]).to eq(token.number)
+          expect(context.yytable[index]).to eq(-(grammar.rules[3].id + 1))
+        end
+      end
+
       ["'a' | 'a'", "|"].each do |alternatives|
         it "builds #{lr_type} tables for duplicate alternatives #{alternatives.inspect}" do
           grammar = Lrama::Parser.new(<<~GRAMMAR, "duplicate.y").parse
