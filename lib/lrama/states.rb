@@ -751,11 +751,20 @@ module Lrama
 
       queue = @states.reject {|state| state.annotation_list.empty? }
       queued = Set.new(queue.map(&:id))
+      propagated = {} #: Hash[State::InadequacyAnnotation, Hash[State::InadequacyAnnotation::action, Bitmap::bitmap?]]
 
       while (curr = queue.shift) do
         queued.delete(curr.id)
+        annotations = curr.annotation_list.select do |annotation|
+          matrix = annotation.contribution_matrix
+          next false if propagated[annotation] == matrix
+
+          # Snapshot before propagation so changes made through cycles are retried.
+          propagated[annotation] = matrix.dup
+          true
+        end
         curr.predecessors.each do |pred|
-          changed = curr.annotate_predecessor(pred)
+          changed = curr.annotate_predecessor(pred, annotations)
           queue << pred if changed && queued.add?(pred.id)
         end
       end

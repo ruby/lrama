@@ -2162,6 +2162,74 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe '#compute_inadequacy_annotations' do
+    let(:grammar) do
+      grammar = Lrama::Parser.new("%%\nstart: 'a';\n", "annotations.y").parse
+      grammar.prepare
+      grammar
+    end
+    let(:states) { described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new)) }
+    let(:token) { grammar.terms.last }
+    let(:source) { Lrama::State.new(0, token, []) }
+    let(:updater) { Lrama::State.new(1, token, []) }
+    let(:first_predecessor) { Lrama::State.new(2, token, []) }
+    let(:second_predecessor) { Lrama::State.new(3, token, []) }
+    let(:action) { Lrama::State::Action::Reduce.new(Lrama::State::Item.new(rule: grammar.rules.last, position: 1)) }
+    let(:unchanged) { Lrama::State::InadequacyAnnotation.new(source, token, [action], { action => 0b01 }) }
+    let(:changed) { Lrama::State::InadequacyAnnotation.new(updater, token, [action], { action => 0b01 }) }
+
+    before do
+      states.states.concat([source, updater, first_predecessor, second_predecessor])
+      states.states.each do |state|
+        allow(state).to receive(:annotate_manifestation)
+        allow(state).to receive(:predecessors).and_return([])
+      end
+      source.annotation_list.concat([unchanged, changed])
+    end
+
+    [0b11, nil].each do |contributions|
+      it "repropagates merged and new annotations to every predecessor when contributions become #{contributions.inspect}" do
+        added = Lrama::State::InadequacyAnnotation.new(first_predecessor, token, [action], { action => 0b10 })
+        updater.annotation_list << Lrama::State::InadequacyAnnotation.new(updater, token, [action], { action => 0b10 })
+        allow(source).to receive(:predecessors).and_return([first_predecessor, second_predecessor])
+        allow(updater).to receive(:predecessors).and_return([source])
+        allow(updater).to receive(:annotate_predecessor) do
+          changed.merge_matrix([{ action => contributions }])
+          source.annotation_list << added
+          true
+        end
+        propagated = []
+        allow(source).to receive(:annotate_predecessor) do |predecessor, annotations = source.annotation_list|
+          propagated << [predecessor.id, annotations.map {|annotation| annotation.state.id }]
+          false
+        end
+
+        states.send(:compute_inadequacy_annotations)
+
+        expect(propagated).to eq([
+          [first_predecessor.id, [source.id, updater.id]],
+          [second_predecessor.id, [source.id, updater.id]],
+          [first_predecessor.id, [updater.id, first_predecessor.id]],
+          [second_predecessor.id, [updater.id, first_predecessor.id]],
+        ])
+      end
+    end
+
+    it "keeps changes made during self-loop propagation pending" do
+      allow(source).to receive(:predecessors).and_return([source])
+      propagated = []
+      allow(source).to receive(:annotate_predecessor) do |_, annotations = source.annotation_list|
+        propagated << annotations.map {|annotation| annotation.state.id }
+        raise "Annotation propagation did not converge" if propagated.length > 2
+        changed.merge_matrix([{ action => 0b11 }])
+      end
+
+      states.send(:compute_inadequacy_annotations)
+
+      expect(propagated).to eq([[source.id, updater.id], [updater.id]])
+    end
+  end
+
   describe '#merge_lookaheads' do
     let(:grammar) do
       grammar = Lrama::Parser.new("%%\nstart: 'a' 'b' | 'a' 'c' | 'a' 'd';\n", "merge.y").parse
