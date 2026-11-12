@@ -432,11 +432,11 @@ module Lrama
 
     # Definition 3.32 (annotate_predecessor)
     #
-    # @rbs (State predecessor) -> bool
-    def annotate_predecessor(predecessor)
+    # @rbs (State predecessor, ?Array[InadequacyAnnotation] annotations) -> bool
+    def annotate_predecessor(predecessor, annotations = annotation_list)
       always_contributions = {} #: Hash[Grammar::Symbol, Hash[Item, bool]]
       propagating_list = []
-      annotation_list.each {|annotation|
+      annotations.each {|annotation|
         always_by_kernel = always_contributions[annotation.token] ||= {}.compare_by_identity
         contribution_matrix = {}
         propagates = false

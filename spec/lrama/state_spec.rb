@@ -520,6 +520,17 @@ RSpec.describe Lrama::State do
       expect(predecessor.annotation_list.first.contribution_matrix).to eq({ actions.first => 0b11 })
     end
 
+    it "propagates only the supplied annotations" do
+      unchanged = annotation(0b10)
+      changed = annotation(0b10, from: state)
+      state.annotation_list.concat([unchanged, changed])
+
+      expect(state.annotate_predecessor(predecessor, [changed])).to be(true)
+
+      expect(predecessor.annotation_list.map(&:state)).to eq([state])
+      expect(predecessor.annotation_list.first.contribution_matrix).to eq({ actions.first => 0b10 })
+    end
+
     it "shares the unconditional contribution check across actions" do
       state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
         actions.first => 0b01, other_action => 0b01,
