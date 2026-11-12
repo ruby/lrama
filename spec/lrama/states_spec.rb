@@ -213,6 +213,24 @@ RSpec.describe Lrama::States do
     end
   end
 
+  describe 'IELR lookaheads through nested rules' do
+    ["'y'", "'y' 'z'", "'y' 'z' 'w'"].each do |rhs|
+      it "splits nested reductions with the shared tail #{rhs} without conflicts" do
+        source = File.read(fixture_path("ielr/nested_rule_contributions.y")).gsub("'y'", rhs)
+        grammar = Lrama::Parser.new(source, "nested.y").parse
+        grammar.prepare
+        states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+
+        states.compute_ielr
+
+        expect(states.sr_conflicts_count).to eq(0)
+        expect(states.rr_conflicts_count).to eq(0)
+        expect { Lrama::Context.new(states) }.not_to raise_error
+      end
+    end
+  end
+
   describe '#compute' do
     it "basic" do
       path = "common/basic.y"
