@@ -105,6 +105,23 @@ RSpec.describe "integration" do
     end
   end
 
+  it "accepts all paths through nested IELR rules" do
+    Dir.mktmpdir do |directory|
+      c_path = File.join(directory, "nested#{file_extension}")
+      obj_path = File.join(directory, "nested")
+      generate_object(fixture_path("ielr/nested_rule_contributions.y"), c_path, obj_path)
+
+      %w[axyd axye bxyd bxye].each do |input|
+        _, error, status = Open3.capture3(obj_path, input)
+        expect(status.success?).to be(true), "#{input}: #{error}"
+      end
+      ["", "axy", "axyde", "cxyd", "axxd", "xyde"].each do |input|
+        _, _, status = Open3.capture3(obj_path, input)
+        expect(status.success?).to be(false), input
+      end
+    end
+  end
+
   it "accepts all paths through shared multi-symbol IELR reductions" do
     Dir.mktmpdir do |directory|
       c_path = File.join(directory, "multiple_predecessors#{file_extension}")

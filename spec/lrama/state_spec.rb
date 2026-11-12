@@ -509,6 +509,17 @@ RSpec.describe Lrama::State do
       expect(predecessor.annotation_list.map(&:state)).to eq([origin, state])
     end
 
+    it "propagates first-position contributions through kernels outside the transition lane" do
+      predecessor = described_class.new(0, token, [last_item, next_item])
+      predecessor.lane_items[state] = [[item, next_item]]
+      allow(predecessor).to receive(:lhs_contributions).with(rule.lhs, token).and_return({ last_item => true, next_item => true })
+      state.annotation_list << annotation(0b01)
+
+      expect(state.annotate_predecessor(predecessor)).to be(true)
+
+      expect(predecessor.annotation_list.first.contribution_matrix).to eq({ actions.first => 0b11 })
+    end
+
     it "shares the unconditional contribution check across actions" do
       state.annotation_list << Lrama::State::InadequacyAnnotation.new(origin, token, actions + [other_action], {
         actions.first => 0b01, other_action => 0b01,

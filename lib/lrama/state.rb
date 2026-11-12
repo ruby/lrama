@@ -454,14 +454,19 @@ module Lrama
             cs = 0
             predecessor.lane_items[self].each {|pred_kernel, kernel|
               next unless contributions[kernel_indices.fetch(kernel)] == 1
-              pred_index = predecessor.kernel_indices[pred_kernel]
-              next unless pred_index
-              c =
-                (kernel.position > 1 && predecessor.item_lookahead_set[pred_kernel][annotation.token.number] == 1) ||
-                (kernel.position == 1 && predecessor.lhs_contributions(kernel.lhs, annotation.token)[pred_kernel])
-              cs |= (1 << pred_index) if c
-              propagates = true if c
+
+              if kernel.position == 1
+                # Enclosing rules can contribute through kernels outside this transition lane.
+                predecessor.lhs_contributions(kernel.lhs, annotation.token).each do |contributing_kernel, contributes|
+                  cs |= (1 << predecessor.kernel_indices.fetch(contributing_kernel)) if contributes
+                end
+              else
+                pred_index = predecessor.kernel_indices[pred_kernel]
+                next unless pred_index
+                cs |= (1 << pred_index) if predecessor.item_lookahead_set[pred_kernel][annotation.token.number] == 1
+              end
             }
+            propagates = true if cs != 0
             contribution_matrix[action] = cs
           end
         }
