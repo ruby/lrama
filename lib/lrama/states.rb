@@ -501,8 +501,11 @@ module Lrama
     # @rbs () -> void
     def compute_shift_reduce_conflicts(lr_type)
       states.each do |state|
+        reduces = state.reduces.sort_by { |reduce| reduce.rule.id }
         state.term_transitions.each do |shift|
-          state.reduces.each do |reduce|
+          reduces.each do |reduce|
+            break if shift.not_selected
+
             sym = shift.next_sym
 
             next unless reduce.look_ahead

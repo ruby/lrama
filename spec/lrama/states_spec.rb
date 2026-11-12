@@ -1404,6 +1404,43 @@ RSpec.describe Lrama::States do
   end
 
   describe '#compute_conflicts' do
+    [:lalr, :ielr].each do |lr_type|
+      [
+        ["higher precedence", "%nonassoc 'b'\n%precedence HIGH",
+         ["empty: %empty %prec HIGH;", "direct: 'a' %prec 'b';"], :reduce],
+        ["nonassociativity before higher precedence", "%nonassoc 'b'\n%precedence HIGH",
+         ["direct: 'a' %prec 'b';", "empty: %empty %prec HIGH;"], :error],
+        ["left associativity", "%precedence LOW\n%left 'b'",
+         ["empty: %empty %prec 'b';", "direct: 'a' %prec LOW;"], :reduce],
+        ["nonassociativity", "%precedence LOW\n%nonassoc 'b'",
+         ["empty: %empty %prec 'b';", "direct: 'a' %prec LOW;"], :error],
+      ].each do |description, precedences, rules, resolution|
+        it "stops comparing discarded shifts after #{description} in #{lr_type}" do
+          grammar = Lrama::Parser.new(<<~GRAMMAR, "discarded_shift.y").parse
+            %define lr.type #{lr_type}
+            #{precedences}
+            %%
+            start: 'a' empty 'b' 'x' | direct 'b' 'y' | 'a' 'b' 'z';
+            #{rules.join("\n")}
+          GRAMMAR
+          grammar.prepare
+          states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+          states.compute
+          states.compute_ielr if lr_type == :ielr
+          state = states.states.find { |s| s.reduces.length == 2 }
+          token = grammar.find_symbol_by_s_value!("'b'")
+          reduces = state.reduces.sort_by { |reduce| reduce.rule.id }
+
+          expect(state.resolved_conflicts.map { |conflict| [conflict.reduce.rule.id, conflict.which] }).to eq([
+            [reduces.first.rule.id, resolution],
+          ])
+          expect(state.term_transitions.find { |shift| shift.next_sym == token }.not_selected).to be(true)
+          expect(reduces.first.selected_look_ahead.include?(token)).to be(resolution == :reduce)
+          expect(reduces.last.selected_look_ahead).to include(token)
+        end
+      end
+    end
+
     describe "rules have no explicit precedence" do
       it "inherits precedence from the last term in RHS" do
         y = <<~INPUT
