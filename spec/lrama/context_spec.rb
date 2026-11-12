@@ -216,6 +216,28 @@ RSpec.describe Lrama::Context do
 
   describe "compute_yydefact" do
     [:lalr, :ielr].each do |lr_type|
+      it "omits #{lr_type} reductions already discarded by precedence" do
+        source = "%define lr.type #{lr_type}\n" + File.read(fixture_path("ielr/selected_reduction_lookaheads.y"))
+        grammar = Lrama::Parser.new(source, "precedence.y").parse
+        grammar.prepare
+        states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+        states.compute
+        states.compute_ielr if lr_type == :ielr
+        state = states.states.find { |s| s.reduces.length == 2 }
+        empty = state.reduces.find { |reduce| reduce.rule.rhs.empty? }
+        direct = state.reduces.find { |reduce| !reduce.rule.rhs.empty? }
+        token = grammar.find_symbol_by_s_value!("'b'")
+
+        expect(empty.look_ahead).to include(token)
+        expect(empty.selected_look_ahead).not_to include(token)
+        expect(empty.selected_look_ahead).to include(grammar.find_symbol_by_s_value!("'c'"))
+        expect(direct.selected_look_ahead).to include(token)
+        context = Lrama::Context.new(states)
+        index = context.yypact[state.id] + token.number
+        expect(context.yycheck[index]).to eq(token.number)
+        expect(context.yytable[index]).to eq(-(direct.rule.id + 1))
+      end
+
       ["empty: %empty;\ndirect: 'a';", "direct: 'a';\nempty: %empty;"].each do |rules|
         it "resolves #{lr_type} R/R conflicts by rule order with #{rules.lines.first.strip} first" do
           grammar = Lrama::Parser.new(<<~GRAMMAR, "reduce_order.y").parse

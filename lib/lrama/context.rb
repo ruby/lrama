@@ -222,7 +222,7 @@ module Lrama
         if state.reduces.map(&:selected_look_ahead).any? {|la| !la.empty? }
           # Visit later rules first so earlier rules win reduce/reduce conflicts.
           state.reduces.sort_by {|reduce| reduce.rule.id }.reverse_each do |reduce|
-            reduce.look_ahead.each do |term|
+            reduce.selected_look_ahead.each do |term|
               actions[term.number] = rule_id_to_action_number(reduce.rule.id)
             end
           end
