@@ -10,6 +10,7 @@ module Lrama
     #   @options: Lrama::Options
     #   @trace: Array[String]
     #   @report: Array[String]
+    #   @warning: Array[String]
     #   @profile: Array[String]
 
     # @rbs (Array[String]) -> Lrama::Options
@@ -22,6 +23,7 @@ module Lrama
       @options = Options.new
       @trace = []
       @report = []
+      @warning = []
       @profile = []
     end
 
@@ -31,6 +33,8 @@ module Lrama
 
       @options.trace_opts = validate_trace(@trace)
       report_opts = @options.report_opts = validate_report(@report)
+      warning_opts = @options.warning_opts = validate_warning(@warning)
+      @options.warnings = !@warning.empty? && !warning_opts[:none]
       @options.profile_opts = validate_profile(@profile)
       @options.grammar_file = argv.shift
 
@@ -125,7 +129,15 @@ module Lrama
         o.on('-v', '--verbose', "same as '--report=states'") {|_v| @report << 'states' }
         o.separator ''
         o.separator 'Diagnostics:'
-        o.on('-W', '--warnings', 'report the warnings') {|v| @options.warnings = true }
+        o.on('-W', '--warnings[=CATEGORY]', Array, 'report the warnings') do |v|
+          @warning.concat(v || ['all'])
+        end
+        o.on_tail ''
+        o.on_tail 'CATEGORY can include:'
+        o.on_tail '    counterexamples, cex             generate conflict counterexamples'
+        o.on_tail '    all                              enable all warnings except counterexamples'
+        o.on_tail '    none                             disable all warnings'
+        o.on_tail '    no-counterexamples, no-cex       disable conflict counterexamples'
         o.separator ''
         o.separator 'Error Recovery:'
         o.on('-e', 'enable error recovery') {|v| @options.error_recovery = true }
@@ -169,6 +181,29 @@ module Lrama
     # @rbs (String) -> Symbol
     def aliased_report_option(opt)
       (ALIASED_REPORTS[opt.to_sym] || opt).to_sym
+    end
+
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
+    def validate_warning(warning)
+      h = {} #: Hash[Symbol, bool]
+
+      warning.each do |w|
+        case w
+        when 'none'
+          h.clear
+          h[:none] = true
+        when 'all'
+          h.delete(:none)
+        when 'counterexamples', 'cex'
+          h[:counterexamples] = true
+        when 'no-counterexamples', 'no-cex'
+          h.delete(:counterexamples)
+        else
+          raise "Invalid warning option \"#{w}\"."
+        end
+      end
+
+      h
     end
 
     VALID_TRACES = %w[

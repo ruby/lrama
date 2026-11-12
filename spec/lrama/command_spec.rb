@@ -24,6 +24,26 @@ RSpec.describe Lrama::Command do
       expect(File.read(outfile)).not_to include('"plus" =')
     end
 
+    it "suppresses token redeclaration warnings with -Wnone" do
+      y = "%token PLUS\n%token PLUS\n%%\nstart: PLUS;\n"
+      allow(STDIN).to receive(:read).and_return(y)
+      command = Lrama::Command.new(o_option + ["-Wnone", "-", "redeclared_token.y"])
+
+      expect { command.run }.to output("").to_stderr_from_any_process
+      expect(File.read(outfile)).to include("PLUS =")
+    end
+
+    it "reports conflicts without computing counterexamples with -Wall" do
+      y = "%token NUM\n%%\nexpr: NUM | expr '+' expr;\n"
+      allow(STDIN).to receive(:read).and_return(y)
+      command = Lrama::Command.new(o_option + ["-Wall", "-", "conflict.y"])
+
+      expect { command.run }.to output(<<~OUTPUT).to_stderr_from_any_process
+        warning: shift/reduce conflicts: 1 found
+        note: rerun with option '-Wcounterexamples' to generate conflict counterexamples
+      OUTPUT
+    end
+
     context "when `--diagram` is specified" do
       it "generates links and reverse references without text diagrams" do
         diagram_file = File.join(Dir.tmpdir, "diagram.html")
