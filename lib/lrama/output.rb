@@ -28,7 +28,7 @@ module Lrama
       @context = context
       @grammar = grammar
       @error_recovery = error_recovery
-      @include_header = header_file_path ? header_file_path.sub("./", "") : nil
+      @include_header = header_file_path ? include_header_path(output_file_path, header_file_path) : nil
     end
 
     if ERB.instance_method(:initialize).parameters.last.first == :key
@@ -385,6 +385,14 @@ module Lrama
     end
 
     private
+
+    def include_header_path(output_file_path, header_file_path)
+      if File.absolute_path(File.dirname(output_file_path)) == File.absolute_path(File.dirname(header_file_path))
+        File.basename(header_file_path)
+      else
+        header_file_path.sub(/\A\.\//, "")
+      end
+    end
 
     def eval_template(file, path)
       tmp = ERB.render(file, context: @context, output: self)
