@@ -128,6 +128,17 @@ RSpec.describe Lrama::Command do
     end
 
     [:lalr, :ielr].each do |lr_type|
+      it "honors %expect 0 after resolving a previously recorded #{lr_type} shift conflict" do
+        Dir.mktmpdir do |dir|
+          outfile = File.join(dir, "parse.c")
+          command = Lrama::Command.new(["-o", outfile, "-Dlr.type=#{lr_type}",
+                                        fixture_path("ielr/resolved_shift_conflicts.y")])
+
+          expect { command.run }.not_to raise_error
+          expect(File).to exist(outfile)
+        end
+      end
+
       it "honors %expect 0 after discarding #{lr_type} reduction lookaheads" do
         Dir.mktmpdir do |dir|
           outfile = File.join(dir, "parse.c")

@@ -1406,6 +1406,34 @@ RSpec.describe Lrama::States do
   describe '#compute_conflicts' do
     [:lalr, :ielr].each do |lr_type|
       [
+        ["higher precedence", "%precedence 'b'\n%precedence HIGH", "%prec 'b'", "%prec HIGH", ["'c'"], 1],
+        ["left associativity", "%left 'b'", "", "%prec 'b'", ["'c'"], 1],
+        ["nonassociativity", "%nonassoc 'b'", "", "%prec 'b'", ["'c'"], 0],
+        ["equal precedence", "%precedence 'b'", "%prec 'b'", "%prec 'b'", ["'b'", "'b'", "'c'"], 1],
+      ].each do |description, precedences, empty_prec, direct_prec, unresolved, rr_count|
+        it "reports only remaining #{lr_type} S/R conflicts after #{description}" do
+          grammar = Lrama::Parser.new(<<~GRAMMAR, "resolved_shift.y").parse
+            %define lr.type #{lr_type}
+            #{precedences}
+            %%
+            start: 'a' empty 'b' 'x' | direct 'b' 'y' | 'a' 'b' 'z'
+                 | 'a' empty 'c' | 'a' 'c' 'w';
+            empty: %empty #{empty_prec};
+            direct: 'a' #{direct_prec};
+          GRAMMAR
+          grammar.prepare
+          states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+          states.compute
+          states.compute_ielr if lr_type == :ielr
+          state = states.states.find { |s| s.reduces.length == 2 }
+
+          expect(state.sr_conflicts.flat_map(&:symbols).map(&:name)).to eq(unresolved)
+          expect(states.sr_conflicts_count).to eq(unresolved.length)
+          expect(state.rr_conflicts.count).to eq(rr_count)
+        end
+      end
+
+      [
         ["higher precedence", "%nonassoc 'b'\n%precedence HIGH",
          ["empty: %empty %prec HIGH;", "direct: 'a' %prec 'b';"], :reduce],
         ["nonassociativity before higher precedence", "%nonassoc 'b'\n%precedence HIGH",
