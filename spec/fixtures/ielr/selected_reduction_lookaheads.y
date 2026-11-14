@@ -1,4 +1,5 @@
 %define api.pure full
+%expect 0
 %locations
 %code provides {
   static int yylex(YYSTYPE *, YYLTYPE *);

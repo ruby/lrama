@@ -601,7 +601,7 @@ module Lrama
         state.reduces.combination(2) do |reduce1, reduce2|
           next if reduce1.look_ahead.nil? || reduce2.look_ahead.nil?
 
-          intersection = reduce1.look_ahead & reduce2.look_ahead
+          intersection = reduce1.selected_look_ahead & reduce2.selected_look_ahead
 
           unless intersection.empty?
             state.conflicts << State::ReduceReduceConflict.new(symbols: intersection, reduce1: reduce1, reduce2: reduce2)

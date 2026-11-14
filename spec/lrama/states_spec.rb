@@ -1437,6 +1437,33 @@ RSpec.describe Lrama::States do
           expect(state.term_transitions.find { |shift| shift.next_sym == token }.not_selected).to be(true)
           expect(reduces.first.selected_look_ahead.include?(token)).to be(resolution == :reduce)
           expect(reduces.last.selected_look_ahead).to include(token)
+          expect(state.rr_conflicts.count).to eq(resolution == :error ? 0 : 1)
+        end
+      end
+
+      [false, true].each do |shared_token|
+        it "reports #{shared_token ? 'only the remaining' : 'no'} #{lr_type} R/R conflict after precedence resolution" do
+          grammar = Lrama::Parser.new(<<~GRAMMAR, "selected_conflicts.y").parse
+            %define lr.type #{lr_type}
+            %precedence LOW
+            %precedence 'b'
+            %precedence HIGH
+            %%
+            start: 'a' empty 'b' 'x' | direct 'b' 'y' | 'a' 'b' 'z' | 'a' empty 'c'
+                 #{"| direct 'c'" if shared_token};
+            empty: %empty %prec LOW;
+            direct: 'a' %prec HIGH;
+          GRAMMAR
+          grammar.prepare
+          states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+          states.compute
+          states.compute_ielr if lr_type == :ielr
+          state = states.states.find { |s| s.reduces.length == 2 }
+          token = grammar.find_symbol_by_s_value!("'b'")
+
+          expect(state.reduces.all? { |reduce| reduce.look_ahead.include?(token) }).to be(true)
+          expect(state.rr_conflicts.flat_map(&:symbols).map(&:name)).to eq(shared_token ? ["'c'"] : [])
+          expect(states.rr_conflicts_count).to eq(shared_token ? 1 : 0)
         end
       end
     end
