@@ -127,6 +127,19 @@ RSpec.describe Lrama::Command do
       end
     end
 
+    [:lalr, :ielr].each do |lr_type|
+      it "honors %expect 0 after discarding #{lr_type} reduction lookaheads" do
+        Dir.mktmpdir do |dir|
+          outfile = File.join(dir, "parse.c")
+          command = Lrama::Command.new(["-o", outfile, "-Dlr.type=#{lr_type}",
+                                        fixture_path("ielr/selected_reduction_lookaheads.y")])
+
+          expect { command.run }.not_to raise_error
+          expect(File).to exist(outfile)
+        end
+      end
+    end
+
     it "generates a parser and all reports for duplicate rules on the same line" do
       Dir.mktmpdir do |dir|
         outfile = File.join(dir, "parse.c")
