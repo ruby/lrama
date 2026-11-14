@@ -299,6 +299,16 @@ RSpec.describe Lrama::State do
       expect(state.is_compatible?(current.dup)).to be(true)
     end
 
+    it "keeps distinct path contributions separate when checking compatibility" do
+      swapped = Lrama::State::InadequacyAnnotation.new(origin, token, entry.actions, {
+        actions.first => 0b10, other_action => 0b01,
+      })
+      state.append_annotation_list([swapped])
+
+      expect(state.is_compatible?(incoming)).to be(false)
+      expect(entry.contribution_matrix).to eq({ actions.first => 0b01, other_action => 0b10 })
+    end
+
     it "reuses stored contributions and invalidates them when lookaheads are assigned" do
       expect(entry).to receive(:dominant_contribution).with(current, state.kernels).once.and_call_original
       expect(entry).to receive(:dominant_contribution).with(incoming, state.kernels).exactly(3).times.and_call_original
@@ -455,7 +465,7 @@ RSpec.describe Lrama::State do
       })
     end
 
-    it "does not mutate cached lhs contributions when merging annotations for empty reductions" do
+    it "does not mutate cached lhs contributions when appending annotations for empty reductions" do
       state = described_class.new(0, token, [item])
       empty_rule = rule.dup
       empty_rule.rhs = []
@@ -466,9 +476,10 @@ RSpec.describe Lrama::State do
 
       state.annotate_manifestation
       entry = state.annotation_list.first
-      entry.merge_matrix([{ reduce => 0b01 }])
+      state.append_annotation_list([Lrama::State::InadequacyAnnotation.new(state, token, [reduce], { reduce => 0b01 })])
 
-      expect(entry.contribution_matrix[reduce]).to eq(0b01)
+      expect(entry.contribution_matrix[reduce]).to eq(0)
+      expect(state.annotation_list.last.contribution_matrix[reduce]).to eq(0b01)
       expect(contributions).to eq({ item => false })
     end
   end
@@ -591,29 +602,62 @@ RSpec.describe Lrama::State do
 
       state.annotate_predecessor(predecessor)
 
-      expect(predecessor.annotation_list).to eq([existing])
-      expect(existing.contribution_matrix[reduce]).to eq(0)
-      expect(existing.contribution_matrix[other_action]).to eq(0b10)
+      expect(predecessor.annotation_list.length).to eq(2)
+      expect(predecessor.annotation_list.map { |entry| entry.contribution_matrix[reduce] }).to eq([0, 0])
+      expect(predecessor.annotation_list.map { |entry| entry.contribution_matrix[other_action] }).to eq([0, 0b10])
     end
   end
 
   describe "#append_annotation_list" do
-    it "matches state IDs and equal action arrays while retaining the existing annotation" do
+    it "indexes existing annotations only once when an index is shared" do
+      existing = annotation(0b01)
+      state.annotation_list << existing
+      indexes = {}
+      expect(existing).to receive(:contribution_matrix).once.and_call_original
+
+      3.times do
+        expect(state.append_annotation_list([annotation(0b01)], indexes)).to be(false)
+      end
+
+      expect(state.append_annotation_list([annotation(0b10)], indexes)).to be(true)
+      expect(state.append_annotation_list([annotation(0b10)], indexes)).to be(false)
+      expect(state.annotation_list.length).to eq(2)
+    end
+
+    it "keeps the indexes for different receiving states separate" do
+      other = described_class.new(2, token, [])
+      indexes = {}
+
+      [state, other].each do |receiver|
+        expect(receiver.append_annotation_list([annotation(0b01)], indexes)).to be(true)
+        expect(receiver.append_annotation_list([annotation(0b01)], indexes)).to be(false)
+        expect(receiver.annotation_list.length).to eq(1)
+      end
+    end
+
+    it "rebuilds the index for independent calls after existing contributions change" do
+      existing = annotation(0b01)
+      state.append_annotation_list([existing])
+      existing.contribution_matrix[actions.first] = 0b10
+
+      expect(state.append_annotation_list([annotation(0b10)])).to be(false)
+      expect(state.annotation_list).to eq([existing])
+    end
+
+    it "deduplicates equal matrices with matching state IDs and action arrays" do
       existing = annotation(0b10)
       state.annotation_list << existing
-      incoming = annotation(0b01,
-                            from: described_class.new(origin.id, token, []), with: actions.dup)
+      incoming = annotation(0b10, from: described_class.new(origin.id, token, []), with: actions.dup)
       propagating = [incoming]
 
-      expect(state.append_annotation_list(propagating)).to be(true)
+      expect(state.append_annotation_list(propagating)).to be(false)
 
       expect(state.annotation_list).to eq([existing])
-      expect(existing.contribution_matrix).to eq({ actions.first => 0b11 })
       expect(propagating).to eq([incoming])
     end
 
     it "keeps annotations for different states, token objects, or actions separate" do
-      existing = annotation(0)
+      existing = annotation(0b01)
       state.annotation_list << existing
       incoming = [
         annotation(0b01, from: described_class.new(2, token, [])),
@@ -624,96 +668,40 @@ RSpec.describe Lrama::State do
       expect(state.append_annotation_list(incoming)).to be(true)
 
       expect(state.annotation_list).to eq([existing] + incoming)
-      expect(existing.contribution_matrix[actions.first]).to eq(0)
     end
 
-    it "merges all matching incoming annotations into only the first existing match" do
-      first = annotation(0)
-      duplicate = annotation(0)
-      state.annotation_list.concat([first, duplicate])
-
-      state.append_annotation_list([annotation(0b01), annotation(0b10)])
-
-      expect(state.annotation_list).to eq([first, duplicate])
-      expect(first.contribution_matrix[actions.first]).to eq(0b11)
-      expect(duplicate.contribution_matrix[actions.first]).to eq(0)
-    end
-
-    it "appends unmatched annotations in their original order, including duplicate keys" do
-      existing = annotation(0)
+    it "retains distinct matrices in arrival order and removes incoming duplicates" do
+      existing = annotation(0b01)
+      first = annotation(0b10)
+      second = annotation(0b01, from: described_class.new(2, token, []))
+      third = annotation(0b11)
       state.annotation_list << existing
-      first = annotation(0, from: described_class.new(2, token, []))
-      second = annotation(0b10, on: rule.rhs.last)
-      third = annotation(0b01, from: first.state)
 
-      state.append_annotation_list([first, annotation(0b01), second, third])
+      expect(state.append_annotation_list([first, annotation(0b01), second, annotation(0b10), third])).to be(true)
 
       expect(state.annotation_list).to eq([existing, first, second, third])
-      expect(first.contribution_matrix[actions.first]).to eq(0)
-      expect(existing.contribution_matrix[actions.first]).to eq(0b01)
+      expect(state.annotation_list.map { |entry| entry.contribution_matrix[actions.first] }).to eq([0b01, 0b10, 0b01, 0b11])
     end
 
-    it "retains always contributions when conditional contributions arrive" do
-      existing = annotation(nil)
-      state.annotation_list << existing
+    [false, true].each do |reverse|
+      it "keeps unconditional, empty and conditional contributions distinct with reverse order #{reverse}" do
+        incoming = [annotation(nil), annotation(0), annotation(0b01)]
+        incoming.reverse! if reverse
 
-      expect(state.append_annotation_list([annotation(0b01), annotation(nil)])).to be(false)
+        expect(state.append_annotation_list(incoming)).to be(true)
+        expect(state.append_annotation_list([annotation(nil), annotation(0), annotation(0b01)])).to be(false)
 
-      expect(existing.contribution_matrix[actions.first]).to be_nil
-      expect(existing.dominant_contribution({ item => 0 }, [item])).to eq(actions)
+        expect(state.annotation_list).to eq(incoming)
+        expect(state.annotation_list.map { |entry| entry.contribution_matrix[actions.first] }).to eq(reverse ? [0b01, 0, nil] : [nil, 0, 0b01])
+      end
     end
 
-    it "replaces conditional contributions with always contributions and reports the change once" do
+    it "reports no change for empty input" do
       existing = annotation(0b01)
       state.annotation_list << existing
 
-      expect(state.append_annotation_list([annotation(nil), annotation(0b01)])).to be(true)
-      expect(state.append_annotation_list([annotation(nil)])).to be(false)
-
-      expect(existing.contribution_matrix[actions.first]).to be_nil
-      expect(existing.dominant_contribution({ item => 0 }, [item])).to eq(actions)
-    end
-
-    it "does not mutate contributions shared with another annotation" do
-      contributions = 0
-      first = annotation(contributions)
-      second = annotation(contributions, on: rule.rhs.last)
-      state.annotation_list.concat([first, second])
-
-      expect(state.append_annotation_list([annotation(0b01)])).to be(true)
-
-      expect(first.contribution_matrix[actions.first]).to eq(0b01)
-      expect(second.contribution_matrix[actions.first]).to eq(0)
-      expect(contributions).to eq(0)
-    end
-
-    it "reports no change when no contributions are added" do
-      state.annotation_list << annotation(0b01)
-
-      expect(state.append_annotation_list([annotation(0b01)])).to be(false)
       expect(state.append_annotation_list([])).to be(false)
-    end
-
-    it "does not treat empty conditional contributions as changes" do
-      existing = annotation(0)
-      state.annotation_list << existing
-
-      expect(state.append_annotation_list([annotation(0)])).to be(false)
-      expect(existing.contribution_matrix[actions.first]).to eq(0)
-    end
-
-    it "does not rescan incoming annotation keys for every existing annotation" do
-      incoming = 8.times.map do |index|
-        from = described_class.new(index + 1, token, [])
-        state.annotation_list << annotation(0, from: from)
-        annotation(0b01, from: from)
-      end
-      incoming.each { |entry| expect(entry).to receive(:state).at_most(2).times.and_call_original }
-
-      state.append_annotation_list(incoming)
-
-      expect(state.annotation_list.length).to eq(8)
-      expect(state.annotation_list).to all(have_attributes(contribution_matrix: { actions.first => 0b01 }))
+      expect(state.annotation_list).to eq([existing])
     end
   end
 end

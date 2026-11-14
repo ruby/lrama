@@ -133,6 +133,19 @@ RSpec.describe "integration" do
     end
   end
 
+  it "preserves distinct IELR annotation contributions through nullable recursive rules" do
+    Dir.mktmpdir do |directory|
+      c_path = File.join(directory, "distinct_annotations#{file_extension}")
+      obj_path = File.join(directory, "distinct_annotations")
+      generate_object(fixture_path("ielr/distinct_annotation_contributions.y"), c_path, obj_path)
+
+      {"bbc" => true, "" => true, "c" => true, "bc" => true, "b" => false, "bb" => false}.each do |input, accepted|
+        _, error, status = Open3.capture3(obj_path, input)
+        expect(status.success?).to be(accepted), "#{input}: #{error}"
+      end
+    end
+  end
+
   it "accepts all paths through nested IELR rules" do
     Dir.mktmpdir do |directory|
       c_path = File.join(directory, "nested#{file_extension}")
