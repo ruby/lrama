@@ -6,7 +6,7 @@ RSpec.describe Lrama::Output do
   let(:output) {
     Lrama::Output.new(
       out: out,
-      output_file_path: "y.tab.c",
+      output_file_path: output_file_path,
       template_name: "bison/yacc.c",
       grammar_file_path: grammar_file_path,
       header_out: header_out,
@@ -27,6 +27,7 @@ RSpec.describe Lrama::Output do
   let(:states) { s = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new)); s.compute; s }
   let(:context) { Lrama::Context.new(states) }
   let(:grammar_file_path) { fixture_path("common/basic.y") }
+  let(:output_file_path) { "y.tab.c" }
   let(:header_file_path) { "y.tab.h" }
 
   describe "#token_enums" do
@@ -213,6 +214,76 @@ RSpec.describe Lrama::Output do
 
       allow(grammar).to receive(:lex_params).and_return([" int lex_param  "])
       expect(output.lex_param_name).to eq("lex_param")
+    end
+  end
+
+  describe "#include_header" do
+    context "header_file_path is not specified" do
+      let(:header_file_path) { nil }
+
+      it "returns nil" do
+        expect(output.include_header).to be_nil
+      end
+    end
+
+    context "header file is in the current directory" do
+      let(:header_file_path) { "./y.tab.h" }
+
+      it "returns the file name" do
+        expect(output.include_header).to eq("y.tab.h")
+      end
+    end
+
+    context "header file and output file are in the same parent directory" do
+      let(:output_file_path) { "../y.tab.c" }
+      let(:header_file_path) { "../y.tab.h" }
+
+      it "returns the file name" do
+        expect(output.include_header).to eq("y.tab.h")
+      end
+    end
+
+    context "header file and output file are in the same subdirectory" do
+      let(:output_file_path) { "ext/y.tab.c" }
+      let(:header_file_path) { "ext/y.tab.h" }
+
+      it "returns the file name" do
+        expect(output.include_header).to eq("y.tab.h")
+      end
+    end
+
+    context "the same directory is spelled differently" do
+      let(:output_file_path) { "./ext/y.tab.c" }
+      let(:header_file_path) { "ext/y.tab.h" }
+
+      it "returns the file name" do
+        expect(output.include_header).to eq("y.tab.h")
+      end
+    end
+
+    context "directory name starts with ~" do
+      let(:output_file_path) { "~build/y.tab.c" }
+      let(:header_file_path) { "~build/y.tab.h" }
+
+      it "returns the file name" do
+        expect(output.include_header).to eq("y.tab.h")
+      end
+    end
+
+    context "header file is in a different directory from output file" do
+      let(:header_file_path) { "../include/y.tab.h" }
+
+      it "returns the path as specified" do
+        expect(output.include_header).to eq("../include/y.tab.h")
+      end
+    end
+
+    context "header file path in a different directory starts with ./" do
+      let(:header_file_path) { "./include/y.tab.h" }
+
+      it "removes only the leading ./" do
+        expect(output.include_header).to eq("include/y.tab.h")
+      end
     end
   end
 
