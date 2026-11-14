@@ -2279,14 +2279,31 @@ RSpec.describe Lrama::States do
       source.annotation_list.concat([unchanged, changed])
     end
 
+    it "shares insertion indexes within a propagation pass and discards them between passes" do
+      allow(source).to receive(:predecessors).and_return([first_predecessor, second_predecessor])
+      indexes = []
+      allow(source).to receive(:annotate_predecessor) do |_, _, shared_indexes|
+        indexes << shared_indexes
+        false
+      end
+
+      2.times { states.send(:compute_inadequacy_annotations) }
+
+      expect(indexes.length).to eq(4)
+      expect(indexes.first).to be_a(Hash)
+      expect(indexes[1]).to equal(indexes[0])
+      expect(indexes[3]).to equal(indexes[2])
+      expect(indexes[2]).not_to equal(indexes[0])
+    end
+
     [0b11, nil].each do |contributions|
-      it "repropagates merged and new annotations to every predecessor when contributions become #{contributions.inspect}" do
+      it "repropagates changed and new annotations to every predecessor when contributions become #{contributions.inspect}" do
         added = Lrama::State::InadequacyAnnotation.new(first_predecessor, token, [action], { action => 0b10 })
         updater.annotation_list << Lrama::State::InadequacyAnnotation.new(updater, token, [action], { action => 0b10 })
         allow(source).to receive(:predecessors).and_return([first_predecessor, second_predecessor])
         allow(updater).to receive(:predecessors).and_return([source])
         allow(updater).to receive(:annotate_predecessor) do
-          changed.merge_matrix([{ action => contributions }])
+          changed.contribution_matrix[action] = contributions
           source.annotation_list << added
           true
         end
@@ -2313,7 +2330,10 @@ RSpec.describe Lrama::States do
       allow(source).to receive(:annotate_predecessor) do |_, annotations = source.annotation_list|
         propagated << annotations.map {|annotation| annotation.state.id }
         raise "Annotation propagation did not converge" if propagated.length > 2
-        changed.merge_matrix([{ action => 0b11 }])
+        next false if changed.contribution_matrix[action] == 0b11
+
+        changed.contribution_matrix[action] = 0b11
+        true
       end
 
       states.send(:compute_inadequacy_annotations)

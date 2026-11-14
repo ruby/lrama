@@ -14,6 +14,10 @@ module Lrama
 
     type item_origins_cache = Hash[item_pair, Array[item_pair]]
 
+    type annotation_key = [ Integer, Grammar::Symbol, Array[InadequacyAnnotation::action], Hash[InadequacyAnnotation::action, Bitmap::bitmap?] ]
+
+    type annotation_indexes = Hash[Integer, Set[annotation_key]]
+
     @id: Integer
 
     @accessing_symbol: Grammar::Symbol
@@ -204,11 +208,11 @@ module Lrama
 
     # Definition 3.32 (annotate_predecessor)
     #
-    # @rbs (State predecessor, ?Array[InadequacyAnnotation] annotations) -> bool
-    def annotate_predecessor: (State predecessor, ?Array[InadequacyAnnotation] annotations) -> bool
+    # @rbs (State predecessor, ?Array[InadequacyAnnotation] annotations, ?annotation_indexes indexes) -> bool
+    def annotate_predecessor: (State predecessor, ?Array[InadequacyAnnotation] annotations, ?annotation_indexes indexes) -> bool
 
-    # @rbs (Array[InadequacyAnnotation] propagating_list) -> bool
-    def append_annotation_list: (Array[InadequacyAnnotation] propagating_list) -> bool
+    # @rbs (Array[InadequacyAnnotation] propagating_list, ?annotation_indexes indexes) -> bool
+    def append_annotation_list: (Array[InadequacyAnnotation] propagating_list, ?annotation_indexes indexes) -> bool
 
     # Definition 3.31 (compute_lhs_contributions)
     #

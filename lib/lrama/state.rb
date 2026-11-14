@@ -1,6 +1,7 @@
 # rbs_inline: enabled
 # frozen_string_literal: true
 
+require "set"
 require_relative "state/action"
 require_relative "state/inadequacy_annotation"
 require_relative "state/item"
@@ -21,6 +22,8 @@ module Lrama
     #   type dominant_contributions = Hash[InadequacyAnnotation, Array[InadequacyAnnotation::action]?]
     #   type item_pair = [State, Item]
     #   type item_origins_cache = Hash[item_pair, Array[item_pair]]
+    #   type annotation_key = [Integer, Grammar::Symbol, Array[InadequacyAnnotation::action], Hash[InadequacyAnnotation::action, Bitmap::bitmap?]]
+    #   type annotation_indexes = Hash[Integer, Set[annotation_key]]
     #
     #   @id: Integer
     #   @accessing_symbol: Grammar::Symbol
@@ -432,8 +435,8 @@ module Lrama
 
     # Definition 3.32 (annotate_predecessor)
     #
-    # @rbs (State predecessor, ?Array[InadequacyAnnotation] annotations) -> bool
-    def annotate_predecessor(predecessor, annotations = annotation_list)
+    # @rbs (State predecessor, ?Array[InadequacyAnnotation] annotations, ?annotation_indexes indexes) -> bool
+    def annotate_predecessor(predecessor, annotations = annotation_list, indexes = {})
       always_contributions = {} #: Hash[Grammar::Symbol, Hash[Item, bool]]
       propagating_list = []
       annotations.each {|annotation|
@@ -480,27 +483,22 @@ module Lrama
 
         propagating_list << InadequacyAnnotation.new(annotation.state, annotation.token, annotation.actions, contribution_matrix)
       }
-      predecessor.append_annotation_list(propagating_list)
+      predecessor.append_annotation_list(propagating_list, indexes)
     end
 
-    # @rbs (Array[InadequacyAnnotation] propagating_list) -> bool
-    def append_annotation_list(propagating_list)
-      changed = false
-      propagating_by_key = propagating_list.group_by {|annotation|
-        [annotation.state.id, annotation.token, annotation.actions]
-      }
+    # @rbs (Array[InadequacyAnnotation] propagating_list, ?annotation_indexes indexes) -> bool
+    def append_annotation_list(propagating_list, indexes = {})
+      return false if propagating_list.empty?
 
-      annotation_list.each do |annotation|
-        merging_list = propagating_by_key.delete([annotation.state.id, annotation.token, annotation.actions])
-        changed = annotation.merge_matrix(merging_list.map(&:contribution_matrix)) || changed if merging_list
+      # Unioning distinct paths can hide differences in their dominant actions.
+      keys = indexes[id] ||= Set.new(annotation_list.map do |annotation|
+        [annotation.state.id, annotation.token, annotation.actions, annotation.contribution_matrix] #: annotation_key
+      end)
+      appending = propagating_list.select do |annotation|
+        keys.add?([annotation.state.id, annotation.token, annotation.actions, annotation.contribution_matrix])
       end
-
-      # Preserve propagation order even when unmatched keys are interleaved.
-      appending = propagating_list.select {|annotation|
-        propagating_by_key.key?([annotation.state.id, annotation.token, annotation.actions])
-      }
-      @annotation_list += appending
-      changed || !appending.empty?
+      @annotation_list.concat(appending)
+      !appending.empty?
     end
 
     # Definition 3.31 (compute_lhs_contributions)
