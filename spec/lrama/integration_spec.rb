@@ -76,6 +76,20 @@ RSpec.describe "integration" do
   include IntegrationHelper
 
   [:lalr, :ielr].each do |lr_type|
+    it "preserves nonassociative errors after removing obsolete #{lr_type} S/R conflicts" do
+      Dir.mktmpdir do |directory|
+        c_path = File.join(directory, "resolved_shift#{file_extension}")
+        obj_path = File.join(directory, "resolved_shift")
+        generate_object(fixture_path("ielr/resolved_shift_conflicts.y"), c_path, obj_path,
+                        command_args: ["-Dlr.type=#{lr_type}"])
+
+        {"ac" => true, "abx" => false, "aby" => false, "abz" => false, "" => false}.each do |input, accepted|
+          _, error, status = Open3.capture3(obj_path, input)
+          expect(status.success?).to be(accepted), "#{input}: #{error}"
+        end
+      end
+    end
+
     it "does not create errors from discarded shifts in #{lr_type} parsers" do
       Dir.mktmpdir do |directory|
         c_path = File.join(directory, "discarded_shift#{file_extension}")

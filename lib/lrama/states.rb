@@ -580,6 +580,10 @@ module Lrama
             end
           end
         end
+
+        state.conflicts.reject! do |conflict|
+          conflict.is_a?(State::ShiftReduceConflict) && conflict.shift.not_selected
+        end
       end
     end
 
