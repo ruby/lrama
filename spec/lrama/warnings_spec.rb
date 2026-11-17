@@ -104,7 +104,7 @@ RSpec.describe Lrama::Warnings do
         logger = Lrama::Logger.new
         allow(logger).to receive(:warn)
         Lrama::Warnings.new(logger, true).warn(grammar, states)
-        expect(logger).to have_received(:warn).with("shift/reduce conflicts: 2 found")
+        expect(logger).to have_received(:warn).with("shift/reduce conflicts: 1 found")
         expect(logger).to have_received(:warn).with("reduce/reduce conflicts: 1 found")
       end
     end

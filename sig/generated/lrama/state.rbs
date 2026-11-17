@@ -162,6 +162,12 @@ module Lrama
     # @rbs () -> Array[conflict]
     def rr_conflicts: () -> Array[conflict]
 
+    # @rbs () -> Integer
+    def sr_conflicts_count: () -> Integer
+
+    # @rbs () -> Integer
+    def rr_conflicts_count: () -> Integer
+
     # Clear information related to conflicts.
     # IELR computation re-calculates conflicts and default reduction of states
     # after LALR computation.

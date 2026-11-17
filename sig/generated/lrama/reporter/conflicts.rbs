@@ -10,9 +10,6 @@ module Lrama
 
       # @rbs (IO io, Lrama::States states) -> void
       def report_conflicts: (IO io, Lrama::States states) -> void
-
-      # @rbs (Array[(Lrama::State::ShiftReduceConflict | Lrama::State::ReduceReduceConflict)] conflicts) -> Array[String]
-      def format_conflict_messages: (Array[Lrama::State::ShiftReduceConflict | Lrama::State::ReduceReduceConflict] conflicts) -> Array[String]
     end
   end
 end

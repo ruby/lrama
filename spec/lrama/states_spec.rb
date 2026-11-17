@@ -289,7 +289,7 @@ RSpec.describe Lrama::States do
            10 '>'
 
 
-        State 1 conflicts: 2 shift/reduce, 1 reduce/reduce
+        State 1 conflicts: 1 shift/reduce, 1 reduce/reduce
 
 
         Grammar
@@ -1428,7 +1428,7 @@ RSpec.describe Lrama::States do
           state = states.states.find { |s| s.reduces.length == 2 }
 
           expect(state.sr_conflicts.flat_map(&:symbols).map(&:name)).to eq(unresolved)
-          expect(states.sr_conflicts_count).to eq(unresolved.length)
+          expect(states.sr_conflicts_count).to eq(unresolved.uniq.length)
           expect(state.rr_conflicts.count).to eq(rr_count)
         end
       end
@@ -3769,7 +3769,7 @@ RSpec.describe Lrama::States do
             // Prologue
             %}
 
-            %expect 2
+            %expect 1
           STR
         end
 
@@ -3808,7 +3808,7 @@ RSpec.describe Lrama::States do
           allow(logger).to receive(:error)
 
           expect{ states.validate!(logger) }.to raise_error(SystemExit)
-          expect(logger).to have_received(:error).with("shift/reduce conflicts: 2 found, 0 expected")
+          expect(logger).to have_received(:error).with("shift/reduce conflicts: 1 found, 0 expected")
           expect(logger).to have_received(:error).with("reduce/reduce conflicts: 1 found, 0 expected")
         end
       end
