@@ -18,6 +18,14 @@ NUMBER [0-9]+
     return NUM;
 }
 
+[\(] {
+    return LPAREN;
+}
+
+[\)] {
+    return RPAREN;
+}
+
 [+\-\*\/\(\)] {
     return yytext[0];
 }
