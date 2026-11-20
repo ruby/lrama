@@ -16,7 +16,11 @@ module Lrama
         has_conflict = false
 
         states.states.each do |state|
-          messages = format_conflict_messages(state.conflicts)
+          messages = [] #: Array[String]
+          sr_count = state.sr_conflicts_count
+          rr_count = state.rr_conflicts_count
+          messages << "#{sr_count} shift/reduce" if sr_count > 0
+          messages << "#{rr_count} reduce/reduce" if rr_count > 0
 
           unless messages.empty?
             has_conflict = true
@@ -25,19 +29,6 @@ module Lrama
         end
 
         io << "\n\n" if has_conflict
-      end
-
-      # @rbs (Array[(Lrama::State::ShiftReduceConflict | Lrama::State::ReduceReduceConflict)] conflicts) -> Array[String]
-      def format_conflict_messages(conflicts)
-        conflict_types = {
-          shift_reduce: "shift/reduce",
-          reduce_reduce: "reduce/reduce"
-        }
-
-        conflict_types.keys.map do |type|
-          type_conflicts = conflicts.select { |c| c.type == type }
-          "#{type_conflicts.count} #{conflict_types[type]}" unless type_conflicts.empty?
-        end.compact
       end
     end
   end

@@ -186,12 +186,12 @@ module Lrama
 
     # @rbs () -> Integer
     def sr_conflicts_count
-      @sr_conflicts_count ||= @states.flat_map(&:sr_conflicts).count
+      @states.sum(&:sr_conflicts_count)
     end
 
     # @rbs () -> Integer
     def rr_conflicts_count
-      @rr_conflicts_count ||= @states.flat_map(&:rr_conflicts).count
+      @states.sum(&:rr_conflicts_count)
     end
 
     # @rbs (Logger logger) -> void

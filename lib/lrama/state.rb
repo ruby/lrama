@@ -283,6 +283,22 @@ module Lrama
       end
     end
 
+    # @rbs () -> Integer
+    def sr_conflicts_count
+      return 0 if @conflicts.empty?
+      sr_conflicts.flat_map(&:symbols).uniq.count
+    end
+
+    # @rbs () -> Integer
+    def rr_conflicts_count
+      return 0 if @conflicts.empty?
+      # Pairs follow reduction order, so each reduction after the first counts once per token.
+      rr_conflicts.flat_map do |conflict|
+        # @type var conflict: ReduceReduceConflict
+        conflict.symbols.map { |symbol| [symbol, conflict.reduce2] }
+      end.uniq.count
+    end
+
     # Clear information related to conflicts.
     # IELR computation re-calculates conflicts and default reduction of states
     # after LALR computation.
