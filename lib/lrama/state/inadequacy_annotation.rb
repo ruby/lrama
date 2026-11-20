@@ -70,7 +70,10 @@ module Lrama
         # @type var shifts: Array[Action::Shift]
         # @type var reduces: Array[Action::Reduce]
         shifts = actions.select {|action| action.is_a?(Action::Shift)}
+        return actions if shifts.empty?
+
         reduces = actions.select {|action| action.is_a?(Action::Reduce) }
+        reduces.sort_by! {|reduce| reduce.rule.id } if reduces.length > 1
 
         shifts.each do |shift|
           reduces.each do |reduce|
@@ -88,7 +91,7 @@ module Lrama
             when shift_prec < reduce_prec
               # Reduce is selected
               actions.delete(shift)
-              next
+              break
             when shift_prec > reduce_prec
               # Shift is selected
               actions.delete(reduce)
@@ -108,16 +111,11 @@ module Lrama
             when :left
               # Reduce is selected
               actions.delete(shift)
-              next
+              break
             when :nonassoc
-              # Can not resolve
-              #
-              # nonassoc creates "run-time" error, precedence creates "compile-time" error.
-              # Then omit both the shift and reduce.
-              #
+              # An explicit error overrides every remaining action.
               # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
-              actions.delete(shift)
-              actions.delete(reduce)
+              return []
             else
               raise "Unknown precedence type. #{sym}"
             end

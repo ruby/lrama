@@ -75,6 +75,17 @@ RSpec.describe "integration" do
 
   include IntegrationHelper
 
+  it "preserves reductions after discarding a shift in IELR annotations" do
+    Dir.mktmpdir do |directory|
+      c_path = File.join(directory, "annotation_order#{file_extension}")
+      obj_path = File.join(directory, "annotation_order")
+      generate_object(fixture_path("ielr/annotation_conflict_order.y"), c_path, obj_path)
+
+      _, error, status = Open3.capture3(obj_path, 'aacc')
+      expect(status.success?).to be(true), error
+    end
+  end
+
   [:lalr, :ielr].each do |lr_type|
     it "preserves nonassociative errors after removing obsolete #{lr_type} S/R conflicts" do
       Dir.mktmpdir do |directory|
