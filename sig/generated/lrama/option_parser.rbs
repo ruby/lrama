@@ -9,6 +9,8 @@ module Lrama
 
     @report: Array[String]
 
+    @warning: Array[String]
+
     @profile: Array[String]
 
     # @rbs (Array[String]) -> Lrama::Options
@@ -34,6 +36,9 @@ module Lrama
 
     # @rbs (String) -> Symbol
     def aliased_report_option: (String) -> Symbol
+
+    # @rbs (Array[String]) -> Hash[Symbol, bool]
+    def validate_warning: (Array[String]) -> Hash[Symbol, bool]
 
     VALID_TRACES: Array[String]
 

@@ -12,21 +12,22 @@ require_relative 'warnings/useless_precedence'
 
 module Lrama
   class Warnings
-    # @rbs (Logger logger, bool warnings) -> void
-    def initialize(logger, warnings)
-      @conflicts = Conflicts.new(logger, warnings)
+    # @rbs (Logger logger, bool warnings, ?Hash[Symbol, bool] warning_opts) -> void
+    def initialize(logger, warnings, warning_opts = {})
+      @conflicts = Conflicts.new(logger, warnings, counterexamples: warning_opts[:counterexamples] || false)
       @implicit_empty = ImplicitEmpty.new(logger, warnings)
       @mixed_references = MixedReferences.new(logger, warnings)
       @name_conflicts = NameConflicts.new(logger, warnings)
       @redefined_rules = RedefinedRules.new(logger, warnings)
       @required = Required.new(logger, warnings)
       @token_redeclarations = TokenRedeclarations.new(logger)
+      @token_redeclarations_enabled = !warning_opts[:none]
       @useless_precedence = UselessPrecedence.new(logger, warnings)
     end
 
     # @rbs (Lrama::Grammar grammar, Lrama::States states) -> void
     def warn(grammar, states)
-      @token_redeclarations.warn(grammar)
+      @token_redeclarations.warn(grammar) if @token_redeclarations_enabled
       @conflicts.warn(states)
       @implicit_empty.warn(grammar)
       @mixed_references.warn(grammar)
