@@ -15,10 +15,10 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %token <i> NUM
 %type <i> expression
 
-%rule %inline op  : '+' { + }
-                  | '-' { - }
-                  | '*' { * }
-                  | '/' { / }
+%rule %inline op  : '+' { $$ = '+'; }
+                  | '-' { $$ = '-'; }
+                  | '*' { $$ = '*'; }
+                  | '/' { $$ = '/'; }
                   ;
 
 %%
@@ -29,8 +29,8 @@ expression      : NUM
                 ;
 
 
-%rule %inline other_op : '%' { + 1 + }
-                       | '&' { - 1 - }
+%rule %inline other_op : '%' { $$ = '%'; }
+                       | '&' { $$ = '&'; }
                        ;
 
 %%

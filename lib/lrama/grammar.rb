@@ -103,6 +103,7 @@ module Lrama
     attr_accessor :define #: Hash[String, String?]
     attr_accessor :required #: bool
     attr_accessor :nodes #: Array[Node::Base]
+    attr_accessor :no_inline #: bool
 
     def_delegators "@symbols_resolver", :symbols, :nterms, :terms, :add_nterm, :add_term, :find_term_by_s_value,
                                         :find_symbol_by_number!, :find_symbol_by_id!,
@@ -140,6 +141,7 @@ module Lrama
       @precedences = []
       @start_nterm = nil
       @nodes = nil
+      @no_inline = false
 
       append_special_symbols
     end
@@ -266,7 +268,12 @@ module Lrama
 
     # @rbs () -> void
     def prepare
-      resolve_inline_rules
+      if @no_inline
+        convert_inline_rules_to_regular_rules
+      else
+        validate_inline_rules
+        resolve_inline_rules
+      end
       normalize_rules
       collect_symbols
       set_lhs_and_rhs
@@ -491,6 +498,7 @@ module Lrama
         when Grammar::Node::ParameterizedRule
           rhs_list = node.rhs_list.map do |rhs|
             builder = Grammar::Parameterized::Rhs.new
+            builder.line = (rhs.first || node).location.first_line
 
             rhs.each do |rhs_node|
               case rhs_node
@@ -653,9 +661,13 @@ module Lrama
     end
 
     # @rbs () -> void
-    def resolve_inline_rules
-      validate_inline_rules!
+    def validate_inline_rules
+      validator = Inline::Validator.new(@parameterized_resolver, @start_nterm)
+      validator.validate!
+    end
 
+    # @rbs () -> void
+    def resolve_inline_rules
       while @rule_builders.any?(&:has_inline_rules?) do
         @rule_builders = @rule_builders.flat_map do |builder|
           if builder.has_inline_rules?
@@ -667,32 +679,31 @@ module Lrama
       end
     end
 
+    # Convert inline rules to regular rules when --no-inline is specified.
+    # This allows inline rules to be treated as ordinary non-terminal rules.
+    # Only non-parameterized inline rules can be converted (rules with parameters
+    # require instantiation and cannot be converted to simple rules).
+    #
     # @rbs () -> void
-    def validate_inline_rules!
-      visiting = {} #: Hash[Parameterized::Rule, bool]
-      visited = {} #: Hash[Parameterized::Rule, bool]
+    def convert_inline_rules_to_regular_rules
+      inline_rules, remaining_rules = @parameterized_resolver.rules.partition { |rule| rule.inline? && rule.parameters.empty? }
+      @parameterized_resolver.rules = remaining_rules
 
-      parameterized_rules.select(&:inline?).each do |rule|
-        validate_inline_rule!(rule, visiting, visited)
-      end
-    end
-
-    # @rbs (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
-    def validate_inline_rule!(rule, visiting, visited)
-      return if visited[rule]
-      raise "Recursive inline rule: #{rule.name}" if visiting[rule]
-
-      visiting[rule] = true
-      rule.rhs.each do |rhs|
-        rhs.symbols.each do |symbol|
-          next if rule.parameters.any? { |parameter| parameter.s_value == symbol.name }
-
-          inline_rule = @parameterized_resolver.find_inline(symbol)
-          validate_inline_rule!(inline_rule, visiting, visited) if inline_rule
+      inline_rules.each do |inline_rule|
+        lhs = Grammar::Symbol::Id.new(name: inline_rule.name, kind: :ident)
+        inline_rule.rhs.each do |rhs|
+          rule_builder = RuleBuilder.new(@rule_counter, @midrule_action_counter, @parameterized_resolver, lhs_tag: inline_rule.tag)
+          rule_builder.lhs = lhs
+          rule_builder.line = rhs.line
+          rhs.symbols.each { |sym| rule_builder.add_rhs(sym) }
+          rule_builder.precedence_sym = rhs.precedence_sym
+          if (action = rhs.action)
+            rule_builder.add_rhs(action)
+          end
+          rule_builder.complete_input
+          add_rule_builder(rule_builder)
         end
       end
-      visiting.delete(rule)
-      visited[rule] = true
     end
 
     # @rbs () -> void

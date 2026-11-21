@@ -74,21 +74,43 @@ module Lrama
           return action if rhs.action.nil? || action.nil?
 
           inline_index = index + 1
+          inline_var = "_inline_#{inline_index}"
+          inline_action = rhs.action.code
+          inline_code = inline_action.s_value.dup
+          bind_value = false
+
+          inline_action.references.reverse_each do |ref|
+            range = ref.first_column...ref.last_column
+            if ref.type == :dollar && ref.name == "$"
+              bind_value = true
+              inline_code[range] = inline_value(inline_var, ref)
+            elsif ref.index && index != 0
+              reference = inline_code[range] #: String
+              inline_code[range] = reference.sub(/\d+\z/, (ref.index + index).to_s)
+            end
+          end
+
           index_offset = rhs.symbols.count - 1
           code = action.code.s_value.dup
-
+          substituted = false
           action.code.references.reverse_each do |ref|
             next if ref.index.nil? || ref.index < inline_index # The index is nil for $$.
 
-            reference = code[ref.first_column...ref.last_column]
-            replacement =
+            range = ref.first_column...ref.last_column
+            code[range] =
               if ref.type == :dollar && ref.index == inline_index
-                rhs.action.code.s_value
+                substituted = true
+                bind_value ? inline_value(inline_var, ref) : inline_code
               else
-                reference.sub(/\d+\z/, (ref.index + index_offset).to_s)
+                code[range].sub(/\d+\z/, (ref.index + index_offset).to_s)
               end
-            code[ref.first_column...ref.last_column] = replacement
           end
+          if bind_value
+            code = " YYSTYPE #{inline_var}; { #{inline_code} } #{code}"
+          elsif !substituted && inline_action.ends_with_statement?
+            code = " { #{inline_code} } #{code}"
+          end
+
           resolved_code = Lrama::Lexer::Token::UserCode.new(s_value: code, location: action.code.location)
           Node::RuleRhs::Action.new(
             code: resolved_code,
@@ -96,6 +118,12 @@ module Lrama
             tag: action.tag,
             location: action.location
           )
+        end
+
+        # @rbs (String variable, Grammar::Reference ref) -> String
+        def inline_value(variable, ref)
+          tag = ref.ex_tag
+          tag.is_a?(Lexer::Token::Tag) ? "#{variable}.#{tag.member}" : variable
         end
       end
     end
