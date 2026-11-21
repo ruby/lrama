@@ -20,9 +20,6 @@ module Lrama
       # @rbs (Integer kernel_index) -> bool
       def contributed?: (Integer kernel_index) -> bool
 
-      # @rbs (Array[Hash[action, Bitmap::bitmap?]] another_matrixes) -> bool
-      def merge_matrix: (Array[Hash[action, Bitmap::bitmap?]] another_matrixes) -> bool
-
       # Definition 3.42 (dominant_contribution)
       #
       # @rbs (State::lookahead_set lookaheads, Array[Item] kernels) -> Array[action]?

@@ -26,32 +26,6 @@ module Lrama
         @contribution_matrix.any? {|action, contributions| !contributions.nil? && contributions[kernel_index] == 1 }
       end
 
-      # @rbs (Array[Hash[action, Bitmap::bitmap?]] another_matrixes) -> bool
-      def merge_matrix(another_matrixes)
-        changed = false
-        another_matrixes.each do |another_matrix|
-          another_matrix.each do |action, another_contributions|
-            unless @contribution_matrix.key?(action)
-              @contribution_matrix[action] = another_contributions
-              changed = true
-              next
-            end
-            contributions = @contribution_matrix[action]
-            next if contributions.nil?
-
-            if another_contributions.nil?
-              @contribution_matrix[action] = nil
-              changed = true
-            else
-              merged = contributions | another_contributions
-              changed = true if merged != contributions
-              @contribution_matrix[action] = merged
-            end
-          end
-        end
-        changed
-      end
-
       # Definition 3.42 (dominant_contribution)
       #
       # @rbs (State::lookahead_set lookaheads, Array[Item] kernels) -> Array[action]?

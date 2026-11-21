@@ -759,6 +759,8 @@ module Lrama
       queue = @states.reject {|state| state.annotation_list.empty? }
       queued = Set.new(queue.map(&:id))
       propagated = {} #: Hash[State::InadequacyAnnotation, Hash[State::InadequacyAnnotation::action, Bitmap::bitmap?]]
+      # Scope insertion indexes to this pass, while contribution matrices are fixed.
+      indexes = {} #: State::annotation_indexes
 
       while (curr = queue.shift) do
         queued.delete(curr.id)
@@ -771,7 +773,7 @@ module Lrama
           true
         end
         curr.predecessors.each do |pred|
-          changed = curr.annotate_predecessor(pred, annotations)
+          changed = curr.annotate_predecessor(pred, annotations, indexes)
           queue << pred if changed && queued.add?(pred.id)
         end
       end
