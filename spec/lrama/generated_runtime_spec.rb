@@ -289,6 +289,43 @@ RSpec.describe "generated runtime" do
     end
   end
 
+  it "sets custom token and EOF locations in the generated lexer" do
+    with_parser(<<~'GRAMMAR', flags: ["-Wunused-but-set-variable"]) do |parser|
+      %define lr.type pslr
+      %define api.pslr.lexer generated
+      %locations
+      %code requires {
+        struct Location {
+          int line, column;
+        #ifdef __cplusplus
+          explicit Location() : line(0), column(0) {}
+        #endif
+        };
+        #define YYLTYPE struct Location
+        #define YYLLOC_DEFAULT(Current, Rhs, N) ((Current) = (Rhs)[N])
+        #define YYPSLR_SET_LOCATION(Loc, FL, FC, LL, LC) \
+          do { (Loc).line = (LL); (Loc).column = (LC); } while (0)
+      }
+      %token-pattern A /aa\nb/
+      %token-pattern YYLAYOUT_WS /[ \n]+/
+      %%
+      start: A {
+        if (@1.line != 3 || @1.column != 2) YYABORT;
+      };
+      %%
+      int main(void) {
+        YYSTYPE value = 0;
+        YYLTYPE loc;
+        yypslr_set_input("\n aa\nb ", 7);
+        if (yyparse() || yylex(&value, &loc) != YYEOF) return 1;
+        return loc.line != 3 || loc.column != 3;
+      }
+    GRAMMAR
+      _out, err, status = Open3.capture3(parser)
+      expect(status.success?).to be(true), err
+    end
+  end
+
   it "preserves the ninth and sixty-fourth lexer context flags" do
     declarations = (0...64).map { |i| "%lexer-context C#{i} A" }.join("\n")
     with_parser(<<~GRAMMAR) do |parser|

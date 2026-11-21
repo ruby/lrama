@@ -110,39 +110,7 @@ module Lrama
 
       # @rbs () -> Integer
       def character_code
-        # Ignore ' on both sides.
-        code =
-          case name[1..-2]
-          when "\\a"
-            7
-          when "\\b"
-            8
-          when "\\f"
-            12
-          when "\\n"
-            10
-          when "\\r"
-            13
-          when "\\t"
-            9
-          when "\\v"
-            11
-          when "\\\""
-            34
-          when "\\'"
-            39
-          when "\\?"
-            63
-          when "\\\\"
-            92
-          when /\A\\([0-7]{1,3})\z/
-            Integer($1, 8)
-          when /\A\\[xuU]([0-9a-fA-F]+)\z/
-            Integer($1, 16)
-          when /\A(.)\z/
-            $1&.bytes&.first
-          end
-
+        code = literal_character_code(name[1..-2].to_s)
         raise "Unknown Char s_value #{name}" unless code
 
         unless (1..255).cover?(code)
@@ -150,6 +118,15 @@ module Lrama
         end
 
         code
+      end
+
+      # @rbs () -> String?
+      def string_literal
+        name[1..-2].to_s.gsub(/\\(?:[0-7]{1,3}|x[0-9a-fA-F]+|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|.)/) do |escape|
+          code = literal_character_code(escape)
+          return unless code && code < 128
+          code.chr
+        end
       end
 
       # @rbs () -> bool
@@ -234,6 +211,36 @@ module Lrama
         else
           # YYSYMBOL_keyword_class, YYSYMBOL_strings_1
           display_name
+        end
+      end
+
+      private
+
+      # @rbs (String spelling) -> Integer?
+      def literal_character_code(spelling)
+        case spelling
+        when "\\a"
+          7
+        when "\\b"
+          8
+        when "\\f"
+          12
+        when "\\n"
+          10
+        when "\\r"
+          13
+        when "\\t"
+          9
+        when "\\v"
+          11
+        when "\\\"", "\\'", "\\?", "\\\\"
+          spelling.getbyte(1)
+        when /\A\\([0-7]{1,3})\z/
+          Integer($1, 8)
+        when /\A\\[xuU]([0-9a-fA-F]+)\z/
+          Integer($1, 16)
+        when /\A.\z/
+          spelling.getbyte(0)
         end
       end
     end

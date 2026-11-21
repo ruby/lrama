@@ -4,7 +4,7 @@ require "open3"
 require "tmpdir"
 
 RSpec.describe "LAC runtime" do
-  def with_lac_parser(source, instrument: false, flags: [])
+  def with_lac_parser(source, instrument: false, flags: [], lac: "full")
     Dir.mktmpdir("lrama-lac") do |dir|
       compiler = ENV.fetch("COMPILER", "cc")
       cpp = compiler.include?("++")
@@ -12,7 +12,7 @@ RSpec.describe "LAC runtime" do
       output = File.join(dir, cpp ? "parser.cpp" : "parser.c")
       executable = File.join(dir, "parser")
       File.write(grammar, <<~GRAMMAR + source)
-        %define parse.lac full
+        %define parse.lac #{lac}
         %code provides {
           static int yyerror(YYLTYPE *loc, const char *message)
           { (void)loc; (void)message; return 0; }
@@ -89,6 +89,30 @@ RSpec.describe "LAC runtime" do
       prefix: A { enabled = 1; };
       %%
       int main(void) { return yyparse(); }
+    GRAMMAR
+      _out, err, status = Open3.capture3(parser)
+      expect(status.success?).to be(true), err
+    end
+  end
+
+  it "retains scanner rows when a later action clears unchecked lookahead" do
+    with_lac_parser(<<~GRAMMAR, lac: "none") do |parser|
+      %define lr.type pslr
+      %define api.pslr.lexer generated
+      %token-pattern X /x/
+      %token-pattern T /t/
+      %token-pattern B /a/
+      %token-pattern A /a/
+      %right T
+      %%
+      start: short clear T A | X T;
+      short: X %prec T;
+      clear: %empty { yyclearin; };
+      %%
+      int main(void) {
+        yypslr_set_input("x?ta", 4);
+        return yyparse();
+      }
     GRAMMAR
       _out, err, status = Open3.capture3(parser)
       expect(status.success?).to be(true), err

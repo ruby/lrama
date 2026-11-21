@@ -298,26 +298,36 @@ module Lrama
     def build_length_precedences: () -> void
 
     # Build scanner_accepts table
-    # @rbs () -> void
-    def build_scanner_accepts: () -> void
+    # @rbs (Array[State] parser_states) -> void
+    def build_scanner_accepts: (Array[State] parser_states) -> void
 
     # Handle PSLR inadequacies
     # Detects and splits states where pseudo-scanner behavior differs
-    # @rbs () -> void
-    def handle_pslr_inadequacies: () -> void
+    # @rbs (Hash[State, Array[State::transition]] transitions) -> void
+    def handle_pslr_inadequacies: (Hash[State, Array[State::transition]] transitions) -> void
 
     # @rbs () -> void
     def finalize_pslr_metrics: () -> void
 
     # Detect PSLR inadequacies in isocore groups
-    # @rbs () -> Array[State::PslrInadequacy]
-    def detect_pslr_inadequacies: () -> Array[State::PslrInadequacy]
+    # @rbs (Hash[State, Array[State::transition]] transitions) -> Array[State::PslrInadequacy]
+    def detect_pslr_inadequacies: (Hash[State, Array[State::transition]] transitions) -> Array[State::PslrInadequacy]
 
-    # @rbs () -> void
-    def collect_lexical_tie_candidates: () -> void
+    # @rbs (Array[State] parser_states) -> void
+    def collect_lexical_tie_candidates: (Array[State] parser_states) -> void
 
-    # @rbs () -> Array[State]
-    def reachable_parser_states: () -> Array[State]
+    # @rbs () -> Hash[State, Array[State::transition]]
+    def reachable_parser_transitions: () -> Hash[State, Array[State::transition]]
+
+    # A goto on A can run after the parser traverses an entire RHS of A
+    # from that goto's source and selects the matching reduction at its end.
+    # @rbs () -> Set[State::Action::Goto]
+    def reducible_gotos: () -> Set[State::Action::Goto]
+
+    # A selected shift or explicit error takes priority over reductions.
+    # Among competing reductions the parse table selects the earliest rule.
+    # @rbs (State state) -> Hash[Grammar::Rule, Bitmap::bitmap]
+    def selected_reduction_lookaheads: (State state) -> Hash[Grammar::Rule, Bitmap::bitmap]
 
     # @rbs (Logger logger) -> void
     def validate_pslr_inadequacies!: (Logger logger) -> void
@@ -325,8 +335,6 @@ module Lrama
     # @rbs (Logger logger) -> void
     def validate_pslr_scanner_conflicts!: (Logger logger) -> void
 
-    # Pure mode owns lexical analysis completely, so every terminal must
-    # be producible by the pseudo-scanner.
     # @rbs (Logger logger) -> void
     def validate_pslr_pure_coverage!: (Logger logger) -> void
 

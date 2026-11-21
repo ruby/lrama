@@ -56,11 +56,7 @@ module Lrama
     # @rbs (Grammar::Symbol sym) -> Integer
     def classify_symbol_context(sym)
       name = sym.name
-      # Also try without surrounding quotes for single-char tokens
-      bare = name.gsub(/\A["']|["']\z/, "")
-
-      # Direct match
-      ctx = @symbol_to_context[name] || @symbol_to_context[bare]
+      ctx = @symbol_to_context[name]
       return ctx if ctx
 
       # Fallback: inherit context from parameterized rule expansion arguments

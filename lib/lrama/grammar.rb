@@ -404,9 +404,10 @@ module Lrama
     # @rbs () -> Array[String]
     def uncovered_pslr_terminals
       covered = @token_patterns.map(&:name).to_set
+      used = @rules.each_with_object(Set.new) { |rule, symbols| symbols.merge(rule.rhs) }
 
       terms.reject do |term|
-        term == eof_symbol || term == error_symbol || term == undef_symbol ||
+        !used.include?(term) || term == eof_symbol || term == error_symbol || term == undef_symbol ||
           covered.include?(term.name)
       end.map(&:name)
     end
@@ -657,7 +658,7 @@ module Lrama
         when :char
           term.character_code.chr
         when :string
-          term.name[1..-2]
+          term.string_literal
         end
       return if !literal || literal.empty? || !literal.ascii_only?
 

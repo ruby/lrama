@@ -216,8 +216,11 @@ module Lrama
       # Phase 5
       report_duration(:compute_conflicts) { compute_conflicts(:ielr) }
       report_duration(:compute_default_reduction) { compute_default_reduction }
-      report_duration(:build_scanner_accepts) { build_scanner_accepts }
-      report_duration(:handle_pslr_inadequacies) { handle_pslr_inadequacies }
+      if @scanner_fsa
+        transitions = reachable_parser_transitions
+        report_duration(:build_scanner_accepts) { build_scanner_accepts(transitions.keys) }
+        report_duration(:handle_pslr_inadequacies) { handle_pslr_inadequacies(transitions) }
+      end
       finalize_pslr_metrics
     end
 
@@ -1172,14 +1175,14 @@ module Lrama
     end
 
     # Build scanner_accepts table
-    # @rbs () -> void
-    def build_scanner_accepts
+    # @rbs (Array[State] parser_states) -> void
+    def build_scanner_accepts(parser_states)
       return unless @scanner_fsa
 
-      collect_lexical_tie_candidates
+      collect_lexical_tie_candidates(parser_states)
 
       @scanner_accepts_table = State::ScannerAccepts.new(
-        reachable_parser_states,
+        parser_states,
         @scanner_fsa,
         lex_prec,
         @length_precedences,
@@ -1191,11 +1194,9 @@ module Lrama
 
     # Handle PSLR inadequacies
     # Detects and splits states where pseudo-scanner behavior differs
-    # @rbs () -> void
-    def handle_pslr_inadequacies
-      return unless @scanner_fsa && @scanner_accepts_table
-
-      @pslr_inadequacies = detect_pslr_inadequacies
+    # @rbs (Hash[State, Array[State::transition]] transitions) -> void
+    def handle_pslr_inadequacies(transitions)
+      @pslr_inadequacies = detect_pslr_inadequacies(transitions)
       return if @pslr_inadequacies.empty?
 
       @tracer.warn("Detected #{@pslr_inadequacies.size} unresolved PSLR inadequacies") if @tracer.respond_to?(:warn)
@@ -1221,14 +1222,13 @@ module Lrama
     end
 
     # Detect PSLR inadequacies in isocore groups
-    # @rbs () -> Array[State::PslrInadequacy]
-    def detect_pslr_inadequacies
+    # @rbs (Hash[State, Array[State::transition]] transitions) -> Array[State::PslrInadequacy]
+    def detect_pslr_inadequacies(transitions)
       inadequacies = []
 
-      @states.each do |state|
-        state.transitions.each do |transition|
+      transitions.each do |state, outgoing|
+        outgoing.each do |transition|
           next_state = transition.to_state
-          next unless next_state
 
           propagating_lookaheads = state.propagate_lookaheads(next_state.lalr_isocore, filter: false)
           expected_acc = acceptable_tokens_for_pslr(next_state, propagating_lookaheads)
@@ -1259,8 +1259,8 @@ module Lrama
       inadequacies
     end
 
-    # @rbs () -> void
-    def collect_lexical_tie_candidates
+    # @rbs (Array[State] parser_states) -> void
+    def collect_lexical_tie_candidates(parser_states)
       @lexical_tie_candidates = []
       return unless @scanner_fsa
 
@@ -1268,7 +1268,7 @@ module Lrama
       return if pairs.empty?
 
       candidates = Set.new
-      reachable_parser_states.each do |state|
+      parser_states.each do |state|
         pre_tie_tokens = acceptable_tokens_for_pslr(state, nil, expand_ties: false, include_layout: false)
         pairs.each do |left, right|
           next unless pre_tie_tokens.include?(left) ^ pre_tie_tokens.include?(right)
@@ -1282,26 +1282,89 @@ module Lrama
       @lexical_tie_candidates = candidates.to_a.sort
     end
 
-    # @rbs () -> Array[State]
-    def reachable_parser_states
-      return [] if @states.empty?
-
-      visited = Set.new
-      stack = [@states.first]
-      reachable = []
+    # @rbs () -> Hash[State, Array[State::transition]]
+    def reachable_parser_transitions
+      gotos = reducible_gotos
+      stack = @states.take(1)
+      reachable = {} #: Hash[State, Array[State::transition]]
 
       until stack.empty?
         state = stack.pop
-        next if visited.include?(state.id)
+        next if reachable.key?(state)
 
-        visited << state.id
-        reachable << state
-        state.transitions.each do |transition|
-          stack << transition.to_state if transition.to_state
+        transitions = state.selected_term_transitions + state.nterm_transitions.select { |goto| gotos.include?(goto) }
+        reachable[state] = transitions
+        transitions.each { |transition| stack << transition.to_state }
+      end
+
+      reachable.sort_by { |state, _| state.id }.to_h
+    end
+
+    # A goto on A can run after the parser traverses an entire RHS of A
+    # from that goto's source and selects the matching reduction at its end.
+    # @rbs () -> Set[State::Action::Goto]
+    def reducible_gotos
+      pending = [] #: Array[[State::Action::Goto, Array[State::Action::Goto]]]
+      lac = @grammar.parse_lac_full?
+      all_terminals = (1 << terms.size) - 1
+      @states.each do |state|
+        lookbacks = @lookback_relation[state.id]
+        next unless lookbacks
+
+        selected_reduction_lookaheads(state).each do |rule, lookaheads|
+          next if lookaheads.zero?
+          # LAC checks a fetched token before reduction. Unconditional defaults
+          # can run before fetching it, and unchecked actions can clear it.
+          check_follow = lac && lookaheads != all_terminals
+          lookbacks.fetch(rule.id, []).each do |goto|
+            next if check_follow && (@follow_sets.fetch(goto) & lookaheads).zero?
+
+            current = goto.from_state
+            required = [] #: Array[State::Action::Goto]
+            shifts_selected = rule.rhs.all? do |symbol|
+              step = current.transitions_by_symbol_number.fetch(symbol.number)
+              current = step.to_state
+              required << step if step.is_a?(State::Action::Goto)
+              !(step.is_a?(State::Action::Shift) && step.not_selected)
+            end
+            pending << [goto, required] if shifts_selected
+          end
         end
       end
 
-      reachable.sort_by(&:id)
+      viable = Set.new #: Set[State::Action::Goto]
+      waiting = {} #: Hash[State::Action::Goto, Array[[State::Action::Goto, Array[State::Action::Goto]]]]
+      until pending.empty?
+        goto, required = pending.pop
+        next if viable.include?(goto)
+
+        required.pop while !required.empty? && viable.include?(required.last)
+        if (dependency = required.last)
+          (waiting[dependency] ||= []) << [goto, required]
+        else
+          viable << goto
+          pending.concat(waiting.delete(goto) || [])
+        end
+      end
+      viable
+    end
+
+    # A selected shift or explicit error takes priority over reductions.
+    # Among competing reductions the parse table selects the earliest rule.
+    # @rbs (State state) -> Hash[Grammar::Rule, Bitmap::bitmap]
+    def selected_reduction_lookaheads(state)
+      selected = {} #: Hash[Grammar::Rule, Bitmap::bitmap]
+      used = Bitmap.from_array(state.selected_term_transitions.map { |shift| shift.next_sym.number })
+      used |= Bitmap.from_array(state.pslr_error_tokens.map(&:number))
+      state.reduces.sort_by { |reduce| reduce.rule.id }.each do |reduce|
+        lookaheads = Bitmap.from_array(reduce.selected_look_ahead.map(&:number))
+        selected[reduce.rule] = lookaheads & ~used
+        used |= lookaheads
+      end
+      if (default = state.default_reduction_rule)
+        selected[default] |= ((1 << terms.size) - 1) & ~used
+      end
+      selected
     end
 
     # @rbs (Logger logger) -> void
@@ -1329,8 +1392,6 @@ module Lrama
       exit false
     end
 
-    # Pure mode owns lexical analysis completely, so every terminal must
-    # be producible by the pseudo-scanner.
     # @rbs (Logger logger) -> void
     def validate_pslr_pure_coverage!(logger)
       return unless pslr_defined?
@@ -1340,7 +1401,7 @@ module Lrama
       return if uncovered.empty?
 
       logger.error(
-        "api.pslr.lexer generated requires a %token-pattern for every terminal; " \
+        "api.pslr.lexer generated requires a %token-pattern for every input terminal; " \
         "missing: #{uncovered.join(', ')}"
       )
       exit false

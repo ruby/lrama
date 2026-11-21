@@ -4028,7 +4028,6 @@ RSpec.describe Lrama::States do
       from_state = instance_double(
         Lrama::State,
         id: 1,
-        transitions: [transition],
         propagate_lookaheads: propagated,
       )
 
@@ -4040,9 +4039,7 @@ RSpec.describe Lrama::States do
       allow(states).to receive(:acceptable_tokens_for_pslr).with(next_state, propagated).and_return(Set["RANGLE"])
       allow(states).to receive(:acceptable_tokens_for_pslr).with(next_state).and_return(Set["RSHIFT"])
       allow(states).to receive(:acceptable_tokens_for_pslr).with(matching_state).and_return(Set["RANGLE"])
-      states.instance_variable_set(:@states, [from_state])
-
-      inadequacies = states.send(:detect_pslr_inadequacies)
+      inadequacies = states.send(:detect_pslr_inadequacies, { from_state => [transition] })
 
       expect(inadequacies.size).to eq(1)
       expect(inadequacies.first.details[:matching_state_id]).to eq(8)

@@ -57,6 +57,87 @@ RSpec.describe Lrama::States, "PSLR state construction" do
     expect(targets.map(&:lexer_context)).to eq([4])
   end
 
+  it "keeps a character literal distinct from a named token in lexer contexts" do
+    states = states_for(<<~GRAMMAR)
+      %define lr.type pslr
+      %token a Z
+      %lexer-context BEG Z
+      %lexer-context AFTER_WORD a
+      %%
+      start: a Z | 'a' Z;
+    GRAMMAR
+    states.compute
+    states.compute_pslr
+
+    start = states.states.first
+    expect(transition(states, start, "a").lexer_context).to eq(2)
+    expect(transition(states, start, "'a'").lexer_context).to eq(1)
+  end
+
+  it "ignores scanner conflicts reached only through a shift disabled by precedence" do
+    states = states_for(<<~GRAMMAR)
+      %define lr.type pslr
+      %token-pattern X /x/
+      %token-pattern T /t/
+      %token-pattern A /a/
+      %token-pattern B /a/
+      %left T
+      %%
+      start: short T | X T suffix;
+      short: X %prec T;
+      suffix: A | B;
+    GRAMMAR
+    states.compute
+    states.compute_pslr
+
+    expect(states.scanner_accepts_table.conflicts).to be_empty
+    expect(states.pslr_inadequacies).to be_empty
+  end
+
+  it "follows a goto only where its rule can reduce" do
+    states = states_for(<<~GRAMMAR)
+      %define lr.type pslr
+      %token-pattern X /x/
+      %token-pattern Y /y/
+      %token-pattern T /t/
+      %token-pattern A /a/
+      %token-pattern B /a/
+      %left T
+      %%
+      start: short T | X prefix suffix | Y prefix A;
+      short: X %prec T;
+      prefix: nested;
+      nested: T;
+      suffix: A | B;
+    GRAMMAR
+    states.compute
+    states.compute_pslr
+
+    expect(states.scanner_accepts_table.conflicts).to be_empty
+    after_y = transition(states, states.states.first, "Y")
+    after_prefix = transition(states, after_y, "prefix")
+    expect(states.scanner_accepts_table.table.keys.map(&:first)).to include(after_prefix.id)
+  end
+
+  it "excludes gotos whose only lookahead selects a shift over the default reduction" do
+    states = states_for(<<~GRAMMAR)
+      %define lr.type pslr
+      %token-pattern X /x/
+      %token-pattern T /t/
+      %token-pattern A /a/
+      %token-pattern B /a/
+      %right T
+      %%
+      start: short T suffix | X T;
+      short: X %prec T;
+      suffix: A | B;
+    GRAMMAR
+    states.compute
+    states.compute_pslr
+
+    expect(states.scanner_accepts_table.conflicts).to be_empty
+  end
+
   [
     ["empty: %empty %prec HIGH; direct: A %prec OP;", true],
     ["direct: A %prec OP; empty: %empty %prec HIGH;", false],

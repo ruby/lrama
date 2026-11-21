@@ -33,6 +33,7 @@ RSpec.describe "PSLR layout storage" do
       with_parser(<<~GRAMMAR) do |parser|
         %define parse.lac none
         %code provides {
+          #include <stdio.h>
           #define YYSTACK_USE_ALLOCA 1
           static int expected;
           static int invalid_layout;
@@ -53,10 +54,11 @@ RSpec.describe "PSLR layout storage" do
         %%
         start: A;
         %%
-        int main(int argc, char **argv) {
-          if (argc != 2) return 1;
-          expected = (int)strlen(argv[1]) - 1;
-          yypslr_set_input(argv[1], strlen(argv[1]));
+        int main(void) {
+          char input[32768 + 2];
+          if (!fgets(input, sizeof(input), stdin)) return 1;
+          expected = (int)strlen(input) - 1;
+          yypslr_set_input(input, strlen(input));
           if (yyparse() || invalid_layout) return 2;
           expected = 0;
           yypslr_set_input("a", 1);
@@ -64,7 +66,7 @@ RSpec.describe "PSLR layout storage" do
         }
       GRAMMAR
         [" " * 4095, " " * 4096, " " * 32768, " !" * 8192].each do |layout|
-          _out, err, status = Open3.capture3(parser, layout + "a")
+          _out, err, status = Open3.capture3(parser, stdin_data: layout + "a")
           expect(status.success?).to be(true), "#{layout.bytesize} bytes: exit #{status.exitstatus}: #{err}"
         end
       end

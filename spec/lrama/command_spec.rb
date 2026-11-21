@@ -251,6 +251,7 @@ RSpec.describe Lrama::Command do
     context "when validation fails with requested reports" do
       let(:outfile) { File.join(Dir.tmpdir, "invalid-parser.c") }
       let(:report_file) { File.join(Dir.tmpdir, "invalid-parser.output") }
+      let(:diagram_file) { File.join(Dir.tmpdir, "invalid-parser.html") }
 
       before do
         allow(STDIN).to receive(:read).and_return(source)
@@ -259,23 +260,26 @@ RSpec.describe Lrama::Command do
       after do
         File.delete(outfile) if File.exist?(outfile)
         File.delete(report_file) if File.exist?(report_file)
+        File.delete(diagram_file) if File.exist?(diagram_file)
       end
 
       shared_examples "a diagnostic report without parser output" do
-        it "writes the requested report before aborting" do
+        it "writes the requested diagnostics before aborting" do
           command = Lrama::Command.new([
             "--report=pslr,states",
             "--report-file=#{report_file}",
+            "--trace=rules", "--diagram=#{diagram_file}",
             "-o", outfile,
             "-", "invalid.y"
           ])
 
           expect do
             expect { command.run }.to raise_error(SystemExit)
-          end.to output(error_message).to_stderr_from_any_process
+          end.to output(/start -> .*#{error_message}/m).to_stderr_from_any_process
 
           expect(File).to exist(report_file)
           expect(File.read(report_file)).to include(report_message, "State 0")
+          expect(File.read(diagram_file)).to include('<section id="rule-start">')
           expect(File).not_to exist(outfile)
         end
       end

@@ -33,9 +33,9 @@ module Lrama
       grammar = build_grammar(text)
       states, context = compute_status(grammar)
       render_reports(states) if @options.report_file
-      states.validate!(@logger)
       @tracer.trace(grammar)
       render_diagram(grammar)
+      states.validate!(@logger)
       render_output(context, grammar)
       @warnings.warn(grammar, states)
     end

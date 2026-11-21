@@ -1201,6 +1201,16 @@ module Lrama
       location_declarations = location_reset = location_start = location_end = ""
       if @grammar.locations
         location_declarations = <<~C_CODE
+          #ifndef YYPSLR_SET_LOCATION
+          # define YYPSLR_SET_LOCATION(Loc, FirstLine, FirstColumn, LastLine, LastColumn) \\
+            do {                                                                          \\
+              (Loc).first_line = (FirstLine);                                             \\
+              (Loc).first_column = (FirstColumn);                                         \\
+              (Loc).last_line = (LastLine);                                               \\
+              (Loc).last_column = (LastColumn);                                           \\
+            } while (0)
+          #endif
+
           static void
           yypslr_update_location (yypslr_scanner *yypslr_lexer)
           {
@@ -1223,13 +1233,15 @@ module Lrama
         C_CODE
         location_start = <<~C_CODE
             yypslr_update_location (yypslr_lexer);
-            yyllocp->first_line = yypslr_lexer->input.line + 1;
-            yyllocp->first_column = yypslr_lexer->input.column + 1;
+            yypslr_first_line = yypslr_lexer->input.line + 1;
+            yypslr_first_column = yypslr_lexer->input.column + 1;
         C_CODE
         location_end = <<~C_CODE
             yypslr_update_location (yypslr_lexer);
-            yyllocp->last_line = yypslr_lexer->input.line + 1;
-            yyllocp->last_column = yypslr_lexer->input.column + 1;
+            YYPSLR_SET_LOCATION (*yyllocp, yypslr_first_line, yypslr_first_column,
+                                 yypslr_lexer->input.line + 1, yypslr_lexer->input.column + 1);
+            YY_USE (yypslr_first_line);
+            YY_USE (yypslr_first_column);
         C_CODE
       end
 
@@ -1278,6 +1290,7 @@ module Lrama
           yypslr_scanner *yypslr_lexer = yypslr_current ();
           int yypslr_token;
           int yypslr_length;
+        #{@grammar.locations ? "  int yypslr_first_line, yypslr_first_column;" : ""}
         #{lex_param_use}
 
           if (yypslr_has_input)

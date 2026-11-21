@@ -179,8 +179,12 @@ Two operating modes are supported. In pure mode (`%define api.pslr.lexer generat
 lexical analysis: `yylex` is generated, layout tokens are skipped with their text accumulated, `%token-action`
 bodies build semantic values from `yytext`/`yyleng`, and the caller hands the input to the parser with
 `yypslr_set_input(input, len)` before `yyparse`. Set the input on the thread that will parse it. A nested
-`yyparse` call uses its own input cursor, source location, and layout buffer. Pure mode requires a
-`%token-pattern` for every terminal.
+`yyparse` call uses its own input cursor, source location, and layout buffer. In pure mode, each input terminal
+used on the right-hand side of a rule needs an explicit or implicit token pattern. A symbol used only in
+`%prec` supplies precedence without adding a scanner rule.
+With `%locations`, the generated lexer reports one-based lines and byte columns, with an exclusive end.
+To populate a custom `YYLTYPE`, define `YYPSLR_SET_LOCATION(Loc, FirstLine, FirstColumn, LastLine, LastColumn)`
+in `%code requires` and assign the coordinates to `Loc`.
 In bridge mode, `%define api.pslr.state-member` names the field in the first parser parameter that stores the
 current parser state. An existing hand-written lexer consults the pseudo-scanner
 through helper macros such as `YYPSLR_PSEUDO_SCAN(Context, Input, InputLen, MatchLength)`; terminals without a

@@ -635,7 +635,41 @@ RSpec.describe Lrama::Grammar do
     end
   end
 
+  describe "#uncovered_pslr_terminals" do
+    it "requires patterns for input terminals and skips precedence-only symbols" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "precedence_only.y").parse
+        %define lr.type pslr
+        %define api.pslr.lexer generated
+        %token-pattern NUM /[0-9]+/
+        %precedence UMINUS
+        %precedence OP
+        %%
+        expr: NUM | '-' expr %prec UMINUS | expr OP expr;
+      GRAMMAR
+      grammar.prepare
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      expect(grammar.uncovered_pslr_terminals).to eq(["OP"])
+    end
+  end
+
   describe "#synthesize_implicit_literal_token_patterns!" do
+    it "matches the decoded bytes of a quoted string literal" do
+      grammar = Lrama::Parser.new(<<~'GRAMMAR', "implicit_string.y").parse
+        %define lr.type pslr
+        %symbol-set delimiters "\n\042\\\x2b\u002e"
+        %%
+        start: "\n\042\\\x2b\u002e";
+      GRAMMAR
+      grammar.prepare
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      scanner = Lrama::ScannerFSA.new(grammar.token_patterns)
+      literal = grammar.rules.last.rhs.first.name
+      expect(scanner.scan("\n\"\\+.").map { |match| match[:token].name }).to eq([literal])
+      expect(scanner.scan(literal[1..-2])).to be_empty
+    end
+
     it "adds exact-match token patterns for character literal terminals" do
       grammar = Lrama::Parser.new(<<~GRAMMAR, "implicit_literal.y").parse
         %define lr.type pslr
