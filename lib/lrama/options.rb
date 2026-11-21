@@ -21,6 +21,7 @@ module Lrama
     attr_accessor :diagram #: bool
     attr_accessor :diagram_file #: String
     attr_accessor :profile_opts #: Hash[Symbol, bool]?
+    attr_accessor :color #: Symbol
 
     # @rbs () -> void
     def initialize
@@ -41,6 +42,7 @@ module Lrama
       @diagram = false
       @diagram_file = "diagram.html"
       @profile_opts = nil
+      @color = :auto
     end
   end
 end
