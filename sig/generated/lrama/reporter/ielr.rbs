@@ -1,0 +1,42 @@
+# Generated from lib/lrama/reporter/ielr.rb with RBS::Inline
+
+module Lrama
+  class Reporter
+    class Ielr
+      # @rbs (?ielr: bool, **bool _) -> void
+      def initialize: (?ielr: bool, **bool _) -> void
+
+      # @rbs (IO io, Lrama::States states) -> void
+      def report: (IO io, Lrama::States states) -> void
+
+      private
+
+      # @rbs (Lrama::States states) -> Array[Lrama::State]
+      def lalr_isocores_with_splits: (Lrama::States states) -> Array[Lrama::State]
+
+      # @rbs (Lrama::States states) -> Hash[Lrama::State, Array[Lrama::State::Action::Shift | Lrama::State::Action::Goto]]
+      def build_incoming_transitions: (Lrama::States states) -> Hash[Lrama::State, Array[Lrama::State::Action::Shift | Lrama::State::Action::Goto]]
+
+      # @rbs (IO io, Lrama::State lalr_isocore, Hash[Integer, String] token_names) -> void
+      def report_isocore_set: (IO io, Lrama::State lalr_isocore, Hash[Integer, String] token_names) -> void
+
+      # @rbs (IO io, Array[Lrama::State] isocores) -> void
+      def report_incoming_transitions: (IO io, Array[Lrama::State] isocores) -> void
+
+      # @rbs (IO io, Array[Lrama::State] isocores, Hash[Integer, String] token_names) -> void
+      def report_item_lookahead_differences: (IO io, Array[Lrama::State] isocores, Hash[Integer, String] token_names) -> void
+
+      # @rbs (IO io, Array[Lrama::State] isocores) -> void
+      def report_dominant_contributions: (IO io, Array[Lrama::State] isocores) -> void
+
+      # @rbs (Array[Lrama::State::InadequacyAnnotation::action]? dominant_contribution) -> String
+      def format_dominant_contribution: (Array[Lrama::State::InadequacyAnnotation::action]? dominant_contribution) -> String
+
+      # @rbs (Lrama::State::InadequacyAnnotation::action action) -> String
+      def format_action: (Lrama::State::InadequacyAnnotation::action action) -> String
+
+      # @rbs (Lrama::State isocore) -> String
+      def isocore_label: (Lrama::State isocore) -> String
+    end
+  end
+end
