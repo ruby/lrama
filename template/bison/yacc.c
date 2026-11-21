@@ -1924,7 +1924,6 @@ yysetstate:
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
         YYSTACK_RELOCATE (yyls_alloc, yyls);
-#  undef YYSTACK_RELOCATE
         if (yyss1 != yyssa)
           YYSTACK_FREE (yyss1);
       }
@@ -2374,9 +2373,10 @@ yyreturnlab:
                   YY_ACCESSING_SYMBOL (+*yyssp), yyvsp, yylsp<%= output.user_args %>);
       YYPOPSTACK (1);
     }
-#ifndef yyoverflow
+#if !defined yyoverflow && defined YYSTACK_RELOCATE
   if (yyss != yyssa)
     YYSTACK_FREE (yyss);
+# undef YYSTACK_RELOCATE
 #endif
   if (yymsg != yymsgbuf)
     YYSTACK_FREE (yymsg);
