@@ -2,7 +2,7 @@ class Lrama::Parser
   expect 0
   error_on_expect_mismatch
 
-  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG
+  token C_DECLARATION CHARACTER IDENT_COLON IDENTIFIER INTEGER STRING TAG REGEX
 
 rule
 
@@ -10,7 +10,7 @@ rule
         {
           ary = []
           ary.concat(val[0]) if val[0]
-          ary.concat(val[1]) if val[1]
+          ary.concat(val[1].flatten) if val[1]
           ary.concat(val[3].flatten)
           ary.append(val[4]) if val[4]
           result = ary
@@ -187,6 +187,36 @@ rule
         {
           result = Grammar::Node::TokenDecl.new(tokens: val[1], location: merge_locations(val[0].loc, val[1].last.loc))
         }
+    | "%token-pattern" token_pattern_declarations
+        { result = val[1] }
+    | "%token-action" token_action_declaration+
+        { result = val[1] }
+    | "%symbol-set" IDENTIFIER symbol+
+        {
+          result = Grammar::Node::SymbolSetDecl.new(
+            name: val[1].s_value, symbols: val[2], location: merge_locations(val[0].loc, val[2].last.loc)
+          )
+        }
+    | "%lexer-context" IDENTIFIER symbol+
+        {
+          result = Grammar::Node::LexerContextDecl.new(
+            name: val[1].s_value, symbols: val[2], location: merge_locations(val[0].loc, val[2].last.loc)
+          )
+        }
+    | "%lex-prec" lex_prec_chain
+        { result = val[1] }
+    | "%lex-tie" symbol symbol+
+        {
+          result = Grammar::Node::LexTieDecl.new(
+            kind: :tie, operands: [val[1]] + val[2], location: merge_locations(val[0].loc, val[2].last.loc)
+          )
+        }
+    | "%lex-no-tie" symbol symbol+
+        {
+          result = Grammar::Node::LexTieDecl.new(
+            kind: :no_tie, operands: [val[1]] + val[2], location: merge_locations(val[0].loc, val[2].last.loc)
+          )
+        }
     | "%type" symbol_declarations
         {
           result = Grammar::Node::TypeDecl.new(
@@ -262,6 +292,80 @@ rule
           result = Grammar::Node::Token.new(
             id: val[0], token_id: val[1]&.s_value, alias_name: val[2]&.s_value,
             location: merge_locations(val[0].loc, val[1]&.loc, val[2]&.loc)
+          )
+        }
+
+  token_pattern_declarations:
+      TAG? token_pattern_declaration+
+        {
+          val[1].each { |pattern| pattern.tag = val[0] }
+          result = val[1]
+        }
+    | token_pattern_declarations TAG token_pattern_declaration+
+        {
+          val[2].each { |pattern| pattern.tag = val[1] }
+          result = val[0].concat(val[2])
+        }
+
+  token_pattern_declaration:
+      IDENTIFIER REGEX alias
+        {
+          result = Grammar::Node::TokenPatternDecl.new(
+            id: val[0], pattern: val[1], alias_name: val[2]&.s_value,
+            location: merge_locations(val[0].loc, val[1].loc, val[2]&.loc)
+          )
+        }
+
+  lex_prec_chain:
+      symbol lex_prec_op symbol
+        {
+          result = [Grammar::Node::LexPrecDecl.new(
+            left: val[0], operator: val[1], right: val[2], location: merge_locations(val[0].loc, val[2].loc)
+          )]
+        }
+    | lex_prec_chain lex_prec_op symbol
+        {
+          left = val[0].last.right
+          result = val[0] << Grammar::Node::LexPrecDecl.new(
+            left: left, operator: val[1], right: val[2], location: merge_locations(left.loc, val[2].loc)
+          )
+        }
+
+  lex_prec_op:
+      "<~"
+        {
+          result = Lrama::Grammar::LexPrec::IDENTITY_RIGHT_LONGEST
+        }
+    | "<-"
+        {
+          result = Lrama::Grammar::LexPrec::IDENTITY_RIGHT
+        }
+    | "-~"
+        {
+          result = Lrama::Grammar::LexPrec::LONGEST
+        }
+    | "<<"
+        {
+          result = Lrama::Grammar::LexPrec::TOKEN_RIGHT
+        }
+    | "-<"
+        {
+          result = Lrama::Grammar::LexPrec::TOKEN_RIGHT_LENGTH
+        }
+    | "<s"
+        {
+          result = Lrama::Grammar::LexPrec::IDENTITY_RIGHT_SHORTEST
+        }
+    | "-s"
+        {
+          result = Lrama::Grammar::LexPrec::SHORTEST
+        }
+
+  token_action_declaration:
+      IDENTIFIER param
+        {
+          result = Grammar::Node::TokenActionDecl.new(
+            id: val[0], code: val[1], location: merge_locations(val[0].loc, val[1].loc)
           )
         }
 

@@ -76,6 +76,12 @@ module Lrama
       # @rbs () -> bool
       def character?: () -> bool
 
+      # @rbs () -> Integer
+      def character_code: () -> Integer
+
+      # @rbs () -> String?
+      def string_literal: () -> String?
+
       # @rbs () -> bool
       def eof_symbol?: () -> bool
 
@@ -111,6 +117,11 @@ module Lrama
       #
       # @rbs () -> String?
       def comment: () -> String?
+
+      private
+
+      # @rbs (String spelling) -> Integer?
+      def literal_character_code: (String spelling) -> Integer?
     end
   end
 end

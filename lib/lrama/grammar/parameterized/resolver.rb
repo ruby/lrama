@@ -7,11 +7,13 @@ module Lrama
       class Resolver
         attr_accessor :rules #: Array[Rule]
         attr_accessor :created_lhs_list #: Array[Grammar::Symbol::Id]
+        attr_reader :expansion_args #: Hash[String, Array[String]]
 
         # @rbs () -> void
         def initialize
           @rules = []
           @created_lhs_list = []
+          @expansion_args = {}
         end
 
         # @rbs (Rule rule) -> Array[Rule]
@@ -32,6 +34,14 @@ module Lrama
         # @rbs (String lhs_s_value) -> Grammar::Symbol::Id?
         def created_lhs(lhs_s_value)
           @created_lhs_list.reverse.find { |created_lhs| created_lhs.name == lhs_s_value }
+        end
+
+        # Register the argument symbol names for a parameterized rule expansion.
+        # Used by LexerContextClassifier to inherit context from arguments.
+        #
+        # @rbs (String lhs_s_value, Array[String] args) -> void
+        def register_expansion_args(lhs_s_value, args)
+          @expansion_args[lhs_s_value] = args
         end
 
         # @rbs () -> Array[Rule]

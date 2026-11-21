@@ -21,6 +21,30 @@ RSpec.describe Lrama::Grammar do
     end
   end
 
+  describe '#add_lexer_context' do
+    before do
+      64.times { |index| grammar.add_lexer_context(name: "CTX#{index}", symbols: []) }
+    end
+
+    it 'supports all 64 context bits' do
+      expect(grammar.lexer_contexts.fetch("CTX63").bitmask).to eq(1 << 63)
+    end
+
+    it 'rejects a context that exceeds the generated mask capacity' do
+      expect { grammar.add_lexer_context(name: "OVERFLOW", symbols: []) }
+        .to raise_error("%lexer-context supports at most 64 distinct contexts")
+      expect(grammar.lexer_contexts.size).to eq(64)
+    end
+
+    it 'allows an existing context to be extended at capacity' do
+      symbol = Lrama::Lexer::Token::Ident.new(s_value: "NUM")
+      context = grammar.add_lexer_context(name: "CTX63", symbols: [symbol])
+
+      expect(context.symbols).to eq([symbol])
+      expect(grammar.lexer_contexts.size).to eq(64)
+    end
+  end
+
   describe '#validate!' do
     let(:grammar_file) { Lrama::Lexer::GrammarFile.new('parse.y', '') }
 
@@ -240,6 +264,487 @@ RSpec.describe Lrama::Grammar do
             expect(error.message).not_to include("tIDENT")
           end
       end
+    end
+
+    context 'when PSLR state member is not a valid C identifier' do
+      before do
+        grammar.define = {
+          'lr.type' => 'pslr',
+          'api.pslr.state-member' => 'current-state'
+        }
+      end
+
+      it 'raises an error with the invalid member name' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, '%define api.pslr.state-member must be a valid C identifier, got "current-state".')
+      end
+    end
+
+    context 'when PSLR max states is not an integer' do
+      before do
+        grammar.define = {
+          'lr.type' => 'pslr',
+          'pslr.max-states' => 'many'
+        }
+      end
+
+      it 'raises an error with the invalid value' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, '%define pslr.max-states must be an integer, got "many".')
+      end
+    end
+
+    context 'when PSLR max state ratio is smaller than one' do
+      before do
+        grammar.define = {
+          'lr.type' => 'pslr',
+          'pslr.max-state-ratio' => '0.5'
+        }
+      end
+
+      it 'raises an error with the invalid ratio' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, '%define pslr.max-state-ratio must be greater than or equal to 1.0, got "0.5".')
+      end
+    end
+
+    context 'when pslr.tables has an unknown value' do
+      before do
+        grammar.define = {
+          'lr.type' => 'pslr',
+          'pslr.tables' => 'lalr'
+        }
+      end
+
+      it 'raises an error' do
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, '%define pslr.tables must be "ielr" or "canonical-lr", got "lalr".')
+      end
+    end
+
+    context 'when a layout token appears in a grammar rule' do
+      it 'raises an error' do
+        y = <<~GRAMMAR
+          %define lr.type pslr
+          %token-pattern ID /[a-z]+/
+          %token-pattern YYLAYOUT_WS /[ ]+/
+          %%
+          program: ID YYLAYOUT_WS ID
+        GRAMMAR
+        grammar = Lrama::Parser.new(y, "layout_in_rule.y").parse
+        grammar.prepare
+
+        expect { grammar.validate! }
+          .to raise_error(RuntimeError, /layout token YYLAYOUT_WS must not appear in a grammar rule/)
+      end
+    end
+  end
+
+  it "rejects lexer context names that cannot be used in generated C macros" do
+    expect { grammar.add_lexer_context(name: "in-string", symbols: []) }
+      .to raise_error(/%lexer-context.*C identifier/)
+  end
+
+  describe "#finalize_lexical_declarations!" do
+    it "resolves quoted aliases to canonical token ids" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "lex_prec_alias.y").parse
+        %token-pattern ID /[a-z]+/ "identifier"
+        %token-pattern IF /if/ "if"
+        %lex-prec "identifier" <~ "if"
+        %%
+        start: ID | IF ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      grammar.finalize_lexical_declarations!
+
+      expect(grammar.lex_prec.rules.map {|rule| [rule.left_name, rule.right_name] }).to eq([["ID", "IF"]])
+      expect(grammar.lex_prec.identity_precedes?("IF", "ID")).to be true
+      expect(grammar.lex_prec.longest_pair?("ID", "IF")).to be true
+    end
+
+    it "resolves an alias first mentioned before its token pattern" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "forward_alias.y").parse
+        %symbol-set words "word"
+        %lex-prec words -~ "word"
+        %lex-tie "word" OTHER
+        %token-pattern OTHER /other/
+        %token-pattern WORD /word/ "word"
+        %%
+        start: "word";
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+      grammar.finalize_lexical_declarations!
+
+      expect(grammar.rules.last.rhs).to eq([grammar.find_symbol_by_s_value!("WORD")])
+      expect(grammar.lex_prec.rules.map(&:left_name)).to eq(["WORD"])
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+      expect(grammar.lex_tie.tied?("WORD", "OTHER")).to be true
+    end
+
+    it "resolves aliases in symbol sets and keeps literal terminals" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "symbol_set_alias.y").parse
+        %token-pattern ID /[a-z]+/
+        %token-pattern IF /if/ "if"
+        %symbol-set keywords "if" ';'
+        %lex-prec ID <~ keywords
+        %%
+        start: ID | IF | ';' ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      grammar.finalize_lexical_declarations!
+
+      expect(grammar.symbol_sets.fetch("keywords").map(&:s_value)).to eq(["IF", "';'"])
+      expect(grammar.lex_prec.rules.map {|rule| [rule.left_name, rule.right_name] }).to eq([["ID", "IF"], ["ID", "';'"]])
+    end
+
+    it "expands yyall after later token patterns and implicit literals are registered" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "lex_prec_yyall.y").parse
+        %lex-prec yyall -~ yyall
+        %token-pattern IF /if/ "if"
+        %%
+        start: IF ';' ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      grammar.finalize_lexical_declarations!
+
+      expect(grammar.lex_prec.rules.map {|rule| [rule.left_name, rule.right_name] }).to contain_exactly(
+        ["IF", "IF"], ["IF", "';'"], ["';'", "IF"], ["';'", "';'"]
+      )
+    end
+  end
+
+  describe "#finalize_lexical_ties!" do
+    def build_pslr_grammar(source)
+      grammar = Lrama::Parser.new(source, "lex_tie.y").parse
+      grammar.prepare
+      grammar.validate!
+      grammar
+    end
+
+    it "keeps token-token ties even without a scanner conflict" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern A /a/
+        %token-pattern B /b/
+        %lex-tie A B
+        %%
+        start: A | B ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("A", "B")).to be true
+    end
+
+    it "preserves transitive ties through terminals without scanner patterns" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token ID NAME
+        %token-pattern IF /if/
+        %lex-tie ID NAME
+        %lex-tie NAME IF
+        %lex-no-tie yyall yyall
+        %%
+        start: ID | NAME | IF ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      %w[ID NAME IF].each do |name|
+        expect(grammar.lex_tie.tied_names(name)).to contain_exactly("ID", "NAME", "IF")
+      end
+    end
+
+    it "rejects no-ties conflicting with transitive ties through external terminals" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token ID NAME
+        %token-pattern IF /if/
+        %lex-tie ID NAME
+        %lex-tie NAME IF
+        %lex-no-tie ID IF
+        %%
+        start: ID | NAME | IF ;
+      GRAMMAR
+
+      expect do
+        grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+      end.to raise_error(RuntimeError, /%lex-no-tie ID IF conflicts/)
+    end
+
+    it "includes patterns tied to external terminals in normal scanner rows" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token ID
+        %token-pattern IF /if/
+        %token-pattern OTHER /[a-z]+/
+        %lex-tie ID IF
+        %lex-prec OTHER <~ IF
+        %%
+        start: ID | OTHER ;
+      GRAMMAR
+      states = Lrama::States.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.compute_pslr
+
+      accepting = states.scanner_fsa.states.find { |state| state.accepting_tokens.any? { |token| token.name == "IF" } }
+      expect(states.scanner_accepts_table[0, accepting.id].name).to eq("IF")
+    end
+
+    ["lex-tie", "lex-no-tie"].each do |directive|
+      ['"if"', "keywords"].each do |operand|
+        it "resolves #{directive} aliases in #{operand}" do
+          grammar = build_pslr_grammar(<<~GRAMMAR)
+            %define lr.type pslr
+            %token-pattern ID /[a-z]+/ "identifier"
+            %token-pattern IF /if/ "if"
+            %symbol-set keywords "if"
+            %#{directive} "identifier" #{operand}
+            %%
+            start: ID | IF ;
+          GRAMMAR
+
+          expect(grammar.lex_tie.declarations.first.groups.map(&:names)).to eq([["ID"], ["IF"]])
+          grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+          expect(grammar.lex_tie.tied?("ID", "IF")).to eq(directive == "lex-tie")
+          expect(grammar.lex_tie.no_tie?("ID", "IF")).to eq(directive == "lex-no-tie")
+        end
+      end
+
+      it "expands #{directive} yyall after implicit literal synthesis" do
+        grammar = build_pslr_grammar(<<~GRAMMAR)
+          %define lr.type pslr
+          %#{directive} yyall yyall
+          %token-pattern PLUSPLUS /\\+\\+/
+          %%
+          start: PLUSPLUS | '+' ;
+        GRAMMAR
+        grammar.synthesize_implicit_literal_token_patterns!
+
+        grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+        expect(grammar.lex_tie.tied?("PLUSPLUS", "'+'")).to eq(directive == "lex-tie")
+        expect(grammar.lex_tie.no_tie?("PLUSPLUS", "'+'")).to eq(directive == "lex-no-tie")
+      end
+    end
+
+    it "limits set-set ties to scanner-conflicting pairs" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern RANGLE />/
+        %token-pattern RSHIFT />>/
+        %token-pattern DOT /\\./
+        %token-pattern COMMA /,/
+        %symbol-set punct RANGLE RSHIFT DOT COMMA
+        %lex-tie punct punct
+        %%
+        start: RANGLE | RSHIFT | DOT | COMMA ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("RANGLE", "RSHIFT")).to be true
+      expect(grammar.lex_tie.tied?("DOT", "COMMA")).to be false
+    end
+
+    it "limits set-token ties to scanner-conflicting pairs" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern ID /[a-z]+/
+        %token-pattern KW_IF /if/
+        %token-pattern KW_WHILE /while/
+        %token-pattern PLUS /\\+/
+        %symbol-set keywords KW_IF KW_WHILE
+        %lex-tie ID keywords
+        %lex-tie PLUS keywords
+        %%
+        start: ID | KW_IF | KW_WHILE | PLUS ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("ID", "KW_IF")).to be true
+      expect(grammar.lex_tie.tied?("ID", "KW_WHILE")).to be true
+      expect(grammar.lex_tie.tied?("PLUS", "KW_IF")).to be false
+      expect(grammar.lex_tie.tied?("PLUS", "KW_WHILE")).to be false
+    end
+
+    it "limits yyall ties to scanner-conflicting pairs" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern PLUS /\\+/
+        %token-pattern PLUSPLUS /\\+\\+/
+        %token-pattern DOT /\\./
+        %token-pattern SLASH /\\//
+        %lex-tie yyall yyall
+        %%
+        start: PLUS | PLUSPLUS | DOT | SLASH ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("PLUS", "PLUSPLUS")).to be true
+      expect(grammar.lex_tie.tied?("DOT", "SLASH")).to be false
+      expect(grammar.lex_tie.tied?("PLUS", "DOT")).to be false
+      expect(grammar.lex_tie.tied?("SLASH", "PLUSPLUS")).to be false
+    end
+
+    it "lets a specific tie override generic yyall no-tie" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern IF /if/
+        %token-pattern ID /[a-z]+/
+        %symbol-set keywords IF
+        %lex-no-tie yyall yyall
+        %lex-tie ID keywords
+        %%
+        start: IF | ID ;
+      GRAMMAR
+
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+
+      expect(grammar.lex_tie.tied?("ID", "IF")).to be true
+      expect(grammar.lex_tie.no_tie?("ID", "IF")).to be false
+    end
+
+    it "rejects a direct no-tie that conflicts with transitive ties" do
+      grammar = build_pslr_grammar(<<~GRAMMAR)
+        %define lr.type pslr
+        %token-pattern A /a/
+        %token-pattern B /a/
+        %token-pattern C /a/
+        %lex-tie A B
+        %lex-tie B C
+        %lex-no-tie A C
+        %%
+        start: A | B | C ;
+      GRAMMAR
+
+      expect do
+        grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+      end.to raise_error(RuntimeError, /%lex-no-tie A C conflicts/)
+    end
+  end
+
+  describe "#uncovered_pslr_terminals" do
+    it "requires patterns for input terminals and skips precedence-only symbols" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "precedence_only.y").parse
+        %define lr.type pslr
+        %define api.pslr.lexer generated
+        %token-pattern NUM /[0-9]+/
+        %precedence UMINUS
+        %precedence OP
+        %%
+        expr: NUM | '-' expr %prec UMINUS | expr OP expr;
+      GRAMMAR
+      grammar.prepare
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      expect(grammar.uncovered_pslr_terminals).to eq(["OP"])
+    end
+  end
+
+  describe "#synthesize_implicit_literal_token_patterns!" do
+    it "matches the decoded bytes of a quoted string literal" do
+      grammar = Lrama::Parser.new(<<~'GRAMMAR', "implicit_string.y").parse
+        %define lr.type pslr
+        %symbol-set delimiters "\n\042\\\x2b\u002e"
+        %%
+        start: "\n\042\\\x2b\u002e";
+      GRAMMAR
+      grammar.prepare
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      scanner = Lrama::ScannerFSA.new(grammar.token_patterns)
+      literal = grammar.rules.last.rhs.first.name
+      expect(scanner.scan("\n\"\\+.").map { |match| match[:token].name }).to eq([literal])
+      expect(scanner.scan(literal[1..-2])).to be_empty
+    end
+
+    it "adds exact-match token patterns for character literal terminals" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "implicit_literal.y").parse
+        %define lr.type pslr
+        %token-pattern ID /[a-z]+/
+        %%
+        start: ID ';' ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      literal_pattern = grammar.token_patterns.find {|pattern| pattern.name == "';'" }
+      expect(literal_pattern).not_to be_nil
+      expect(Lrama::ScannerFSA.new(grammar.token_patterns).scan(";").map {|result| result[:token].name }).to include("';'")
+    end
+
+    it "escapes regex metacharacters in character literal patterns" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "implicit_escape.y").parse
+        %define lr.type pslr
+        %token-pattern ID /[a-z]+/
+        %%
+        start
+          : ID '/'
+          | ID '['
+          | ID ']'
+          | ID '+'
+          ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      slash = grammar.token_patterns.find {|p| p.name == "'/'" }
+      lbracket = grammar.token_patterns.find {|p| p.name == "'['" }
+      rbracket = grammar.token_patterns.find {|p| p.name == "']'" }
+      plus = grammar.token_patterns.find {|p| p.name == "'+'" }
+
+      expect(slash).not_to be_nil
+      expect(slash.regex_pattern).to eq("\\/")
+      expect(lbracket).not_to be_nil
+      expect(lbracket.regex_pattern).to eq("\\[")
+      expect(rbracket).not_to be_nil
+      expect(rbracket.regex_pattern).to eq("\\]")
+      expect(plus).not_to be_nil
+      expect(plus.regex_pattern).to eq("\\+")
+    end
+
+    it "handles backslash and control character literals" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "implicit_ctrl.y").parse
+        %define lr.type pslr
+        %token-pattern ID /[a-z]+/
+        %%
+        start
+          : ID '\\\\'
+          | ID '\\n'
+          | ID '\\t'
+          ;
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+
+      grammar.synthesize_implicit_literal_token_patterns!
+
+      backslash = grammar.token_patterns.find {|p| p.name == "'\\\\'" }
+      newline = grammar.token_patterns.find {|p| p.name == "'\\n'" }
+      tab = grammar.token_patterns.find {|p| p.name == "'\\t'" }
+
+      expect(backslash).not_to be_nil
+      expect(backslash.regex_pattern).to eq("\\\\")
+      expect(newline).not_to be_nil
+      expect(newline.regex_pattern).to eq("\\n")
+      expect(tab).not_to be_nil
+      expect(tab.regex_pattern).to eq("\\t")
     end
   end
 end

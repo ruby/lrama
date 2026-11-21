@@ -536,6 +536,19 @@ RSpec.describe Lrama::Lexer do
     MSG
   end
 
+  it 'preserves regex text after a multibyte comment' do
+    text = "/* 日本語 */\n%token-pattern ID /[a-z]+/\n%%"
+    grammar_file = Lrama::Lexer::GrammarFile.new("multibyte.y", text)
+    lexer = Lrama::Lexer.new(grammar_file)
+    2.times { lexer.next_token }
+
+    type, token = lexer.next_token
+
+    expect(type).to eq(:REGEX)
+    expect(token.s_value).to eq('/[a-z]+/')
+    expect(token.pattern).to eq('[a-z]+')
+  end
+
   [%q('\''), %q('\"'), %q('\a'), %q('\?'), %q('\1'), %q('\12'), %q('\101'), %q('\x41')].each do |literal|
     it "lexes the escaped character literal #{literal.inspect}" do
       grammar_file = Lrama::Lexer::GrammarFile.new("character.y", "#{literal} NEXT")
