@@ -55,7 +55,7 @@ module Lrama
     #
     # @rbs (Grammar::Symbol sym) -> Integer
     def classify_symbol_context(sym)
-      name = sym.id.s_value
+      name = sym.name
       # Also try without surrounding quotes for single-char tokens
       bare = name.gsub(/\A["']|["']\z/, "")
 

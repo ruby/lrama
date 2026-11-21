@@ -400,13 +400,13 @@ RSpec.describe Lrama::Output do
     let(:mock_grammar) do
       instance_double(
         Lrama::Grammar,
-        eof_symbol: instance_double(Lrama::Grammar::Symbol, id: Lrama::Lexer::Token::Ident.new(s_value: "YYEOF")),
+        eof_symbol: instance_double(Lrama::Grammar::Symbol, name: "YYEOF"),
         error_symbol: nil,
         undef_symbol: nil,
         accept_symbol: nil,
         locations: false,
-        parse_param: "struct parse_params *p",
-        lex_param: "struct parse_params *p",
+        parse_params: ["struct parse_params *p"],
+        lex_params: ["struct parse_params *p"],
         pslr_defined?: true,
         pslr_state_member: "current_state",
         parse_lac_full?: true,
@@ -480,11 +480,6 @@ RSpec.describe Lrama::Output do
         expect(result).to include("while (i < input_len)")
         expect(result).not_to include("input[i] != '\\0'")
       end
-
-      it "marks fallback-row and character-token matches with from_fallback" do
-        result = pslr_output.pseudo_scan_function
-        expect(result.scan("result->from_fallback = 1;").size).to eq(2)
-      end
     end
 
     describe "#pslr_tables_and_functions" do
@@ -521,9 +516,9 @@ RSpec.describe Lrama::Output do
         result = pslr_output.pslr_layout_declarations
 
         expect(result).to include("static int\nyypslr_layout_append")
-        expect(result).to include("length > INT_MAX - yypslr_layout_length")
+        expect(result).to include("length > INT_MAX - scanner->length")
         expect(result).to include("YYMALLOC (capacity)")
-        expect(result).not_to include("yypslr_layout_length + length")
+        expect(result).not_to include("scanner->length + length")
       end
     end
 

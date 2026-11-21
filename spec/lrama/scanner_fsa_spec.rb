@@ -193,7 +193,7 @@ RSpec.describe Lrama::ScannerFSA do
   end
 
   describe "pattern validation" do
-    ["^foo", "foo$", "^foo$", "f^oo", "fo$o", "(foo|^bar)", "(foo$)bar"].each do |pattern|
+    ["^foo", "foo$", "^foo$", "f^oo", "foo$bar", "(foo|^bar)", "(foo$)bar"].each do |pattern|
       it "rejects unsupported anchors in #{pattern.inspect}" do
         expect { Lrama::ScannerFSA.new([token_pattern("ANCHORED", pattern, lineno: 14)]) }
           .to raise_error(Lrama::ScannerFSA::PatternError, /ANCHORED at line 14.*anchors are not supported.*offset/m)

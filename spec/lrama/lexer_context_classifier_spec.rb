@@ -71,7 +71,7 @@ RSpec.describe Lrama::LexerContextClassifier do
 
     it "classifies operator-like terminals" do
       %w[tPLUS tMINUS].each do |name|
-        sym = double("symbol", id: double("id", s_value: name), term?: true)
+        sym = double("symbol", name: name, term?: true)
         ctx = classifier.classify_symbol_context(sym)
         # BEG = 1 << 0 = 0x01
         expect(ctx).to eq(0x01), "Expected #{name} to be BEG"
@@ -80,7 +80,7 @@ RSpec.describe Lrama::LexerContextClassifier do
 
     it "classifies identifier terminals as CMDARG" do
       %w[tIDENTIFIER tFID tCONSTANT].each do |name|
-        sym = double("symbol", id: double("id", s_value: name), term?: true)
+        sym = double("symbol", name: name, term?: true)
         ctx = classifier.classify_symbol_context(sym)
         # CMDARG = 1 << 1 = 0x02
         expect(ctx).to eq(0x02), "Expected #{name} to be CMDARG"
@@ -89,7 +89,7 @@ RSpec.describe Lrama::LexerContextClassifier do
 
     it "classifies literal terminals as END" do
       %w[tINTEGER tFLOAT tSTRING_END].each do |name|
-        sym = double("symbol", id: double("id", s_value: name), term?: true)
+        sym = double("symbol", name: name, term?: true)
         ctx = classifier.classify_symbol_context(sym)
         # END = 1 << 2 = 0x04
         expect(ctx).to eq(0x04), "Expected #{name} to be END"
@@ -97,7 +97,7 @@ RSpec.describe Lrama::LexerContextClassifier do
     end
 
     it "classifies keyword_def as ENDFN" do
-      sym = double("symbol", id: double("id", s_value: "keyword_def"), term?: true)
+      sym = double("symbol", name: "keyword_def", term?: true)
       ctx = classifier.classify_symbol_context(sym)
       # ENDFN = 1 << 3 = 0x08
       expect(ctx).to eq(0x08)
@@ -105,7 +105,7 @@ RSpec.describe Lrama::LexerContextClassifier do
 
     it "classifies dot tokens as DOT" do
       %w[tDOT tCOLON2 tANDDOT].each do |name|
-        sym = double("symbol", id: double("id", s_value: name), term?: true)
+        sym = double("symbol", name: name, term?: true)
         ctx = classifier.classify_symbol_context(sym)
         # DOT = 1 << 4 = 0x10
         expect(ctx).to eq(0x10), "Expected #{name} to be DOT"
@@ -114,7 +114,7 @@ RSpec.describe Lrama::LexerContextClassifier do
 
     it "classifies open brackets as BEG" do
       %w[tLPAREN tLBRACK tLBRACE].each do |name|
-        sym = double("symbol", id: double("id", s_value: name), term?: true)
+        sym = double("symbol", name: name, term?: true)
         ctx = classifier.classify_symbol_context(sym)
         expect(ctx).to eq(0x01), "Expected #{name} to be BEG"
       end
@@ -122,14 +122,14 @@ RSpec.describe Lrama::LexerContextClassifier do
 
     it "classifies close brackets as END" do
       %w[tRPAREN tRBRACK tRBRACE].each do |name|
-        sym = double("symbol", id: double("id", s_value: name), term?: true)
+        sym = double("symbol", name: name, term?: true)
         ctx = classifier.classify_symbol_context(sym)
         expect(ctx).to eq(0x04), "Expected #{name} to be END"
       end
     end
 
     it "returns 0 for unknown symbols" do
-      sym = double("symbol", id: double("id", s_value: "unknown_token"), term?: true)
+      sym = double("symbol", name: "unknown_token", term?: true)
       ctx = classifier.classify_symbol_context(sym)
       expect(ctx).to eq(0)
     end
@@ -152,7 +152,7 @@ RSpec.describe Lrama::LexerContextClassifier do
         states.compute
         states.compute_pslr
 
-        target = states.states.first.term_transitions.find { |shift| shift.next_sym.id.s_value == "A" }.to_state
+        target = states.states.first.term_transitions.find { |shift| shift.next_sym.name == "A" }.to_state
         expect(target.lexer_context).to eq(3)
       end
     end
@@ -354,7 +354,7 @@ RSpec.describe Lrama::LexerContextClassifier do
         operator_target_states = []
         states.states.each do |state|
           state.term_transitions.each do |shift|
-            name = shift.next_sym.id.s_value
+            name = shift.next_sym.name
             if name == "tPLUS" || name == "tSTAR"
               operator_target_states << shift.to_state
             end
@@ -410,7 +410,7 @@ RSpec.describe Lrama::LexerContextClassifier do
         def_target = nil
         states.states.each do |state|
           state.term_transitions.each do |shift|
-            if shift.next_sym.id.s_value == "keyword_def"
+            if shift.next_sym.name == "keyword_def"
               def_target = shift.to_state
             end
           end

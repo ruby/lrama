@@ -53,7 +53,7 @@ module Lrama
 
       # @rbs () -> void
       def initialize
-        @ties = Hash.new { |h, k| h[k] = Set.new([k]) }
+        @ties = {}
         @no_ties = Set.new
         @declarations = []
       end
@@ -99,7 +99,7 @@ module Lrama
 
       # @rbs (String name) -> Set[String]
       def tied_names(name)
-        @ties[name].dup
+        @ties[name]&.dup || Set[name]
       end
 
       # @rbs (String left, String right) -> bool
@@ -193,7 +193,7 @@ module Lrama
           tie_specificities[pair] = decision.specificity
         end
 
-        @ties = Hash.new { |h, k| h[k] = Set.new([k]) }
+        @ties = {}
         groups = parents.keys.group_by {|name| root(parents, name) }
         groups.each_value do |names|
           tied = names.to_set

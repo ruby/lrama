@@ -69,6 +69,32 @@ RSpec.describe "LAC runtime" do
     end
   end
 
+  it "runs a default reduction before asking the lexer for the next token" do
+    with_lac_parser(<<~'GRAMMAR') do |parser|
+      %token A B BAD
+      %code provides {
+        static int enabled;
+        static int yylex(YYSTYPE *value) {
+          static int reads;
+          (void)value;
+          switch (reads++) {
+            case 0: return A;
+            case 1: return enabled ? B : BAD;
+            default: return YYEOF;
+          }
+        }
+      }
+      %%
+      start: prefix B;
+      prefix: A { enabled = 1; };
+      %%
+      int main(void) { return yyparse(); }
+    GRAMMAR
+      _out, err, status = Open3.capture3(parser)
+      expect(status.success?).to be(true), err
+    end
+  end
+
   it "revalidates lookahead changed by a semantic action before further reductions" do
     with_lac_parser(<<~'GRAMMAR') do |parser|
       %code provides { static int reduced = 0; }
@@ -96,7 +122,7 @@ RSpec.describe "LAC runtime" do
   it "revalidates a new lookahead after yyclearin even when its token kind is unchanged" do
     with_lac_parser(<<~'GRAMMAR', instrument: true) do |parser|
       %code provides { static int eof_checks = 0; }
-      %token A
+      %token A B
       %code provides {
         static int yylex(YYSTYPE *value) {
           static int i = 0;
@@ -106,7 +132,7 @@ RSpec.describe "LAC runtime" do
       }
       %%
       start: n;
-      n: A { yyclearin; };
+      n: A { yyclearin; } | A B;
       %%
       int main(void) { return yyparse() || eof_checks != 2; }
     GRAMMAR
@@ -118,7 +144,7 @@ RSpec.describe "LAC runtime" do
   it "revalidates YYBACKUP after it changes the stack while keeping the same lookahead kind" do
     with_lac_parser(<<~'GRAMMAR', instrument: true) do |parser|
       %code provides { static int eof_checks = 0, backed_up = 0, reduced = 0; }
-      %token A
+      %token A B
       %code provides {
         static int yylex(YYSTYPE *value) {
           static int i = 0;
@@ -136,6 +162,7 @@ RSpec.describe "LAC runtime" do
         }
         reduced++;
       }
+      | A B
       | %empty { reduced++; };
       %%
       int main(void) { return yyparse() || !backed_up || reduced != 1 || eof_checks != 2; }

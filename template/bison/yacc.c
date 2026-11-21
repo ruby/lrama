@@ -1730,8 +1730,26 @@ done:
 | yyparse.  |
 `----------*/
 
+<%- if output.pslr_scanner_enabled? || output.pslr_pure_mode? -%>
+static int yypslr_parse (<%= output.parse_param %>);
+
 int
 yyparse (<%= output.parse_param %>)
+{
+  yypslr_scope yypslr_call;
+  int yypslr_result;
+  yypslr_enter (&yypslr_call);
+  yypslr_result = yypslr_parse (<%= output.parse_param_name %>);
+  YYPSLR_LEAVE (yypslr_call);
+  return yypslr_result;
+}
+
+static int
+yypslr_parse (<%= output.parse_param %>)
+<%- else -%>
+int
+yyparse (<%= output.parse_param %>)
+<%- end -%>
 {
 <%# b4_declare_scanner_communication_variables -%>
 /* Lookahead token kind.  */
@@ -1943,8 +1961,7 @@ yybackup:
   /* First try to decide what to do without reference to lookahead token.  */
   yyn = yypact[yystate];
 <%- if output.lac_enabled? -%>
-  /* Default reductions also need lookahead from the repair queue for LAC.  */
-  if (yypact_value_is_default (yyn) && yydefact[yystate] == 0)
+  if (yypact_value_is_default (yyn) && yychar == YYEMPTY)
 <%- else -%>
   if (yypact_value_is_default (yyn))
 <%- end -%>

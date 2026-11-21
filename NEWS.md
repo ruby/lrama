@@ -178,11 +178,16 @@ because PSLR token lexemes must be non-empty.
 Two operating modes are supported. In pure mode (`%define api.pslr.lexer generated`), the generated parser owns
 lexical analysis: `yylex` is generated, layout tokens are skipped with their text accumulated, `%token-action`
 bodies build semantic values from `yytext`/`yyleng`, and the caller hands the input to the parser with
-`yypslr_set_input(input, len)` before `yyparse`. Pure mode requires a `%token-pattern` for every terminal.
-In bridge mode (`%define api.pslr.state-member`), an existing hand-written lexer consults the pseudo-scanner
+`yypslr_set_input(input, len)` before `yyparse`. Set the input on the thread that will parse it. A nested
+`yyparse` call uses its own input cursor, source location, and layout buffer. Pure mode requires a
+`%token-pattern` for every terminal.
+In bridge mode, `%define api.pslr.state-member` names the field in the first parser parameter that stores the
+current parser state. An existing hand-written lexer consults the pseudo-scanner
 through helper macros such as `YYPSLR_PSEUDO_SCAN(Context, Input, InputLen, MatchLength)`; terminals without a
 token pattern stay owned by the user lexer and are reported as a warning. The scan API is length-delimited
-(`input` plus `input_len`) so inputs containing NUL bytes are handled correctly, and the scan result reports
+(`input` plus `input_len`) so inputs containing NUL bytes are handled correctly. A single lexeme must fit in
+the `int` match length. The scanner reports `YYUNDEF` for a longer match and caps source line and column
+numbers at `INT_MAX`. The scan result reports
 `from_fallback` when the token came from the syntax-error fallback row. The paper-compatible scanning path needs
 the lexer to pass the unconsumed input prefix, not only an already-decided token fragment, so legacy external
 lexer bridges may still be limited by the text they provide.
@@ -190,11 +195,12 @@ lexer bridges may still be limited by the text they provide.
 Unresolved pseudo-scanner conflict reports include a witness: an example input that reaches the conflicting
 scanner profile. `%lex-prec` rules that never participate in a normal-row resolution are reported as useless.
 
-PSLR parsers enable LAC (lookahead correction, `%define parse.lac full`) by default so syntax errors caused by
-LR state merging, default reductions, or `%nonassoc` error actions are detected before user semantic actions are
-run for the bad lookahead, and expected-token lists in error messages are computed by exploratory parses. LAC can
-also be enabled independently for LALR/IELR parsers. PSLR support is still experimental. Scoped lexical
-declarations, lexical nonterminals, and `%lex` are not implemented yet. If you find any bugs, please report them.
+PSLR parsers enable LAC (lookahead correction, `%define parse.lac full`) by default. Once the parser reads a
+lookahead token, it checks whether it can shift that token before running further semantic actions. States with
+an unconditional default reduction can still run their action before the next lexer call. LAC also computes
+expected-token lists in error messages and can be enabled for LALR/IELR parsers. PSLR support is still
+experimental. Scoped lexical declarations, lexical nonterminals, and `%lex` are not implemented yet. If you
+find any bugs, please report them.
 
 ## Lrama 0.7.1 (2025-12-24)
 

@@ -12,7 +12,7 @@ module Lrama
     class LexerContext
       attr_reader :name #: String
       attr_reader :index #: Integer
-      attr_reader :symbols #: Array[Lexer::Token::Ident]
+      attr_reader :symbols #: Array[Lexer::Token::Base]
 
       # @rbs (name: String, index: Integer) -> void
       def initialize(name:, index:)
@@ -28,7 +28,7 @@ module Lrama
       end
 
       # Add symbols that belong to this context.
-      # @rbs (Array[Lexer::Token::Ident] syms) -> void
+      # @rbs (Array[Lexer::Token::Base] syms) -> void
       def add_symbols(syms)
         syms.each do |sym|
           @symbols << sym

@@ -340,6 +340,11 @@ RSpec.describe Lrama::Grammar do
     end
   end
 
+  it "rejects lexer context names that cannot be used in generated C macros" do
+    expect { grammar.add_lexer_context(name: "in-string", symbols: []) }
+      .to raise_error(/%lexer-context.*C identifier/)
+  end
+
   describe "#finalize_lexical_declarations!" do
     it "resolves quoted aliases to canonical token ids" do
       grammar = Lrama::Parser.new(<<~GRAMMAR, "lex_prec_alias.y").parse
@@ -357,6 +362,26 @@ RSpec.describe Lrama::Grammar do
       expect(grammar.lex_prec.rules.map {|rule| [rule.left_name, rule.right_name] }).to eq([["ID", "IF"]])
       expect(grammar.lex_prec.identity_precedes?("IF", "ID")).to be true
       expect(grammar.lex_prec.longest_pair?("ID", "IF")).to be true
+    end
+
+    it "resolves an alias first mentioned before its token pattern" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "forward_alias.y").parse
+        %symbol-set words "word"
+        %lex-prec words -~ "word"
+        %lex-tie "word" OTHER
+        %token-pattern OTHER /other/
+        %token-pattern WORD /word/ "word"
+        %%
+        start: "word";
+      GRAMMAR
+      grammar.prepare
+      grammar.validate!
+      grammar.finalize_lexical_declarations!
+
+      expect(grammar.rules.last.rhs).to eq([grammar.find_symbol_by_s_value!("WORD")])
+      expect(grammar.lex_prec.rules.map(&:left_name)).to eq(["WORD"])
+      grammar.finalize_lexical_ties!(Lrama::ScannerFSA.new(grammar.token_patterns))
+      expect(grammar.lex_tie.tied?("WORD", "OTHER")).to be true
     end
 
     it "resolves aliases in symbol sets and keeps literal terminals" do

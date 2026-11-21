@@ -438,7 +438,7 @@ RSpec.describe Lrama::State do
       ])
       lookaheads = token_bitmap | Lrama::Bitmap.from_integer(rule.rhs.last.number)
       predecessor.item_lookahead_set = { next_item => lookaheads | 1 }
-      allow(predecessor).to receive(:goto_follow_set).with(rule.lhs).and_return(lookaheads | 1)
+      allow(predecessor).to receive(:goto_follow_set).with(rule.lhs, nil).and_return(lookaheads | 1)
 
       expect(predecessor.propagate_lookaheads(successor)).to eq({
         next_item => lookaheads, last_item => lookaheads,

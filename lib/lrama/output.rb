@@ -497,13 +497,14 @@ module Lrama
           C_CODE
         end
 
-        if !parse_param_name.empty?
+        if (context_param = @grammar.parse_params.first)
+          context_name = extract_param_name(context_param)
           declarations << <<~C_CODE
             #ifndef YYSETSTATE_CONTEXT
             # define YYSETSTATE_CONTEXT(CurrentState) \\
               do { \\
-                if (#{parse_param_name} != 0) { \\
-                  YYGETSTATE_CONTEXT (#{parse_param_name}) = (CurrentState); \\
+                if (#{context_name} != 0) { \\
+                  YYGETSTATE_CONTEXT (#{context_name}) = (CurrentState); \\
                 } \\
               } while (0)
             #endif
@@ -923,7 +924,7 @@ module Lrama
          *   input_len: Number of remaining input bytes
          *   result: Output parameter for the match
          *
-         * Returns: Selected parser token ID. #{eof_symbol.id.s_value} when input_len is zero.
+         * Returns: Selected parser token ID. #{eof_symbol.name} when input_len is zero.
          * If neither the parser-state row nor the fallback row matches,
          * returns YYUNDEF and consumes one byte (character-token handling);
          * from_fallback is set for both cases because a syntax error is
@@ -933,9 +934,9 @@ module Lrama
         yy_pseudo_scan_result (int parser_state, const char *input, size_t input_len, yypslr_scan_result *result)
         {
           int ss = 0;  /* FSA initial state */
-          int ibest = 0;
+          size_t ibest = 0;
           int pbest = YY_PSLR_EMPTY_PATTERN;
-          int fallback_ibest = 0;
+          size_t fallback_ibest = 0;
           int fallback_pbest = YY_PSLR_EMPTY_PATTERN;
           int fallback_profile = 0;
           size_t i = 0;
@@ -950,12 +951,12 @@ module Lrama
           result->is_character_token = 0;
           result->from_fallback = 0;
 
-          if (parser_state < 0 || parser_state >= YY_NUM_PARSER_STATES || input == NULL) {
+          if (parser_state < 0 || parser_state >= YY_NUM_PARSER_STATES || (!input && input_len)) {
             return YYEMPTY;
           }
 
           if (input_len == 0) {
-            result->token = #{eof_symbol.id.s_value};
+            result->token = #{eof_symbol.name};
             return result->token;
           }
 
@@ -978,7 +979,7 @@ module Lrama
                 if (pbest == YY_PSLR_EMPTY_PATTERN ||
                     yy_pslr_length_precedes[pbest][pattern_index]) {
                   pbest = pattern_index;
-                  ibest = (int)i;
+                  ibest = i;
                 }
               }
 
@@ -986,7 +987,7 @@ module Lrama
               fallback_profile = yy_scanner_fallback_next[fallback_profile][sa];
               if (pattern_index != YY_PSLR_EMPTY_PATTERN) {
                 fallback_pbest = pattern_index;
-                fallback_ibest = (int)i;
+                fallback_ibest = i;
               }
             }
 
@@ -996,25 +997,21 @@ module Lrama
             }
           }
 
-          if (pbest != YY_PSLR_EMPTY_PATTERN) {
-            result->token = yy_token_pattern_to_token_id[pbest];
-            result->length = ibest;
-            result->is_layout = yy_token_pattern_is_layout[pbest];
-            return result->token;
-          }
-
-          if (fallback_pbest != YY_PSLR_EMPTY_PATTERN) {
-            result->token = yy_token_pattern_to_token_id[fallback_pbest];
-            result->length = fallback_ibest;
-            result->is_layout = yy_token_pattern_is_layout[fallback_pbest];
+          if (pbest == YY_PSLR_EMPTY_PATTERN) {
+            pbest = fallback_pbest;
+            ibest = fallback_ibest;
             result->from_fallback = 1;
-            return result->token;
           }
 
-          result->token = YYUNDEF;
-          result->length = 1;
-          result->is_character_token = 1;
-          result->from_fallback = 1;
+          if (pbest != YY_PSLR_EMPTY_PATTERN && ibest <= INT_MAX) {
+            result->token = yy_token_pattern_to_token_id[pbest];
+            result->length = (int)ibest;
+            result->is_layout = yy_token_pattern_is_layout[pbest];
+          } else {
+            result->token = YYUNDEF;
+            result->length = ibest > INT_MAX ? INT_MAX : 1;
+            result->is_character_token = pbest == YY_PSLR_EMPTY_PATTERN;
+          }
           return result->token;
         }
 
@@ -1087,82 +1084,10 @@ module Lrama
       pslr_enabled? && !@grammar.token_actions.empty?
     end
 
-    # Generate layout accumulation declarations
     def pslr_layout_declarations
       return "" unless pslr_scanner_enabled? || pslr_pure_mode?
 
-      <<~C_CODE
-
-        #ifndef YYPSLR_LAYOUT_DEFINED
-        # define YYPSLR_LAYOUT_DEFINED
-
-        #include <limits.h>
-        #include <string.h>
-
-        typedef struct yypslr_layout {
-          const char *text;
-          int length;
-        } yypslr_layout;
-
-        # ifndef YYPSLR_LAYOUT_BUFFER_SIZE
-        #  define YYPSLR_LAYOUT_BUFFER_SIZE 4096
-        # endif
-
-        static char yypslr_layout_initial[YYPSLR_LAYOUT_BUFFER_SIZE];
-        static char *yypslr_layout_buffer = yypslr_layout_initial;
-        static size_t yypslr_layout_capacity = sizeof yypslr_layout_initial;
-        static int yypslr_layout_length = 0;
-
-        static void
-        yypslr_layout_clear (void)
-        {
-          if (yypslr_layout_buffer != yypslr_layout_initial)
-            YYFREE (yypslr_layout_buffer);
-          yypslr_layout_buffer = yypslr_layout_initial;
-          yypslr_layout_capacity = sizeof yypslr_layout_initial;
-          yypslr_layout_length = 0;
-          yypslr_layout_buffer[0] = '\\0';
-        }
-
-        static int
-        yypslr_layout_append (const char *text, int length)
-        {
-          size_t required;
-          if (length < 0 || length > INT_MAX - yypslr_layout_length)
-            return 0;
-
-          required = (size_t) yypslr_layout_length + (size_t) length + 1;
-          if (required > (size_t) YYSIZE_MAXIMUM)
-            return 0;
-          if (required > yypslr_layout_capacity)
-            {
-              size_t capacity = yypslr_layout_capacity;
-              char *buffer;
-              while (capacity < required)
-                capacity = capacity > (size_t) YYSIZE_MAXIMUM / 2 ? required : capacity * 2;
-              buffer = YY_CAST (char *, YYMALLOC (capacity));
-              if (!buffer)
-                return 0;
-              memcpy (buffer, yypslr_layout_buffer, (size_t) yypslr_layout_length);
-              if (yypslr_layout_buffer != yypslr_layout_initial)
-                YYFREE (yypslr_layout_buffer);
-              yypslr_layout_buffer = buffer;
-              yypslr_layout_capacity = capacity;
-            }
-
-          memcpy (yypslr_layout_buffer + yypslr_layout_length, text, (size_t) length);
-          yypslr_layout_length += length;
-          yypslr_layout_buffer[yypslr_layout_length] = '\\0';
-          return 1;
-        }
-
-        # define YYPSLR_LAYOUT_TEXT    yypslr_layout_buffer
-        # define YYPSLR_LAYOUT_LENGTH  yypslr_layout_length
-        # define YYPSLR_LAYOUT_CLEAR() yypslr_layout_clear ()
-        # define YYPSLR_LAYOUT_APPEND(Text, Len) yypslr_layout_append ((Text), (Len))
-
-        #endif /* YYPSLR_LAYOUT_DEFINED */
-      C_CODE
+      render_partial("bison/_pslr_scanner.c")
     end
 
     # Generate token action dispatch function.
@@ -1184,7 +1109,7 @@ module Lrama
       lines << "  YY_USE (yytext);"
       lines << "  YY_USE (yyleng);"
       lines << "  YY_USE (yylvalp);"
-      lines << "  YY_USE (#{lex_param_name});" unless lex_param.empty?
+      lines << lex_param_use
 
       @grammar.token_actions.each_with_index do |action, idx|
         token_id = @context.states.find_symbol_by_s_value!(action.token_name).token_id
@@ -1218,7 +1143,7 @@ module Lrama
          * Layout tokens are accumulated in the layout buffer;
          * non-layout tokens are returned to the caller with the
          * accumulated layout available via YYPSLR_LAYOUT_TEXT.
-         * The #{eof_symbol.id.s_value} token action (if any) runs before returning #{eof_symbol.id.s_value} so
+         * The #{eof_symbol.name} token action (if any) runs before returning #{eof_symbol.name} so
          * trailing layout can be recovered (paper section 3.6).
          */
         int
@@ -1228,7 +1153,7 @@ module Lrama
         {
           YYPSLR_LAYOUT_CLEAR ();
           YY_USE (yylvalp);
-        #{lex_param.empty? ? "" : "  YY_USE (#{lex_param_name});"}
+        #{lex_param_use}
 
           for (;;)
             {
@@ -1236,12 +1161,6 @@ module Lrama
 
               if (yytoken == YYEMPTY)
                 return yytoken;
-
-              if (yytoken == #{eof_symbol.id.s_value})
-                {
-        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (yytoken, *yyinput, 0, yylvalp);" : ""}
-                  return yytoken;
-                }
 
               if (yyresult->is_layout)
                 {
@@ -1272,56 +1191,54 @@ module Lrama
     def pslr_generated_lexer_function
       return "" unless pslr_pure_mode?
 
+      args = ["yylvalp"]
+      args << "yyllocp" if @grammar.locations
+      args << lex_param_name unless lex_param.empty?
       params = ["YYSTYPE *yylvalp"]
       params << "YYLTYPE *yyllocp" if @grammar.locations
       params << lex_param unless lex_param.empty?
-      unused = []
-      unused << "  YY_USE (#{lex_param_name});" unless lex_param.empty?
 
       location_declarations = location_reset = location_start = location_end = ""
       if @grammar.locations
         location_declarations = <<~C_CODE
-          static const char *yypslr_location_cursor = 0;
-          static int yypslr_line = 1;
-          static int yypslr_column = 1;
-
           static void
-          yypslr_update_location (void)
+          yypslr_update_location (yypslr_scanner *yypslr_lexer)
           {
-            while (yypslr_location_cursor != yypslr_input_cursor)
+            while (yypslr_lexer->input.location_cursor != yypslr_lexer->input.cursor)
               {
-                if (*yypslr_location_cursor++ == '\\n')
+                if (*yypslr_lexer->input.location_cursor++ == '\\n')
                   {
-                    yypslr_line++;
-                    yypslr_column = 1;
+                    if (yypslr_lexer->input.line < INT_MAX - 1)
+                      yypslr_lexer->input.line++;
+                    yypslr_lexer->input.column = 0;
                   }
-                else
-                  yypslr_column++;
+                else if (yypslr_lexer->input.column < INT_MAX - 1)
+                  yypslr_lexer->input.column++;
               }
           }
         C_CODE
         location_reset = <<~C_CODE
-            yypslr_location_cursor = input;
-            yypslr_line = yypslr_column = 1;
+            yypslr_lexer->input.location_cursor = input;
+            yypslr_lexer->input.line = yypslr_lexer->input.column = 0;
         C_CODE
         location_start = <<~C_CODE
-            yypslr_update_location ();
-            yyllocp->first_line = yypslr_line;
-            yyllocp->first_column = yypslr_column;
+            yypslr_update_location (yypslr_lexer);
+            yyllocp->first_line = yypslr_lexer->input.line + 1;
+            yyllocp->first_column = yypslr_lexer->input.column + 1;
         C_CODE
         location_end = <<~C_CODE
-            yypslr_update_location ();
-            yyllocp->last_line = yypslr_line;
-            yyllocp->last_column = yypslr_column;
+            yypslr_update_location (yypslr_lexer);
+            yyllocp->last_line = yypslr_lexer->input.line + 1;
+            yyllocp->last_column = yypslr_lexer->input.column + 1;
         C_CODE
       end
 
       scan = if pslr_scanner_enabled?
         <<~C_CODE
             yypslr_scan_result yypslr_result;
-            yypslr_token = yypslr_scan_with_layout (yypslr_parser_state,
-                                                    &yypslr_input_cursor,
-                                                    &yypslr_input_remain,
+            yypslr_token = yypslr_scan_with_layout (yypslr_lexer->input.parser_state,
+                                                    &yypslr_lexer->input.cursor,
+                                                    &yypslr_lexer->input.remaining,
                                                     yylvalp,
                                                     &yypslr_result#{lex_param.empty? ? "" : ", #{lex_param_name}"});
             yypslr_length = yypslr_result.length;
@@ -1330,48 +1247,74 @@ module Lrama
         <<~C_CODE
             YY_USE (yylvalp);
             YYPSLR_LAYOUT_CLEAR ();
-            yypslr_token = yypslr_input_remain ? YYUNDEF : #{eof_symbol.id.s_value};
-            yypslr_length = yypslr_input_remain ? 1 : 0;
-        #{pslr_token_actions_enabled? ? "    if (yypslr_token == #{eof_symbol.id.s_value})\n      YYPSLR_TOKEN_ACTION (yypslr_token, yypslr_input_cursor, 0, yylvalp);" : ""}
+            yypslr_token = yypslr_lexer->input.remaining ? YYUNDEF : #{eof_symbol.name};
+            yypslr_length = yypslr_lexer->input.remaining ? 1 : 0;
+        #{pslr_token_actions_enabled? ? "    if (yypslr_token == #{eof_symbol.name})\n      YYPSLR_TOKEN_ACTION (yypslr_token, yypslr_lexer->input.cursor, 0, yylvalp);" : ""}
         C_CODE
       end
 
       <<~C_CODE
 
         /* Pure-mode PSLR lexer: generated, owns the input cursor. */
-        static const char *yypslr_input_cursor = 0;
-        static size_t yypslr_input_remain = 0;
-        static int yypslr_parser_state = 0;
         #{location_declarations}
 
         void
         yypslr_set_input (const char *input, size_t input_len)
         {
-          YYPSLR_LAYOUT_CLEAR ();
-          yypslr_input_cursor = input;
-          yypslr_input_remain = input_len;
-          yypslr_parser_state = 0;
+          yypslr_scanner *yypslr_lexer = &yypslr_pending;
+          yypslr_layout_clear (yypslr_lexer);
+          yypslr_lexer->input.cursor = input;
+          yypslr_lexer->input.remaining = input_len;
+          yypslr_lexer->input.parser_state = 0;
+          yypslr_has_input = 1;
         #{location_reset}
         }
 
-        #define YYPSLR_SET_PARSER_STATE(State) (yypslr_parser_state = (State))
+        #define YYPSLR_SET_PARSER_STATE(State) (yypslr_current ()->input.parser_state = (State))
+
+        static int
+        yypslr_read_token (#{params.join(", ")})
+        {
+          yypslr_scanner *yypslr_lexer = yypslr_current ();
+          int yypslr_token;
+          int yypslr_length;
+        #{lex_param_use}
+
+          if (yypslr_has_input)
+            {
+              int state = yypslr_lexer->input.parser_state;
+              yypslr_take_input (yypslr_lexer);
+              yypslr_lexer->input.parser_state = state;
+            }
+        #{scan}
+        #{location_start}
+          if (yypslr_length > 0)
+            {
+              yypslr_lexer->input.cursor += yypslr_length;
+              yypslr_lexer->input.remaining -= (size_t) yypslr_length;
+            }
+        #{location_end}
+          return yypslr_token;
+        }
+
+        /* A standalone lexer call may itself invoke yyparse in a token action. */
+        static int
+        yypslr_read_standalone (#{params.join(", ")})
+        {
+          yypslr_scope yypslr_call;
+          int yypslr_token;
+          yypslr_enter (&yypslr_call);
+          yypslr_token = yypslr_read_token (#{args.join(", ")});
+          YYPSLR_LEAVE (yypslr_call);
+          return yypslr_token;
+        }
 
         static int
         yylex (#{params.join(", ")})
         {
-          int yypslr_token;
-          int yypslr_length;
-        #{unused.join("\n")}
-
-        #{scan}
-        #{location_start}
-          if (yypslr_token != YYEMPTY && yypslr_token != #{eof_symbol.id.s_value})
-            {
-              yypslr_input_cursor += yypslr_length;
-              yypslr_input_remain -= (size_t) yypslr_length;
-            }
-        #{location_end}
-          return yypslr_token;
+          if (yypslr_active)
+            return yypslr_read_token (#{args.join(", ")});
+          return yypslr_read_standalone (#{args.join(", ")});
         }
       C_CODE
     end
@@ -1401,6 +1344,10 @@ module Lrama
     end
 
     private
+
+    def lex_param_use
+      @grammar.lex_params.map { |param| "  YY_USE (#{extract_param_name(param)});" }.join("\n")
+    end
 
     def include_header_path(output_file_path, header_file_path)
       if File.identical?(File.dirname(output_file_path), File.dirname(header_file_path))

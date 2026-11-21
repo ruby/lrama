@@ -5196,7 +5196,37 @@ RSpec.describe Lrama::Parser do
   end
 
   describe "PSLR directives" do
+    it "evaluates lexical declarations on both sides of %% in source order" do
+      grammar = Lrama::Parser.new(<<~GRAMMAR, "declarations.y").parse
+        %token <first> A 300 "letter"
+        %token-pattern <one> A /a/ <two> B /b/
+        %%
+        start: "letter" B;
+        %token-action A { a(); } B { b(); };
+        %token-pattern <last> C /c/;
+      GRAMMAR
+
+      grammar.prepare
+      expect(grammar.token_patterns.map { |pattern| [pattern.name, pattern.tag.s_value] }).to eq([
+        ["A", "<one>"], ["B", "<two>"], ["C", "<last>"]
+      ])
+      expect(grammar.find_symbol_by_s_value!("A").token_id).to eq(300)
+      expect(grammar.token_actions.map(&:token_name)).to eq(%w[A B])
+      expect(grammar.nodes.map { |node| node.loc.first_line }).to eq([1, 2, 2, 4, 5, 5, 6])
+    end
+
     describe "%token-pattern" do
+      it "resumes lexing line comments after a declaration in the rules section" do
+        grammar = Lrama::Parser.new(<<~GRAMMAR, "declarations.y").parse
+          %%
+          %token-pattern A /a/;
+          start: A // first rule
+          ;
+        GRAMMAR
+        grammar.prepare
+        expect(grammar.rules.last.rhs.map(&:name)).to eq(["A"])
+      end
+
       it "parses a single token pattern" do
         y = <<~GRAMMAR
           %token-pattern RSHIFT />>/ "right shift"
@@ -5273,7 +5303,7 @@ RSpec.describe Lrama::Parser do
 
           rule = grammar.rules.last
           expect(rule.translated_code(grammar)).to eq(" use((yyvsp[0].val)); ")
-          expect(rule.rhs.first.id.s_value).to eq("A")
+          expect(rule.rhs.first.name).to eq("A")
           expect(rule.rhs.first.alias_name).to eq('"letter"')
         end
       end
@@ -5292,7 +5322,7 @@ RSpec.describe Lrama::Parser do
 
         rule = grammar.rules.last
         expect(rule.translated_code(grammar)).to eq(" use((yyvsp[0].val)); ")
-        expect(rule.rhs.first.id.s_value).to eq("A")
+        expect(rule.rhs.first.name).to eq("A")
         expect(rule.rhs.first.alias_name).to eq('"letter"')
         expect(rule.rhs.first.token_id).to eq(300)
       end

@@ -28,6 +28,29 @@ RSpec.describe "generated runtime" do
     end
   end
 
+  %w[ielr canonical-lr].each do |tables|
+    it "selects the end token after a nonassociative expression with #{tables} tables" do
+      with_parser(<<~GRAMMAR) do |parser|
+        %define lr.type pslr
+        %define pslr.tables #{tables}
+        %define api.pslr.lexer generated
+        %token-pattern A /a/
+        %token-pattern OP /o/
+        %token-pattern END /o/
+        %lex-prec END <- OP
+        %nonassoc OP
+        %%
+        start: expr END;
+        expr: A | expr OP expr;
+        %%
+        int main(void) { yypslr_set_input("aoao", 4); return yyparse(); }
+      GRAMMAR
+        _out, err, status = Open3.capture3(parser)
+        expect(status.exitstatus).to eq(0), err
+      end
+    end
+  end
+
   it "compiles PSLR scanning without user-provided string declarations or layout tokens" do
     with_parser(<<~GRAMMAR) do |parser|
       %define lr.type pslr
@@ -37,6 +60,120 @@ RSpec.describe "generated runtime" do
       start: A;
       %%
       int main(void) { yypslr_set_input("a", 1); return yyparse(); }
+    GRAMMAR
+      _out, err, status = Open3.capture3(parser)
+      expect(status.success?).to be(true), err
+    end
+  end
+
+  it "preserves the outer scanner across nested parses from token and grammar actions" do
+    with_parser(<<~'GRAMMAR') do |parser|
+      %define lr.type pslr
+      %define api.pslr.lexer generated
+      %define api.pure full
+      %locations
+      %code provides {
+        #include <stdlib.h>
+        #define YYPSLR_LAYOUT_BUFFER_SIZE 2
+      }
+      %token-pattern A /a/
+      %token-pattern B /b/
+      %token-pattern YYLAYOUT_WS /[ \n]+/
+      %token-action A {
+        int length = YYPSLR_LAYOUT_LENGTH;
+        const char *layout = length == 2 ? "  " : "\n  ";
+        yypslr_set_input("   b", 4);
+        if (yyparse() || YYPSLR_LAYOUT_LENGTH != length
+            || strcmp(YYPSLR_LAYOUT_TEXT, layout)) exit(2);
+      }
+      %%
+      start: prefix A {
+        if (@2.first_line != 2 || @2.first_column != 3 || @2.last_column != 4) YYABORT;
+      } | B;
+      prefix: A {
+        yypslr_set_input("b", 1);
+        if (yyparse() || @1.first_line != 1 || @1.first_column != 3) YYABORT;
+      };
+      %%
+      int main(void) {
+        YYSTYPE value;
+        YYLTYPE loc;
+        yypslr_set_input("  a\n  a", 7);
+        if (yyparse()) return 3;
+        yypslr_set_input("  a", 3);
+        if (yylex(&value, &loc) != A || loc.first_column != 3 || loc.last_column != 4) return 4;
+        return yylex(&value, &loc) != YYEOF;
+      }
+    GRAMMAR
+      _out, err, status = Open3.capture3(parser)
+      expect(status.success?).to be(true), "exit #{status.exitstatus}: #{err}"
+    end
+  end
+
+  it "keeps scanner state independent while two threads are inside yyparse" do
+    skip "requires pthreads" if windows?
+    with_parser(<<~GRAMMAR, flags: ["-pthread"]) do |parser|
+      %define lr.type pslr
+      %define api.pslr.lexer generated
+      %define api.pure full
+      %parse-param {int expected}
+      %code provides {
+        #include <pthread.h>
+        #define yyerror(Loc, Expected, Message) yyerror(Loc, Message)
+        static pthread_t thread;
+        static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+        static pthread_cond_t changed = PTHREAD_COND_INITIALIZER;
+        static int phase;
+        static void enter_phase(int next_phase) {
+          pthread_mutex_lock(&mutex);
+          while (phase < next_phase - 1) pthread_cond_wait(&changed, &mutex);
+          phase = next_phase;
+          pthread_cond_broadcast(&changed);
+          pthread_mutex_unlock(&mutex);
+        }
+      }
+      %initial-action {
+        if (expected == B) {
+          enter_phase(1);
+          enter_phase(4);
+        } else {
+          enter_phase(3);
+          if (pthread_join(thread, 0)) YYABORT;
+        }
+      }
+      %token-pattern A /a/
+      %token-pattern B /b/
+      %%
+      start: A { if (expected != A) YYABORT; } | B { if (expected != B) YYABORT; };
+      %%
+      static void *worker(void *result) {
+        yypslr_set_input("b", 1);
+        *(int *)result = yyparse(B);
+        return 0;
+      }
+      int main(void) {
+        int result;
+        yypslr_set_input("a", 1);
+        if (pthread_create(&thread, 0, worker, &result)) return 1;
+        enter_phase(2);
+        return yyparse(A) || result;
+      }
+    GRAMMAR
+      _out, err, status = Open3.capture3(parser)
+      expect(status.success?).to be(true), "exit #{status.exitstatus}: #{err}"
+    end
+  end
+
+  it "allows an initial action to set the generated lexer's input" do
+    with_parser(<<~GRAMMAR) do |parser|
+      %define lr.type pslr
+      %define api.pslr.lexer generated
+      %initial-action { yypslr_set_input("a", 1); }
+      %token-pattern A /a/
+      %%
+      start: A;
+      %%
+      int main(void) { return yyparse(); }
     GRAMMAR
       _out, err, status = Open3.capture3(parser)
       expect(status.success?).to be(true), err
@@ -237,28 +374,34 @@ RSpec.describe "generated runtime" do
     end
   end
 
-  it "runs the EOF token action without token patterns or locations" do
-    with_parser(<<~GRAMMAR) do |parser|
-      %code provides { static int eof_count = 0; }
-      %define lr.type pslr
-      %define api.pslr.lexer generated
-      %token-action YYEOF { eof_count++; }
-      %%
-      start: %empty;
-      %%
-      int main(void) {
-        yypslr_set_input(0, 0);
-        if (yyparse() || eof_count != 1) return 1;
-        yypslr_set_input("", 0);
-        return yyparse() || eof_count != 2;
-      }
-    GRAMMAR
-      _out, err, status = Open3.capture3(parser)
-      expect(status.success?).to be(true), err
-    end
-  end
-
   [false, true].each do |scanner|
+    it "runs the EOF action for an empty input pointer #{scanner ? 'with' : 'without'} scanner tables" do
+      with_parser(<<~GRAMMAR) do |parser|
+        %code provides { static int eof_count = 0; }
+        %define lr.type pslr
+        %define api.pslr.lexer generated
+        #{'%token-pattern A /a/' if scanner}
+        %token-action YYEOF { eof_count++; }
+        %%
+        start: %empty;
+        %%
+        int main(void) {
+        #ifdef YYPSLR_ENABLED
+          yypslr_scan_result result;
+          if (yy_pseudo_scan_result(0, 0, 1, &result) != YYEMPTY
+              || yy_pseudo_scan_result(-1, 0, 0, &result) != YYEMPTY) return 2;
+        #endif
+          yypslr_set_input(0, 0);
+          if (yyparse() || eof_count != 1) return 1;
+          yypslr_set_input("", 0);
+          return yyparse() || eof_count != 2;
+        }
+      GRAMMAR
+        _out, err, status = Open3.capture3(parser)
+        expect(status.success?).to be(true), err
+      end
+    end
+
     it "uses a renamed EOF token and its action #{scanner ? 'with scanner and layout' : 'without token patterns'}" do
       patterns = scanner ? "%token-pattern A /a/\n%token-pattern YYLAYOUT_WS / +/" : ""
       with_parser(<<~GRAMMAR) do |parser|
@@ -279,6 +422,30 @@ RSpec.describe "generated runtime" do
         _out, err, status = Open3.capture3(parser)
         expect(status.success?).to be(true), err
       end
+    end
+  end
+
+  it "consumes an explicit end marker before parsing the next record" do
+    with_parser(<<~'GRAMMAR') do |parser|
+      %define lr.type pslr
+      %define api.pslr.lexer generated
+      %code provides {
+        #include <stdlib.h>
+      }
+      %token END 0
+      %token-pattern END /;/
+      %token-pattern A /a/
+      %token-action END { if (yyleng != 1) exit(3); }
+      %%
+      start: A;
+      %%
+      int main(void) {
+        yypslr_set_input("a;a;", 4);
+        return yyparse() || yyparse();
+      }
+    GRAMMAR
+      _out, err, status = Open3.capture3(parser)
+      expect(status.success?).to be(true), "exit #{status.exitstatus}: #{err}"
     end
   end
 end

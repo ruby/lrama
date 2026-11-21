@@ -77,11 +77,11 @@ RSpec.describe "PSLR lexer parameter runtime" do
     GRAMMAR
   end
 
-  it "forwards a separately compiled bridge lexer's parameter through the layout macro" do
+  it "forwards a separately compiled bridge lexer's parameters through the layout macro" do
     lexer = <<~C_CODE
       #include "parser.h"
 
-      int yylex(YYSTYPE *value, struct lexer_state *Result) {
+      int yylex(YYSTYPE *value, struct lexer_state *Result, int *count) {
         yypslr_scan_result result;
         int token = YYPSLR_SCAN_WITH_LAYOUT(Result->current_state, &Result->input, &Result->remaining, value, &result);
         if (token != YYEOF && token != YYEMPTY) {
@@ -94,30 +94,30 @@ RSpec.describe "PSLR lexer parameter runtime" do
     run_parser(<<~GRAMMAR, lexer: lexer)
       %define lr.type pslr
       %define api.pslr.state-member current_state
-      %lex-param {struct lexer_state *Result}
-      %parse-param {struct lexer_state *Result}
+      %param {struct lexer_state *Result} {int *count}
       %code requires {
         #include <stddef.h>
         struct lexer_state { int current_state; int counter; const char *input; size_t remaining; };
       }
       %code provides {
-        int yylex(YYSTYPE *value, struct lexer_state *p);
-        int yyerror(YYLTYPE *loc, struct lexer_state *p, const char *message);
+        int yylex(YYSTYPE *value, struct lexer_state *p, int *count);
+        int yyerror(YYLTYPE *loc, struct lexer_state *p, int *count, const char *message);
       }
       %token-pattern A /a/
       %token-pattern YYLAYOUT_WS / +/
       %token-action A { yylval = ++Result->counter; }
       %token-action YYLAYOUT_WS { ++Result->counter; }
-      %token-action YYEOF { ++Result->counter; }
+      %token-action YYEOF { ++*count; }
       %%
       start: A { if ($1 != 2) YYABORT; };
       %%
-      int yyerror(YYLTYPE *loc, struct lexer_state *p, const char *message)
-      { (void)loc; (void)p; (void)message; return 0; }
+      int yyerror(YYLTYPE *loc, struct lexer_state *p, int *count, const char *message)
+      { (void)loc; (void)p; (void)count; (void)message; return 0; }
 
       int main(void) {
         struct lexer_state state = { 0, 0, " a ", 3 };
-        return yyparse(&state) || state.counter != 4;
+        int count = 0;
+        return yyparse(&state, &count) || state.counter != 3 || count != 1;
       }
     GRAMMAR
   end

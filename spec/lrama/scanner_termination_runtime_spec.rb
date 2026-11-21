@@ -68,6 +68,48 @@ RSpec.describe "generated scanner termination" do
     end
   end
 
+  it "keeps match lengths and source locations representable as int" do
+    with_scanner(<<~'GRAMMAR')
+      %code provides {
+        #include <limits.h>
+        /* Exercise the length boundary with a small input. */
+        #undef INT_MAX
+        #define INT_MAX 7
+      }
+      %locations
+      %token-pattern A /a+/
+      %token-pattern NL /\n/
+      %%
+      start: A NL;
+      %%
+      int main(void) {
+        yypslr_scan_result result;
+        int states[] = {0, YYFINAL};
+        for (int i = 0; i < 2; i++) {
+          if (yy_pseudo_scan_result(states[i], "aaaaaaa", 7, &result) != A || result.length != 7
+              || result.from_fallback != i || result.is_character_token)
+            return 1;
+          if (yy_pseudo_scan_result(states[i], "aaaaaaaa", 8, &result) != YYUNDEF || result.length != 7
+              || result.from_fallback != i || result.is_character_token)
+            return 2;
+          if (yy_pseudo_scan_result(states[i], "?", 1, &result) != YYUNDEF || result.length != 1
+              || !result.from_fallback || !result.is_character_token)
+            return 3;
+        }
+        YYSTYPE value;
+        YYLTYPE location;
+        yypslr_set_input("aaaaaaa\n\n\n\n\n\n\na", 15);
+        if (yylex(&value, &location) != A || location.last_column != INT_MAX) return 4;
+        for (int i = 0; i < 7; i++) {
+          if (yylex(&value, &location) != NL) return 5;
+        }
+        if (yylex(&value, &location) != A || location.first_line != INT_MAX
+            || location.first_column != 1 || location.last_column != 2) return 6;
+        return 0;
+      }
+    GRAMMAR
+  end
+
   it "keeps scanning for reachable replacements and normal matches after fallback wins" do
     with_scanner(<<~'GRAMMAR')
       %token-pattern A /a+/

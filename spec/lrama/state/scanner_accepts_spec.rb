@@ -315,7 +315,8 @@ RSpec.describe Lrama::State::ScannerAccepts do
       end
       scanner_accepts = Lrama::State::ScannerAccepts.new(
         tokens.each_with_index.map { |token, index| parser_state(index, [token.name]) },
-        scanner_fsa, lex_prec, Lrama::LengthPrecedences.new(lex_prec)
+        scanner_fsa, lex_prec, Lrama::LengthPrecedences.new(lex_prec),
+        symbols: []
       )
       scanner_accepts.build
 
