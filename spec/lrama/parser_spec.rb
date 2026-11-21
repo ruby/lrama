@@ -3322,7 +3322,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 27,
@@ -3335,7 +3335,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'-'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '-';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  -  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
               lineno: 27,
@@ -3348,7 +3348,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'*'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '*';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  *  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'*'"),
               lineno: 27,
@@ -3361,7 +3361,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'/'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '/';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  /  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'/'"),
               lineno: 27,
@@ -3374,7 +3374,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'%'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '%';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  + 1 +  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'%'"),
               lineno: 28,
@@ -3387,7 +3387,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'&'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '&';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  - 1 -  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'&'"),
               lineno: 28,
@@ -3453,7 +3453,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3487,7 +3487,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'-'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '-';  }  $$ = $1 _inline_2 $4; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  -  $4; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
               lineno: 25,
@@ -3537,7 +3537,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3550,7 +3550,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'-'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '-';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  -  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'-'"),
               lineno: 25,
@@ -3669,7 +3669,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $1 _inline_2 $3; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  +  $3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3683,7 +3683,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'='"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+=';  }  $$ = $1 _inline_2 $4; "),
+              token_code: T::UserCode.new(s_value: " $$ = $1  +=  $4; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'='"),
               lineno: 25,
@@ -3733,7 +3733,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = @1 _inline_2 @3; "),
+              token_code: T::UserCode.new(s_value: " $$ = @1  +  @3; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3747,7 +3747,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'='"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+=';  }  $$ = @1 _inline_2 @4; "),
+              token_code: T::UserCode.new(s_value: " $$ = @1  +=  @4; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'='"),
               lineno: 25,
@@ -3797,7 +3797,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'+'"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+';  }  $$ = $3 _inline_2 $1; "),
+              token_code: T::UserCode.new(s_value: " $$ = $3  +  $1; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'+'"),
               lineno: 25,
@@ -3811,7 +3811,7 @@ RSpec.describe Lrama::Parser do
                 grammar.find_symbol_by_s_value!("'='"),
                 grammar.find_symbol_by_s_value!("expression"),
               ],
-              token_code: T::UserCode.new(s_value: " YYSTYPE _inline_2; {  _inline_2 = '+=';  }  $$ = $4 _inline_2 $1; "),
+              token_code: T::UserCode.new(s_value: " $$ = $4  +=  $1; "),
               nullable: false,
               precedence_sym: grammar.find_symbol_by_s_value!("'='"),
               lineno: 25,
@@ -3858,7 +3858,55 @@ RSpec.describe Lrama::Parser do
         grammar.prepare
         rule = grammar.rules.last
 
-        expect(rule.token_code.s_value).to eq(%q{ $$ = f( "\1" , $3, $4, $11, @2, @3, @11); })
+        expect(rule.token_code.s_value).to include(%q{ $$ = f( "\1" , $3, $4, $11, yyinline_1_loc, @3, @11); })
+      end
+
+      it "requires a tag for an inline value when a union is declared" do
+        grammar = Lrama::Parser.new(<<~GRAMMAR, "inline.y").parse
+          %union { int i; }
+          %rule %inline op : '+' { $$ = 1; } ;
+          %%
+          expression : op { consume($1); } ;
+        GRAMMAR
+
+        expect { grammar.prepare }.to raise_error(RuntimeError, "Tag is not specified for inline rule 'op'")
+      end
+
+      it "keeps the token location for an actionless single-symbol inline rule" do
+        grammar = Lrama::Parser.new(<<~GRAMMAR, "inline.y").parse
+          %rule %inline token : '+' ;
+          %%
+          expression : token { use(@1); } ;
+        GRAMMAR
+        grammar.prepare
+        expect(grammar.rules.last.token_code.s_value).to eq(" use(@1); ")
+      end
+
+      it "runs sibling and nested inline actions in reduction order" do
+        grammar = Lrama::Parser.new(<<~GRAMMAR, "inline.y").parse
+          %rule %inline inner : 'i' { mark_inner(); } ;
+          %rule %inline left : inner { mark_left(); } ;
+          %rule %inline right : 'r' { mark_right(); } ;
+          %%
+          expression : left right { mark_outer(); } ;
+        GRAMMAR
+        grammar.prepare
+        expect(grammar.rules.last.token_code.s_value.scan(/mark_\w+/)).to eq(%w[mark_inner mark_left mark_right mark_outer])
+      end
+
+      it "runs an inline action and returns its value through an implicit outer action" do
+        grammar = Lrama::Parser.new(<<~GRAMMAR, "inline.y").parse
+          %union { int i; }
+          %token <i> NUM
+          %type <i> expression
+          %rule %inline number <i> : NUM { $$ = next($1); } ;
+          %%
+          expression : number ;
+        GRAMMAR
+        grammar.prepare
+        code = grammar.rules.last.translated_code(grammar)
+        expect(code).to include("next((yyvsp[0].i))")
+        expect(code).to match(/yyval = yyinline_\d+/)
       end
 
       it "discards an unused inline expression fragment" do
@@ -3948,13 +3996,13 @@ RSpec.describe Lrama::Parser do
           expect(plus_rule).not_to be_nil
           expect(times_rule).not_to be_nil
 
-          expect(plus_rule.token_code.s_value).to include("YYSTYPE _inline_2")
-          expect(plus_rule.token_code.s_value).to include("_inline_2 = add")
-          expect(plus_rule.token_code.s_value).to include("$$ = _inline_2($1, $3)")
+          expect(plus_rule.token_code.s_value).to include("YYSTYPE yyinline_1")
+          expect(plus_rule.token_code.s_value).to include("yyinline_1.fn = add")
+          expect(plus_rule.token_code.s_value).to include("$$ = yyinline_1.fn($1, $3)")
 
-          expect(times_rule.token_code.s_value).to include("YYSTYPE _inline_2")
-          expect(times_rule.token_code.s_value).to include("_inline_2 = mul")
-          expect(times_rule.token_code.s_value).to include("$$ = _inline_2($1, $3)")
+          expect(times_rule.token_code.s_value).to include("YYSTYPE yyinline_2")
+          expect(times_rule.token_code.s_value).to include("yyinline_2.fn = mul")
+          expect(times_rule.token_code.s_value).to include("$$ = yyinline_2.fn($1, $3)")
         end
       end
 

@@ -276,22 +276,20 @@ rule
         }
 
   inline_declaration:
-      "%rule" "%inline" IDENT_COLON ":" rule_rhs_list
+      "%rule" "%inline" inline_head ":" rule_rhs_list
         {
+          name, parameters, tag = val[2]
           result = Grammar::Node::ParameterizedRule.new(
-            name: val[2].s_value, parameters: [],
+            name: name.s_value, parameters: parameters, tag: tag,
             rhs_list: val[4], is_inline: true,
             location: merge_locations(val[0].loc, val[3].loc, *val[4].flatten.map(&:loc))
           )
         }
-    | "%rule" "%inline" IDENTIFIER "(" rule_args ")" ":" rule_rhs_list
-        {
-          result = Grammar::Node::ParameterizedRule.new(
-            name: val[2].s_value, parameters: val[4],
-            rhs_list: val[7], is_inline: true,
-            location: merge_locations(val[0].loc, val[6].loc, *val[7].flatten.map(&:loc))
-          )
-        }
+
+  inline_head:
+      IDENT_COLON                              { result = [val[0], [], nil] }
+    | IDENTIFIER TAG                           { result = [val[0], [], val[1]] }
+    | IDENTIFIER "(" rule_args ")" TAG?        { result = [val[0], val[2], val[4]] }
 
   rule_args:
       IDENTIFIER { result = [val[0]] }

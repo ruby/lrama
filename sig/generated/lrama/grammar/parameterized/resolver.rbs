@@ -4,6 +4,12 @@ module Lrama
   class Grammar
     class Parameterized
       class Resolver
+        attr_reader inline_counter: Counter
+
+        attr_accessor locations: bool
+
+        attr_accessor union_defined: bool
+
         attr_accessor rules: Array[Rule]
 
         attr_accessor created_lhs_list: Array[Grammar::Symbol::Id]

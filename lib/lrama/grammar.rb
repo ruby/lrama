@@ -268,10 +268,12 @@ module Lrama
 
     # @rbs () -> void
     def prepare
+      @parameterized_resolver.union_defined = !@union.nil?
       if @no_inline
         convert_inline_rules_to_regular_rules
       else
         validate_inline_rules
+        @parameterized_resolver.locations = @locations || inline_locations?
         resolve_inline_rules
       end
       normalize_rules
@@ -679,15 +681,14 @@ module Lrama
       end
     end
 
-    # Convert inline rules to regular rules when --no-inline is specified.
-    # This allows inline rules to be treated as ordinary non-terminal rules.
-    # Only non-parameterized inline rules can be converted (rules with parameters
-    # require instantiation and cannot be converted to simple rules).
-    #
     # @rbs () -> void
     def convert_inline_rules_to_regular_rules
       inline_rules, remaining_rules = @parameterized_resolver.rules.partition { |rule| rule.inline? && rule.parameters.empty? }
-      @parameterized_resolver.rules = remaining_rules
+      @parameterized_resolver.rules = remaining_rules.map do |rule|
+        next rule unless rule.inline?
+
+        Parameterized::Rule.new(rule.name, rule.parameters, rule.rhs, tag: rule.tag, is_inline: false)
+      end
 
       inline_rules.each do |inline_rule|
         lhs = Grammar::Symbol::Id.new(name: inline_rule.name, kind: :ident)
@@ -867,6 +868,48 @@ module Lrama
     # @rbs () -> void
     def set_locations
       @locations = @locations || @rules.any? {|rule| rule.contains_at_reference? }
+    end
+
+    # @rbs (Node::RuleRhs::Action? action) -> bool
+    def uses_locations?(action)
+      return false unless action
+
+      action.code.references.any? { |ref| ref.type == :at }
+    end
+
+    # @rbs () -> bool
+    def inline_locations?
+      @rule_builders.each do |builder|
+        return true if uses_locations?(builder.action)
+        return true if builder.rhs.any? { |node| node.is_a?(Node::RuleRhs::Action) && uses_locations?(node) }
+      end
+      return false unless parameterized_rules.any? { |rule| rule.rhs.any? { |rhs| uses_locations?(rhs.action) } }
+
+      # An unused template must not add a location argument to yylex.
+      pending = @rule_builders.flat_map(&:rhs)
+      visited = Set.new #: Set[[Parameterized::Rule, String]]
+      while (node = pending.pop)
+        next unless node.is_a?(Node::RuleRhs::Symbol) || node.is_a?(Node::RuleRhs::InstantiateRule)
+
+        rule = @parameterized_resolver.find_inline(node)
+        bindings = nil
+        if node.is_a?(Node::RuleRhs::InstantiateRule)
+          rule ||= @parameterized_resolver.find_rule(node)
+          next unless rule
+          bindings = Binding.new(rule.parameters, node.args)
+          key = bindings.concatenated_args_str(node)
+        else
+          next unless rule
+          key = node.name
+        end
+        next unless visited.add?([rule, key])
+
+        rule.rhs.each do |rhs|
+          return true if uses_locations?(rhs.action)
+          rhs.symbols.each { |symbol| pending << (bindings ? bindings.resolve_symbol(symbol) : symbol) }
+        end
+      end
+      false
     end
   end
 end

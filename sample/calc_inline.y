@@ -65,16 +65,16 @@ program: /* empty */
  *   expr TIMES expr  <- inherits TIMES precedence
  */
 expr: NUM
-    | expr op expr { $$ = $<val>2 ? $1 * $3 : $1 + $3; }
+    | expr op expr { $$ = $2 ? $1 * $3 : $1 + $3; }
     | '(' expr ')' { $$ = $2; }
     ;
 
 /*
- * Remove "%inline" here to see the conflict.
+ * Run lrama with --no-inline to see the shift/reduce conflicts.
  */
-%rule %inline op: PLUS  { $<val>$ = 0; }
-                | TIMES { $<val>$ = 1; }
-                ;
+%rule %inline op <val>: PLUS  { $$ = 0; }
+                      | TIMES { $$ = 1; }
+                      ;
 
 %%
 

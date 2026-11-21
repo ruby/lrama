@@ -1,5 +1,26 @@
 # NEWS for Lrama
 
+## Unreleased
+
+### Typed inline actions
+
+An inline rule can declare its semantic type and assign its result to `$$`.
+The parser evaluates the action once per occurrence, even when the enclosing action reads its result more than once.
+
+```yacc
+%union { int i; }
+%token <i> NUM
+%type <i> expr
+%rule %inline twice <i>: NUM { $$ = 2 * $1; };
+%%
+expr: twice { $$ = $1 + $1; };
+```
+
+The operator fragments introduced in 0.6.6, such as `{ + }`, still work.
+To give a fragment with side effects single-evaluation semantics, declare its type and assign the expression to `$$`.
+Use `--no-inline` to generate ordinary nonterminals for inline rules, including parameterized rules such as `ioption(X)`.
+To run the same grammar in both modes, use a semantic value for each result that the enclosing action reads.
+
 ## Lrama 0.8.0 (2026-03-01)
 
 ### Support parser generation without %union directive (Bison compatibility)

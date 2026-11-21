@@ -101,6 +101,21 @@ module Lrama
         end
       end
 
+      # Resolve names while their declaring rule and original source offsets are available.
+      # @rbs (Lexer::Token::UserCode code, ?symbols: Array[Node::RuleRhs::rhs], ?lhs_name: String?, ?lhs_alias: String?, ?position: Integer) -> Lexer::Token::UserCode
+      def positional_action_code(code, symbols: rhs, lhs_name: lhs&.name, lhs_alias: lhs_alias_name, position: symbols.length + 1)
+        resolve_action_references(code, symbols, lhs_name, lhs_alias, position)
+        return code unless code.references.any?(&:name)
+
+        text = code.s_value.dup
+        code.references.reverse_each do |ref|
+          next unless ref.name
+
+          text[ref.first_column...ref.last_column] = ref.spelling
+        end
+        Lexer::Token::UserCode.new(s_value: text, location: code.location)
+      end
+
       private
 
       # @rbs () -> void
@@ -232,65 +247,48 @@ module Lrama
 
       # @rbs () -> void
       def numberize_references
-        # Bison n'th component is 1-origin
-        (rhs + [action]).compact.each.with_index(1) do |node, i|
+        (rhs + [action]).compact.each.with_index(1) do |node, position|
           next unless node.is_a?(Node::RuleRhs::Action)
 
-          token = node.code
-
-          token.references.each do |ref|
-            ref_name = ref.name
-
-            if ref_name
-              if ref_name == '$'
-                ref.name = '$'
-              else
-                candidates = ([lhs] + rhs).each_with_index.select do |node, _i|
-                  rhs_node_referred_by?(node, ref_name)
-                end
-
-                if candidates.size >= 2
-                  token.invalid_ref(ref, "Referring symbol `#{ref_name}` is duplicated.")
-                end
-
-                unless (referring_symbol = candidates.first)
-                  token.invalid_ref(ref, "Referring symbol `#{ref_name}` is not found.")
-                end
-
-                if referring_symbol[1] == 0 # Refers to LHS
-                  ref.name = '$'
-                else
-                  ref.number = referring_symbol[1]
-                end
-              end
-            end
-
-            if ref.number
-              ref.index = ref.number
-            end
-
-            # TODO: Need to check index of @ too?
-            next if ref.type == :at
-
-            if ref.index
-              # TODO: Prohibit $0 even so Bison allows it?
-              # See: https://www.gnu.org/software/bison/manual/html_node/Actions.html
-              token.invalid_ref(ref, "Can not refer following component. #{ref.index} >= #{i}.") if ref.index >= i
-              mark_rhs_node_referred(rhs[ref.index - 1])
-            end
-          end
+          resolve_action_references(node.code, rhs, lhs&.name, lhs_alias_name, position)
         end
       end
 
-      # @rbs (Grammar::Symbol::Id? | Node::RuleRhs::rhs node, String name) -> bool
+      # @rbs (Lexer::Token::UserCode token, Array[Node::RuleRhs::rhs] symbols, String? lhs_name, String? lhs_alias, Integer position) -> void
+      def resolve_action_references(token, symbols, lhs_name, lhs_alias, position)
+        token.references.each do |ref|
+          name = ref.name
+          if name && name != '$'
+            candidates = [] #: Array[Integer]
+            candidates << 0 if name == lhs_name || name == lhs_alias
+            symbols.each_with_index do |node, index|
+              candidates << index + 1 if rhs_node_referred_by?(node, name)
+            end
+            token.invalid_ref(ref, "Referring symbol `#{name}` is duplicated.") if candidates.size > 1
+            target = candidates.first
+            token.invalid_ref(ref, "Referring symbol `#{name}` is not found.") unless target
+            if target == 0
+              ref.name = '$'
+            else
+              ref.number = target
+            end
+          end
+
+          ref.index = ref.number if ref.number
+          next if ref.type == :at || !ref.index
+
+          token.invalid_ref(ref, "Can not refer following component. #{ref.index} >= #{position}.") if ref.index >= position
+          mark_rhs_node_referred(symbols[ref.index - 1])
+        end
+      end
+
+      # @rbs (Node::RuleRhs::rhs node, String name) -> bool
       def rhs_node_referred_by?(node, name)
         case node
-        when Grammar::Symbol::Id
-          [node.name, lhs_alias_name].compact.include?(name)
         when Node::RuleRhs::Symbol, Node::RuleRhs::InstantiateRule
-          [node.name, node.alias_name].compact.include?(name)
+          node.name == name || node.alias_name == name
         when Node::RuleRhs::Action
-          [node.code.s_value, node.alias_name].compact.include?(name)
+          node.code.s_value == name || node.alias_name == name
         else
           false
         end

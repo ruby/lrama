@@ -268,11 +268,6 @@ module Lrama
     # @rbs () -> void
     def resolve_inline_rules: () -> void
 
-    # Convert inline rules to regular rules when --no-inline is specified.
-    # This allows inline rules to be treated as ordinary non-terminal rules.
-    # Only non-parameterized inline rules can be converted (rules with parameters
-    # require instantiation and cannot be converted to simple rules).
-    #
     # @rbs () -> void
     def convert_inline_rules_to_regular_rules: () -> void
 
@@ -314,5 +309,11 @@ module Lrama
 
     # @rbs () -> void
     def set_locations: () -> void
+
+    # @rbs (Node::RuleRhs::Action? action) -> bool
+    def uses_locations?: (Node::RuleRhs::Action? action) -> bool
+
+    # @rbs () -> bool
+    def inline_locations?: () -> bool
   end
 end

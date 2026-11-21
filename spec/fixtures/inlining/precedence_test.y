@@ -9,11 +9,10 @@
  *           allowing precedence to be inherited from the terminal.
  */
 
-%{
-// Prologue
+%code provides {
 static int yylex(YYSTYPE *val, YYLTYPE *loc);
 static int yyerror(YYLTYPE *loc, const char *str);
-%}
+}
 
 %union {
     int i;
@@ -27,14 +26,14 @@ static int yyerror(YYLTYPE *loc, const char *str);
 
 %type <i> expression
 
-%rule %inline op: PLUS { $$ = add; }
-               | TIMES { $$ = mul; }
+%rule %inline op <i>: PLUS { $$ = 0; }
+               | TIMES { $$ = 1; }
                ;
 
 %%
 
 expression: NUM { $$ = $1; }
-          | expression op expression { $$ = $1 $2 $3; }
+          | expression op expression { $$ = $2 ? $1 * $3 : $1 + $3; }
           ;
 
 %%

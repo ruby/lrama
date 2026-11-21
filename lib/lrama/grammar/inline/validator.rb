@@ -35,18 +35,15 @@ module Lrama
           return unless @start_nterm
 
           start_symbol_name = @start_nterm.s_value
-          if inline_rules.any? { |rule| rule.name == start_symbol_name }
-            raise StartSymbolInlineError, "Start symbol '#{start_symbol_name}' cannot be declared as inline."
+          if inline_rules.any? { |rule| rule.name == start_symbol_name && rule.parameters.empty? }
+            message = "Start symbol '#{start_symbol_name}' cannot be declared as inline."
+            raise StartSymbolInlineError, @start_nterm.location.generate_error_message(message)
           end
         end
 
         # @rbs (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
         def check_recursion(rule, visiting, visited)
           return if visited[rule]
-          if visiting[rule]
-            path = visiting.keys.map(&:name) + [rule.name]
-            raise RecursiveInlineError, "Recursive inline definition detected: #{path.join(' -> ')}. Inline rules cannot reference themselves directly or indirectly."
-          end
 
           visiting[rule] = true
           rule.rhs.each do |rhs|
@@ -54,7 +51,13 @@ module Lrama
               next if rule.parameters.any? { |parameter| parameter.s_value == symbol.name }
 
               referenced_rule = @parameterized_resolver.find_inline(symbol)
-              check_recursion(referenced_rule, visiting, visited) if referenced_rule
+              next unless referenced_rule
+              if visiting[referenced_rule]
+                path = visiting.keys.map(&:name) + [referenced_rule.name]
+                message = "Recursive inline definition detected: #{path.join(' -> ')}."
+                raise RecursiveInlineError, symbol.location.generate_error_message(message)
+              end
+              check_recursion(referenced_rule, visiting, visited)
             end
           end
           visiting.delete(rule)

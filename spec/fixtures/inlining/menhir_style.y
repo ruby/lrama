@@ -3,11 +3,13 @@
  * When inline action contains $$, variable binding is used.
  */
 
-%{
-// Prologue
+%code provides {
+#include <stdio.h>
+static int add(int a, int b);
+static int mul(int a, int b);
 static int yylex(YYSTYPE *val, YYLTYPE *loc);
 static int yyerror(YYLTYPE *loc, const char *str);
-%}
+}
 
 %union {
     int i;
@@ -18,7 +20,7 @@ static int yyerror(YYLTYPE *loc, const char *str);
 %type <i> expression
 
 /* Menhir-style: inline action returns a value via $$ */
-%rule %inline op: '+' { printf("plus\n"); $$ = add; }
+%rule %inline op <fn>: '+' { printf("plus\n"); $$ = add; }
                | '*' { printf("times\n"); $$ = mul; }
                ;
 

@@ -259,6 +259,42 @@ RSpec.describe "integration" do
     end
   end
 
+  [[], ["--no-inline"]].each do |options|
+    it "preserves inline values and locations with #{options.first || 'inlining enabled'}" do
+      Dir.mktmpdir do |directory|
+        c_path = File.join(directory, "inline_actions#{file_extension}")
+        obj_path = File.join(directory, "inline_actions")
+        generate_object(fixture_path("integration/inline_actions.y"), c_path, obj_path, command_args: options)
+
+        {
+          "12345" => "249",
+          "n3" => "31 31 1",
+          "u7" => "3",
+          "cpab" => "4",
+          "xpab" => "1..3",
+          "xp" => "1..7",
+          "ypab" => "1..3 1..3",
+          "yp" => "1..7 1..7",
+          "v7" => "10",
+          "d2" => "20 1",
+          "s4" => "0 40",
+          "s-4" => "1 40",
+          "lab9" => "1..3 2..3",
+          "l9" => "1..1 1..1",
+          "m2345" => "203/41/1[1..4] 203/41/5",
+          "k23" => "2 3",
+          "k-23" => "2 3",
+          "o9" => "9",
+          "o-9" => "9",
+        }.each do |input, expected|
+          output, error, status = Open3.capture3(obj_path, input)
+          expect(status.success?).to be(true), "#{input}: #{error}"
+          expect(output).to eq(expected), "input #{input.inspect} produced #{output.inspect}"
+        end
+      end
+    end
+  end
+
   describe "user defined parameterized rules" do
     it "prints messages corresponding to rules" do
       expected = <<~STR
