@@ -12,6 +12,8 @@ module Lrama
 
     type item_pair = [ State, Item ]
 
+    type item_lookahead_dependencies = Hash[Integer, Array[[ State, Item, Array[item_pair] ]]]
+
     type item_origins_cache = Hash[item_pair, Array[item_pair]]
 
     type annotation_key = [ Integer, Grammar::Symbol, Array[InadequacyAnnotation::action], Hash[InadequacyAnnotation::action, Bitmap::bitmap?] ]
@@ -230,8 +232,8 @@ module Lrama
     # @rbs () -> lookahead_set
     def item_lookahead_set: () -> lookahead_set
 
-    # @rbs (Array[[State, bool]] pending, bool dependencies_computed) -> void
-    def compute_item_lookahead_set: (Array[[ State, bool ]] pending, bool dependencies_computed) -> void
+    # @rbs (Array[State] pending, item_lookahead_dependencies dependencies) -> void
+    def collect_item_lookahead_dependencies: (Array[State] pending, item_lookahead_dependencies dependencies) -> void
 
     # @rbs (lookahead_set k) -> void
     def item_lookahead_set=: (lookahead_set k) -> void
