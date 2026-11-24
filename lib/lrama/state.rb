@@ -21,6 +21,7 @@ module Lrama
     #   type lookahead_set = Hash[Item, Bitmap::bitmap]
     #   type dominant_contributions = Hash[InadequacyAnnotation, Array[InadequacyAnnotation::action]?]
     #   type item_pair = [State, Item]
+    #   type item_lookahead_dependencies = Hash[Integer, Array[[State, Item, Array[item_pair]]]]
     #   type item_origins_cache = Hash[item_pair, Array[item_pair]]
     #   type annotation_key = [Integer, Grammar::Symbol, Array[InadequacyAnnotation::action], Hash[InadequacyAnnotation::action, Bitmap::bitmap?]]
     #   type annotation_indexes = Hash[Integer, Set[annotation_key]]
@@ -542,46 +543,43 @@ module Lrama
     def item_lookahead_set
       return @item_lookahead_set if @item_lookahead_set
 
-      pending = [[self, false]] #: Array[[State, bool]]
-      while (entry = pending.pop)
-        state, dependencies_computed = entry
-        state.compute_item_lookahead_set(pending, dependencies_computed)
+      pending = [self] #: Array[State]
+      dependencies = {} #: item_lookahead_dependencies
+      while (state = pending.pop)
+        state.collect_item_lookahead_dependencies(pending, dependencies)
+      end
+
+      # Predecessor states can form cycles, but the predecessor item's dot is one position earlier.
+      dependencies.keys.sort.each do |position|
+        dependencies.fetch(position).each do |state, item, predecessors|
+          state.item_lookahead_set[item] = predecessors.reduce(0) do |bits, (predecessor, previous_item)|
+            bits | predecessor.item_lookahead_set.fetch(previous_item)
+          end
+        end
       end
       @item_lookahead_set
     end
 
-    # @rbs (Array[[State, bool]] pending, bool dependencies_computed) -> void
-    def compute_item_lookahead_set(pending, dependencies_computed)
-      unless dependencies_computed
-        return if @item_lookahead_set
+    # @rbs (Array[State] pending, item_lookahead_dependencies dependencies) -> void
+    def collect_item_lookahead_dependencies(pending, dependencies)
+      return if @item_lookahead_set
 
-        @item_lookahead_set = kernels.map {|k| [k, 0] }.to_h.compare_by_identity
-        pending << [self, true]
-        # Depth-first order matters when a predecessor refers to an unfinished state.
-        kernels.reverse_each do |kernel|
-          next if kernel.lhs.accept_symbol? || kernel.position <= 1
-          predecessors_with_item(kernel).reverse_each do |state, _|
-            pending << [state, false]
+      @item_lookahead_set = {} #: lookahead_set
+      @item_lookahead_set.compare_by_identity
+      kernels.each do |item|
+        if item.lhs.accept_symbol?
+          @item_lookahead_set[item] = 0
+        elsif item.position == 1
+          @item_lookahead_set[item] = @predecessors.reduce(0) do |lookaheads, predecessor|
+            goto = predecessor.transitions_by_symbol_number.fetch(item.lhs.number) #: Action::Goto
+            lookaheads | predecessor.goto_follows.fetch(goto)
           end
+        else
+          predecessors = predecessors_with_item(item)
+          (dependencies[item.position] ||= []) << [self, item, predecessors]
+          predecessors.each { |predecessor, _| pending << predecessor }
         end
-        return
       end
-
-      @item_lookahead_set = kernels.map {|kernel|
-        value =
-          if kernel.lhs.accept_symbol?
-            0
-          elsif kernel.position > 1
-            prev_items = predecessors_with_item(kernel)
-            prev_items.map {|st, i| st.item_lookahead_set[i] }.reduce(0) {|acc, bitmap| acc | bitmap }
-          elsif kernel.position == 1
-            @predecessors.reduce(0) do |lookaheads, prev_state|
-              goto = prev_state.transitions_by_symbol_number.fetch(kernel.lhs.number) #: Action::Goto
-              lookaheads | prev_state.goto_follows.fetch(goto)
-            end
-          end
-        [kernel, value]
-      }.to_h.compare_by_identity
     end
 
     # @rbs (lookahead_set k) -> void

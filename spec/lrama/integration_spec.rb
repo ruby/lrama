@@ -133,6 +133,19 @@ RSpec.describe "integration" do
     end
   end
 
+  it "propagates initial item lookaheads through recursive IELR rules" do
+    Dir.mktmpdir do |directory|
+      c_path = File.join(directory, "initial_lookaheads#{file_extension}")
+      obj_path = File.join(directory, "initial_lookaheads")
+      generate_object(fixture_path("ielr/initial_item_lookaheads.y"), c_path, obj_path)
+
+      {"caad" => 0, "cdbad" => 0, "d" => 0, "caa" => 1, "cdba" => 1}.each do |input, expected_status|
+        _, error, status = Open3.capture3(obj_path, input)
+        expect(status.exitstatus).to eq(expected_status), "#{input}: #{error}"
+      end
+    end
+  end
+
   it "preserves distinct IELR annotation contributions through nullable recursive rules" do
     Dir.mktmpdir do |directory|
       c_path = File.join(directory, "distinct_annotations#{file_extension}")

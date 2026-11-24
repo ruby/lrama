@@ -214,6 +214,26 @@ RSpec.describe Lrama::States do
   end
 
   describe 'IELR lookaheads through nested rules' do
+    it 'propagates lookaheads through every dot position of a recursive rule' do
+      source = "%%\nlist: %empty | list 'x' list;\n"
+      grammar = Lrama::Parser.new(source, "recursive.y").parse
+      grammar.prepare
+      states = described_class.new(grammar, Lrama::Tracer.new(Lrama::Logger.new))
+      states.compute
+      states.send(:compute_predecessors)
+      states.send(:compute_follow_kernel_items)
+      always_follows = states.send(:compute_always_follows)
+      states.send(:compute_goto_follows, always_follows)
+
+      after_x = states.states.find { |state| state.accessing_symbol.name == "'x'" }
+      after_list = after_x.nterm_transitions.first.to_state
+      completed = after_list.kernels.find(&:end_of_rule?)
+      expected = Lrama::Bitmap.from_array([grammar.eof_symbol.number, after_x.accessing_symbol.number])
+
+      expect(after_x.item_lookahead_set.fetch(after_x.kernels.first)).to eq(expected)
+      expect(after_list.item_lookahead_set.fetch(completed)).to eq(expected)
+    end
+
     ["'y'", "'y' 'z'", "'y' 'z' 'w'"].each do |rhs|
       it "splits nested reductions with the shared tail #{rhs} without conflicts" do
         source = File.read(fixture_path("ielr/nested_rule_contributions.y")).gsub("'y'", rhs)
