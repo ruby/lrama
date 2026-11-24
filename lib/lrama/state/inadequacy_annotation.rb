@@ -41,60 +41,45 @@ module Lrama
 
       # @rbs (Array[action] actions) -> Array[action]
       def resolve_conflict(actions)
-        # @type var shifts: Array[Action::Shift]
+        return actions if actions.length < 2
+
+        shift = actions.find { |action| action.is_a?(Action::Shift) } #: Action::Shift?
+        return actions unless shift
+        shift_prec = shift.next_sym.precedence
+        return actions unless shift_prec
+
         # @type var reduces: Array[Action::Reduce]
-        shifts = actions.select {|action| action.is_a?(Action::Shift)}
-        reduces = actions.select {|action| action.is_a?(Action::Reduce) }
+        reduces = actions.select { |action| action.is_a?(Action::Reduce) }
+        # Match the order in which the parser tables resolve reductions against this shift.
+        reduces.sort_by! { |reduce| reduce.rule.id } if reduces.length > 1
 
-        shifts.each do |shift|
-          reduces.each do |reduce|
-            sym = shift.next_sym
+        reduces.each do |reduce|
+          reduce_prec = reduce.rule.precedence
+          next unless reduce_prec
 
-            shift_prec = sym.precedence
-            reduce_prec = reduce.item.rule.precedence
+          if shift_prec < reduce_prec
+            actions.delete(shift)
+            break
+          elsif shift_prec > reduce_prec
+            actions.delete(reduce)
+            next
+          end
 
-            # Can resolve only when both have prec
-            unless shift_prec && reduce_prec
-              next
-            end
-
-            case
-            when shift_prec < reduce_prec
-              # Reduce is selected
-              actions.delete(shift)
-              next
-            when shift_prec > reduce_prec
-              # Shift is selected
-              actions.delete(reduce)
-              next
-            end
-
-            # shift_prec == reduce_prec, then check associativity
-            case sym.precedence&.type
-            when :precedence
-              # %precedence only specifies precedence and not specify associativity
-              # then a conflict is unresolved if precedence is same.
-              next
-            when :right
-              # Shift is selected
-              actions.delete(reduce)
-              next
-            when :left
-              # Reduce is selected
-              actions.delete(shift)
-              next
-            when :nonassoc
-              # Can not resolve
-              #
-              # nonassoc creates "run-time" error, precedence creates "compile-time" error.
-              # Then omit both the shift and reduce.
-              #
-              # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
-              actions.delete(shift)
-              actions.delete(reduce)
-            else
-              raise "Unknown precedence type. #{sym}"
-            end
+          case shift_prec.type
+          when :precedence
+            # Equal precedence alone leaves the conflict unresolved.
+            next
+          when :right
+            actions.delete(reduce)
+          when :left
+            actions.delete(shift)
+            break
+          when :nonassoc
+            # An explicit syntax error overrides every remaining action for this token.
+            # https://www.gnu.org/software/bison/manual/html_node/Using-Precedence.html
+            return []
+          else
+            raise "Unknown precedence type. #{shift_prec.type}"
           end
         end
 
