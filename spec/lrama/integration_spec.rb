@@ -133,6 +133,19 @@ RSpec.describe "integration" do
     end
   end
 
+  it "keeps a nonassociative error separate from a reduction in IELR states" do
+    Dir.mktmpdir do |directory|
+      c_path = File.join(directory, "annotation_order#{file_extension}")
+      obj_path = File.join(directory, "annotation_order")
+      generate_object(fixture_path("ielr/annotation_conflict_order.y"), c_path, obj_path)
+
+      {"ax+" => 0, "x+" => 1, "ax" => 0, "+x+" => 0}.each do |input, expected_status|
+        _, error, status = Open3.capture3(obj_path, input)
+        expect(status.exitstatus).to eq(expected_status), "#{input}: #{error}"
+      end
+    end
+  end
+
   it "propagates initial item lookaheads through recursive IELR rules" do
     Dir.mktmpdir do |directory|
       c_path = File.join(directory, "initial_lookaheads#{file_extension}")
