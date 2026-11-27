@@ -23,7 +23,7 @@ jobs:
         ruby: ${{ fromJson(needs.ruby-versions.outputs.versions) }}
     steps:
       - uses: actions/checkout@v7
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1.345.0
         with:
           ruby-version: ${{ matrix.ruby }}
           # NOTE: If this cache is present, the following will fail at Ruby 2.5:
@@ -40,7 +40,7 @@ jobs:
         ruby: ['head']
     steps:
       - uses: actions/checkout@v7
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1.345.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
@@ -59,7 +59,7 @@ jobs:
         compiler: ['cc', 'gcc', 'clang']
     steps:
       - uses: actions/checkout@v7
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1.345.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
@@ -78,7 +78,7 @@ jobs:
         compiler: ['g++', 'clang++']
     steps:
       - uses: actions/checkout@v7
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1.345.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
@@ -95,7 +95,7 @@ jobs:
         ruby: ['head']
     steps:
       - uses: actions/checkout@v7
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1.345.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
@@ -114,7 +114,7 @@ jobs:
         ruby: ['head']
     steps:
       - uses: actions/checkout@v7
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1.345.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
@@ -148,7 +148,7 @@ jobs:
       INSTALL_STEEP: 'true'
     steps:
       - uses: actions/checkout@v7
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1.345.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
@@ -177,7 +177,7 @@ jobs:
         working-directory: ../ruby/build
     steps:
       - uses: actions/checkout@v7
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@145243922b4465b78e04dd66294782c7de45901f # v1.345.0
         with:
           ruby-version: ${{ matrix.baseruby }}
           bundler-cache: true
