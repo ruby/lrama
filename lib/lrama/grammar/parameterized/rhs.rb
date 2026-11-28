@@ -5,6 +5,7 @@ module Lrama
   class Grammar
     class Parameterized
       class Rhs
+        attr_accessor :line #: Integer?
         attr_accessor :symbols #: Array[Node::RuleRhs::value]
         attr_accessor :action #: Node::RuleRhs::Action?
         attr_accessor :precedence_sym #: Grammar::Symbol?

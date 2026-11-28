@@ -242,4 +242,133 @@ RSpec.describe Lrama::Grammar do
       end
     end
   end
+
+  describe '#no_inline' do
+    it 'defaults to false' do
+      expect(grammar.no_inline).to be false
+    end
+
+    it 'can be set to true' do
+      grammar.no_inline = true
+      expect(grammar.no_inline).to be true
+    end
+
+    it 'prepares recursive inline rules as ordinary nonterminals' do
+      source = <<~GRAMMAR
+        %rule %inline repeat: 'x' repeat | %empty ;
+        %%
+        program: repeat ;
+      GRAMMAR
+      grammar = Lrama::Parser.new(source, "repeat.y").parse
+      grammar.no_inline = true
+      grammar.prepare
+      alternatives = grammar.rules.select { |rule| rule.lhs.name == "repeat" }
+      expect(alternatives.map { |rule| rule.rhs.map(&:name) }).to eq([["'x'", "repeat"], []])
+    end
+
+    it 'instantiates inline rules by arity, including rules from the standard library' do
+      source = <<~GRAMMAR
+        %token X Y
+        %rule %inline helper: X ;
+        %rule %inline helper(A): A ;
+        %rule %inline helper(A, B): B A ;
+        %%
+        program: helper helper(X) helper(X, Y) ioption(X) ;
+      GRAMMAR
+      grammar = Lrama::Parser.new(source, "overloads.y").parse
+      path = Lrama::Command::STDLIB_FILE_PATH
+      stdlib = Lrama::Parser.new(File.read(path), path).parse
+      grammar.prepend_parameterized_rules(stdlib.parameterized_rules)
+      grammar.no_inline = true
+      grammar.prepare
+
+      rules = grammar.rules.group_by { |rule| rule.lhs.name }
+      expect(rules.fetch("program").first.rhs.map(&:name)).to eq(["helper", "helper_X", "helper_X_Y", "ioption_X"])
+      expect(rules.fetch("helper_X_Y").first.rhs.map(&:name)).to eq(["Y", "X"])
+      expect(rules.fetch("ioption_X").map { |rule| rule.rhs.map(&:name) }).to eq([[], ["X"]])
+    end
+  end
+
+  describe '#prepare' do
+    context 'when an inline alternative is empty' do
+      let(:source) do
+        <<~GRAMMAR
+          %rule %inline opt: %empty | '-' ;
+          %rule observe(X): X { seen(@1); } ;
+          %rule pass(X): X ;
+          %rule ignore(X): 'y' ;
+          %%
+          program: #{entry} ;
+          expr: opt 'x' ;
+        GRAMMAR
+      end
+      let(:grammar) { Lrama::Parser.new(source, "locations.y").parse }
+      let(:empty_alternative) { grammar.rules.find { |rule| rule.lhs.name == "expr" && rule.rhs.size == 1 } }
+
+      context 'when another ordinary rule uses locations' do
+        let(:entry) { "expr { seen(@1); }" }
+
+        it 'preserves the default location of the expanded rule' do
+          grammar.prepare
+          expect(empty_alternative.token_code.s_value).to include("YYLLOC_DEFAULT")
+        end
+      end
+
+      context 'when an instantiated parameterized rule uses locations' do
+        let(:entry) { "pass(observe(expr))" }
+
+        it 'preserves the default location of the expanded rule' do
+          grammar.prepare
+          expect(empty_alternative.token_code.s_value).to include("YYLLOC_DEFAULT")
+        end
+      end
+
+      context 'when a parameterized rule with locations is never instantiated' do
+        let(:entry) { "expr ignore(observe(expr))" }
+
+        it 'keeps the lexer signature without a location argument' do
+          grammar.prepare
+          expect(grammar.locations).to be(false)
+          expect(empty_alternative.token_code).to be_nil
+        end
+      end
+    end
+
+    it 'allows a start symbol with a parameterized inline rule of the same name' do
+      source = <<~GRAMMAR
+        %rule %inline first(X): X ;
+        %start first
+        %%
+        first: first 'x' | 'x' ;
+      GRAMMAR
+      grammar = Lrama::Parser.new(source, "start.y").parse
+      expect { grammar.prepare }.not_to raise_error
+    end
+
+    it 'points to the reference that closes an inline cycle' do
+      source = <<~GRAMMAR
+        %rule %inline a: b ;
+        %rule %inline b: a ;
+        %%
+        program: a ;
+      GRAMMAR
+      grammar = Lrama::Parser.new(source, "cycle.y").parse
+      expect { grammar.prepare }.to raise_error(
+        Lrama::Grammar::Inline::Validator::RecursiveInlineError, /cycle\.y:2:17: .*a -> b -> a/
+      )
+    end
+
+    it 'points to the inline symbol in the start directive' do
+      source = <<~GRAMMAR
+        %rule %inline first: 'x' ;
+        %start first
+        %%
+        program: first ;
+      GRAMMAR
+      grammar = Lrama::Parser.new(source, "start.y").parse
+      expect { grammar.prepare }.to raise_error(
+        Lrama::Grammar::Inline::Validator::StartSymbolInlineError, /start\.y:2:7: Start symbol 'first'/
+      )
+    end
+  end
 end

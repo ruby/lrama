@@ -24,6 +24,9 @@ module Lrama
 
       def initialize: (type: ::Symbol, first_column: Integer, last_column: Integer, ?name: String, ?number: Integer, ?index: Integer, ?ex_tag: Lexer::Token::Base?) -> void
 
+      # @rbs (?(Integer | String) position, ?Lexer::Token::Base? tag) -> String
+      def spelling: (?Integer | String position, ?Lexer::Token::Base? tag) -> String
+
       # @rbs () -> (String|Integer)
       def value: () -> (String | Integer)
     end

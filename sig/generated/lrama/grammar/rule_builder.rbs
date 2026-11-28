@@ -66,6 +66,10 @@ module Lrama
       # @rbs () -> bool
       def has_inline_rules?: () -> bool
 
+      # Resolve names while their declaring rule and original source offsets are available.
+      # @rbs (Lexer::Token::UserCode code, ?symbols: Array[Node::RuleRhs::rhs], ?lhs_name: String?, ?lhs_alias: String?, ?position: Integer) -> Lexer::Token::UserCode
+      def positional_action_code: (Lexer::Token::UserCode code, ?symbols: Array[Node::RuleRhs::rhs], ?lhs_name: String?, ?lhs_alias: String?, ?position: Integer) -> Lexer::Token::UserCode
+
       private
 
       # @rbs () -> void
@@ -91,8 +95,11 @@ module Lrama
       # @rbs () -> void
       def numberize_references: () -> void
 
-      # @rbs (Grammar::Symbol::Id? | Node::RuleRhs::rhs node, String name) -> bool
-      def rhs_node_referred_by?: (Grammar::Symbol::Id? | Node::RuleRhs::rhs node, String name) -> bool
+      # @rbs (Lexer::Token::UserCode token, Array[Node::RuleRhs::rhs] symbols, String? lhs_name, String? lhs_alias, Integer position) -> void
+      def resolve_action_references: (Lexer::Token::UserCode token, Array[Node::RuleRhs::rhs] symbols, String? lhs_name, String? lhs_alias, Integer position) -> void
+
+      # @rbs (Node::RuleRhs::rhs node, String name) -> bool
+      def rhs_node_referred_by?: (Node::RuleRhs::rhs node, String name) -> bool
 
       # @rbs (Node::RuleRhs::rhs node) -> void
       def mark_rhs_node_referred: (Node::RuleRhs::rhs node) -> void

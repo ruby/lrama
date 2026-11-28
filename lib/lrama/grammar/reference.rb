@@ -20,6 +20,12 @@ module Lrama
       #
       #   def initialize: (type: ::Symbol, ?name: String, ?number: Integer, ?index: Integer, ?ex_tag: Lexer::Token::Base?, first_column: Integer, last_column: Integer) -> void
 
+      # @rbs (?(Integer | String) position, ?Lexer::Token::Base? tag) -> String
+      def spelling(position = index || '$', tag = ex_tag)
+        prefix = { dollar: "$", at: "@", index: "$:" }.fetch(type)
+        "#{prefix}#{tag&.s_value}#{position}"
+      end
+
       # @rbs () -> (String|Integer)
       def value
         name || number

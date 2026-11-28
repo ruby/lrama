@@ -1,0 +1,74 @@
+# Generated from lib/lrama/grammar/inline/action.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Inline
+      class Action
+        # Keep a whole YYSTYPE copy together when a later expansion replaces its source.
+        class GeneratedCode < Lexer::Token::UserCode
+          private
+
+          # @rbs (StringScanner scanner) -> Reference?
+          def scan_reference: (StringScanner scanner) -> Reference?
+        end
+
+        class ExpandedAction < Node::RuleRhs::Action
+          attr_reader prefixes: Array[[ Integer, Lexer::Token::UserCode ]]
+
+          attr_reader body: String
+
+          attr_reader initial_value: String?
+
+          attr_reader default_location: Lexer::Token::UserCode?
+
+          # @rbs (Array[[Integer, Lexer::Token::UserCode]] prefixes, String body, Node::RuleRhs::Action origin, String? initial_value, Lexer::Token::UserCode? default_location) -> void
+          def initialize: (Array[[ Integer, Lexer::Token::UserCode ]] prefixes, String body, Node::RuleRhs::Action origin, String? initial_value, Lexer::Token::UserCode? default_location) -> void
+        end
+
+        # @rbs (RuleBuilder source, Parameterized::Rule rule, Parameterized::Rhs rhs, Integer index, Lexer::Token::Tag? tag) -> void
+        def initialize: (RuleBuilder source, Parameterized::Rule rule, Parameterized::Rhs rhs, Integer index, Lexer::Token::Tag? tag) -> void
+
+        # @rbs () -> Node::RuleRhs::Action?
+        def stack_action: () -> Node::RuleRhs::Action?
+
+        # @rbs (Node::RuleRhs::Action action, Integer position) -> Node::RuleRhs::Action
+        def rewrite_midrule: (Node::RuleRhs::Action action, Integer position) -> Node::RuleRhs::Action
+
+        # @rbs () -> Node::RuleRhs::Action?
+        def expand: () -> Node::RuleRhs::Action?
+
+        private
+
+        # @rbs (Lexer::Token::UserCode code) -> String
+        def inner_code: (Lexer::Token::UserCode code) -> String
+
+        # @rbs () -> String
+        def action_prefix: () -> String
+
+        # @rbs (Node::RuleRhs::Action? outer) -> String
+        def outer_body: (Node::RuleRhs::Action? outer) -> String
+
+        # @rbs () -> Integer
+        def offset: () -> Integer
+
+        # @rbs (Lexer::Token::UserCode code) -> Lexer::Token::UserCode
+        def rewrite_outer: (Lexer::Token::UserCode code) -> Lexer::Token::UserCode
+
+        # @rbs (Lexer::Token::UserCode code) { (Reference) -> String? } -> String
+        def replace_references: (Lexer::Token::UserCode code) { (Reference) -> String? } -> String
+
+        # @rbs (Integer position) -> String
+        def stack_value: (Integer position) -> String
+
+        # @rbs (String target, Integer index, Integer size) -> String
+        def location_default: (String target, Integer index, Integer size) -> String
+
+        # @rbs () -> String
+        def location_target: () -> String
+
+        # @rbs (Reference ref) -> String
+        def value: (Reference ref) -> String
+      end
+    end
+  end
+end

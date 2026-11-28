@@ -5,11 +5,17 @@ module Lrama
   class Grammar
     class Parameterized
       class Resolver
+        attr_reader :inline_counter #: Counter
+        attr_accessor :locations #: bool
+        attr_accessor :union_defined #: bool
         attr_accessor :rules #: Array[Rule]
         attr_accessor :created_lhs_list #: Array[Grammar::Symbol::Id]
 
         # @rbs () -> void
         def initialize
+          @inline_counter = Counter.new(1)
+          @locations = false
+          @union_defined = false
           @rules = []
           @created_lhs_list = []
         end
@@ -26,7 +32,8 @@ module Lrama
 
         # @rbs (Node::RuleRhs::value node) -> Rule?
         def find_inline(node)
-          @rules.reverse.find { |rule| rule.name == node.name && rule.inline? }
+          arity = node.is_a?(Node::RuleRhs::InstantiateRule) ? node.args.length : 0
+          @rules.reverse_each.find { |rule| rule.inline? && rule.name == node.name && rule.required_parameters_count == arity }
         end
 
         # @rbs (String lhs_s_value) -> Grammar::Symbol::Id?

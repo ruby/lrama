@@ -1,0 +1,34 @@
+# Generated from lib/lrama/grammar/inline/validator.rb with RBS::Inline
+
+module Lrama
+  class Grammar
+    class Inline
+      # Validates inline rules according to Menhir specification.
+      # Detects:
+      # - Direct recursion (inline rule references itself)
+      # - Mutual recursion (inline rules reference each other in a cycle)
+      # - Start symbol declared as inline
+      class Validator
+        class RecursiveInlineError < RuntimeError
+        end
+
+        class StartSymbolInlineError < StandardError
+        end
+
+        # @rbs (Lrama::Grammar::Parameterized::Resolver parameterized_resolver, Lexer::Token::Base? start_nterm) -> void
+        def initialize: (Lrama::Grammar::Parameterized::Resolver parameterized_resolver, Lexer::Token::Base? start_nterm) -> void
+
+        # @rbs () -> void
+        def validate!: () -> void
+
+        private
+
+        # @rbs (Array[Lrama::Grammar::Parameterized::Rule] inline_rules) -> void
+        def validate_no_start_symbol_inline: (Array[Lrama::Grammar::Parameterized::Rule] inline_rules) -> void
+
+        # @rbs (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
+        def check_recursion: (Parameterized::Rule rule, Hash[Parameterized::Rule, bool] visiting, Hash[Parameterized::Rule, bool] visited) -> void
+      end
+    end
+  end
+end

@@ -14,6 +14,12 @@ module Lrama
           @references ||= _references
         end
 
+        # @rbs () -> bool
+        def ends_with_statement?
+          references
+          !!@ends_with_statement
+        end
+
         private
 
         # @rbs () -> Array[Lrama::Grammar::Reference]
@@ -21,20 +27,25 @@ module Lrama
           scanner = StringScanner.new(s_value)
           references = [] #: Array[Grammar::Reference]
 
+          last_token = nil #: String?
           until scanner.eos? do
             case
+            when scanner.skip(/\s+/)
             when reference = scan_reference(scanner)
               references << reference
+              last_token = nil
             when scanner.scan(/\/\*/)
               scanner.scan_until(/\*\//) || scanner.terminate
             when scanner.scan(%r{//(?:\\\r?\n|[^\n])*})
             when quote = scanner.scan(/["']/)
               skip_quoted_literal(scanner, quote)
+              last_token = quote
             else
-              scanner.getch
+              last_token = scanner.getch
             end
           end
 
+          @ends_with_statement = last_token == ";" || last_token == "}"
           references
         end
 

@@ -87,6 +87,45 @@ RSpec.describe Lrama::Grammar::RuleBuilder do
     end
   end
 
+  describe "references in inline actions" do
+    let(:source) do
+      <<~GRAMMAR
+        %token NUM
+        %rule %inline op : NUM[n] { $op = $n; } ;
+        %%
+        expr : op[left] NUM[right] { $expr = $left + $right; } ;
+      GRAMMAR
+    end
+
+    def prepare(source)
+      grammar = Lrama::Parser.new(source, "inline.y").parse
+      grammar.prepare
+      grammar.rules.last.token_code.s_value
+    end
+
+    it "resolves names in each action before combining their scopes" do
+      positional = <<~GRAMMAR
+        %token NUM
+        %rule %inline op : NUM { $$ = $1; } ;
+        %%
+        expr : op NUM { $$ = $1 + $2; } ;
+      GRAMMAR
+      expect(prepare(source)).to eq(prepare(positional))
+    end
+
+    it "reports a missing outer reference at its original column" do
+      invalid = source.sub('$right', '$missing')
+      column = invalid.lines[3].index('$missing')
+      expect { prepare(invalid) }.to raise_error(/inline\.y:4:#{column}: Referring symbol `missing` is not found/)
+    end
+
+    it "reports a missing inline reference at its declaration" do
+      invalid = source.sub('$n;', '$unknown;')
+      column = invalid.lines[1].index('$unknown')
+      expect { prepare(invalid) }.to raise_error(/inline\.y:2:#{column}: Referring symbol `unknown` is not found/)
+    end
+  end
+
   describe "#preprocess_references" do
     context "variables refer to correct name and correct position" do
       let(:location) { Lrama::Lexer::Location.new(grammar_file: Lrama::Lexer::GrammarFile.new(path, ""), first_line: 1, first_column: 0, last_line: 1, last_column: 4) }
