@@ -5,8 +5,10 @@ require "set"
 require_relative "state/action"
 require_relative "state/inadequacy_annotation"
 require_relative "state/item"
+require_relative "state/pslr_inadequacy"
 require_relative "state/reduce_reduce_conflict"
 require_relative "state/resolved_conflict"
+require_relative "state/scanner_accepts"
 require_relative "state/shift_reduce_conflict"
 
 module Lrama
@@ -68,6 +70,7 @@ module Lrama
     attr_accessor :follow_kernel_items #: Hash[Action::Goto, Hash[Item, bool]]
     attr_accessor :always_follows #: Hash[Action::Goto, Bitmap::bitmap]
     attr_accessor :goto_follows #: Hash[Action::Goto, Bitmap::bitmap]
+    attr_accessor :lexer_context #: Integer?
 
     # @rbs (Integer id, Grammar::Symbol accessing_symbol, Array[Item] kernels) -> void
     def initialize(id, accessing_symbol, kernels)
@@ -91,6 +94,7 @@ module Lrama
       @follow_kernel_items = {}
       @always_follows = {}
       @goto_follows = {}
+      @lexer_context = nil
       @lhs_contributions = {}
       @lane_items = {}
     end
@@ -161,6 +165,37 @@ module Lrama
       end
 
       reduce.look_ahead = look_ahead
+    end
+
+    # @rbs (Action::Reduce reduce, ?lookahead_set lookaheads) -> Bitmap::bitmap
+    def acceptable_pslr_reduce_lookahead(reduce, lookaheads = item_lookahead_set)
+      if reduce.item.position.zero?
+        goto_follow_set(reduce.item.lhs, lookaheads)
+      else
+        lookaheads.fetch(reduce.item, 0)
+      end
+    end
+
+    # @rbs (?lookahead_set? lookaheads) -> Array[Grammar::Symbol]
+    def pslr_error_tokens(lookaheads = nil)
+      unless lookaheads
+        return resolved_conflicts.select { |conflict| conflict.which == :error }.map(&:symbol)
+      end
+
+      # During splitting, resolve the prospective lane in rule order, just as
+      # compute_shift_reduce_conflicts stops once a reduction removes the shift.
+      term_transitions.each_with_object([]) do |shift, errors|
+        token = shift.next_sym
+        precedence = token.precedence
+        next unless precedence && precedence.type == :nonassoc
+
+        winner = reduces.sort_by { |reduce| reduce.rule.id }.find do |reduce|
+          rule_precedence = reduce.rule.precedence
+          rule_precedence && rule_precedence >= precedence &&
+            acceptable_pslr_reduce_lookahead(reduce, lookaheads)[token.number] == 1
+        end
+        errors << token if winner && winner.rule.precedence == precedence
+      end
     end
 
     # @rbs (Grammar::Rule rule, Hash[Grammar::Symbol, Array[Action::Goto]] sources) -> void
@@ -336,14 +371,14 @@ module Lrama
 
     # Definition 3.40 (propagate_lookaheads)
     #
-    # @rbs (State next_state) -> lookahead_set
-    def propagate_lookaheads(next_state)
-      filters = next_state.lookahead_set_filters
+    # @rbs (State next_state, ?lookahead_set? lookaheads, ?filter: bool) -> lookahead_set
+    def propagate_lookaheads(next_state, lookaheads = nil, filter: true)
+      filters = next_state.lookahead_set_filters if filter
       sets = {} #: lookahead_set
       sets.compare_by_identity
       next_state.kernels.each {|next_kernel|
-        filter = filters[next_kernel]
-        if filter == 0
+        mask = filters && filters[next_kernel]
+        if mask == 0
           sets[next_kernel] = 0
           next
         end
@@ -351,12 +386,12 @@ module Lrama
         lookahead_sets =
           if next_kernel.position > 1
             kernel = kernels.find {|k| k.predecessor_item_of?(next_kernel) }
-            item_lookahead_set[kernel]
+            (lookaheads || item_lookahead_set).fetch(kernel)
           else
-            goto_follow_set(next_kernel.lhs)
+            goto_follow_set(next_kernel.lhs, lookaheads)
           end
 
-        sets[next_kernel] = lookahead_sets & filter
+        sets[next_kernel] = mask ? lookahead_sets & mask : lookahead_sets
       }
       sets
     end
@@ -607,6 +642,12 @@ module Lrama
       candidates.select {|item| item.rule == rule }
     end
 
+    # @rbs () -> void
+    def clear_predecessors
+      @predecessors.clear
+      @predecessor_set = nil
+    end
+
     # @rbs (State prev_state) -> void
     def append_predecessor(prev_state)
       seen = (@predecessor_set ||= {}.compare_by_identity)
@@ -617,14 +658,14 @@ module Lrama
 
     # Definition 3.39 (compute_goto_follow_set)
     #
-    # @rbs (Grammar::Symbol nterm_token) -> Bitmap::bitmap
-    def goto_follow_set(nterm_token)
+    # @rbs (Grammar::Symbol nterm_token, ?lookahead_set? lookaheads) -> Bitmap::bitmap
+    def goto_follow_set(nterm_token, lookaheads = nil)
       return 0 if nterm_token.accept_symbol?
       goto = @lalr_isocore.transitions_by_symbol_number[nterm_token.number] #: Action::Goto?
 
       @kernels
         .select {|kernel| @lalr_isocore.follow_kernel_items[goto][kernel] }
-        .map {|kernel| item_lookahead_set[kernel] }
+        .map {|kernel| (lookaheads || item_lookahead_set).fetch(kernel) }
         .reduce(@lalr_isocore.always_follows[goto]) {|result, bitmap| result | bitmap }
     end
 

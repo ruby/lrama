@@ -207,5 +207,159 @@ RSpec.describe Lrama::Command do
         end
       end
     end
+
+    context "when a PSLR grammar needs pure-reduce lookahead to choose tokens" do
+      let(:outfile) { File.join(Dir.tmpdir, "pslr-pure-reduce.c") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      it "emits parser output successfully" do
+        command = Lrama::Command.new(["-o", outfile, fixture_path("command/pslr_pure_reduce.y")])
+
+        expect(command.run).to be_nil
+        expect(File).to exist(outfile)
+      end
+    end
+
+    context "when validation aborts" do
+      let(:outfile) { File.join(Dir.tmpdir, "validate-abort.c") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+      end
+
+      it "fails before writing parser output" do
+        allow_any_instance_of(Lrama::States).to receive(:validate!).and_raise(SystemExit)
+
+        command = Lrama::Command.new(["-o", outfile, fixture_path("command/basic.y")])
+
+        expect { command.run }.to raise_error(SystemExit)
+        expect(File).not_to exist(outfile)
+      end
+    end
+
+    context "when validation fails with requested reports" do
+      let(:outfile) { File.join(Dir.tmpdir, "invalid-parser.c") }
+      let(:report_file) { File.join(Dir.tmpdir, "invalid-parser.output") }
+      let(:diagram_file) { File.join(Dir.tmpdir, "invalid-parser.html") }
+
+      before do
+        allow(STDIN).to receive(:read).and_return(source)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+        File.delete(report_file) if File.exist?(report_file)
+        File.delete(diagram_file) if File.exist?(diagram_file)
+      end
+
+      shared_examples "a diagnostic report without parser output" do
+        it "writes the requested diagnostics before aborting" do
+          command = Lrama::Command.new([
+            "--report=pslr,states",
+            "--report-file=#{report_file}",
+            "--trace=rules", "--diagram=#{diagram_file}",
+            "-o", outfile,
+            "-", "invalid.y"
+          ])
+
+          expect do
+            expect { command.run }.to raise_error(SystemExit)
+          end.to output(/start -> .*#{error_message}/m).to_stderr_from_any_process
+
+          expect(File).to exist(report_file)
+          expect(File.read(report_file)).to include(report_message, "State 0")
+          expect(File.read(diagram_file)).to include('<section id="rule-start">')
+          expect(File).not_to exist(outfile)
+        end
+      end
+
+      context "with an unresolved PSLR scanner conflict" do
+        let(:source) do
+          <<~GRAMMAR
+            %define lr.type pslr
+            %token-pattern A /a/
+            %token-pattern B /a/
+            %%
+            start: A | B;
+          GRAMMAR
+        end
+        let(:error_message) { /unresolved PSLR scanner conflict/ }
+        let(:report_message) { "PSLR Unresolved Scanner Conflicts" }
+
+        include_examples "a diagnostic report without parser output"
+      end
+
+      context "with a LALR %expect mismatch" do
+        let(:source) do
+          <<~GRAMMAR
+            %expect 0
+            %%
+            start: 'a' | start start;
+          GRAMMAR
+        end
+        let(:error_message) { /shift\/reduce conflicts: 1 found, 0 expected/ }
+        let(:report_message) { "conflicts: 1 shift/reduce" }
+
+        include_examples "a diagnostic report without parser output"
+      end
+    end
+
+    it "preserves parser and report files when a split would exceed the state limit" do
+      Dir.mktmpdir do |dir|
+        outfile = File.join(dir, "parse.c")
+        report = File.join(dir, "parse.output")
+        File.write(outfile, "previous parser")
+        File.write(report, "previous report")
+        command = Lrama::Command.new(["-Dpslr.max-states=15", "--report=pslr", "--report-file=#{report}",
+                                      "-o", outfile, fixture_path("command/pslr_growth_limit.y")])
+
+        expect do
+          expect { command.run }.to raise_error(SystemExit) { |error| expect(error).not_to be_success }
+        end.to output(/error: PSLR state growth exceeded pslr.max-states=15/).to_stderr_from_any_process
+        expect(File.read(outfile)).to eq("previous parser")
+        expect(File.read(report)).to eq("previous report")
+      end
+    end
+
+    context "when PSLR report output is requested" do
+      let(:outfile) { File.join(Dir.tmpdir, "pslr-report.c") }
+      let(:report_file) { File.join(Dir.tmpdir, "pslr-report.output") }
+
+      before do
+        File.delete(outfile) if File.exist?(outfile)
+        File.delete(report_file) if File.exist?(report_file)
+      end
+
+      after do
+        File.delete(outfile) if File.exist?(outfile)
+        File.delete(report_file) if File.exist?(report_file)
+      end
+
+      it "writes PSLR metrics into the report file" do
+        command = Lrama::Command.new([
+          "--report=pslr",
+          "--report-file=#{report_file}",
+          "-o", outfile,
+          fixture_path("command/pslr_growth_limit.y")
+        ])
+
+        expect(command.run).to be_nil
+        report = File.read(report_file)
+        expect(report).to include("PSLR Summary")
+        expect(report).to include("Base states:")
+        expect(report).to include("Total states:")
+      end
+    end
   end
 end

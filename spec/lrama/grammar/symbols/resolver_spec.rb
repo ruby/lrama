@@ -64,6 +64,36 @@ RSpec.describe Lrama::Grammar::Symbols::Resolver do
       expect(term1).to eq(term2)
     end
 
+    [nil, 300].each do |token_id|
+      it "preserves omitted attributes when redeclaring a term with token_id #{token_id.inspect}" do
+        tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
+        term = resolver.add_term(id: symbol_id("NUM"), alias_name: '"number"', tag: tag, token_id: 300)
+
+        redeclared = resolver.add_term(id: symbol_id("NUM"), token_id: token_id, replace: true)
+
+        expect(redeclared).to equal(term)
+        expect(redeclared.alias_name).to eq('"number"')
+        expect(redeclared.tag).to eq(tag)
+        expect(redeclared.token_id).to eq(300)
+      end
+    end
+
+    [nil, 256].each do |token_id|
+      it "preserves the canonical identifier when redeclaring an alias with token_id #{token_id.inspect}" do
+        id = symbol_id("YYerror")
+        tag = Lrama::Lexer::Token::Tag.new(s_value: "<i>")
+        term = resolver.add_term(id: id, alias_name: "error", tag: tag, token_id: 256)
+
+        redeclared = resolver.add_term(id: symbol_id("error"), token_id: token_id, replace: true)
+
+        expect(redeclared).to equal(term)
+        expect(redeclared.id).to eq(id)
+        expect(redeclared.alias_name).to eq("error")
+        expect(redeclared.tag).to eq(tag)
+        expect(redeclared.token_id).to eq(256)
+      end
+    end
+
     [false, true].each do |replace|
       it "rejects a duplicate token code without changing the original term with replace=#{replace}" do
         original = resolver.add_term(id: symbol_id("A"), token_id: 300)

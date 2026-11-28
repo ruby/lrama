@@ -86,8 +86,15 @@ module Lrama
     def compute_status(grammar)
       states = Lrama::States.new(grammar, @tracer)
       states.compute
-      states.compute_ielr if grammar.ielr_defined?
+      if grammar.pslr_defined?
+        states.compute_pslr
+      elsif grammar.ielr_defined?
+        states.compute_ielr
+      end
       [states, Lrama::Context.new(states)]
+    rescue States::StateLimitExceeded => e
+      @logger.error(e.message)
+      exit false
     end
 
     def render_reports(states)

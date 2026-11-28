@@ -384,7 +384,983 @@ module Lrama
       end.join
     end
 
+    # PSLR Output Helper Methods
+    # Based on PSLR::OutputHelper - generates PSLR-specific C code
+
+    # Check if the grammar requested PSLR output.
+    def pslr_enabled?
+      @grammar.pslr_defined?
+    end
+
+    # Check if LAC (lookahead correction) is enabled.
+    # Defaults to full for PSLR parsers; any parser type can opt in
+    # with %define parse.lac full (section 3.5.2 is orthogonal to PSLR).
+    def lac_enabled?
+      @grammar.parse_lac_full?
+    end
+
+    # Pure mode: the generated parser owns lexical analysis
+    # (%define api.pslr.lexer generated).
+    def pslr_pure_mode?
+      pslr_enabled? && @grammar.pslr_lexer_generated?
+    end
+
+    # Check if PSLR scanner tables are available.
+    def pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+      !scanner_fsa.nil? && !scanner_fsa.states.empty?
+    end
+
+    def pslr_function_declarations
+      return "" unless pslr_enabled?
+
+      declarations = ["#include <stddef.h>"]
+
+      if pslr_scanner_enabled?
+        declarations << <<~C_CODE
+          #ifndef YYPSLR_SCAN_RESULT_DEFINED
+          # define YYPSLR_SCAN_RESULT_DEFINED
+          typedef struct yypslr_scan_result {
+            int token;
+            int length;
+            int is_layout;
+            int is_character_token;
+            int from_fallback;
+          } yypslr_scan_result;
+          #endif
+
+          int yy_pseudo_scan_result (int parser_state, const char *input, size_t input_len, yypslr_scan_result *result);
+          int yy_pseudo_scan (int parser_state, const char *input, size_t input_len, int *match_length);
+          int yy_pslr_token_is_layout (int token);
+        C_CODE
+
+        declarations << <<~C_CODE
+          #define YYPSLR_ENABLED 1
+          #define YYPSLR_NO_MATCH YYEMPTY
+
+          #ifndef YYPSLR_PSEUDO_SCAN_STATE
+          # define YYPSLR_PSEUDO_SCAN_STATE(ParserState, Input, InputLen, MatchLength) \\
+            yy_pseudo_scan ((ParserState), (Input), (InputLen), (MatchLength))
+          #endif
+
+          #ifndef YYPSLR_PSEUDO_SCAN_RESULT_STATE
+          # define YYPSLR_PSEUDO_SCAN_RESULT_STATE(ParserState, Input, InputLen, Result) \\
+            yy_pseudo_scan_result ((ParserState), (Input), (InputLen), (Result))
+          #endif
+
+          #ifndef YYPSLR_TOKEN_IS_LAYOUT
+          # define YYPSLR_TOKEN_IS_LAYOUT(Token) yy_pslr_token_is_layout ((Token))
+          #endif
+
+          int yypslr_scan_with_layout (int yyparser_state, const char **yyinput,
+                                       size_t *yyinput_len, YYSTYPE *yylvalp,
+                                       yypslr_scan_result *yyresult#{lex_param.empty? ? "" : ", #{lex_param}"});
+
+          #ifndef YYPSLR_SCAN_WITH_LAYOUT
+          # define YYPSLR_SCAN_WITH_LAYOUT(yyParserState, yyInputPtr, yyInputLenPtr, yyLvalPtr, yyResult) \\
+            yypslr_scan_with_layout ((yyParserState), (yyInputPtr), (yyInputLenPtr), (yyLvalPtr), (yyResult)#{lex_param.empty? ? "" : ", #{lex_param_name}"})
+          #endif
+        C_CODE
+      end
+
+      if pslr_pure_mode?
+        declarations << <<~C_CODE
+          /* Pure mode (%define api.pslr.lexer generated): the generated
+             parser owns lexical analysis. Give it the input before
+             calling yyparse. */
+          void yypslr_set_input (const char *input, size_t input_len);
+        C_CODE
+      end
+
+      if (member = pslr_state_member)
+        declarations << <<~C_CODE
+          #ifndef YYGETSTATE_CONTEXT
+          # define YYGETSTATE_CONTEXT(Context) ((Context)->#{member})
+          #endif
+        C_CODE
+
+        if pslr_scanner_enabled?
+          declarations << <<~C_CODE
+            #ifndef YYPSLR_PSEUDO_SCAN
+            # define YYPSLR_PSEUDO_SCAN(Context, Input, InputLen, MatchLength) \\
+              ((Context) != 0 \\
+               ? YYPSLR_PSEUDO_SCAN_STATE (YYGETSTATE_CONTEXT (Context), (Input), (InputLen), (MatchLength)) \\
+               : YYEMPTY)
+            #endif
+
+            #ifndef YYPSLR_PSEUDO_SCAN_RESULT
+            # define YYPSLR_PSEUDO_SCAN_RESULT(Context, Input, InputLen, Result) \\
+              ((Context) != 0 \\
+               ? YYPSLR_PSEUDO_SCAN_RESULT_STATE (YYGETSTATE_CONTEXT (Context), (Input), (InputLen), (Result)) \\
+               : YYEMPTY)
+            #endif
+          C_CODE
+        end
+
+        if (context_param = @grammar.parse_params.first)
+          context_name = extract_param_name(context_param)
+          declarations << <<~C_CODE
+            #ifndef YYSETSTATE_CONTEXT
+            # define YYSETSTATE_CONTEXT(CurrentState) \\
+              do { \\
+                if (#{context_name} != 0) { \\
+                  YYGETSTATE_CONTEXT (#{context_name}) = (CurrentState); \\
+                } \\
+              } while (0)
+            #endif
+          C_CODE
+        end
+      end
+
+      declarations.join("\n")
+    end
+
+    def pslr_state_member
+      member = @grammar.pslr_state_member
+      member&.strip
+    end
+
+    def pslr_accepting_states
+      return [] unless pslr_scanner_enabled?
+
+      @context.states.scanner_fsa.states.select(&:accepting?)
+    end
+
+    def pslr_token_pattern_count
+      @context.states.token_patterns.size
+    end
+
+    def pslr_token_id(token_pattern)
+      @context.states.find_symbol_by_s_value!(token_pattern.name).token_id
+    end
+
+    # Generate Scanner FSA transition table as C code
+    def scanner_transition_table
+      return "" unless pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+
+      lines = []
+      lines << "/* Scanner FSA transition table */"
+      lines << "#define YY_SCANNER_NUM_STATES #{scanner_fsa.states.size}"
+      lines << "#define YY_SCANNER_INVALID_STATE (-1)"
+      lines << ""
+      lines << "static const int yy_scanner_transition[YY_SCANNER_NUM_STATES][256] = {"
+
+      scanner_fsa.states.each_with_index do |state, idx|
+        transitions = Array.new(256, -1)
+        state.transitions.each do |char, target_id|
+          transitions[char.ord] = target_id
+        end
+        lines << "  /* state #{idx} */ {#{transitions.join(', ')}}#{idx < scanner_fsa.states.size - 1 ? ',' : ''}"
+      end
+
+      lines << "};"
+      lines.join("\n")
+    end
+
+    # Generate state_to_accepting table as C code
+    def state_to_accepting_table
+      return "" unless pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+      accepting_indices = Array.new(scanner_fsa.states.size, -1)
+
+      pslr_accepting_states.each_with_index do |state, index|
+        accepting_indices[state.id] = index
+      end
+
+      lines = []
+      lines << ""
+      lines << "/* FSA state -> accepting state index mapping */"
+      lines << "#define YY_ACCEPTING_NONE (-1)"
+      lines << ""
+      lines << "static const int yy_state_to_accepting[YY_SCANNER_NUM_STATES] = {"
+      lines << "  #{accepting_indices.join(', ')}"
+      lines << "};"
+      lines.join("\n")
+    end
+
+    def token_pattern_token_ids_table
+      return "" unless pslr_scanner_enabled?
+
+      lines = []
+      lines << ""
+      lines << "/* token pattern index -> parser token id */"
+      lines << "#define YY_PSLR_EMPTY_PATTERN (-1)"
+      lines << "#define YY_NUM_TOKEN_PATTERNS #{pslr_token_pattern_count}"
+      lines << ""
+      lines << "static const int yy_token_pattern_to_token_id[YY_NUM_TOKEN_PATTERNS] = {"
+      lines << "  #{@context.states.token_patterns.map {|token_pattern| pslr_token_id(token_pattern) }.join(', ')}"
+      lines << "};"
+      lines << ""
+      lines << "static const int yy_token_pattern_is_layout[YY_NUM_TOKEN_PATTERNS] = {"
+      lines << "  #{@context.states.token_patterns.map {|token_pattern| token_pattern.layout? ? 1 : 0 }.join(', ')}"
+      lines << "};"
+      lines << ""
+      lines << "int"
+      lines << "yy_pslr_token_is_layout (int token)"
+      lines << "{"
+      lines << "  int i;"
+      lines << "  for (i = 0; i < YY_NUM_TOKEN_PATTERNS; i++)"
+      lines << "    if (yy_token_pattern_to_token_id[i] == token)"
+      lines << "      return yy_token_pattern_is_layout[i];"
+      lines << "  return 0;"
+      lines << "}"
+      lines.join("\n")
+    end
+
+    # Generate token IDs for accepting states as C code
+    def accepting_tokens_table
+      return "" unless pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+
+      lines = []
+      lines << ""
+      lines << "/* Accepting state token IDs */"
+      lines << ""
+
+      # Collect all unique tokens
+      all_tokens = @context.states.token_patterns.map(&:name)
+      lines << "/* Token pattern names: #{all_tokens.join(', ')} */"
+      lines << ""
+
+      # Generate accepting tokens for each FSA state
+      scanner_fsa.states.each do |state|
+        next unless state.accepting?
+
+        token_names = state.accepting_tokens.map(&:name)
+        lines << "/* State #{state.id} accepts: #{token_names.join(', ')} */"
+      end
+
+      lines.join("\n")
+    end
+
+    # Generate scanner_accepts table as C code
+    def scanner_accepts_table_code
+      return "" unless pslr_scanner_enabled?
+      scanner_fsa = @context.states.scanner_fsa
+      scanner_accepts = @context.states.scanner_accepts_table
+      return "" unless scanner_accepts
+
+      lines = []
+      lines << ""
+      lines << "/* scanner_accepts[parser_state][accepting_state] -> token pattern index */"
+      lines << "/* YY_PSLR_EMPTY_PATTERN means no token accepted */"
+      lines << ""
+
+      num_parser_states = @context.states.states.size
+      num_accepting_states = pslr_accepting_states.size
+
+      lines << "#define YY_NUM_PARSER_STATES #{num_parser_states}"
+      lines << "#define YY_NUM_ACCEPTING_STATES #{num_accepting_states}"
+      lines << ""
+
+      if num_accepting_states > 0
+        lines << "static const int yy_scanner_accepts[YY_NUM_PARSER_STATES][YY_NUM_ACCEPTING_STATES] = {"
+        token_pattern_indexes = @context.states.token_patterns.each_with_index.to_h
+
+        @context.states.states.each_with_index do |parser_state, ps_idx|
+          row = []
+          pslr_accepting_states.each do |fsa_state|
+            token = scanner_accepts[parser_state.id, fsa_state.id]
+            if token
+              row << token_pattern_indexes.fetch(token)
+            else
+              row << -1
+            end
+          end
+
+          lines << "  /* parser state #{ps_idx} */ {#{row.join(', ')}}#{ps_idx < num_parser_states - 1 ? ',' : ''}"
+        end
+
+        lines << "};"
+        lines << ""
+        lines << "#define YY_NUM_FALLBACK_PROFILES #{scanner_accepts.fallback_profiles.size}"
+        lines << "static const int yy_scanner_fallback_accepts[YY_NUM_FALLBACK_PROFILES][YY_NUM_ACCEPTING_STATES] = {"
+        scanner_accepts.fallback_profiles.each do |profile|
+          row = pslr_accepting_states.map do |fsa_state|
+            transition = profile[fsa_state.id]
+            token = transition && transition.last
+            token ? token_pattern_indexes.fetch(token) : -1
+          end
+          lines << "  {#{row.join(', ')}},"
+        end
+        lines << "};"
+        lines << "static const int yy_scanner_fallback_next[YY_NUM_FALLBACK_PROFILES][YY_NUM_ACCEPTING_STATES] = {"
+        scanner_accepts.fallback_profiles.each do |profile|
+          row = pslr_accepting_states.map do |fsa_state|
+            transition = profile[fsa_state.id]
+            transition ? transition.first : -1
+          end
+          lines << "  {#{row.join(', ')}},"
+        end
+        lines << "};"
+        lines << scanner_continuation_table_code
+      end
+
+      lines.join("\n")
+    end
+
+    def scanner_continuation_table_code
+      scanner_fsa = @context.states.scanner_fsa
+      scanner_accepts = @context.states.scanner_accepts_table
+      patterns = @context.states.token_patterns
+      accepting_states = pslr_accepting_states
+      relations = scanner_fsa.states.map {|state| [state.id, state.transitions.values.uniq] }.to_h
+      accepting_bits = scanner_fsa.states.map {|state| [state.id, 0] }.to_h
+      accepting_states.each_with_index {|state, index| accepting_bits[state.id] = 1 << index }
+      reachable = Digraph.new(relations.keys, relations, accepting_bits).compute
+      future = scanner_fsa.states.map do |state|
+        relations.fetch(state.id).inject(0) {|bits, target| bits | reachable.fetch(target) }
+      end
+
+      # Rows share a profile when the same future accepting states can replace the winner.
+      profiles = {}
+      normal_profiles = @context.states.states.map do |parser_state|
+        [nil, *patterns].map do |winner|
+          mask = 0
+          accepting_states.each_with_index do |state, index|
+            token = scanner_accepts[parser_state.id, state.id]
+            if token && (!winner || @context.states.length_precedences.normal_precedes?(winner.name, token.name))
+              mask |= 1 << index
+            end
+          end
+          profiles[mask] ||= profiles.size
+        end
+      end
+
+      lines = ["/* Continue only while a future match can replace the selected token. */"]
+      lines << "static const int yy_scanner_normal_profile[YY_NUM_PARSER_STATES][YY_NUM_TOKEN_PATTERNS + 1] = {"
+      normal_profiles.each {|row| lines << "  {#{row.join(', ')}}," }
+      lines << "};"
+      lines << "static const unsigned char yy_scanner_continue[#{profiles.size}][YY_SCANNER_NUM_STATES] = {"
+      profiles.each_key do |mask|
+        lines << "  {#{future.map {|bits| (bits & mask).zero? ? 0 : 1 }.join(', ')}},"
+      end
+      lines << "};"
+      lines << "static const unsigned char yy_scanner_fallback_continue[YY_NUM_FALLBACK_PROFILES][YY_SCANNER_NUM_STATES] = {"
+      scanner_fallback_continuations.each {|row| lines << "  {#{row.join(', ')}}," }
+      lines << "};"
+      lines.join("\n")
+    end
+
+    def scanner_fallback_continuations
+      scanner_fsa = @context.states.scanner_fsa
+      profiles = @context.states.scanner_accepts_table.fallback_profiles
+      initial = [0, 0]
+      nodes = [initial]
+      visited = Set.new(nodes)
+      relations = {}
+      updates = {}
+      nodes.each do |node|
+        profile_id, state_id = node
+        updates[node] = 0
+        relations[node] = scanner_fsa.states[state_id].transitions.values.uniq.map do |target_id|
+          transition = profiles[profile_id][target_id]
+          updates[node] = 1 if transition && transition.last
+          target = [transition ? transition.first : profile_id, target_id]
+          nodes << target if visited.add?(target)
+          target
+        end
+      end
+      reachable_updates = Digraph.new(nodes, relations, updates).compute
+      profiles.each_index.map do |profile_id|
+        scanner_fsa.states.map {|state| reachable_updates.fetch([profile_id, state.id], 0) }
+      end
+    end
+
+    # Generate length_precedences table as C code
+    def length_precedences_table_code
+      return "" unless pslr_scanner_enabled?
+      length_precedences = @context.states.length_precedences
+      return "" unless length_precedences
+
+      lines = []
+      lines << ""
+      lines << "/* yy_pslr_length_precedes[old_token][new_token] is true when a longer"
+      lines << "   match for new_token replaces an earlier match for old_token. */"
+      lines << ""
+
+      num_tokens = pslr_token_pattern_count
+      if num_tokens > 0
+        lines << length_precedence_matrix_code(
+          "yy_pslr_length_precedes",
+          num_tokens,
+          :normal_precedes?
+        )
+      end
+
+      lines.join("\n")
+    end
+
+    def length_precedence_matrix_code(table_name, num_tokens, query_method)
+      length_precedences = @context.states.length_precedences
+      lines = []
+
+      lines << "static const int #{table_name}[#{num_tokens}][#{num_tokens}] = {"
+      @context.states.token_patterns.each_with_index do |t1, i|
+        row = @context.states.token_patterns.map do |t2|
+          length_precedences.public_send(query_method, t1.name, t2.name) ? 1 : 0
+        end
+        lines << "  /* #{t1.name} */ {#{row.join(', ')}}#{i < num_tokens - 1 ? ',' : ''}"
+      end
+      lines << "};"
+
+      lines.join("\n")
+    end
+
+    def pslr_lac_function
+      return "" unless lac_enabled?
+
+      <<~C_CODE
+
+        static int
+        yy_lac_check_ (yy_state_t *yyss, yy_state_t *yyssp, yysymbol_kind_t yytoken)
+        {
+          yy_state_t yylac_states[YYINITDEPTH];
+          yy_state_t *yylac_base = yylac_states;
+          YYPTRDIFF_T yylac_size = YYINITDEPTH;
+          YYPTRDIFF_T yylac_len = 0;
+          int yylac_status = 0;
+
+          if (YYMAXDEPTH < yyssp - yyss + 1)
+            return YYENOMEM;
+
+          for (;;)
+            {
+              int yystate = yylac_len ? yylac_base[yylac_len - 1] : *yyssp;
+              int yyn = yypact[yystate];
+
+              if (!yypact_value_is_default (yyn))
+                {
+                  yyn += yytoken;
+                  if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == yytoken)
+                    {
+                      yyn = yytable[yyn];
+                      if (0 < yyn)
+                        {
+                          yylac_status = 1;
+                          break;
+                        }
+                      if (yytable_value_is_error (yyn))
+                        break;
+                      yyn = -yyn;
+                    }
+                  else
+                    {
+                      yyn = yydefact[yystate];
+                      if (yyn == 0)
+                        break;
+                    }
+                }
+              else
+                {
+                  yyn = yydefact[yystate];
+                  if (yyn == 0)
+                    break;
+                }
+
+              /* Keep the parser's stack read-only; only speculative states need storage. */
+              if (yylac_len < yyr2[yyn])
+                {
+                  yyssp -= yyr2[yyn] - yylac_len;
+                  yylac_len = 0;
+                }
+              else
+                yylac_len -= yyr2[yyn];
+              {
+                const int yylhs = yyr1[yyn] - YYNTOKENS;
+                const int yytop = yylac_len ? yylac_base[yylac_len - 1] : *yyssp;
+                const int yyi = yypgoto[yylhs] + yytop;
+                yystate = (0 <= yyi && yyi <= YYLAST && yycheck[yyi] == yytop
+                           ? yytable[yyi]
+                           : yydefgoto[yylhs]);
+              }
+
+              if (YYMAXDEPTH <= yyssp - yyss + 1 + yylac_len)
+                {
+                  yylac_status = YYENOMEM;
+                  break;
+                }
+              if (yylac_len == yylac_size)
+                {
+                  yy_state_t *yylac_new;
+                  yylac_size = yylac_size <= YYMAXDEPTH / 2 ? 2 * yylac_size : YYMAXDEPTH;
+                  yylac_new = YY_CAST (yy_state_t *,
+                    YYMALLOC (YY_CAST (YYSIZE_T, yylac_size * YYSIZEOF (yy_state_t))));
+                  if (!yylac_new)
+                    {
+                      yylac_status = YYENOMEM;
+                      break;
+                    }
+                  YYCOPY (yylac_new, yylac_base, yylac_len);
+                  if (yylac_base != yylac_states)
+                    YYFREE (yylac_base);
+                  yylac_base = yylac_new;
+                }
+
+              yylac_base[yylac_len++] = YY_CAST (yy_state_t, yystate);
+            }
+          if (yylac_base != yylac_states)
+            YYFREE (yylac_base);
+          return yylac_status;
+        }
+      C_CODE
+    end
+
+    # Generate pseudo_scan function as C code
+    def pseudo_scan_function
+      return "" unless pslr_scanner_enabled?
+
+      <<~C_CODE
+
+        /*
+         * pseudo_scan: PSLR(1) scanning function
+         * Based on Definition 3.2.16 from the PSLR dissertation,
+         * extended with the fallback row of section 3.5.1.
+         *
+         * Input:
+         *   parser_state: Current parser state
+         *   input: Unconsumed input pointer (may contain NUL bytes)
+         *   input_len: Number of remaining input bytes
+         *   result: Output parameter for the match
+         *
+         * Returns: Selected parser token ID. #{eof_symbol.name} when input_len is zero.
+         * If neither the parser-state row nor the fallback row matches,
+         * returns YYUNDEF and consumes one byte (character-token handling);
+         * from_fallback is set for both cases because a syntax error is
+         * then guaranteed.
+         */
+        int
+        yy_pseudo_scan_result (int parser_state, const char *input, size_t input_len, yypslr_scan_result *result)
+        {
+          int ss = 0;  /* FSA initial state */
+          size_t ibest = 0;
+          int pbest = YY_PSLR_EMPTY_PATTERN;
+          size_t fallback_ibest = 0;
+          int fallback_pbest = YY_PSLR_EMPTY_PATTERN;
+          int fallback_profile = 0;
+          size_t i = 0;
+
+          if (result == NULL) {
+            return YYEMPTY;
+          }
+
+          result->token = YYEMPTY;
+          result->length = 0;
+          result->is_layout = 0;
+          result->is_character_token = 0;
+          result->from_fallback = 0;
+
+          if (parser_state < 0 || parser_state >= YY_NUM_PARSER_STATES || (!input && input_len)) {
+            return YYEMPTY;
+          }
+
+          if (input_len == 0) {
+            result->token = #{eof_symbol.name};
+            return result->token;
+          }
+
+          while (i < input_len) {
+            int c = (unsigned char)input[i];
+            int next_ss = yy_scanner_transition[ss][c];
+
+            if (next_ss == YY_SCANNER_INVALID_STATE) {
+              break;
+            }
+
+            ss = next_ss;
+            i++;
+
+            /* Check if this is an accepting state */
+            int sa = yy_state_to_accepting[ss];
+            if (sa != YY_ACCEPTING_NONE) {
+              int pattern_index = yy_scanner_accepts[parser_state][sa];
+              if (pattern_index != YY_PSLR_EMPTY_PATTERN) {
+                if (pbest == YY_PSLR_EMPTY_PATTERN ||
+                    yy_pslr_length_precedes[pbest][pattern_index]) {
+                  pbest = pattern_index;
+                  ibest = i;
+                }
+              }
+
+              pattern_index = yy_scanner_fallback_accepts[fallback_profile][sa];
+              fallback_profile = yy_scanner_fallback_next[fallback_profile][sa];
+              if (pattern_index != YY_PSLR_EMPTY_PATTERN) {
+                fallback_pbest = pattern_index;
+                fallback_ibest = i;
+              }
+            }
+
+            if (!yy_scanner_continue[yy_scanner_normal_profile[parser_state][pbest + 1]][ss] &&
+                (pbest != YY_PSLR_EMPTY_PATTERN || !yy_scanner_fallback_continue[fallback_profile][ss])) {
+              break;
+            }
+          }
+
+          if (pbest == YY_PSLR_EMPTY_PATTERN) {
+            pbest = fallback_pbest;
+            ibest = fallback_ibest;
+            result->from_fallback = 1;
+          }
+
+          if (pbest != YY_PSLR_EMPTY_PATTERN && ibest <= INT_MAX) {
+            result->token = yy_token_pattern_to_token_id[pbest];
+            result->length = (int)ibest;
+            result->is_layout = yy_token_pattern_is_layout[pbest];
+          } else {
+            result->token = YYUNDEF;
+            result->length = ibest > INT_MAX ? INT_MAX : 1;
+            result->is_character_token = pbest == YY_PSLR_EMPTY_PATTERN;
+          }
+          return result->token;
+        }
+
+        int
+        yy_pseudo_scan(int parser_state, const char *input, size_t input_len, int *match_length)
+        {
+          yypslr_scan_result result;
+          int token = yy_pseudo_scan_result (parser_state, input, input_len, &result);
+
+          if (match_length != NULL) {
+            *match_length = result.length;
+          }
+
+          return token;
+        }
+      C_CODE
+    end
+
+    # Check if lexer context table is available.
+    def lexer_context_enabled?
+      @context.states.lexer_context_enabled?
+    end
+
+    # Generate #define constants for lexer contexts, emitted early in the output
+    # so that user code in %{ ... %} can reference them.
+    def lexer_context_defines_code
+      return "" unless lexer_context_enabled?
+
+      classifier = @context.states.lexer_context_classifier
+      lines = []
+      lines << "/* Lexer context constants — generated from %lexer-context directives */"
+      classifier.contexts.each do |lc|
+        lines << "#define YY_CTX_%-8s 0x%02xULL" % [lc.name, lc.bitmask]
+      end
+      lines.join("\n")
+    end
+
+    # Generate the lexer context table as C code.
+    def lexer_context_table_code
+      return "" unless lexer_context_enabled?
+
+      table = @context.states.lexer_context_table
+      lexer_contexts = @grammar.lexer_contexts
+      lines = []
+
+      lines << "/* Lexer Context Classification Table */"
+      lines << "/* Maps parser state -> lexer context flags */"
+      lines << ""
+      lines << "static const unsigned long long yy_lexer_context[] = {"
+
+      table.each_with_index do |ctx, idx|
+        ctx_name = LexerContextClassifier.context_name(ctx, lexer_contexts)
+        comma = idx < table.size - 1 ? "," : ""
+        lines << "  /* state #{idx} */ #{ctx}ULL#{comma} /* #{ctx_name} */"
+      end
+
+      lines << "};"
+      lines << ""
+      lines << "int"
+      lines << "yy_lexer_context_is(int yystate, unsigned long long ctx_mask) {"
+      lines << "    if (yystate < 0 || yystate >= #{table.size}) return 0;"
+      lines << "    return (yy_lexer_context[yystate] & ctx_mask) != 0;"
+      lines << "}"
+
+      lines.join("\n")
+    end
+
+    # Check if token actions are defined
+    def pslr_token_actions_enabled?
+      pslr_enabled? && !@grammar.token_actions.empty?
+    end
+
+    def pslr_layout_declarations
+      return "" unless pslr_scanner_enabled? || pslr_pure_mode?
+
+      render_partial("bison/_pslr_scanner.c")
+    end
+
+    # Generate token action dispatch function.
+    # yylval inside a %token-action refers to the semantic value slot the
+    # caller passes in, so token actions work with both the generated
+    # (pure-mode) lexer and a user yylex driving the bridge macros.
+    def pslr_token_action_function
+      return "" unless pslr_token_actions_enabled?
+
+      lines = []
+      lines << ""
+      lines << "/* PSLR token action dispatch */"
+      lines << "/* Generated from %token-action declarations */"
+      lines << ""
+      lines << "#define yylval (*yylvalp)"
+      lines << "static void"
+      lines << "yypslr_token_action (int yytoken, const char *yytext, int yyleng, YYSTYPE *yylvalp#{lex_param.empty? ? "" : ", #{lex_param}"})"
+      lines << "{"
+      lines << "  YY_USE (yytext);"
+      lines << "  YY_USE (yyleng);"
+      lines << "  YY_USE (yylvalp);"
+      lines << lex_param_use
+
+      @grammar.token_actions.each_with_index do |action, idx|
+        token_id = @context.states.find_symbol_by_s_value!(action.token_name).token_id
+        keyword = idx == 0 ? "if" : "else if"
+        lines << "  #{keyword} (yytoken == #{token_id})"
+        lines << "    {"
+        lines << "#line #{action.lineno} \"#{@grammar_file_path}\""
+        lines << "      {#{action.code.s_value}}"
+        lines << "#line [@oline@] [@ofile@]"
+        lines << "    }"
+      end
+
+      lines << "}"
+      lines << "#undef yylval"
+      lines << ""
+      lines << "#define YYPSLR_TOKEN_ACTION(yyToken, yyText, yyLen, yyLvalPtr) \\"
+      lines << "  yypslr_token_action ((yyToken), (yyText), (yyLen), (yyLvalPtr)#{lex_param.empty? ? "" : ", #{lex_param_name}"})"
+      lines.join("\n")
+    end
+
+    # Generate enhanced pseudo_scan_result with layout accumulation
+    def pslr_layout_scan_function
+      return "" unless pslr_scanner_enabled?
+
+      <<~C_CODE
+
+        /*
+         * yypslr_scan_with_layout: scan with layout accumulation.
+         *
+         * Repeatedly invokes yy_pseudo_scan_result to consume input.
+         * Layout tokens are accumulated in the layout buffer;
+         * non-layout tokens are returned to the caller with the
+         * accumulated layout available via YYPSLR_LAYOUT_TEXT.
+         * The #{eof_symbol.name} token action (if any) runs before returning #{eof_symbol.name} so
+         * trailing layout can be recovered (paper section 3.6).
+         */
+        int
+        yypslr_scan_with_layout (int yyparser_state, const char **yyinput,
+                                 size_t *yyinput_len, YYSTYPE *yylvalp,
+                                 yypslr_scan_result *yyresult#{lex_param.empty? ? "" : ", #{lex_param}"})
+        {
+          YYPSLR_LAYOUT_CLEAR ();
+          YY_USE (yylvalp);
+        #{lex_param_use}
+
+          for (;;)
+            {
+              int yytoken = yy_pseudo_scan_result (yyparser_state, *yyinput, *yyinput_len, yyresult);
+
+              if (yytoken == YYEMPTY)
+                return yytoken;
+
+              if (yyresult->is_layout)
+                {
+                  if (!YYPSLR_LAYOUT_APPEND (*yyinput, yyresult->length))
+                    {
+                      yyresult->token = YYUNDEF;
+                      yyresult->is_layout = 0;
+                      yyresult->is_character_token = 0;
+                      yyresult->from_fallback = 0;
+                      return yyresult->token;
+                    }
+        #{pslr_token_actions_enabled? ? "          YYPSLR_TOKEN_ACTION (yytoken, *yyinput, yyresult->length, yylvalp);" : ""}
+                  *yyinput += yyresult->length;
+                  *yyinput_len -= (size_t)yyresult->length;
+                  continue;
+                }
+
+        #{pslr_token_actions_enabled? ? "      YYPSLR_TOKEN_ACTION (yytoken, *yyinput, yyresult->length, yylvalp);" : ""}
+              return yytoken;
+            }
+        }
+      C_CODE
+    end
+
+    # Generate the pure-mode lexer: yylex is emitted by the generator and
+    # drives the pseudo-scanner with the current parser state, so no user
+    # lexer is involved (%define api.pslr.lexer generated, section 3.1).
+    def pslr_generated_lexer_function
+      return "" unless pslr_pure_mode?
+
+      args = ["yylvalp"]
+      args << "yyllocp" if @grammar.locations
+      args << lex_param_name unless lex_param.empty?
+      params = ["YYSTYPE *yylvalp"]
+      params << "YYLTYPE *yyllocp" if @grammar.locations
+      params << lex_param unless lex_param.empty?
+
+      location_declarations = location_reset = location_start = location_end = ""
+      if @grammar.locations
+        location_declarations = <<~C_CODE
+          #ifndef YYPSLR_SET_LOCATION
+          # define YYPSLR_SET_LOCATION(Loc, FirstLine, FirstColumn, LastLine, LastColumn) \\
+            do {                                                                          \\
+              (Loc).first_line = (FirstLine);                                             \\
+              (Loc).first_column = (FirstColumn);                                         \\
+              (Loc).last_line = (LastLine);                                               \\
+              (Loc).last_column = (LastColumn);                                           \\
+            } while (0)
+          #endif
+
+          static void
+          yypslr_update_location (yypslr_scanner *yypslr_lexer)
+          {
+            while (yypslr_lexer->input.location_cursor != yypslr_lexer->input.cursor)
+              {
+                if (*yypslr_lexer->input.location_cursor++ == '\\n')
+                  {
+                    if (yypslr_lexer->input.line < INT_MAX - 1)
+                      yypslr_lexer->input.line++;
+                    yypslr_lexer->input.column = 0;
+                  }
+                else if (yypslr_lexer->input.column < INT_MAX - 1)
+                  yypslr_lexer->input.column++;
+              }
+          }
+        C_CODE
+        location_reset = <<~C_CODE
+            yypslr_lexer->input.location_cursor = input;
+            yypslr_lexer->input.line = yypslr_lexer->input.column = 0;
+        C_CODE
+        location_start = <<~C_CODE
+            yypslr_update_location (yypslr_lexer);
+            yypslr_first_line = yypslr_lexer->input.line + 1;
+            yypslr_first_column = yypslr_lexer->input.column + 1;
+        C_CODE
+        location_end = <<~C_CODE
+            yypslr_update_location (yypslr_lexer);
+            YYPSLR_SET_LOCATION (*yyllocp, yypslr_first_line, yypslr_first_column,
+                                 yypslr_lexer->input.line + 1, yypslr_lexer->input.column + 1);
+            YY_USE (yypslr_first_line);
+            YY_USE (yypslr_first_column);
+        C_CODE
+      end
+
+      scan = if pslr_scanner_enabled?
+        <<~C_CODE
+            yypslr_scan_result yypslr_result;
+            yypslr_token = yypslr_scan_with_layout (yypslr_lexer->input.parser_state,
+                                                    &yypslr_lexer->input.cursor,
+                                                    &yypslr_lexer->input.remaining,
+                                                    yylvalp,
+                                                    &yypslr_result#{lex_param.empty? ? "" : ", #{lex_param_name}"});
+            yypslr_length = yypslr_result.length;
+        C_CODE
+      else
+        <<~C_CODE
+            YY_USE (yylvalp);
+            YYPSLR_LAYOUT_CLEAR ();
+            yypslr_token = yypslr_lexer->input.remaining ? YYUNDEF : #{eof_symbol.name};
+            yypslr_length = yypslr_lexer->input.remaining ? 1 : 0;
+        #{pslr_token_actions_enabled? ? "    if (yypslr_token == #{eof_symbol.name})\n      YYPSLR_TOKEN_ACTION (yypslr_token, yypslr_lexer->input.cursor, 0, yylvalp);" : ""}
+        C_CODE
+      end
+
+      <<~C_CODE
+
+        /* Pure-mode PSLR lexer: generated, owns the input cursor. */
+        #{location_declarations}
+
+        void
+        yypslr_set_input (const char *input, size_t input_len)
+        {
+          yypslr_scanner *yypslr_lexer = &yypslr_pending;
+          yypslr_layout_clear (yypslr_lexer);
+          yypslr_lexer->input.cursor = input;
+          yypslr_lexer->input.remaining = input_len;
+          yypslr_lexer->input.parser_state = 0;
+          yypslr_has_input = 1;
+        #{location_reset}
+        }
+
+        #define YYPSLR_SET_PARSER_STATE(State) (yypslr_current ()->input.parser_state = (State))
+
+        static int
+        yypslr_read_token (#{params.join(", ")})
+        {
+          yypslr_scanner *yypslr_lexer = yypslr_current ();
+          int yypslr_token;
+          int yypslr_length;
+        #{@grammar.locations ? "  int yypslr_first_line, yypslr_first_column;" : ""}
+        #{lex_param_use}
+
+          if (yypslr_has_input)
+            {
+              int state = yypslr_lexer->input.parser_state;
+              yypslr_take_input (yypslr_lexer);
+              yypslr_lexer->input.parser_state = state;
+            }
+        #{scan}
+        #{location_start}
+          if (yypslr_length > 0)
+            {
+              yypslr_lexer->input.cursor += yypslr_length;
+              yypslr_lexer->input.remaining -= (size_t) yypslr_length;
+            }
+        #{location_end}
+          return yypslr_token;
+        }
+
+        /* A standalone lexer call may itself invoke yyparse in a token action. */
+        static int
+        yypslr_read_standalone (#{params.join(", ")})
+        {
+          yypslr_scope yypslr_call;
+          int yypslr_token;
+          yypslr_enter (&yypslr_call);
+          yypslr_token = yypslr_read_token (#{args.join(", ")});
+          YYPSLR_LEAVE (yypslr_call);
+          return yypslr_token;
+        }
+
+        static int
+        yylex (#{params.join(", ")})
+        {
+          if (yypslr_active)
+            return yypslr_read_token (#{args.join(", ")});
+          return yypslr_read_standalone (#{args.join(", ")});
+        }
+      C_CODE
+    end
+
+    # Generate all PSLR C code
+    def pslr_tables_and_functions
+      return "" unless pslr_scanner_enabled? || pslr_pure_mode?
+
+      parts = [
+        "/* PSLR(1) Scanner Tables and Functions */",
+        "/* Generated by Lrama PSLR implementation */",
+        "",
+        scanner_transition_table,
+        state_to_accepting_table,
+        token_pattern_token_ids_table,
+        accepting_tokens_table,
+        scanner_accepts_table_code,
+        length_precedences_table_code,
+        pslr_layout_declarations,
+        pseudo_scan_function,
+        pslr_token_action_function,
+        pslr_layout_scan_function,
+        pslr_generated_lexer_function,
+      ]
+
+      parts.join("\n")
+    end
+
     private
+
+    def lex_param_use
+      @grammar.lex_params.map { |param| "  YY_USE (#{extract_param_name(param)});" }.join("\n")
+    end
 
     def include_header_path(output_file_path, header_file_path)
       if File.identical?(File.dirname(output_file_path), File.dirname(header_file_path))
