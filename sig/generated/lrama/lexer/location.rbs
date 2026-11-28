@@ -25,31 +25,15 @@ module Lrama
       # @rbs () -> String
       def to_s: () -> String
 
-      # @rbs (String error_message) -> String
-      def generate_error_message: (String error_message) -> String
-
-      # @rbs () -> String
-      def error_with_carets: () -> String
-
-      private
-
       # @rbs () -> String
       def path: () -> String
 
-      # @rbs () -> String
-      def carets_line: () -> String
+      alias filename path
 
-      # @rbs () -> String
-      def leading_whitespace: () -> String
+      # @rbs (String error_message) -> String
+      def generate_error_message: (String error_message) -> String
 
-      # @rbs () -> String
-      def highlight_marker: () -> String
-
-      # @rbs () -> String
-      def formatted_first_lineno: () -> String
-
-      # @rbs () -> String
-      def line_number_padding: () -> String
+      private
 
       # @rbs () -> String
       def text: () -> String
